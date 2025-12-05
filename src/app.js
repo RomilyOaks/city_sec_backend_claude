@@ -1,255 +1,169 @@
 /**
- * ============================================
- * CONFIGURACIÓN DE LA APLICACIÓN EXPRESS
- * ============================================
- *
- * Este archivo configura toda la aplicación Express:
- * - Middlewares de seguridad
- * - Parsers de body
- * - CORS
- * - Rutas
- * - Manejo de errores
+ * Ruta: src/app.js
+ * Descripción: Archivo principal de la aplicación Express
+ * Configura middlewares, rutas, manejo de errores y conexión a base de datos
+ * Punto de entrada del servidor backend
  */
 
-require("dotenv").config();
-const express = require("express");
-const helmet = require("helmet");
-const cors = require("cors");
-const logger = require("./utils/logger");
-const errorHandler = require("./middlewares/errorHandler.middleware");
-const routes = require("./routes");
-const rateLimit = require("express-rate-limit");
-const morgan = require("morgan");
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import sequelize from "./config/database.js";
 
-// ========================================
-// CREAR APLICACIÓN EXPRESS
-// ========================================
+// Importar rutas
+import catalogosRoutes from "./routes/catalogos.routes.js";
+import novedadesRoutes from "./routes/novedades.routes.js";
+import personalRoutes from "./routes/personal.routes.js";
+import sectoresRoutes from "./routes/sectores.routes.js";
+import vehiculosRoutes from "./routes/vehiculos.routes.js";
+
+// Importar nuevas rutas de autenticación y usuarios
+import authRoutes from "./routes/auth.routes.js";
+import usuariosRoutes from "./routes/usuarios.routes.js";
+
+// Cargar variables de entorno
+dotenv.config();
+
+// Crear instancia de Express
 const app = express();
 
-// ========================================
-// 1. MIDDLEWARES DE SEGURIDAD
-// ========================================
-
 /**
- * Helmet: Configura headers HTTP para mayor seguridad
- * Protege contra:
- * - XSS (Cross-Site Scripting)
- * - Clickjacking
- * - MIME sniffing
- * - Y más...
+ * ============================================
+ * CONFIGURACIÓN DE MIDDLEWARES
+ * ============================================
  */
+
+// Middleware para parsear JSON
+app.use(express.json());
+
+// Middleware para parsear datos de formularios
+app.use(express.urlencoded({ extended: true }));
+
+// Configuración de CORS
 app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https:"],
-      },
-    },
-    crossOriginEmbedderPolicy: false, // Permite embeds de otros orígenes si es necesario
+  cors({
+    origin: process.env.CORS_ORIGIN || "*", // En producción, especificar origen exacto
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-/**
- * CORS: Configuración de Cross-Origin Resource Sharing
- * Permite que el frontend (en otro puerto/dominio) acceda a la API
- */
-const corsOptions = {
-  // Orígenes permitidos (frontend)
-  origin: function (origin, callback) {
-    // Lista blanca de orígenes permitidos
-    const whitelist = [
-      process.env.FRONTEND_URL,
-      process.env.CORS_ORIGIN || "http://localhost:5173", // Vite default port
-      "http://localhost:3000", // React default
-      "http://localhost:4200", // Angular default
-    ].filter(Boolean); // Eliminar undefined
-
-    // Permitir requests sin origin (Postman, curl, etc) en desarrollo
-    if (!origin && process.env.NODE_ENV === "development") {
-      return callback(null, true);
-    }
-
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("No permitido por CORS"));
-    }
-  },
-  // Headers permitidos
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "X-CSRF-Token",
-  ],
-  // Métodos HTTP permitidos
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  // Permitir envío de cookies
-  credentials: true,
-  // Cache de preflight requests (24 horas)
-  maxAge: 86400,
-};
-
-app.use(cors(corsOptions));
-
-// ========================================
-// 2. PARSERS DE BODY
-// ========================================
-
-/**
- * express.json(): Parsea el body de requests con Content-Type: application/json
- * limit: Tamaño máximo del body (protección contra ataques de payload grande)
- */
-app.use(express.json({ limit: "10mb" }));
-
-/**
- * express.urlencoded(): Parsea el body de forms HTML
- * extended: true permite objetos y arrays anidados
- */
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-/**
- * Morgan - Logger de peticiones HTTP
- * Solo en desarrollo
- */
+// Middleware para logging de peticiones (desarrollo)
 if (process.env.NODE_ENV === "development") {
-  app.use(morgan("dev"));
-}
-
-// ========================================
-// 3. LOGGING DE REQUESTS (Desarrollo)
-// ========================================
-
-if (process.env.NODE_ENV === "development") {
-  /**
-   * Middleware personalizado para logear cada request
-   * Útil para debugging en desarrollo
-   */
   app.use((req, res, next) => {
-    const start = Date.now();
-
-    // Cuando la respuesta termina, calcular tiempo
-    res.on("finish", () => {
-      const duration = Date.now() - start;
-      logger.info(
-        `${req.method} ${req.originalUrl} - ${res.statusCode} - ${duration}ms`
-      );
-    });
-
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
     next();
   });
 }
 
-// ========================================
-// 4. HEALTH CHECK ENDPOINT
-// ========================================
-
 /**
- * Endpoint simple para verificar que el servidor está funcionando
- * Útil para:
- * - Load balancers
- * - Sistemas de monitoreo
- * - Docker health checks
+ * ============================================
+ * RUTA DE HEALTH CHECK
+ * ============================================
  */
+
 app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV,
-    version: process.env.npm_package_version || "1.0.0",
-  });
-});
-
-/**
- * Endpoint raíz - información básica de la API
- */
-app.get("/", (req, res) => {
   res.json({
-    message: "🚓 API de Seguridad Ciudadana",
-    version: process.env.API_VERSION || "v1",
-    documentation: "/api-docs", // Futura documentación Swagger
-    endpoints: {
-      health: "/health",
-      api: `/api/${process.env.API_VERSION || "v1"}`,
-    },
+    success: true,
+    message: "API de Seguridad Ciudadana funcionando correctamente",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
   });
 });
 
-// ========================================
-// 5. RUTAS DE LA API
-// ========================================
+/**
+ * ============================================
+ * REGISTRO DE RUTAS DE LA API
+ * ============================================
+ */
+
+// Ruta raíz de la API
+app.get("/api", (req, res) => {
+  res.json({
+    success: true,
+    message: "API de Seguridad Ciudadana v2.0",
+    version: "2.0.0",
+    endpoints: {
+      auth: "/api/auth",
+      usuarios: "/api/usuarios",
+      catalogos: "/api/catalogos",
+      novedades: "/api/novedades",
+      personal: "/api/personal",
+      sectores: "/api/sectores",
+      vehiculos: "/api/vehiculos",
+    },
+    documentation: "/api/docs",
+  });
+});
+
+// Rutas de autenticación (públicas y privadas)
+app.use("/api/auth", authRoutes);
+
+// Rutas de gestión de usuarios (requieren autenticación)
+app.use("/api/usuarios", usuariosRoutes);
+
+// Rutas de módulos operativos (requieren autenticación)
+app.use("/api/catalogos", catalogosRoutes);
+app.use("/api/novedades", novedadesRoutes);
+app.use("/api/personal", personalRoutes);
+app.use("/api/sectores", sectoresRoutes);
+app.use("/api/vehiculos", vehiculosRoutes);
 
 /**
- * Todas las rutas de la API están bajo /api/v1
- * Esto permite versionado de la API
- * Ejemplo: /api/v1/auth/login, /api/v1/users, etc.
+ * ============================================
+ * MANEJO DE RUTAS NO ENCONTRADAS (404)
+ * ============================================
  */
-app.use(`/api/${process.env.API_VERSION || "v1"}`, routes);
 
-// ========================================
-// 6. MANEJO DE RUTAS NO ENCONTRADAS (404)
-// ========================================
-
-/**
- * Si ninguna ruta coincide, responder con 404
- * Este middleware debe estar DESPUÉS de todas las rutas
- */
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: "Endpoint no encontrado",
-    path: req.originalUrl,
+    message: "Ruta no encontrada",
+    path: req.path,
     method: req.method,
   });
 });
 
-// ========================================
-// 7. MANEJO GLOBAL DE ERRORES
-// ========================================
-
 /**
- * Middleware para capturar y manejar todos los errores
- * Debe ser el ÚLTIMO middleware
- *
+ * ============================================
+ * MIDDLEWARE DE MANEJO DE ERRORES GLOBAL
+ * ============================================
  */
+
 app.use((err, req, res, next) => {
   console.error("Error capturado:", err);
 
-  // Error de validación de Sequelize
+  // Errores de validación de Sequelize
   if (err.name === "SequelizeValidationError") {
     return res.status(400).json({
       success: false,
       message: "Error de validación",
       errors: err.errors.map((e) => ({
-        campo: e.path,
-        mensaje: e.message,
+        field: e.path,
+        message: e.message,
       })),
     });
   }
 
-  // Error de unique constraint de Sequelize
+  // Errores de unique constraint de Sequelize
   if (err.name === "SequelizeUniqueConstraintError") {
     return res.status(400).json({
       success: false,
       message: "Ya existe un registro con estos datos",
-      campo: err.errors[0]?.path,
+      field: err.errors[0]?.path,
     });
   }
 
-  // Error de foreign key de Sequelize
+  // Errores de foreign key de Sequelize
   if (err.name === "SequelizeForeignKeyConstraintError") {
     return res.status(400).json({
       success: false,
-      message: "Error de integridad referencial",
-      detalle: "El registro está relacionado con otros datos",
+      message: "Referencia inválida a otro registro",
     });
   }
 
-  // Error de JWT
+  // Errores de JWT
   if (err.name === "JsonWebTokenError") {
     return res.status(401).json({
       success: false,
@@ -261,48 +175,71 @@ app.use((err, req, res, next) => {
     return res.status(401).json({
       success: false,
       message: "Token expirado",
+      code: "TOKEN_EXPIRED",
     });
   }
 
-  // Error genérico del servidor
-  res.status(err.statusCode || 500).json({
+  // Error genérico
+  res.status(err.status || 500).json({
     success: false,
     message: err.message || "Error interno del servidor",
     ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 });
 
-// ========================================
-// EXPORTAR APLICACIÓN
-// ========================================
-// ==================== INICIALIZACIÓN ====================
-
 /**
- * Función para iniciar el servidor
+ * ============================================
+ * FUNCIÓN PARA INICIAR EL SERVIDOR
+ * ============================================
  */
+
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
     // Verificar conexión a la base de datos
-    await db.sequelize.authenticate();
+    console.log("🔄 Verificando conexión a la base de datos...");
+    await sequelize.authenticate();
     console.log("✅ Conexión a la base de datos establecida correctamente");
 
-    // Sincronizar modelos (solo en desarrollo)
+    // Sincronizar modelos (solo en desarrollo, en producción usar migraciones)
     if (
       process.env.NODE_ENV === "development" &&
       process.env.SYNC_DB === "true"
     ) {
-      await db.sequelize.sync({ alter: false });
-      console.log("✅ Modelos sincronizados con la base de datos");
+      console.log("🔄 Sincronizando modelos con la base de datos...");
+      await sequelize.sync({ alter: false }); // No alterar tablas existentes
+      console.log("✅ Modelos sincronizados");
     }
 
     // Iniciar servidor
     app.listen(PORT, () => {
-      console.log("🚀 Servidor corriendo en:", `http://localhost:${PORT}`);
-      console.log("📝 Documentación API:", `http://localhost:${PORT}/api/docs`);
-      console.log("🏥 Health Check:", `http://localhost:${PORT}/api/health`);
-      console.log("🌍 Entorno:", process.env.NODE_ENV || "development");
+      console.log("\n┌─────────────────────────────────────────────┐");
+      console.log("│                                             │");
+      console.log(`│  🚀 Servidor iniciado en puerto ${PORT}      │`);
+      console.log("│                                             │");
+      console.log(`│  🌐 URL: http://localhost:${PORT}             │`);
+      console.log(`│  📚 API: http://localhost:${PORT}/api         │`);
+      console.log(`│  ❤️  Health: http://localhost:${PORT}/health  │`);
+      console.log("│                                             │");
+      console.log(
+        `│  🔐 Ambiente: ${
+          process.env.NODE_ENV || "development"
+        }              │`
+      );
+      console.log("│                                             │");
+      console.log("└─────────────────────────────────────────────┘\n");
+
+      console.log("💡 Endpoints disponibles:");
+      console.log("  • POST   /api/auth/register");
+      console.log("  • POST   /api/auth/login");
+      console.log("  • POST   /api/auth/refresh");
+      console.log("  • POST   /api/auth/logout");
+      console.log("  • GET    /api/auth/me");
+      console.log("  • GET    /api/usuarios");
+      console.log("  • POST   /api/usuarios");
+      console.log("  • PUT    /api/usuarios/:id");
+      console.log("  • DELETE /api/usuarios/:id\n");
     });
   } catch (error) {
     console.error("❌ Error al iniciar el servidor:", error);
@@ -310,59 +247,43 @@ const startServer = async () => {
   }
 };
 
-// Iniciar servidor
-startServer();
+/**
+ * ============================================
+ * MANEJO DE SEÑALES DE TERMINACIÓN
+ * ============================================
+ */
 
-// Manejo de errores no capturados
-process.on("unhandledRejection", (err) => {
-  console.error("❌ Error no manejado (Promise Rejection):", err);
-  process.exit(1);
-});
-
-process.on("uncaughtException", (err) => {
-  console.error("❌ Error no capturado (Exception):", err);
-  process.exit(1);
-});
-
-// Manejo de señales de terminación
-process.on("SIGTERM", () => {
-  console.log("👋 SIGTERM recibido, cerrando servidor gracefully...");
+// Manejar cierre graceful del servidor
+process.on("SIGTERM", async () => {
+  console.log("\n🛑 SIGTERM recibido. Cerrando servidor...");
+  await sequelize.close();
   process.exit(0);
 });
 
-process.on("SIGINT", () => {
-  console.log("👋 SIGINT recibido, cerrando servidor gracefully...");
+process.on("SIGINT", async () => {
+  console.log("\n🛑 SIGINT recibido. Cerrando servidor...");
+  await sequelize.close();
   process.exit(0);
 });
 
-module.exports = app;
+// Manejar errores no capturados
+process.on("uncaughtException", (error) => {
+  console.error("❌ Uncaught Exception:", error);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
+  process.exit(1);
+});
 
 /**
- * NOTAS IMPORTANTES:
- *
- * 1. Orden de Middlewares:
- *    - El orden es CRÍTICO en Express
- *    - Los middlewares se ejecutan en el orden que se definen
- *    - Seguridad → Parsers → Rutas → Errores
- *
- * 2. Seguridad:
- *    - Helmet para headers seguros
- *    - CORS configurado apropiadamente
- *    - Límites en tamaño de body
- *    - Rate limiting (se agrega en routes)
- *
- * 3. CORS:
- *    - Configurar correctamente para producción
- *    - Usar whitelist de orígenes
- *    - No usar origin: '*' en producción
- *
- * 4. Error Handling:
- *    - Siempre debe ser el último middleware
- *    - Captura errores de toda la aplicación
- *    - No expone detalles sensibles en producción
- *
- * 5. Logging:
- *    - Útil en desarrollo para debugging
- *    - En producción, usar herramientas especializadas
- *    - Nunca logear información sensible
+ * ============================================
+ * INICIAR SERVIDOR
+ * ============================================
  */
+
+startServer();
+
+// Exportar app para testing
+export default app;

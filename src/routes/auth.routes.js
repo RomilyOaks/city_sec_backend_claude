@@ -1,69 +1,111 @@
 /**
- * Rutas de Autenticación
- * Endpoints públicos y protegidos para autenticación
+ * Ruta: src/routes/auth.routes.js
+ * Descripción: Definición de rutas para autenticación y gestión de usuarios
+ * Incluye endpoints para registro, login, logout, renovación de tokens,
+ * cambio de contraseña y recuperación de cuenta
  */
 
-const express = require("express");
+import express from "express";
+import {
+  register,
+  login,
+  refreshToken,
+  logout,
+  changePassword,
+  getMe,
+  forgotPassword,
+} from "../controllers/authController.js";
+import { authenticate } from "../middlewares/authMiddleware.js";
+
 const router = express.Router();
-const authController = require("../controllers/authController");
-const {
-  verificarToken,
-  verificarRoles,
-  ROLES,
-} = require("../middlewares/authMiddleware");
-
-/**
- * @route   POST /api/auth/login
- * @desc    Iniciar sesión
- * @access  Público
- */
-router.post("/login", authController.login);
 
 /**
  * @route   POST /api/auth/register
  * @desc    Registrar nuevo usuario
- * @access  Administrador
+ * @access  Public
+ * @body    {username, email, password, nombres, apellidos, telefono?}
  */
-router.post(
-  "/register",
-  verificarToken,
-  verificarRoles([ROLES.ADMINISTRADOR]),
-  authController.register
-);
+router.post("/register", register);
+
+/**
+ * @route   POST /api/auth/login
+ * @desc    Iniciar sesión y obtener tokens JWT
+ * @access  Public
+ * @body    {username_or_email, password}
+ * @returns {accessToken, refreshToken, usuario}
+ */
+router.post("/login", login);
+
+/**
+ * @route   POST /api/auth/refresh
+ * @desc    Renovar access token usando refresh token
+ * @access  Public
+ * @body    {refreshToken}
+ * @returns {accessToken}
+ */
+router.post("/refresh", refreshToken);
 
 /**
  * @route   POST /api/auth/logout
- * @desc    Cerrar sesión
- * @access  Privado
+ * @desc    Cerrar sesión y revocar tokens
+ * @access  Private (requiere autenticación)
+ * @headers {Authorization: Bearer <token>}
  */
-router.post("/logout", verificarToken, authController.logout);
-
-/**
- * @route   GET /api/auth/me
- * @desc    Obtener perfil del usuario autenticado
- * @access  Privado
- */
-router.get("/me", verificarToken, authController.getProfile);
+router.post("/logout", authenticate, logout);
 
 /**
  * @route   POST /api/auth/change-password
  * @desc    Cambiar contraseña del usuario autenticado
- * @access  Privado
+ * @access  Private (requiere autenticación)
+ * @body    {currentPassword, newPassword}
+ * @headers {Authorization: Bearer <token>}
  */
-router.post("/change-password", verificarToken, authController.changePassword);
+router.post("/change-password", authenticate, changePassword);
+
+/**
+ * @route   GET /api/auth/me
+ * @desc    Obtener datos del usuario autenticado actual
+ * @access  Private (requiere autenticación)
+ * @headers {Authorization: Bearer <token>}
+ * @returns {usuario con roles y permisos}
+ */
+router.get("/me", authenticate, getMe);
 
 /**
  * @route   POST /api/auth/forgot-password
- * @desc    Solicitar recuperación de contraseña
- * @access  Público
+ * @desc    Solicitar token para recuperar contraseña
+ * @access  Public
+ * @body    {email}
  */
-router.post("/forgot-password", authController.forgotPassword);
+router.post("/forgot-password", forgotPassword);
 
 /**
- * @route   POST /api/auth/reset-password
- * @desc    Restablecer contraseña con código
- * @access  Público
+ * TODO: Implementar rutas adicionales:
+ *
+ * POST /api/auth/reset-password
+ * - Resetear contraseña usando token de recuperación
+ * - Body: {token, newPassword}
+ *
+ * POST /api/auth/verify-email
+ * - Verificar email del usuario
+ * - Body: {token}
+ *
+ * POST /api/auth/resend-verification
+ * - Reenviar email de verificación
+ * - Body: {email}
+ *
+ * POST /api/auth/enable-2fa
+ * - Habilitar autenticación de dos factores
+ * - Requires: authenticate middleware
+ *
+ * POST /api/auth/verify-2fa
+ * - Verificar código 2FA durante login
+ * - Body: {userId, code}
+ *
+ * POST /api/auth/disable-2fa
+ * - Deshabilitar 2FA
+ * - Requires: authenticate middleware
+ * - Body: {password, code}
  */
-router.post("/reset-password", authController.resetPassword);
 
-module.exports = router;
+export default router;

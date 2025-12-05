@@ -1,424 +1,433 @@
-# 🚨 Sistema de Seguridad Ciudadana - Backend API
+# 🚔 Sistema de Seguridad Ciudadana - Backend API
 
-API RESTful para sistema de gestión de seguridad ciudadana con control de novedades, incidentes, personal, vehículos y recursos operativos.
+Backend API para gestión integral de seguridad ciudadana con autenticación JWT, control de acceso basado en roles (RBAC) y gestión de incidentes.
 
-## 📋 Características
+## 📋 Tabla de Contenidos
 
-✅ **Autenticación JWT** con control RBAC (Role-Based Access Control)  
-✅ **CRUD completo** de Novedades, Vehículos, Personal, Sectores  
-✅ **Control de acceso** por roles (Administrador, Supervisor, Operador, Visualizador)  
-✅ **Auditoría completa** de todas las acciones  
-✅ **Soft Delete** para mantener integridad de datos  
-✅ **Rate Limiting** para prevenir ataques  
-✅ **Documentación API** incluida  
-✅ **Validaciones** y manejo robusto de errores
+- [Características](#características)
+- [Tecnologías](#tecnologías)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Instalación](#instalación)
+- [Configuración](#configuración)
+- [Uso](#uso)
+- [API Endpoints](#api-endpoints)
+- [Sistema RBAC](#sistema-rbac)
+- [Contribución](#contribución)
 
-## 🛠️ Stack Tecnológico
+## ✨ Características
 
-- **Node.js** v16+
+### 🔐 Autenticación y Seguridad
+
+- ✅ Autenticación JWT con access y refresh tokens
+- ✅ Control de acceso basado en roles (RBAC)
+- ✅ Permisos granulares por módulo/recurso/acción
+- ✅ Hasheo seguro de contraseñas con bcrypt
+- ✅ Protección contra intentos de login fallidos
+- ✅ Bloqueo temporal de cuentas
+- 🔜 Autenticación de dos factores (2FA)
+- 🔜 OAuth2 (Google, Microsoft, Azure AD)
+
+### 👥 Gestión de Usuarios
+
+- ✅ CRUD completo de usuarios
+- ✅ Asignación dinámica de roles
+- ✅ Permisos directos a usuarios
+- ✅ Gestión de estados (activo, inactivo, bloqueado)
+- ✅ Soft delete (eliminación lógica)
+- ✅ Reseteo de contraseñas por administrador
+- ✅ Cambio de contraseña por usuario
+
+### 📊 Gestión Operativa
+
+- ✅ Registro de novedades e incidentes
+- ✅ Gestión de vehículos y abastecimiento
+- ✅ Control de personal de seguridad
+- ✅ Sectores y cuadrantes de patrullaje
+- ✅ Unidades operativas
+- ✅ Catálogos configurables
+
+### 📝 Auditoría
+
+- ✅ Historial de cambios de usuarios
+- ✅ Registro de intentos de login
+- ✅ Tracking de estados de novedades
+- 🔜 Auditoría completa de acciones
+
+## 🛠️ Tecnologías
+
+- **Node.js** v18+
 - **Express.js** - Framework web
-- **Sequelize** - ORM para MySQL
+- **Sequelize ORM** - Modelado de datos
 - **MySQL** 8.0+ - Base de datos
 - **JWT** - Autenticación
-- **Bcrypt** - Hash de contraseñas
-- **Helmet** - Seguridad HTTP
-- **Morgan** - Logger de peticiones
+- **bcryptjs** - Hasheo de contraseñas
+- **CORS** - Control de acceso cross-origin
 
-## 📦 Instalación
+## 📁 Estructura del Proyecto
 
-### 1. Clonar el repositorio
-
-```bash
-git clone https://github.com/tu-usuario/citizen-security-backend.git
-cd citizen-security-backend
+```
+city_sec_backend/
+├── src/
+│   ├── config/
+│   │   └── database.js           # Configuración de Sequelize
+│   │
+│   ├── models/                   # Modelos de Sequelize
+│   │   ├── index.js              # Asociaciones entre modelos
+│   │   ├── Usuario.js
+│   │   ├── Rol.js
+│   │   ├── Permiso.js
+│   │   ├── Vehiculo.js
+│   │   ├── TipoVehiculo.js
+│   │   ├── PersonalSeguridad.js
+│   │   ├── Cargo.js
+│   │   ├── Sector.js
+│   │   ├── Cuadrante.js
+│   │   ├── UnidadOficina.js
+│   │   ├── TipoNovedad.js
+│   │   ├── SubtipoNovedad.js
+│   │   ├── EstadoNovedad.js
+│   │   └── Ubigeo.js
+│   │
+│   ├── controllers/              # Controladores
+│   │   ├── authController.js
+│   │   ├── usuariosController.js
+│   │   ├── catalogosController.js
+│   │   ├── novedadesController.js
+│   │   ├── personalController.js
+│   │   ├── sectoresController.js
+│   │   └── vehiculosController.js
+│   │
+│   ├── middlewares/              # Middlewares
+│   │   └── authMiddleware.js
+│   │
+│   ├── routes/                   # Rutas
+│   │   ├── auth.routes.js
+│   │   ├── usuarios.routes.js
+│   │   ├── catalogos.routes.js
+│   │   ├── novedades.routes.js
+│   │   ├── personal.routes.js
+│   │   ├── sectores.routes.js
+│   │   └── vehiculos.routes.js
+│   │
+│   ├── seeders/                  # Seeds de datos
+│   │   └── seedRBAC.js
+│   │
+│   └── app.js                    # Archivo principal
+│
+├── .env                          # Variables de entorno (no versionar)
+├── .env.example                  # Ejemplo de variables de entorno
+├── .gitignore
+├── package.json
+└── README.md
 ```
 
-### 2. Instalar dependencias
+## 🚀 Instalación
 
-```bash
-npm install
-```
+### Prerrequisitos
 
-### 3. Configurar base de datos
+- Node.js v18 o superior
+- MySQL 8.0 o superior
+- npm o yarn
 
-#### 3.1 Crear base de datos
+### Pasos
 
-```sql
-CREATE DATABASE citizen_security_v2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
+1. **Clonar el repositorio**
 
-#### 3.2 Importar estructura principal
+   ```bash
+   git clone https://github.com/RomilyOaks/city_sec_backend_claude.git
+   cd city_sec_backend_claude
+   ```
 
-```bash
-mysql -u root -p citizen_security_v2 < database/citizen_security_2a.sql
-```
+2. **Instalar dependencias**
 
-#### 3.3 Importar tablas de autenticación
+   ```bash
+   npm install
+   ```
 
-```bash
-mysql -u root -p citizen_security_v2 < database/usuarios_roles_permisos.sql
-```
+3. **Crear base de datos**
+   ```bash
+   mysql -u root -p
+   ```
+   ```sql
+   CREATE DATABASE citizen_security_v2;
+   ```
+4. **Restaurar dump de la base de datos**
 
-### 4. Configurar variables de entorno
+   ```bash
+   mysql -u root -p citizen_security_v2 < Dump20251204.sql
+   ```
 
-Copiar el archivo de ejemplo y configurar:
+5. **Configurar variables de entorno**
 
-```bash
-cp .env.example .env
-```
+   ```bash
+   cp .env.example .env
+   ```
 
-Editar `.env` con tus configuraciones:
+   Editar `.env` con tus credenciales
+
+6. **Inicializar RBAC (roles y permisos)**
+
+   ```bash
+   npm run seed:rbac
+   ```
+
+7. **Iniciar servidor**
+
+   ```bash
+   # Desarrollo (con nodemon)
+   npm run dev
+
+   # Producción
+   npm start
+   ```
+
+## ⚙️ Configuración
+
+### Variables de Entorno Principales
 
 ```env
 # Base de datos
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_NAME=citizen_security_v2
+DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=tu_password
+DB_NAME=citizen_security_v2
+DB_PORT=3306
 
-# JWT
-JWT_SECRET=genera_un_secreto_seguro_aqui
-JWT_EXPIRE=24h
+# JWT Secrets (cambiar en producción)
+JWT_SECRET=tu_secret_super_seguro
+JWT_REFRESH_SECRET=tu_refresh_secret_super_seguro
 
 # Servidor
 PORT=3000
 NODE_ENV=development
 ```
 
-#### Generar JWT_SECRET seguro:
+### Credenciales del Usuario Administrador Inicial
 
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
-### 5. Iniciar servidor
-
-#### Modo desarrollo (con nodemon):
-
-```bash
-npm run dev
-```
-
-#### Modo producción:
-
-```bash
-npm start
-```
-
-El servidor estará corriendo en: `http://localhost:3000`
-
-## 🔐 Usuario Administrador por Defecto
+Después de ejecutar `npm run seed:rbac`:
 
 ```
 Username: admin
-Email: admin@seguridadciudadana.gob.pe
+Email: admin@citysec.com
 Password: Admin123!
 ```
 
-**⚠️ IMPORTANTE:** Cambiar la contraseña inmediatamente después del primer login.
+⚠️ **IMPORTANTE:** Cambiar esta contraseña inmediatamente después del primer login.
 
-## 📚 Documentación de la API
+## 📖 Uso
 
-Una vez iniciado el servidor, accede a:
+### 1. Autenticación
 
-- **Documentación completa:** `http://localhost:3000/api/docs`
-- **Health Check:** `http://localhost:3000/api/health`
-
-### Endpoints principales:
-
-#### Autenticación
-
-```
-POST   /api/auth/login           - Iniciar sesión
-POST   /api/auth/register         - Registrar usuario (admin)
-POST   /api/auth/logout           - Cerrar sesión
-GET    /api/auth/me               - Perfil del usuario
-POST   /api/auth/change-password  - Cambiar contraseña
-POST   /api/auth/forgot-password  - Recuperar contraseña
-POST   /api/auth/reset-password   - Restablecer contraseña
-```
-
-#### Novedades/Incidentes
-
-```
-GET    /api/novedades              - Listar novedades
-POST   /api/novedades              - Crear novedad
-GET    /api/novedades/:id          - Obtener novedad
-PUT    /api/novedades/:id          - Actualizar novedad
-DELETE /api/novedades/:id          - Eliminar novedad
-POST   /api/novedades/:id/asignar  - Asignar recursos
-GET    /api/novedades/:id/historial - Historial de estados
-GET    /api/novedades/dashboard/stats - Estadísticas
-```
-
-#### Vehículos
-
-```
-GET    /api/vehiculos              - Listar vehículos
-POST   /api/vehiculos              - Crear vehículo
-GET    /api/vehiculos/:id          - Obtener vehículo
-PUT    /api/vehiculos/:id          - Actualizar vehículo
-DELETE /api/vehiculos/:id          - Eliminar vehículo
-GET    /api/vehiculos/disponibles  - Vehículos disponibles
-POST   /api/vehiculos/:id/abastecimiento - Registrar combustible
-GET    /api/vehiculos/:id/abastecimientos - Historial combustible
-```
-
-#### Personal
-
-```
-GET    /api/personal               - Listar personal
-POST   /api/personal               - Crear personal
-GET    /api/personal/:id           - Obtener personal
-PUT    /api/personal/:id           - Actualizar personal
-DELETE /api/personal/:id           - Eliminar personal
-PATCH  /api/personal/:id/estado    - Cambiar estado
-GET    /api/personal/disponibles   - Personal disponible
-GET    /api/personal/stats         - Estadísticas
-```
-
-#### Sectores y Cuadrantes
-
-```
-GET    /api/sectores               - Listar sectores
-POST   /api/sectores               - Crear sector
-GET    /api/sectores/:id           - Obtener sector
-PUT    /api/sectores/:id           - Actualizar sector
-DELETE /api/sectores/:id           - Eliminar sector
-GET    /api/sectores/cuadrantes    - Listar cuadrantes
-POST   /api/sectores/cuadrantes    - Crear cuadrante
-```
-
-#### Catálogos
-
-```
-GET    /api/catalogos/tipos-novedad      - Tipos de novedad
-GET    /api/catalogos/subtipos-novedad   - Subtipos de novedad
-GET    /api/catalogos/estados-novedad    - Estados de novedad
-GET    /api/catalogos/tipos-vehiculo     - Tipos de vehículo
-GET    /api/catalogos/cargos             - Cargos
-GET    /api/catalogos/unidades           - Unidades/Oficinas
-GET    /api/catalogos/ubigeo             - Búsqueda de ubigeo
-GET    /api/catalogos/departamentos      - Departamentos
-```
-
-## 🔒 Autenticación
-
-Todas las rutas protegidas requieren un token JWT en el header:
-
-```
-Authorization: Bearer {token}
-```
-
-### Ejemplo de login:
+**Login:**
 
 ```bash
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "password": "Admin123!"
-  }'
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "username_or_email": "admin",
+  "password": "Admin123!"
+}
 ```
 
-Respuesta:
+**Respuesta:**
 
 ```json
 {
   "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": 1,
-    "username": "admin",
-    "rol": "administrador"
+  "message": "Login exitoso",
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
+    "usuario": {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@citysec.com",
+      "roles": [...],
+      "permisos": [...]
+    }
   }
 }
 ```
 
-## 👥 Roles y Permisos
-
-### Roles del Sistema
-
-| Rol               | Nivel | Descripción                     |
-| ----------------- | ----- | ------------------------------- |
-| **Administrador** | 1     | Acceso total al sistema         |
-| **Supervisor**    | 2     | Gestión operativa y supervisión |
-| **Operador**      | 3     | Operación diaria del sistema    |
-| **Visualizador**  | 4     | Solo lectura                    |
-
-### Matriz de Permisos
-
-| Acción             | Visualizador | Operador | Supervisor | Admin |
-| ------------------ | ------------ | -------- | ---------- | ----- |
-| Ver datos          | ✅           | ✅       | ✅         | ✅    |
-| Crear registros    | ❌           | ✅       | ✅         | ✅    |
-| Editar registros   | ❌           | ❌       | ✅         | ✅    |
-| Eliminar registros | ❌           | ❌       | ❌         | ✅    |
-| Gestionar usuarios | ❌           | ❌       | ❌         | ✅    |
-| Configuración      | ❌           | ❌       | ❌         | ✅    |
-
-## 📁 Estructura del Proyecto
-
-```
-src/
-├── config/
-│   └── database.js           # Configuración de Sequelize
-├── controllers/
-│   ├── authController.js     # Autenticación
-│   ├── novedadesController.js
-│   ├── vehiculosController.js
-│   ├── personalController.js
-│   ├── sectoresController.js
-│   └── catalogosController.js
-├── middlewares/
-│   └── authMiddleware.js     # JWT y RBAC
-├── models/
-│   └── index.js              # Modelos Sequelize
-├── routes/
-│   ├── index.routes.js       # Router principal
-│   ├── auth.routes.js
-│   ├── novedades.routes.js
-│   ├── vehiculos.routes.js
-│   ├── personal.routes.js
-│   ├── sectores.routes.js
-│   └── catalogos.routes.js
-└── app.js                     # Archivo principal
-
-database/
-├── citizen_security_2a.sql
-└── usuarios_roles_permisos.sql
-
-.env                           # Variables de entorno
-.env.example                   # Plantilla de variables
-package.json                   # Dependencias
-README.md                      # Este archivo
-```
-
-## 🧪 Testing
+### 2. Usar Token en Peticiones
 
 ```bash
-# Ejecutar tests
-npm test
-
-# Tests con coverage
-npm run test:coverage
-
-# Tests en modo watch
-npm run test:watch
+GET http://localhost:3000/api/usuarios
+Authorization: Bearer {accessToken}
 ```
 
-## 🔍 Logs y Debugging
-
-Los logs se muestran en consola en modo desarrollo:
+### 3. Renovar Token Expirado
 
 ```bash
-npm run dev
+POST http://localhost:3000/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "tu_refresh_token"
+}
 ```
 
-Formato de logs:
+## 🔌 API Endpoints
 
+### Autenticación (`/api/auth`)
+
+| Método | Endpoint           | Descripción              | Auth |
+| ------ | ------------------ | ------------------------ | ---- |
+| POST   | `/register`        | Registrar usuario        | No   |
+| POST   | `/login`           | Iniciar sesión           | No   |
+| POST   | `/refresh`         | Renovar token            | No   |
+| POST   | `/logout`          | Cerrar sesión            | Sí   |
+| POST   | `/change-password` | Cambiar contraseña       | Sí   |
+| GET    | `/me`              | Datos del usuario actual | Sí   |
+| POST   | `/forgot-password` | Recuperar contraseña     | No   |
+
+### Usuarios (`/api/usuarios`)
+
+| Método | Endpoint              | Descripción         | Permiso                    |
+| ------ | --------------------- | ------------------- | -------------------------- |
+| GET    | `/`                   | Listar usuarios     | `usuarios.usuarios.read`   |
+| GET    | `/:id`                | Obtener usuario     | `usuarios.usuarios.read`   |
+| POST   | `/`                   | Crear usuario       | `usuarios.usuarios.create` |
+| PUT    | `/:id`                | Actualizar usuario  | `usuarios.usuarios.update` |
+| DELETE | `/:id`                | Eliminar usuario    | `usuarios.usuarios.delete` |
+| POST   | `/:id/reset-password` | Resetear contraseña | `usuarios.reset_password`  |
+| PUT    | `/:id/estado`         | Cambiar estado      | `usuarios.update_estado`   |
+
+### Otros Módulos
+
+- `/api/catalogos` - Tipos de novedad, vehículos, etc.
+- `/api/novedades` - Gestión de incidentes
+- `/api/vehiculos` - Gestión de vehículos
+- `/api/personal` - Gestión de personal
+- `/api/sectores` - Sectores y cuadrantes
+
+Ver documentación completa de cada módulo en sus respectivos archivos.
+
+## 🎭 Sistema RBAC
+
+### Roles Predefinidos
+
+1. **Super Administrador** (`super_admin`)
+
+   - Acceso total sin restricciones
+   - Nivel jerárquico: 0
+
+2. **Administrador** (`admin`)
+
+   - Gestión completa excepto ciertos permisos de sistema
+   - Nivel jerárquico: 1
+
+3. **Operador** (`operador`)
+
+   - Registro y gestión de novedades
+   - Nivel jerárquico: 2
+
+4. **Supervisor** (`supervisor`)
+
+   - Supervisión y cierre de casos
+   - Nivel jerárquico: 3
+
+5. **Consulta** (`consulta`)
+
+   - Solo lectura
+   - Nivel jerárquico: 4
+
+6. **Usuario Básico** (`usuario_basico`)
+   - Acceso mínimo
+   - Nivel jerárquico: 5
+
+### Estructura de Permisos
+
+Formato: `modulo.recurso.accion`
+
+Ejemplos:
+
+- `usuarios.usuarios.read`
+- `novedades.incidentes.create`
+- `vehiculos.combustible.read`
+
+### Usar Middlewares de Autorización
+
+```javascript
+import {
+  authenticate,
+  requireRole,
+  requirePermission,
+} from "../middlewares/authMiddleware.js";
+
+// Solo usuarios autenticados
+router.get("/ruta", authenticate, controller);
+
+// Solo admin o super_admin
+router.delete(
+  "/ruta",
+  authenticate,
+  requireRole(["super_admin", "admin"]),
+  controller
+);
+
+// Solo con permiso específico
+router.post(
+  "/ruta",
+  authenticate,
+  requirePermission("modulo.recurso.create"),
+  controller
+);
 ```
-[2024-12-04T10:30:00.000Z] GET /api/novedades
-✅ Conexión a la base de datos establecida
-🚀 Servidor corriendo en: http://localhost:3000
-```
 
-## 🐛 Solución de Problemas
-
-### Error: Cannot connect to MySQL
-
-Verificar:
-
-1. MySQL está corriendo: `sudo systemctl status mysql`
-2. Credenciales correctas en `.env`
-3. Base de datos existe: `SHOW DATABASES;`
-
-### Error: JWT_SECRET is required
-
-Configurar `JWT_SECRET` en `.env`:
-
-```bash
-JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
-```
-
-### Error: Port 3000 already in use
-
-Cambiar puerto en `.env`:
-
-```env
-PORT=3001
-```
-
-### Error: Sequelize validation errors
-
-Revisar que los datos enviados cumplan con las validaciones de los modelos.
-
-## 📈 Performance
-
-- **Rate Limiting:** 100 req/15min por IP
-- **Auth Rate Limiting:** 5 req/15min por IP
-- **Connection Pool:** 10 conexiones máximas
-- **Timeout:** 30 segundos
-
-## 🔐 Seguridad
-
-- ✅ Contraseñas hasheadas con bcrypt (10 rounds)
-- ✅ JWT con expiración configurable
-- ✅ Helmet.js para headers HTTP seguros
-- ✅ Rate limiting contra fuerza bruta
-- ✅ CORS configurado
-- ✅ Validación de entrada
-- ✅ Protección SQL Injection (ORM)
-- ✅ Logs de auditoría
-
-## 🚀 Despliegue en Producción
-
-### Variables de entorno importantes:
-
-```env
-NODE_ENV=production
-JWT_SECRET=secreto_super_seguro_diferente_al_de_desarrollo
-DB_PASSWORD=password_seguro_de_produccion
-SYNC_DB=false
-```
-
-### Consideraciones:
-
-1. **Cambiar contraseña del usuario admin**
-2. **Habilitar HTTPS**
-3. **Configurar firewall**
-4. **Backups automáticos de BD**
-5. **Monitoreo de logs**
-6. **Rate limiting más estricto**
-
-## 📝 Licencia
-
-MIT License - Ver archivo LICENSE para más detalles.
-
-## 👨‍💻 Desarrollador
-
-Desarrollado por: [Tu Nombre]  
-Email: tu.email@ejemplo.com  
-GitHub: @tu-usuario
-
-## 🤝 Contribuciones
-
-Las contribuciones son bienvenidas. Por favor:
+## 🤝 Contribución
 
 1. Fork el proyecto
-2. Crear una rama (`git checkout -b feature/AmazingFeature`)
-3. Commit cambios (`git commit -m 'Add some AmazingFeature'`)
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add: amazing feature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir un Pull Request
+5. Abre un Pull Request
 
-## 📞 Soporte
+### Convenciones de Código
 
-Para reportar bugs o solicitar funcionalidades:
+- Usar ES6+ modules (`import/export`)
+- Comentarios en español
+- JSDoc para funciones públicas
+- Nombres descriptivos en inglés para código
+- Commits en español con prefijos:
+  - `Add:` - Nueva funcionalidad
+  - `Fix:` - Corrección de bug
+  - `Update:` - Actualización de código existente
+  - `Refactor:` - Refactorización
+  - `Docs:` - Documentación
 
-- Abrir un issue en GitHub
-- Email: soporte@seguridadciudadana.gob.pe
+## 📝 Próximas Características
+
+- [ ] Autenticación 2FA (TOTP)
+- [ ] OAuth2 completo (Google, Microsoft)
+- [ ] Sistema de notificaciones
+- [ ] Exportación de reportes (PDF, Excel)
+- [ ] Gestión de archivos adjuntos
+- [ ] WebSockets para actualizaciones en tiempo real
+- [ ] Geolocalización y mapas interactivos
+- [ ] App móvil (React Native)
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
+
+## 👤 Autor
+
+**Tu Nombre**
+
+- GitHub: [@RomilyOaks](https://github.com/RomilyOaks)
+
+## 🙏 Agradecimientos
+
+- Claude AI por asistencia en desarrollo
+- Comunidad de Express.js
+- Documentación de Sequelize
 
 ---
 
-**⚠️ IMPORTANTE:** Este sistema maneja datos sensibles de seguridad. Asegurar adecuadamente en producción.
+**¿Problemas o sugerencias?** Abre un [issue](https://github.com/RomilyOaks/city_sec_backend_claude/issues) en GitHub.
+
+---
+
+Hecho con ❤️ para mejorar la seguridad ciudadana
