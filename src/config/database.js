@@ -1,12 +1,22 @@
 /**
- * Configuración de Conexión a Base de Datos
- * Sequelize + MySQL
+ * ============================================
+ * CONFIGURACIÓN DE BASE DE DATOS (SEQUELIZE)
+ * ============================================
+ *
+ * Configuración de Sequelize para conectar a MySQL.
+ * Sequelize es un ORM (Object-Relational Mapping) que:
+ * - Abstrae las consultas SQL
+ * - Previene SQL injection automáticamente
+ * - Maneja las relaciones entre tablas
+ * - Facilita migraciones y seeders
  */
 
 require("dotenv").config();
 
 module.exports = {
-  // Configuración para desarrollo
+  // ========================================
+  // ENTORNO DE DESARROLLO
+  // ========================================
   development: {
     username: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "",
@@ -34,7 +44,9 @@ module.exports = {
     timezone: "-05:00", // Zona horaria de Perú (GMT-5)
   },
 
-  // Configuración para pruebas
+  // ========================================
+  // ENTORNO DE TESTING
+  // ========================================
   test: {
     username: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "",
@@ -51,7 +63,9 @@ module.exports = {
     },
   },
 
-  // Configuración para producción
+  // ========================================
+  // ENTORNO DE PRODUCCIÓN
+  // ========================================
   production: {
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
