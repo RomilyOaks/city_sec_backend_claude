@@ -3,24 +3,37 @@
  * Descripción: Archivo central de modelos que importa todos los modelos
  * y define las asociaciones entre ellos para Sequelize ORM
  * Gestiona las relaciones many-to-many, one-to-many y referencias entre tablas
+ *
+ * IMPORTANTE: Este archivo debe ser importado después de que todos los modelos
+ * individuales estén definidos para que las asociaciones funcionen correctamente
  */
 
 import sequelize from "../config/database.js";
 
-// Importar todos los modelos existentes
+// ============================================
+// IMPORTAR TODOS LOS MODELOS
+// ============================================
+
+// Modelos de catálogos base
+import Cargo from "./Cargo.js";
 import TipoVehiculo from "./TipoVehiculo.js";
+import Ubigeo from "./Ubigeo.js";
+
+// Modelos de ubicación y territorio
+import Sector from "./Sector.js";
+import Cuadrante from "./Cuadrante.js";
+
+// Modelos de recursos operativos
 import Vehiculo from "./Vehiculo.js";
+import PersonalSeguridad from "./PersonalSeguridad.js";
+import UnidadOficina from "./UnidadOficina.js";
+
+// Modelos de novedades/incidentes
 import TipoNovedad from "./TipoNovedad.js";
 import SubtipoNovedad from "./SubtipoNovedad.js";
 import EstadoNovedad from "./EstadoNovedad.js";
-import Ubigeo from "./Ubigeo.js";
-import Sector from "./Sector.js";
-import Cuadrante from "./Cuadrante.js";
-import UnidadOficina from "./UnidadOficina.js";
-import Cargo from "./Cargo.js";
-import PersonalSeguridad from "./PersonalSeguridad.js";
 
-// Importar nuevos modelos de autenticación y permisos
+// Modelos de autenticación y autorización
 import Usuario from "./Usuario.js";
 import Rol from "./Rol.js";
 import Permiso from "./Permiso.js";
