@@ -13,7 +13,7 @@ module.exports = {
     database: process.env.DB_NAME || "citizen_security_v2",
     host: process.env.DB_HOST || "127.0.0.1",
     port: process.env.DB_PORT || 3306,
-    dialect: "mysql",
+    dialect: DB_DIALECT,
     logging: console.log, // Mostrar queries SQL en consola
     pool: {
       max: 10, // Máximo de conexiones en el pool
@@ -41,7 +41,7 @@ module.exports = {
     database: process.env.DB_NAME_TEST || "citizen_security_test",
     host: process.env.DB_HOST || "127.0.0.1",
     port: process.env.DB_PORT || 3306,
-    dialect: "mysql",
+    dialect: DB_DIALECT,
     logging: false, // Desactivar logs en tests
     pool: {
       max: 5,
@@ -58,7 +58,7 @@ module.exports = {
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 3306,
-    dialect: "mysql",
+    dialect: DB_DIALECT,
     logging: false, // Desactivar logs en producción
     pool: {
       max: 20, // Más conexiones en producción
