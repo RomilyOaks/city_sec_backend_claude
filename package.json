@@ -1,8 +1,9 @@
 {
   "name": "citizen-security-backend",
-  "version": "1.0.0",
-  "description": "Backend API para Sistema de Seguridad Ciudadana",
-  "main": "app.js",
+  "version": "2.0.0",
+  "description": "API Backend para Sistema de Seguridad Ciudadana con autenticación JWT y RBAC",
+  "type": "module",
+  "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
@@ -11,6 +12,7 @@
     "lint": "eslint src/**/*.js",
     "lint:fix": "eslint src/**/*.js --fix",
     "db:seed": "node src/seeders/index.js",
+    "seed:rbac": "node src/seeders/seedRBAC.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:undo": "sequelize-cli db:migrate:undo"
   },
@@ -22,7 +24,11 @@
     "sequelize",
     "mysql",
     "seguridad",
-    "ciudadana"
+    "ciudadana",
+    "security",
+    "citizen",
+    "jwt",
+    "rbac"
   ],
   "author": "Romily Robles",
   "license": "MIT",
