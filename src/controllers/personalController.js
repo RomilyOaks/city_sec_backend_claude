@@ -4,8 +4,14 @@
  * Gestiona el CRUD del personal del sistema de seguridad ciudadana
  */
 
-const { PersonalSeguridad, Cargo, Ubigeo, Vehiculo } = require("../models");
-const { Op } = require("sequelize");
+import {
+  PersonalSeguridad,
+  Cargo,
+  Ubigeo,
+  Vehiculo,
+  sequelize,
+} from "../models/index.js";
+import { Op } from "sequelize";
 
 /**
  * Obtener todo el personal con filtros
@@ -457,8 +463,6 @@ exports.getPersonalDisponible = async (req, res) => {
  */
 exports.getEstadisticasPersonal = async (req, res) => {
   try {
-    const { sequelize } = require("../models");
-
     // Total por estado
     const porEstado = await PersonalSeguridad.findAll({
       where: { estado: 1, deleted_at: null },
@@ -526,4 +530,4 @@ exports.getEstadisticasPersonal = async (req, res) => {
   }
 };
 
-module.exports = exports;
+export default exports;

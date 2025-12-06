@@ -4,17 +4,17 @@
  * Define los endpoints REST con control de acceso RBAC
  */
 
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const novedadesController = require("../controllers/novedadesController");
-const {
+import novedadesController from "../controllers/novedadesController.js";
+import {
   verificarToken,
   verificarRoles,
   verificarPermisos,
   registrarAccion,
   ROLES,
   PERMISOS,
-} = require("../middlewares/authMiddleware");
+} from "../middlewares/authMiddleware.js";
 
 /**
  * @route   GET /api/novedades/dashboard/stats
@@ -121,4 +121,4 @@ router.get(
   novedadesController.getHistorialEstados
 );
 
-module.exports = router;
+export default router;

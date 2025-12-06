@@ -5,13 +5,14 @@
  * Incluye gestión de abastecimiento de combustible
  */
 
-const {
+import {
   Vehiculo,
   TipoVehiculo,
   PersonalSeguridad,
   AbastecimientoCombustible,
-} = require("../models");
-const { Op } = require("sequelize");
+  Novedad,
+} from "../models/index.js";
+import { Op } from "sequelize";
 
 /**
  * Obtener todos los vehículos
@@ -511,8 +512,6 @@ exports.getHistorialAbastecimientos = async (req, res) => {
  */
 exports.getVehiculosDisponibles = async (req, res) => {
   try {
-    const { Novedad } = require("../models");
-
     // Obtener IDs de vehículos actualmente asignados
     const vehiculosAsignados = await Novedad.findAll({
       where: {
@@ -561,4 +560,4 @@ exports.getVehiculosDisponibles = async (req, res) => {
   }
 };
 
-module.exports = exports;
+export default exports;

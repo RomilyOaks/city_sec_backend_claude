@@ -5,7 +5,7 @@
  * Implementa control de acceso RBAC
  */
 
-const {
+import {
   Novedad,
   TipoNovedad,
   SubtipoNovedad,
@@ -15,9 +15,9 @@ const {
   UnidadOficina,
   Vehiculo,
   PersonalSeguridad,
-  HistorialEstadoNovedad,
-} = require("../models");
-const { Op } = require("sequelize");
+  //HistorialEstadoNovedad,
+} from "../models/index.js";
+import { Op } from "sequelize";
 
 /**
  * Obtener todas las novedades con filtros opcionales
@@ -666,4 +666,4 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
-module.exports = exports;
+export default exports;

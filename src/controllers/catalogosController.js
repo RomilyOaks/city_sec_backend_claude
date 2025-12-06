@@ -8,7 +8,7 @@
  * - Unidades/Oficinas
  */
 
-const {
+import {
   TipoNovedad,
   SubtipoNovedad,
   EstadoNovedad,
@@ -16,8 +16,9 @@ const {
   Cargo,
   UnidadOficina,
   Ubigeo,
-} = require("../models");
-const { Op } = require("sequelize");
+  sequelize,
+} from "../models/index.js";
+import { Op } from "sequelize";
 
 // ==================== TIPOS DE NOVEDAD ====================
 
@@ -642,7 +643,7 @@ exports.buscarUbigeo = async (req, res) => {
  */
 exports.getDepartamentos = async (req, res) => {
   try {
-    const { sequelize } = require("../models");
+    //  import { sequelize } from "../models/index.js";
 
     const departamentos = await Ubigeo.findAll({
       attributes: [
@@ -668,4 +669,4 @@ exports.getDepartamentos = async (req, res) => {
   }
 };
 
-module.exports = exports;
+export default exports;

@@ -4,18 +4,18 @@
  * Centraliza todas las rutas de la API con prefijos y middlewares globales
  */
 
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
 // Importar routers de módulos
-const novedadesRoutes = require("./novedades.routes");
-const vehiculosRoutes = require("./vehiculos.routes");
-const personalRoutes = require("./personal.routes");
-const sectoresRoutes = require("./sectores.routes");
-const cuadrantesRoutes = require("./cuadrantes.routes");
-const authRoutes = require("./auth.routes");
-const catalogosRoutes = require("./catalogos.routes");
-const reportesRoutes = require("./reportes.routes");
+import novedadesRoutes from "./novedades.routes.js";
+import vehiculosRoutes from "./vehiculos.routes.js";
+import personalRoutes from "./personal.routes.js";
+import sectoresRoutes from "./sectores.routes.js";
+import cuadrantesRoutes from "./cuadrantes.routes.js";
+import authRoutes from "./auth.routes.js";
+import catalogosRoutes from "./catalogos.routes.js";
+import reportesRoutes from "./reportes.routes.js";
 
 // Middleware global para logging de requests
 router.use((req, res, next) => {
@@ -78,4 +78,4 @@ router.use("*", (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;

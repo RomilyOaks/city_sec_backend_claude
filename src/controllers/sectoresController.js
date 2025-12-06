@@ -4,8 +4,8 @@
  * Gestiona la división territorial para patrullaje
  */
 
-const { Sector, Cuadrante, Ubigeo } = require("../models");
-const { Op } = require("sequelize");
+import { Sector, Cuadrante, Ubigeo } from "../models/index.js";
+import { Op } from "sequelize";
 
 // ==================== SECTORES ====================
 
@@ -589,4 +589,4 @@ exports.deleteCuadrante = async (req, res) => {
   }
 };
 
-module.exports = exports;
+export default exports;

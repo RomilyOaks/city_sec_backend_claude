@@ -3,15 +3,15 @@
  * Endpoints para gestión territorial
  */
 
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const sectoresController = require("../controllers/sectoresController");
-const {
+import sectoresController from "../controllers/sectoresController.js";
+import {
   verificarToken,
   verificarRoles,
   registrarAccion,
   ROLES,
-} = require("../middlewares/authMiddleware");
+} from "../middlewares/authMiddleware.js";
 
 // ==================== SECTORES ====================
 
@@ -129,4 +129,4 @@ router.delete(
   sectoresController.deleteCuadrante
 );
 
-module.exports = router;
+export default router;
