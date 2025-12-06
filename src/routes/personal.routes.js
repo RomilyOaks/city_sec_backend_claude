@@ -3,17 +3,17 @@
  * Endpoints para gestión de personal con control RBAC
  */
 
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const personalController = require("../controllers/personalController");
-const {
+import personalController from "../controllers/personalController.js";
+import {
   verificarToken,
   verificarRoles,
   verificarPermisos,
   registrarAccion,
   ROLES,
   PERMISOS,
-} = require("../middlewares/authMiddleware");
+} from "../middlewares/authMiddleware.js";
 
 /**
  * @route   GET /api/personal/disponibles
@@ -109,4 +109,4 @@ router.delete(
   personalController.deletePersonal
 );
 
-module.exports = router;
+export default router;

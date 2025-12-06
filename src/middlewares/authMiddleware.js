@@ -8,11 +8,21 @@
 import jwt from "jsonwebtoken";
 import { Usuario, Rol, Permiso } from "../models/index.js";
 
+// DEFINICIÓN DE ROLES
+export const ROLES = Object.freeze({
+  SUPER_ADMIN: "super_admin",
+  ADMINISTRADOR: "admin",
+  OPERADOR: "operador",
+  SUPERVISOR: "supervisor",
+  CONSULTA: "consulta",
+  USUARIO_BASICO: "usuario_basico",
+});
+
 /**
  * Middleware principal de autenticación
  * Verifica que el usuario tenga un token JWT válido
  */
-export const authenticate = async (req, res, next) => {
+export const verificarToken = async (req, res, next) => {
   try {
     // Obtener token del header Authorization
     const authHeader = req.headers.authorization;
@@ -95,9 +105,9 @@ export const authenticate = async (req, res, next) => {
  * @returns {Function} Middleware function
  *
  * Ejemplo de uso:
- * router.get('/admin', authenticate, requireRole(['super_admin', 'admin']), controller)
+ * router.get('/admin', verificarToken, verificarRoles(['super_admin', 'admin']), controller)
  */
-export const requireRole = (rolesPermitidos) => {
+export const verificarRoles = (rolesPermitidos) => {
   return (req, res, next) => {
     try {
       // Verificar que el usuario esté autenticado
@@ -123,7 +133,7 @@ export const requireRole = (rolesPermitidos) => {
 
       next();
     } catch (error) {
-      console.error("Error en requireRole middleware:", error);
+      console.error("Error en verificarRoles middleware:", error);
       return res.status(500).json({
         success: false,
         message: "Error al verificar rol",
@@ -140,7 +150,7 @@ export const requireRole = (rolesPermitidos) => {
  * @returns {Function} Middleware function
  *
  * Ejemplo de uso:
- * router.post('/novedades', authenticate, requirePermission('novedades.incidentes.create'), controller)
+ * router.post('/novedades', verificarToken, requirePermission('novedades.incidentes.create'), controller)
  */
 export const requirePermission = (permisoRequerido) => {
   return (req, res, next) => {
@@ -183,7 +193,7 @@ export const requirePermission = (permisoRequerido) => {
  * @returns {Function} Middleware function
  *
  * Ejemplo de uso:
- * router.put('/config', authenticate, requireAllPermissions(['config.read', 'config.write']), controller)
+ * router.put('/config', verificarToken, requireAllPermissions(['config.read', 'config.write']), controller)
  */
 export const requireAllPermissions = (permisosRequeridos) => {
   return (req, res, next) => {
@@ -227,7 +237,7 @@ export const requireAllPermissions = (permisosRequeridos) => {
  * @returns {Function} Middleware function
  *
  * Ejemplo de uso:
- * router.get('/reports', authenticate, requireAnyPermission(['reports.view', 'reports.admin']), controller)
+ * router.get('/reports', verificarToken, requireAnyPermission(['reports.view', 'reports.admin']), controller)
  */
 export const requireAnyPermission = (permisosRequeridos) => {
   return (req, res, next) => {
@@ -267,7 +277,7 @@ export const requireAnyPermission = (permisosRequeridos) => {
 
 /**
  * Middleware opcional de autenticación
- * Similar a authenticate pero no falla si no hay token
+ * Similar a verificarToken pero no falla si no hay token
  * Útil para endpoints que tienen contenido público y contenido para usuarios autenticados
  */
 export const optionalAuthenticate = async (req, res, next) => {
@@ -341,8 +351,8 @@ export const hasRole = (usuario, rolSlug) => {
 };
 
 export default {
-  authenticate,
-  requireRole,
+  verificarToken,
+  verificarRoles,
   requirePermission,
   requireAllPermissions,
   requireAnyPermission,

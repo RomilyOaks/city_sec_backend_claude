@@ -11,9 +11,20 @@
  * - Facilita migraciones y seeders
  */
 
-require("dotenv").config();
+import { Sequelize } from "sequelize";
+import dotenv from "dotenv";
 
-module.exports = {
+// Cargar variables de entorno
+dotenv.config();
+
+// Dialecto de base de datos
+const DB_DIALECT = "mysql";
+
+/**
+ * Configuraciones por entorno
+ * Separación clara entre: development, test y production
+ */
+const config = {
   // ========================================
   // ENTORNO DE DESARROLLO
   // ========================================
@@ -61,6 +72,17 @@ module.exports = {
       acquire: 30000,
       idle: 10000,
     },
+    define: {
+      charset: "utf8mb4",
+      collate: "utf8mb4_unicode_ci",
+      timestamps: false,
+    },
+    dialectOptions: {
+      charset: "utf8mb4",
+      dateStrings: true,
+      typeCast: true,
+    },
+    timezone: "-05:00",
   },
 
   // ========================================
@@ -98,6 +120,38 @@ module.exports = {
   },
 };
 
-// Exportar configuración según el entorno
+/**
+ * Determinar entorno actual y obtener configuración correspondiente
+ */
 const env = process.env.NODE_ENV || "development";
-module.exports = module.exports[env];
+const dbConfig = config[env];
+
+/**
+ * Crear instancia de Sequelize con la configuración del entorno actual
+ */
+const sequelize = new Sequelize(
+  dbConfig.database,
+  dbConfig.username,
+  dbConfig.password,
+  dbConfig
+);
+
+/**
+ * Probar conexión a la base de datos
+ */
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log(
+      `✅ Conexión a base de datos exitosa - Entorno: ${env.toUpperCase()}`
+    );
+  })
+  .catch((error) => {
+    console.error("❌ Error al conectar a la base de datos:", error.message);
+  });
+
+// Exportar la instancia de Sequelize (export default)
+export default sequelize;
+
+// También exportar la configuración completa por si se necesita
+export { config, dbConfig };

@@ -8,8 +8,8 @@
  * individuales estén definidos para que las asociaciones funcionen correctamente
  */
 
-//import sequelize from "../config/database.js";
-const sequelize = require("../../config/database.js");
+// Importar la instancia de Sequelize configurada
+import sequelize from "../config/database.js";
 
 // ============================================
 // IMPORTAR TODOS LOS MODELOS
@@ -281,6 +281,7 @@ const models = {
   Permiso,
 };
 
+// Exportación por defecto del objeto models
 export default models;
 
 // También exportar individualmente por si se necesita

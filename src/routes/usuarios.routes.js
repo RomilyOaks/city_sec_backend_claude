@@ -15,7 +15,7 @@ import {
   cambiarEstado,
 } from "../controllers/usuariosController.js";
 import {
-  authenticate,
+  verificarToken as authenticate,
   requirePermission,
   requireAnyPermission,
 } from "../middlewares/authMiddleware.js";

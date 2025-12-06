@@ -3,14 +3,14 @@
  * Endpoints para gestión de catálogos maestros del sistema
  */
 
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const catalogosController = require("../controllers/catalogosController");
-const {
+import catalogosController from "../controllers/catalogosController.js";
+import {
   verificarToken,
   verificarRoles,
   ROLES,
-} = require("../middlewares/authMiddleware");
+} from "../middlewares/authMiddleware.js";
 
 // ==================== TIPOS DE NOVEDAD ====================
 
@@ -177,4 +177,4 @@ router.get(
   catalogosController.getDepartamentos
 );
 
-module.exports = router;
+export default router;

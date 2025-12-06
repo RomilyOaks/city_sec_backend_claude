@@ -15,7 +15,7 @@ import {
   getMe,
   forgotPassword,
 } from "../controllers/authController.js";
-import { authenticate } from "../middlewares/authMiddleware.js";
+import { verificarToken as authenticate } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 

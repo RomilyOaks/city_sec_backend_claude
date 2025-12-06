@@ -4,17 +4,17 @@
  * Define los endpoints REST para gestión de vehículos con control RBAC
  */
 
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const vehiculosController = require("../controllers/vehiculosController");
-const {
+import vehiculosController from "../controllers/vehiculosController.js";
+import {
   verificarToken,
   verificarRoles,
   verificarPermisos,
   registrarAccion,
   ROLES,
   PERMISOS,
-} = require("../middlewares/authMiddleware");
+} from "../middlewares/authMiddleware.js";
 
 /**
  * @route   GET /api/vehiculos/disponibles
@@ -112,4 +112,4 @@ router.get(
   vehiculosController.getHistorialAbastecimientos
 );
 
-module.exports = router;
+export default router;
