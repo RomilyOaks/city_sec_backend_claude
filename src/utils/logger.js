@@ -11,9 +11,9 @@
  * - Logs estructurados (JSON)
  */
 
-const winston = require("winston");
-const path = require("path");
-const DailyRotateFile = require("winston-daily-rotate-file");
+import winston from "winston";
+import path from "path";
+import DailyRotateFile from "winston-daily-rotate-file";
 
 // ========================================
 // NIVELES DE LOG
@@ -247,8 +247,7 @@ logger.stream = {
 // ========================================
 // EXPORTAR LOGGER
 // ========================================
-module.exports = logger;
-
+export default logger;
 /**
  * EJEMPLOS DE USO:
  *
