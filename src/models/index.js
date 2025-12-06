@@ -33,11 +33,17 @@ import UnidadOficina from "./UnidadOficina.js";
 import TipoNovedad from "./TipoNovedad.js";
 import SubtipoNovedad from "./SubtipoNovedad.js";
 import EstadoNovedad from "./EstadoNovedad.js";
+import Novedad from "./Novedad.js";
+import HistorialEstadoNovedad from "./HistorialEstadoNovedad.js";
 
 // Modelos de autenticación y autorización
 import Usuario from "./Usuario.js";
 import Rol from "./Rol.js";
 import Permiso from "./Permiso.js";
+
+// Modelos de auditoría
+import HistorialUsuario from "./HistorialUsuario.js";
+import IntentoLogin from "./IntentoLogin.js";
 
 /**
  * DEFINICIÓN DE ASOCIACIONES
@@ -72,6 +78,123 @@ TipoNovedad.hasMany(SubtipoNovedad, {
 SubtipoNovedad.belongsTo(TipoNovedad, {
   foreignKey: "tipo_novedad_id",
   as: "tipo",
+});
+
+// Relación: Novedad -> TipoNovedad
+Novedad.belongsTo(TipoNovedad, {
+  foreignKey: "tipo_novedad_id",
+  as: "tipoNovedad",
+});
+
+TipoNovedad.hasMany(Novedad, {
+  foreignKey: "tipo_novedad_id",
+  as: "novedades",
+});
+
+// Relación: Novedad -> SubtipoNovedad
+Novedad.belongsTo(SubtipoNovedad, {
+  foreignKey: "subtipo_novedad_id",
+  as: "subtipoNovedad",
+});
+
+SubtipoNovedad.hasMany(Novedad, {
+  foreignKey: "subtipo_novedad_id",
+  as: "novedades",
+});
+
+// Relación: Novedad -> EstadoNovedad
+Novedad.belongsTo(EstadoNovedad, {
+  foreignKey: "estado_id",
+  as: "estado",
+});
+
+EstadoNovedad.hasMany(Novedad, {
+  foreignKey: "estado_id",
+  as: "novedades",
+});
+
+// Relación: Novedad -> Usuario (reportado por)
+Novedad.belongsTo(Usuario, {
+  foreignKey: "reportado_por",
+  as: "reportadoPor",
+});
+
+Usuario.hasMany(Novedad, {
+  foreignKey: "reportado_por",
+  as: "novedadesReportadas",
+});
+
+// Relación: Novedad -> Sector
+Novedad.belongsTo(Sector, {
+  foreignKey: "sector_id",
+  as: "sector",
+});
+
+Sector.hasMany(Novedad, {
+  foreignKey: "sector_id",
+  as: "novedades",
+});
+
+// Relación: Novedad -> Cuadrante
+Novedad.belongsTo(Cuadrante, {
+  foreignKey: "cuadrante_id",
+  as: "cuadrante",
+});
+
+Cuadrante.hasMany(Novedad, {
+  foreignKey: "cuadrante_id",
+  as: "novedades",
+});
+
+// Relación: Novedad -> UnidadOficina
+Novedad.belongsTo(UnidadOficina, {
+  foreignKey: "unidad_asignada_id",
+  as: "unidadAsignada",
+});
+
+UnidadOficina.hasMany(Novedad, {
+  foreignKey: "unidad_asignada_id",
+  as: "novedadesAsignadas",
+});
+
+// Relación: Novedad -> Vehiculo
+Novedad.belongsTo(Vehiculo, {
+  foreignKey: "vehiculo_asignado_id",
+  as: "vehiculoAsignado",
+});
+
+Vehiculo.hasMany(Novedad, {
+  foreignKey: "vehiculo_asignado_id",
+  as: "novedadesAsignadas",
+});
+
+// Relación: Novedad -> HistorialEstadoNovedad
+Novedad.hasMany(HistorialEstadoNovedad, {
+  foreignKey: "novedad_id",
+  as: "historialEstados",
+});
+
+HistorialEstadoNovedad.belongsTo(Novedad, {
+  foreignKey: "novedad_id",
+  as: "novedad",
+});
+
+// Relación: HistorialEstadoNovedad -> EstadoNovedad (estado anterior)
+HistorialEstadoNovedad.belongsTo(EstadoNovedad, {
+  foreignKey: "estado_anterior_id",
+  as: "estadoAnterior",
+});
+
+// Relación: HistorialEstadoNovedad -> EstadoNovedad (estado nuevo)
+HistorialEstadoNovedad.belongsTo(EstadoNovedad, {
+  foreignKey: "estado_nuevo_id",
+  as: "estadoNuevo",
+});
+
+// Relación: HistorialEstadoNovedad -> Usuario (quien cambió)
+HistorialEstadoNovedad.belongsTo(Usuario, {
+  foreignKey: "cambiado_por",
+  as: "cambiadoPor",
 });
 
 // ============================================
@@ -111,6 +234,19 @@ Ubigeo.hasMany(UnidadOficina, {
 
 UnidadOficina.belongsTo(Ubigeo, {
   foreignKey: "ubigeo",
+  targetKey: "ubigeo_code",
+  as: "ubicacion",
+});
+
+// Relación: Ubigeo -> Novedad
+Ubigeo.hasMany(Novedad, {
+  foreignKey: "ubigeo_code",
+  sourceKey: "ubigeo_code",
+  as: "novedades",
+});
+
+Novedad.belongsTo(Ubigeo, {
+  foreignKey: "ubigeo_code",
   targetKey: "ubigeo_code",
   as: "ubicacion",
 });
@@ -253,6 +389,38 @@ Permiso.belongsToMany(Usuario, {
   timestamps: true,
 });
 
+// ============================================
+// ASOCIACIONES DE AUDITORÍA
+// ============================================
+
+// Usuario -> HistorialUsuario
+Usuario.hasMany(HistorialUsuario, {
+  foreignKey: "usuario_id",
+  as: "historial",
+});
+
+HistorialUsuario.belongsTo(Usuario, {
+  foreignKey: "usuario_id",
+  as: "usuario",
+});
+
+// Usuario que realizó el cambio
+HistorialUsuario.belongsTo(Usuario, {
+  foreignKey: "realizado_por",
+  as: "realizadoPor",
+});
+
+// Usuario -> IntentoLogin
+Usuario.hasMany(IntentoLogin, {
+  foreignKey: "usuario_id",
+  as: "intentosLogin",
+});
+
+IntentoLogin.belongsTo(Usuario, {
+  foreignKey: "usuario_id",
+  as: "usuario",
+});
+
 /**
  * EXPORTAR TODOS LOS MODELOS Y LA INSTANCIA DE SEQUELIZE
  */
@@ -275,10 +443,18 @@ const models = {
   UnidadOficina,
   PersonalSeguridad,
 
+  // Modelos de novedades
+  Novedad,
+  HistorialEstadoNovedad,
+
   // Modelos de autenticación y autorización
   Usuario,
   Rol,
   Permiso,
+
+  // Modelos de auditoría
+  HistorialUsuario,
+  IntentoLogin,
 };
 
 // Exportación por defecto del objeto models
@@ -301,4 +477,8 @@ export {
   Usuario,
   Rol,
   Permiso,
+  Novedad,
+  HistorialEstadoNovedad,
+  HistorialUsuario,
+  IntentoLogin,
 };

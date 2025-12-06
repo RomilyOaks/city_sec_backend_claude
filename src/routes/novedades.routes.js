@@ -12,8 +12,6 @@ import {
   verificarRoles,
   verificarPermisos,
   registrarAccion,
-  ROLES,
-  PERMISOS,
 } from "../middlewares/authMiddleware.js";
 
 /**
@@ -36,7 +34,7 @@ router.get(
 router.get(
   "/",
   verificarToken,
-  verificarRoles([ROLES.OPERADOR, ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["operador", "supervisor", "admin"]),
   novedadesController.getAllNovedades
 );
 
@@ -48,7 +46,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  verificarRoles([ROLES.OPERADOR, ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["operador", "supervisor", "admin"]),
   novedadesController.getNovedadById
 );
 
@@ -61,7 +59,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  verificarRoles([ROLES.OPERADOR, ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["operador", "supervisor", "admin"]),
   verificarPermisos([PERMISOS.CREAR_NOVEDAD]),
   registrarAccion("CREAR_NOVEDAD"),
   novedadesController.createNovedad
@@ -75,7 +73,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["operador", "supervisor", "admin"]),
   verificarPermisos([PERMISOS.EDITAR_NOVEDAD]),
   registrarAccion("ACTUALIZAR_NOVEDAD"),
   novedadesController.updateNovedad
@@ -89,7 +87,7 @@ router.put(
 router.post(
   "/:id/asignar",
   verificarToken,
-  verificarRoles([ROLES.OPERADOR, ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["operador", "supervisor", "admin"]),
   verificarPermisos([PERMISOS.ASIGNAR_RECURSOS]),
   registrarAccion("ASIGNAR_RECURSOS"),
   novedadesController.asignarRecursos
@@ -103,7 +101,7 @@ router.post(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles([ROLES.ADMINISTRADOR]),
+  verificarRoles("admin"),
   verificarPermisos([PERMISOS.ELIMINAR_NOVEDAD]),
   registrarAccion("ELIMINAR_NOVEDAD"),
   novedadesController.deleteNovedad
@@ -117,7 +115,7 @@ router.delete(
 router.get(
   "/:id/historial",
   verificarToken,
-  verificarRoles([ROLES.OPERADOR, ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["operador", "supervisor", "admin"]),
   novedadesController.getHistorialEstados
 );
 
