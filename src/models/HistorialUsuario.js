@@ -14,13 +14,13 @@ const HistorialUsuario = sequelize.define(
   "HistorialUsuario",
   {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
 
     usuario_id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: false,
       comment: "ID del usuario modificado",
       references: {
@@ -83,7 +83,7 @@ const HistorialUsuario = sequelize.define(
     },
 
     realizado_por: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: false,
       comment: "Usuario que realizó el cambio",
       references: {

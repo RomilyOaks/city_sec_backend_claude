@@ -43,7 +43,7 @@ import Permiso from "./Permiso.js";
 
 // Modelos de auditoría
 import HistorialUsuario from "./HistorialUsuario.js";
-import IntentoLogin from "./IntentoLogin.js";
+import LoginIntento from "./LoginIntento.js";
 
 /**
  * DEFINICIÓN DE ASOCIACIONES
@@ -421,6 +421,289 @@ IntentoLogin.belongsTo(Usuario, {
   as: "usuario",
 });
 
+// ============================================
+// ASOCIACIONES DE AUDITORÍA GLOBAL
+// ============================================
+
+//--------------------------------------------------------------------------
+// Relación: Novedad -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+Novedad.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: Novedad -> Usuario (actualizador)
+Novedad.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: Novedad -> Usuario (eliminador - si usas soft-delete)
+Novedad.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: Vehiculo -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+Vehiculo.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+// Relación: Vehiculo -> Usuario (actualizador)
+Vehiculo.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: Vehiculo -> Usuario (eliminador - si usas soft-delete)
+Vehiculo.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: PersonalSeguridad -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+PersonalSeguridad.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: PersonalSeguridad -> Usuario (actualizador)
+PersonalSeguridad.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: PersonalSeguridad -> Usuario (eliminador - si usas soft-delete)
+PersonalSeguridad.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: Cargo -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+Cargo.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: Cargo -> Usuario (actualizador)
+Cargo.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: Cargo -> Usuario (eliminador - si usas soft-delete)
+Cargo.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: Cuadrante -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+Cuadrante.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: Cuadrante -> Usuario (actualizador)
+Cuadrante.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: Cuadrante -> Usuario (eliminador - si usas soft-delete)
+Cuadrante.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: EstadoNovedad -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+EstadoNovedad.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: EstadoNovedad -> Usuario (actualizador)
+EstadoNovedad.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: EstadoNovedad -> Usuario (eliminador - si usas soft-delete)
+EstadoNovedad.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: PersonalSeguridad -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+PersonalSeguridad.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: PersonalSeguridad -> Usuario (actualizador)
+PersonalSeguridad.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: PersonalSeguridad -> Usuario (eliminador - si usas soft-delete)
+PersonalSeguridad.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: Rol -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+Rol.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: Rol -> Usuario (actualizador)
+Rol.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: Rol -> Usuario (eliminador - si usas soft-delete)
+Rol.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: Sector -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+Sector.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: Sector -> Usuario (actualizador)
+Sector.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: Sector -> Usuario (eliminador - si usas soft-delete)
+Sector.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: SubtipoNovedad -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+SubtipoNovedad.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: SubtipoNovedad -> Usuario (actualizador)
+SubtipoNovedad.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: SubtipoNovedad -> Usuario (eliminador - si usas soft-delete)
+SubtipoNovedad.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: TipoNovedad -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+TipoNovedad.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: TipoNovedad -> Usuario (actualizador)
+TipoNovedad.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: TipoNovedad -> Usuario (eliminador - si usas soft-delete)
+TipoNovedad.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: TipoVehiculo -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+TipoVehiculo.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: TipoVehiculo -> Usuario (actualizador)
+TipoVehiculo.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: TipoVehiculo -> Usuario (eliminador - si usas soft-delete)
+TipoVehiculo.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: UnidadOficina -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+UnidadOficina.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: UnidadOficina -> Usuario (actualizador)
+UnidadOficina.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: UnidadOficina -> Usuario (eliminador - si usas soft-delete)
+UnidadOficina.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
+// Relación: Usuario -> Usuario (creador,actualizador,eliminador)
+//--------------------------------------------------------------------------
+Usuario.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: Usuario -> Usuario (actualizador)
+Usuario.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: Usuario -> Usuario (eliminador - si usas soft-delete)
+Usuario.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
 /**
  * EXPORTAR TODOS LOS MODELOS Y LA INSTANCIA DE SEQUELIZE
  */
@@ -454,7 +737,7 @@ const models = {
 
   // Modelos de auditoría
   HistorialUsuario,
-  IntentoLogin,
+  LoginIntento,
 };
 
 // Exportación por defecto del objeto models

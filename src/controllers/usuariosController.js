@@ -197,9 +197,18 @@ export const getUsuarioById = async (req, res) => {
 /**
  * POST /api/usuarios
  * Crea un nuevo usuario (solo para administradores)
- * @body {username, email, password, nombres, apellidos, roles, estado}
+ * @body {username, email, password, nombres, apellidos, roles, estado, ip}
  */
 export const createUsuario = async (req, res) => {
+  // OBTENER DATOS DE CONTEXTO DE AUDITORÍA
+  const created_by = req.usuario.userId;
+  const auditOptions = {
+    currentUser: created_by,
+    ipAddress: req.ip,
+    userAgent: req.headers["user-agent"],
+  };
+
+  const t = await sequelize.transaction(); // Iniciar transacción para atomicidad
   try {
     const {
       username,
@@ -231,6 +240,7 @@ export const createUsuario = async (req, res) => {
           { email: email.toLowerCase() },
         ],
       },
+      transaction: t,
     });
 
     if (usuarioExistente) {
@@ -245,31 +255,36 @@ export const createUsuario = async (req, res) => {
     const password_hash = await bcrypt.hash(password, salt);
 
     // Crear usuario
-    const nuevoUsuario = await Usuario.create({
-      username: username.toLowerCase(),
-      email: email.toLowerCase(),
-      password_hash,
-      nombres,
-      apellidos,
-      telefono,
-      personal_seguridad_id,
-      estado,
-      email_verified_at: new Date(), // Auto-verificado por admin
-      created_by,
-    });
-
+    const nuevoUsuario = await Usuario.create(
+      {
+        username: username.toLowerCase(),
+        email: email.toLowerCase(),
+        password_hash,
+        nombres,
+        apellidos,
+        telefono,
+        personal_seguridad_id,
+        estado,
+        email_verified_at: new Date(), // Auto-verificado por admin
+        created_by,
+      },
+      { transaction: t, auditOptions }
+    );
     // Asignar roles si se especificaron
     if (roles && roles.length > 0) {
       const rolesEncontrados = await Rol.findAll({
         where: {
           id: { [Op.in]: roles },
         },
+        transaction: t,
       });
 
       if (rolesEncontrados.length > 0) {
-        await nuevoUsuario.addRoles(rolesEncontrados);
+        await nuevoUsuario.addRoles(rolesEncontrados, { transaction: t });
       }
     }
+
+    await t.commit(); // Confirmar transacción
 
     // Recargar usuario con roles
     const usuarioCreado = await Usuario.findByPk(nuevoUsuario.id, {
@@ -296,6 +311,7 @@ export const createUsuario = async (req, res) => {
       data: usuarioCreado,
     });
   } catch (error) {
+    await t.rollback();
     console.error("Error en createUsuario:", error);
     res.status(500).json({
       success: false,
@@ -311,6 +327,16 @@ export const createUsuario = async (req, res) => {
  * @body {nombres, apellidos, telefono, estado, roles}
  */
 export const updateUsuario = async (req, res) => {
+  // OBTENER DATOS DE CONTEXTO DE AUDITORÍA
+  const updated_by = req.usuario.userId;
+  const auditOptions = {
+    currentUser: updated_by,
+    ipAddress: req.ip,
+    userAgent: req.headers["user-agent"],
+    individualHooks: true, // IMPORTANTE: Asegura que el afterUpdate se dispare
+  };
+
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
     const {
@@ -323,12 +349,11 @@ export const updateUsuario = async (req, res) => {
       personal_seguridad_id,
     } = req.body;
 
-    const updated_by = req.usuario.userId;
-
     // Buscar usuario
-    const usuario = await Usuario.findByPk(id);
+    const usuario = await Usuario.findByPk(id, { transaction: t });
 
     if (!usuario || usuario.deleted_at !== null) {
+      await t.rollback();
       return res.status(404).json({
         success: false,
         message: "Usuario no encontrado",
@@ -342,6 +367,7 @@ export const updateUsuario = async (req, res) => {
           email: email.toLowerCase(),
           id: { [Op.ne]: id },
         },
+        transaction: t,
       });
 
       if (emailExistente) {
@@ -365,7 +391,7 @@ export const updateUsuario = async (req, res) => {
     if (personal_seguridad_id !== undefined)
       datosActualizar.personal_seguridad_id = personal_seguridad_id;
 
-    await usuario.update(datosActualizar);
+    await usuario.update(datosActualizar, { transaction: t, auditOptions });
 
     // Actualizar roles si se especificaron
     if (roles !== undefined && Array.isArray(roles)) {
@@ -373,10 +399,13 @@ export const updateUsuario = async (req, res) => {
         where: {
           id: { [Op.in]: roles },
         },
+        transaction: t,
       });
 
-      await usuario.setRoles(rolesEncontrados);
+      await usuario.setRoles(rolesEncontrados, { transaction: t });
     }
+
+    await t.commit();
 
     // Recargar usuario con relaciones
     const usuarioActualizado = await Usuario.findByPk(id, {
@@ -403,6 +432,7 @@ export const updateUsuario = async (req, res) => {
       data: usuarioActualizado,
     });
   } catch (error) {
+    await t.rollback();
     console.error("Error en updateUsuario:", error);
     res.status(500).json({
       success: false,
@@ -417,39 +447,61 @@ export const updateUsuario = async (req, res) => {
  * Elimina (soft delete) un usuario
  */
 export const deleteUsuario = async (req, res) => {
+  // OBTENER DATOS DE CONTEXTO DE AUDITORÍA
+  const deleted_by = req.usuario.userId;
+  const auditOptions = {
+    currentUser: deleted_by,
+    ipAddress: req.ip,
+    userAgent: req.headers["user-agent"],
+    individualHooks: true,
+  };
+
+  const t = await sequelize.transaction();
+
   try {
     const { id } = req.params;
-    const deleted_by = req.usuario.userId;
 
     // No permitir auto-eliminación
     if (parseInt(id) === deleted_by) {
+      await t.rollback();
       return res.status(400).json({
         success: false,
         message: "No puedes eliminar tu propia cuenta",
       });
     }
 
-    const usuario = await Usuario.findByPk(id);
+    const usuario = await Usuario.findByPk(id, { transaction: t });
 
     if (!usuario || usuario.deleted_at !== null) {
+      await t.rollback();
       return res.status(404).json({
         success: false,
         message: "Usuario no encontrado",
       });
     }
 
-    // Soft delete
-    await usuario.update({
-      deleted_at: new Date(),
-      deleted_by,
-      estado: "INACTIVO",
-    });
+    // Soft delete (la actualización disparará el hook afterUpdate para 'eliminacion')
+    await usuario.update(
+      {
+        deleted_at: new Date(),
+        deleted_by,
+        estado: "INACTIVO", // Cambiar estado al eliminar
+        updated_by: deleted_by, // Registrar quién ejecutó la acción
+      },
+      {
+        transaction: t,
+        auditOptions, // Pasa el contexto y habilita hooks
+      }
+    );
+
+    await t.commit();
 
     res.json({
       success: true,
       message: "Usuario eliminado exitosamente",
     });
   } catch (error) {
+    await t.rollback();
     console.error("Error en deleteUsuario:", error);
     res.status(500).json({
       success: false,
@@ -465,21 +517,32 @@ export const deleteUsuario = async (req, res) => {
  * @body {newPassword}
  */
 export const resetPassword = async (req, res) => {
+  // OBTENER DATOS DE CONTEXTO DE AUDITORÍA
+  const updated_by = req.usuario.userId;
+  const auditOptions = {
+    currentUser: updated_by,
+    ipAddress: req.ip,
+    userAgent: req.headers["user-agent"],
+    individualHooks: true,
+  };
+
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
     const { newPassword } = req.body;
-    const updated_by = req.usuario.userId;
 
     if (!newPassword || newPassword.length < 8) {
+      await t.rollback();
       return res.status(400).json({
         success: false,
         message: "La nueva contraseña debe tener al menos 8 caracteres",
       });
     }
 
-    const usuario = await Usuario.findByPk(id);
+    const usuario = await Usuario.findByPk(id, { transaction: t });
 
     if (!usuario || usuario.deleted_at !== null) {
+      await t.rollback();
       return res.status(404).json({
         success: false,
         message: "Usuario no encontrado",
@@ -491,12 +554,18 @@ export const resetPassword = async (req, res) => {
     const password_hash = await bcrypt.hash(newPassword, salt);
 
     // Actualizar contraseña y forzar cambio en próximo login
-    await usuario.update({
-      password_hash,
-      password_changed_at: new Date(),
-      require_password_change: true,
-      updated_by,
-    });
+    await usuario.update(
+      {
+        password_hash,
+        password_changed_at: new Date(),
+        require_password_change: true,
+        updated_by,
+      },
+      {
+        transaction: t,
+        auditOptions, // Pasa el contexto y habilita hooks
+      }
+    );
 
     res.json({
       success: true,
@@ -504,6 +573,7 @@ export const resetPassword = async (req, res) => {
         "Contraseña reseteada exitosamente. El usuario deberá cambiarla en su próximo login.",
     });
   } catch (error) {
+    await t.rollback();
     console.error("Error en resetPassword:", error);
     res.status(500).json({
       success: false,
@@ -519,31 +589,48 @@ export const resetPassword = async (req, res) => {
  * @body {estado: 'ACTIVO' | 'INACTIVO' | 'BLOQUEADO'}
  */
 export const cambiarEstado = async (req, res) => {
+  // OBTENER DATOS DE CONTEXTO DE AUDITORÍA
+  const updated_by = req.usuario.userId;
+  const auditOptions = {
+    currentUser: updated_by,
+    ipAddress: req.ip,
+    userAgent: req.headers["user-agent"],
+    individualHooks: true,
+  };
+
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
     const { estado } = req.body;
-    const updated_by = req.usuario.userId;
 
     if (!["ACTIVO", "INACTIVO", "BLOQUEADO"].includes(estado)) {
+      await t.rollback();
       return res.status(400).json({
         success: false,
         message: "Estado inválido",
       });
     }
 
-    const usuario = await Usuario.findByPk(id);
+    const usuario = await Usuario.findByPk(id, { transaction: t });
 
     if (!usuario || usuario.deleted_at !== null) {
+      await t.rollback();
       return res.status(404).json({
         success: false,
         message: "Usuario no encontrado",
       });
     }
 
-    await usuario.update({
-      estado,
-      updated_by,
-    });
+    // Actualizar estado (el hook afterUpdate registra el 'cambio_estado')
+    await usuario.update(
+      {
+        estado,
+        updated_by,
+      },
+      { transaction: t, auditOptions }
+    );
+
+    await t.commit();
 
     res.json({
       success: true,
@@ -555,6 +642,7 @@ export const cambiarEstado = async (req, res) => {
       },
     });
   } catch (error) {
+    await t.rollback();
     console.error("Error en cambiarEstado:", error);
     res.status(500).json({
       success: false,
