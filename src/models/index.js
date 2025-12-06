@@ -8,7 +8,8 @@
  * individuales estén definidos para que las asociaciones funcionen correctamente
  */
 
-import sequelize from "../config/database.js";
+//import sequelize from "../config/database.js";
+const sequelize = require("../../config/database.js");
 
 // ============================================
 // IMPORTAR TODOS LOS MODELOS
