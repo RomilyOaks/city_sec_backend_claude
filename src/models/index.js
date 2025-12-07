@@ -34,6 +34,7 @@ import HistorialEstadoNovedad from "./HistorialEstadoNovedad.js";
 import Usuario from "./Usuario.js";
 import Rol from "./Rol.js";
 import Permiso from "./Permiso.js";
+import UsuarioRol from "./UsuarioRoles.js"; // Tabla intermedia Usuario-Rol
 
 // Modelos de auditoría
 import HistorialUsuario from "./HistorialUsuario.js";
@@ -323,9 +324,11 @@ Usuario.belongsTo(Usuario, {
 // ASOCIACIONES MANY-TO-MANY: Usuario <-> Rol
 // ============================================
 
+// 1. Relación Many-to-Many entre Usuario y Rol
+// Se usa el modelo explícito UsuarioRol para manejar campos adicionales como fecha_expiracion
 // Tabla intermedia: usuario_roles
 Usuario.belongsToMany(Rol, {
-  through: "usuario_roles",
+  through: "UsuarioRol",
   foreignKey: "usuario_id",
   otherKey: "rol_id",
   as: "roles",
@@ -333,11 +336,36 @@ Usuario.belongsToMany(Rol, {
 });
 
 Rol.belongsToMany(Usuario, {
-  through: "usuario_roles",
+  through: "UsuarioRol",
   foreignKey: "rol_id",
   otherKey: "usuario_id",
   as: "usuarios",
   timestamps: true,
+});
+
+// 2. Relaciones One-to-Many para el modelo intermedio (facilitan la inclusión)
+// UsuarioRol tiene un Usuario asociado (el usuario al que pertenece el rol)
+UsuarioRol.belongsTo(Usuario, {
+  foreignKey: "usuario_id",
+  as: "usuario",
+});
+
+// UsuarioRol tiene un Rol asociado
+UsuarioRol.belongsTo(Rol, {
+  foreignKey: "rol_id",
+  as: "rol",
+});
+
+// 3. Relación de Auditoría para el campo 'asignado_por'
+// Un Usuario asigna (asignado_por) muchos registros UsuarioRol
+Usuario.hasMany(UsuarioRol, {
+  foreignKey: "asignado_por",
+  as: "rolesAsignadosPorMi",
+});
+
+UsuarioRol.belongsTo(Usuario, {
+  foreignKey: "asignado_por",
+  as: "asignador",
 });
 
 // ============================================
@@ -539,6 +567,26 @@ EstadoNovedad.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
+// Relación: UsuarioRol -> Usuario
+//--------------------------------------------------------------------------
+UsuarioRol.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creador",
+});
+
+// Relación: UsuarioRol -> Usuario (actualizador)
+UsuarioRol.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizador",
+});
+
+// Relación: UsuarioRol -> Usuario (eliminador - si usas soft-delete)
+UsuarioRol.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminador",
+});
+
+//--------------------------------------------------------------------------
 // Relación: PersonalSeguridad -> Usuario
 //--------------------------------------------------------------------------
 // NOTA: Esta sección estaba duplicada, se mantiene la definición de PersonalSeguridad
@@ -690,28 +738,29 @@ UnidadOficina.belongsTo(Usuario, {
  */
 const models = {
   // Instancia de Sequelize para poder hacer transacciones
-  sequelize, // Modelos de catálogos
-
+  sequelize,
+  // Modelos de catálogos
   TipoVehiculo,
   TipoNovedad,
   SubtipoNovedad,
   EstadoNovedad,
   Cargo,
-  Ubigeo, // Modelos operativos
-
+  Ubigeo,
+  // Modelos operativos
   Vehiculo,
   Sector,
   Cuadrante,
   UnidadOficina,
-  PersonalSeguridad, // Modelos de novedades
-
+  PersonalSeguridad,
+  // Modelos de novedades
   Novedad,
-  HistorialEstadoNovedad, // Modelos de autenticación y autorización
-
+  HistorialEstadoNovedad,
+  // Modelos de autenticación y autorización
   Usuario,
   Rol,
-  Permiso, // Modelos de auditoría
-
+  Permiso,
+  UsuarioRol,
+  // Modelos de auditoría
   HistorialUsuario,
   LoginIntento,
 };
@@ -736,6 +785,7 @@ export {
   Usuario,
   Rol,
   Permiso,
+  UsuarioRol,
   Novedad,
   HistorialEstadoNovedad,
   HistorialUsuario,

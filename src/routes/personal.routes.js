@@ -1,4 +1,8 @@
 /**
+ * ============================================
+ * RUTAS: src/routes/personal.routes.js
+ * ============================================
+ *
  * Rutas de Personal de Seguridad
  * Endpoints para gestión de personal con control RBAC
  */
@@ -17,25 +21,33 @@ import {
  * @route   GET /api/personal/disponibles
  * @desc    Obtener personal disponible (sin vehículo asignado)
  * @access  Operador, Supervisor, Administrador
+ *
+ * COMENTADO: Descomentar cuando exista personalController.getPersonalDisponible
  */
+/*
 router.get(
   "/disponibles",
   verificarToken,
   verificarRoles([ROLES.OPERADOR, ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
   personalController.getPersonalDisponible
 );
+*/
 
 /**
  * @route   GET /api/personal/stats
  * @desc    Obtener estadísticas del personal
  * @access  Supervisor, Administrador
+ *
+ * COMENTADO: Descomentar cuando exista personalController.getEstadisticasPersonal
  */
+/*
 router.get(
   "/stats",
   verificarToken,
   verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
   personalController.getEstadisticasPersonal
 );
+*/
 
 /**
  * @route   GET /api/personal
@@ -82,13 +94,17 @@ router.put(
  * @route   PATCH /api/personal/:id/estado
  * @desc    Cambiar estado del personal
  * @access  Supervisor, Administrador
+ *
+ * COMENTADO: Descomentar cuando exista personalController.cambiarEstadoPersonal
  */
+/*
 router.patch(
   "/:id/estado",
   verificarToken,
   verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
   personalController.cambiarEstadoPersonal
 );
+*/
 
 /**
  * @route   DELETE /api/personal/:id

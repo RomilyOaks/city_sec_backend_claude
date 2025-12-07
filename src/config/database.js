@@ -2,7 +2,7 @@
  * ============================================
  * CONFIGURACIÓN DE BASE DE DATOS (SEQUELIZE)
  * ============================================
- *
+ * Ruta: src/config/database.js
  * Configuración de Sequelize para conectar a MySQL.
  * Sequelize es un ORM (Object-Relational Mapping) que:
  * - Abstrae las consultas SQL

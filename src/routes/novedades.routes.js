@@ -1,5 +1,8 @@
 /**
- * novedades.routes.js
+ * ============================================
+ * RUTAS: src/routes/novedades.routes.js
+ * ============================================
+ *
  * Rutas de Novedades/Incidentes
  * Define los endpoints REST con control de acceso RBAC
  */
@@ -17,24 +20,33 @@ import {
  * @route   GET /api/novedades/dashboard/stats
  * @desc    Obtener estadísticas para el dashboard
  * @access  Todos los usuarios autenticados
+ *
+ * COMENTADO: Descomentar cuando exista novedadesController.getDashboardStats
  */
+/*
 router.get(
   "/dashboard/stats",
   verificarToken,
   novedadesController.getDashboardStats
 );
+*/
 
 /**
  * @route   GET /api/novedades
  * @desc    Obtener todas las novedades con filtros
  * @access  Operador, Supervisor, Administrador
+ * @query   fecha_inicio, fecha_fin, estado_id, prioridad, sector_id, page, limit
+ *
+ * COMENTADO: Descomentar cuando exista novedadesController.getAllNovedades
  */
+/*
 router.get(
   "/",
   verificarToken,
   verificarRoles(["operador", "supervisor", "admin"]),
   novedadesController.getAllNovedades
 );
+*/
 
 /**
  * @route   GET /api/novedades/:id
@@ -52,6 +64,7 @@ router.get(
  * @route   POST /api/novedades
  * @desc    Crear una nueva novedad
  * @access  Operador, Supervisor, Administrador
+ * @body    tipo_novedad_id, subtipo_novedad_id, fecha_hora, localizacion, etc.
  */
 router.post(
   "/",

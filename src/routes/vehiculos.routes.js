@@ -21,13 +21,17 @@ import {
  * @route   GET /api/vehiculos/disponibles
  * @desc    Obtener vehículos disponibles (no asignados a novedades activas)
  * @access  Operador, Supervisor, Administrador
+ *
+ * COMENTADO: Descomentar cuando exista vehiculosController.getVehiculosDisponibles
  */
+/*
 router.get(
   "/disponibles",
   verificarToken,
   verificarRoles([ROLES.OPERADOR, ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
   vehiculosController.getVehiculosDisponibles
 );
+*/
 
 /**
  * @route   GET /api/vehiculos
@@ -89,24 +93,32 @@ router.delete(
  * @desc    Registrar abastecimiento de combustible
  * @access  Operador, Supervisor, Administrador
  * @body    fecha_hora, tipo_combustible, cantidad, km_llegada, etc.
+ *
+ * COMENTADO: Descomentar cuando exista vehiculosController.registrarAbastecimiento
  */
+/*
 router.post(
   "/:id/abastecimiento",
   verificarToken,
   verificarRoles([ROLES.OPERADOR, ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
   vehiculosController.registrarAbastecimiento
 );
+*/
 
 /**
  * @route   GET /api/vehiculos/:id/abastecimientos
  * @desc    Obtener historial de abastecimientos de un vehículo
  * @access  Todos los usuarios autenticados
  * @query   fecha_inicio, fecha_fin, limit
+ *
+ * COMENTADO: Descomentar cuando exista vehiculosController.getHistorialAbastecimientos
  */
+/*
 router.get(
   "/:id/abastecimientos",
   verificarToken,
   vehiculosController.getHistorialAbastecimientos
 );
+*/
 
 export default router;
