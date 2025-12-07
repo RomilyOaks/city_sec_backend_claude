@@ -1,5 +1,7 @@
 /**
- * sectoresController.js
+ * Ruta: src/controllers/sectoresController.js
+ * ============================================
+ *
  * Controlador de Sectores y Cuadrantes
  * Gestiona la división territorial para patrullaje
  */
@@ -14,7 +16,7 @@ import { Op } from "sequelize";
  * Permisos: todos los usuarios autenticados
  * @route GET /api/sectores
  */
-exports.getAllSectores = async (req, res) => {
+const getAllSectores = async (req, res) => {
   try {
     const { estado, zona_code } = req.query;
 
@@ -67,7 +69,7 @@ exports.getAllSectores = async (req, res) => {
  * Permisos: todos los usuarios autenticados
  * @route GET /api/sectores/:id
  */
-exports.getSectorById = async (req, res) => {
+const getSectorById = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -113,7 +115,7 @@ exports.getSectorById = async (req, res) => {
  * Permisos: supervisor, administrador
  * @route POST /api/sectores
  */
-exports.createSector = async (req, res) => {
+const createSector = async (req, res) => {
   try {
     const {
       sector_code,
@@ -182,7 +184,7 @@ exports.createSector = async (req, res) => {
  * Permisos: supervisor, administrador
  * @route PUT /api/sectores/:id
  */
-exports.updateSector = async (req, res) => {
+const updateSector = async (req, res) => {
   try {
     const { id } = req.params;
     const datosActualizacion = req.body;
@@ -253,7 +255,7 @@ exports.updateSector = async (req, res) => {
  * Permisos: administrador
  * @route DELETE /api/sectores/:id
  */
-exports.deleteSector = async (req, res) => {
+const deleteSector = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -313,7 +315,7 @@ exports.deleteSector = async (req, res) => {
  * Permisos: todos los usuarios autenticados
  * @route GET /api/cuadrantes
  */
-exports.getAllCuadrantes = async (req, res) => {
+const getAllCuadrantes = async (req, res) => {
   try {
     const { sector_id, estado } = req.query;
 
@@ -360,7 +362,7 @@ exports.getAllCuadrantes = async (req, res) => {
  * Permisos: todos los usuarios autenticados
  * @route GET /api/cuadrantes/:id
  */
-exports.getCuadranteById = async (req, res) => {
+const getCuadranteById = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -400,7 +402,7 @@ exports.getCuadranteById = async (req, res) => {
  * Permisos: supervisor, administrador
  * @route POST /api/cuadrantes
  */
-exports.createCuadrante = async (req, res) => {
+const createCuadrante = async (req, res) => {
   try {
     const {
       cuadrante_code,
@@ -485,7 +487,7 @@ exports.createCuadrante = async (req, res) => {
  * Permisos: supervisor, administrador
  * @route PUT /api/cuadrantes/:id
  */
-exports.updateCuadrante = async (req, res) => {
+const updateCuadrante = async (req, res) => {
   try {
     const { id } = req.params;
     const datosActualizacion = req.body;
@@ -553,7 +555,7 @@ exports.updateCuadrante = async (req, res) => {
  * Permisos: administrador
  * @route DELETE /api/cuadrantes/:id
  */
-exports.deleteCuadrante = async (req, res) => {
+const deleteCuadrante = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -589,4 +591,15 @@ exports.deleteCuadrante = async (req, res) => {
   }
 };
 
-export default exports;
+export default {
+  getAllSectores,
+  getSectorById,
+  createSector,
+  updateSector,
+  deleteSector,
+  getAllCuadrantes,
+  getCuadranteById,
+  createCuadrante,
+  updateCuadrante,
+  deleteCuadrante,
+};

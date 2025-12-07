@@ -1,5 +1,7 @@
 /**
- * novedadesController.js
+ * Ruta: src/controllers/novedadesController.js
+ * ============================================
+ *
  * Controlador de Novedades/Incidentes
  * Gestiona el CRUD de novedades e incidentes de seguridad ciudadana
  * Implementa control de acceso RBAC
@@ -24,7 +26,7 @@ import { Op } from "sequelize";
  * Permisos: operador, supervisor, administrador
  * @route GET /api/novedades
  */
-exports.getAllNovedades = async (req, res) => {
+const getAllNovedades = async (req, res) => {
   try {
     const {
       fecha_inicio,
@@ -151,7 +153,7 @@ exports.getAllNovedades = async (req, res) => {
  * Permisos: operador, supervisor, administrador
  * @route GET /api/novedades/:id
  */
-exports.getNovedadById = async (req, res) => {
+const getNovedadById = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -223,7 +225,7 @@ exports.getNovedadById = async (req, res) => {
  * Permisos: operador, supervisor, administrador
  * @route POST /api/novedades
  */
-exports.createNovedad = async (req, res) => {
+const createNovedad = async (req, res) => {
   try {
     const {
       tipo_novedad_id,
@@ -351,7 +353,7 @@ exports.createNovedad = async (req, res) => {
  * Permisos: supervisor, administrador
  * @route PUT /api/novedades/:id
  */
-exports.updateNovedad = async (req, res) => {
+const updateNovedad = async (req, res) => {
   try {
     const { id } = req.params;
     const datosActualizacion = req.body;
@@ -437,7 +439,7 @@ exports.updateNovedad = async (req, res) => {
  * Permisos: operador, supervisor, administrador
  * @route POST /api/novedades/:id/asignar
  */
-exports.asignarRecursos = async (req, res) => {
+const asignarRecursos = async (req, res) => {
   try {
     const { id } = req.params;
     const { unidad_oficina_id, vehiculo_id, personal_cargo_id, km_inicial } =
@@ -503,7 +505,7 @@ exports.asignarRecursos = async (req, res) => {
  * Permisos: administrador
  * @route DELETE /api/novedades/:id
  */
-exports.deleteNovedad = async (req, res) => {
+const deleteNovedad = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -544,7 +546,7 @@ exports.deleteNovedad = async (req, res) => {
  * Permisos: operador, supervisor, administrador
  * @route GET /api/novedades/:id/historial
  */
-exports.getHistorialEstados = async (req, res) => {
+const getHistorialEstados = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -584,7 +586,7 @@ exports.getHistorialEstados = async (req, res) => {
  * Permisos: todos los usuarios autenticados
  * @route GET /api/novedades/dashboard/stats
  */
-exports.getDashboardStats = async (req, res) => {
+const getDashboardStats = async (req, res) => {
   try {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
@@ -666,4 +668,13 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
-export default exports;
+export default {
+  getAllNovedades,
+  getNovedadById,
+  createNovedad,
+  updateNovedad,
+  asignarRecursos,
+  deleteNovedad,
+  getHistorialEstados,
+  getDashboardStats,
+};

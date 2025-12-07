@@ -1,5 +1,7 @@
 /**
- * vehiculosController.js
+ * Ruta: src/controllers/vehiculosController.js
+ * ============================================
+ *
  * Controlador de Vehículos
  * Gestiona el CRUD de vehículos del sistema de seguridad
  * Incluye gestión de abastecimiento de combustible
@@ -18,7 +20,7 @@ import { Op } from "sequelize";
  * Permisos: todos los usuarios autenticados
  * @route GET /api/vehiculos
  */
-exports.getAllVehiculos = async (req, res) => {
+const getAllVehiculos = async (req, res) => {
   try {
     const { tipo_id, estado, search } = req.query;
 
@@ -80,7 +82,7 @@ exports.getAllVehiculos = async (req, res) => {
  * Permisos: todos los usuarios autenticados
  * @route GET /api/vehiculos/:id
  */
-exports.getVehiculoById = async (req, res) => {
+const getVehiculoById = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -124,7 +126,7 @@ exports.getVehiculoById = async (req, res) => {
  * Permisos: supervisor, administrador
  * @route POST /api/vehiculos
  */
-exports.createVehiculo = async (req, res) => {
+const createVehiculo = async (req, res) => {
   try {
     const {
       tipo_id,
@@ -230,7 +232,7 @@ exports.createVehiculo = async (req, res) => {
  * Permisos: supervisor, administrador
  * @route PUT /api/vehiculos/:id
  */
-exports.updateVehiculo = async (req, res) => {
+const updateVehiculo = async (req, res) => {
   try {
     const { id } = req.params;
     const datosActualizacion = req.body;
@@ -301,7 +303,7 @@ exports.updateVehiculo = async (req, res) => {
  * Permisos: administrador
  * @route DELETE /api/vehiculos/:id
  */
-exports.deleteVehiculo = async (req, res) => {
+const deleteVehiculo = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -342,7 +344,7 @@ exports.deleteVehiculo = async (req, res) => {
  * Permisos: operador, supervisor, administrador
  * @route POST /api/vehiculos/:id/abastecimiento
  */
-exports.registrarAbastecimiento = async (req, res) => {
+const registrarAbastecimiento = async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -439,7 +441,7 @@ exports.registrarAbastecimiento = async (req, res) => {
  * Permisos: todos los usuarios autenticados
  * @route GET /api/vehiculos/:id/abastecimientos
  */
-exports.getHistorialAbastecimientos = async (req, res) => {
+const getHistorialAbastecimientos = async (req, res) => {
   try {
     const { id } = req.params;
     const { fecha_inicio, fecha_fin, limit = 50 } = req.query;
@@ -509,7 +511,7 @@ exports.getHistorialAbastecimientos = async (req, res) => {
  * Permisos: operador, supervisor, administrador
  * @route GET /api/vehiculos/disponibles
  */
-exports.getVehiculosDisponibles = async (req, res) => {
+const getVehiculosDisponibles = async (req, res) => {
   try {
     // Obtener IDs de vehículos actualmente asignados
     const vehiculosAsignados = await Novedad.findAll({
@@ -559,4 +561,11 @@ exports.getVehiculosDisponibles = async (req, res) => {
   }
 };
 
-export default exports;
+export default {
+  getAllVehiculos,
+  getVehiculoById,
+  createVehiculo,
+  updateVehiculo,
+  deleteVehiculo,
+  getVehiculosDisponibles,
+};
