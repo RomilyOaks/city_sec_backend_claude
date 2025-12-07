@@ -1,6 +1,7 @@
 /**
  * ============================================
  * MODELO: NOVEDAD (INCIDENTE)
+ * Ruta: src/models/Novedad.js
  * ============================================
  *
  * Modelo principal para gestión de novedades/incidentes de seguridad

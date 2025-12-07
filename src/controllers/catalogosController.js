@@ -1,5 +1,7 @@
 /**
  * Controlador de Catálogos
+ * Ruta: src/controllers/catalogosController.js
+ * ============================================
  * Gestiona los catálogos maestros del sistema:
  * - Tipos y Subtipos de Novedades
  * - Estados de Novedades
@@ -26,7 +28,7 @@ import { Op } from "sequelize";
  * Obtener todos los tipos de novedad
  * @route GET /api/catalogos/tipos-novedad
  */
-exports.getTiposNovedad = async (req, res) => {
+const getTiposNovedad = async (req, res) => {
   try {
     const { incluir_subtipos = "true" } = req.query;
 
@@ -70,7 +72,7 @@ exports.getTiposNovedad = async (req, res) => {
  * @route POST /api/catalogos/tipos-novedad
  * Permisos: administrador
  */
-exports.createTipoNovedad = async (req, res) => {
+const createTipoNovedad = async (req, res) => {
   try {
     const {
       tipo_code,
@@ -133,7 +135,7 @@ exports.createTipoNovedad = async (req, res) => {
  * Obtener subtipos de novedad
  * @route GET /api/catalogos/subtipos-novedad
  */
-exports.getSubtiposNovedad = async (req, res) => {
+const getSubtiposNovedad = async (req, res) => {
   try {
     const { tipo_id, prioridad } = req.query;
 
@@ -184,7 +186,7 @@ exports.getSubtiposNovedad = async (req, res) => {
  * @route POST /api/catalogos/subtipos-novedad
  * Permisos: administrador
  */
-exports.createSubtipoNovedad = async (req, res) => {
+const createSubtipoNovedad = async (req, res) => {
   try {
     const {
       tipo_novedad_id,
@@ -266,7 +268,7 @@ exports.createSubtipoNovedad = async (req, res) => {
  * Obtener estados de novedad
  * @route GET /api/catalogos/estados-novedad
  */
-exports.getEstadosNovedad = async (req, res) => {
+const getEstadosNovedad = async (req, res) => {
   try {
     const estados = await EstadoNovedad.findAll({
       where: { estado: 1, deleted_at: null },
@@ -292,7 +294,7 @@ exports.getEstadosNovedad = async (req, res) => {
  * @route POST /api/catalogos/estados-novedad
  * Permisos: administrador
  */
-exports.createEstadoNovedad = async (req, res) => {
+const createEstadoNovedad = async (req, res) => {
   try {
     const {
       nombre,
@@ -353,7 +355,7 @@ exports.createEstadoNovedad = async (req, res) => {
  * Obtener tipos de vehículo
  * @route GET /api/catalogos/tipos-vehiculo
  */
-exports.getTiposVehiculo = async (req, res) => {
+const getTiposVehiculo = async (req, res) => {
   try {
     const tipos = await TipoVehiculo.findAll({
       where: { estado: 1, deleted_at: null },
@@ -379,7 +381,7 @@ exports.getTiposVehiculo = async (req, res) => {
  * @route POST /api/catalogos/tipos-vehiculo
  * Permisos: administrador
  */
-exports.createTipoVehiculo = async (req, res) => {
+const createTipoVehiculo = async (req, res) => {
   try {
     const { nombre, descripcion } = req.body;
 
@@ -417,7 +419,7 @@ exports.createTipoVehiculo = async (req, res) => {
  * Obtener cargos
  * @route GET /api/catalogos/cargos
  */
-exports.getCargos = async (req, res) => {
+const getCargos = async (req, res) => {
   try {
     const cargos = await Cargo.findAll({
       where: { estado: 1 },
@@ -443,7 +445,7 @@ exports.getCargos = async (req, res) => {
  * @route POST /api/catalogos/cargos
  * Permisos: administrador
  */
-exports.createCargo = async (req, res) => {
+const createCargo = async (req, res) => {
   try {
     const { nombre } = req.body;
 
@@ -480,7 +482,7 @@ exports.createCargo = async (req, res) => {
  * Obtener unidades/oficinas
  * @route GET /api/catalogos/unidades
  */
-exports.getUnidades = async (req, res) => {
+const getUnidades = async (req, res) => {
   try {
     const { tipo_unidad } = req.query;
 
@@ -524,7 +526,7 @@ exports.getUnidades = async (req, res) => {
  * @route POST /api/catalogos/unidades
  * Permisos: administrador
  */
-exports.createUnidad = async (req, res) => {
+const createUnidad = async (req, res) => {
   try {
     const {
       codigo,
@@ -591,7 +593,7 @@ exports.createUnidad = async (req, res) => {
  * Buscar ubigeos
  * @route GET /api/catalogos/ubigeo
  */
-exports.buscarUbigeo = async (req, res) => {
+const buscarUbigeo = async (req, res) => {
   try {
     const { search, departamento, provincia } = req.query;
 
@@ -641,7 +643,7 @@ exports.buscarUbigeo = async (req, res) => {
  * Obtener departamentos únicos
  * @route GET /api/catalogos/departamentos
  */
-exports.getDepartamentos = async (req, res) => {
+const getDepartamentos = async (req, res) => {
   try {
     //  import { sequelize } from "../models/index.js";
 
@@ -669,4 +671,19 @@ exports.getDepartamentos = async (req, res) => {
   }
 };
 
-export default exports;
+export default {
+  getTiposNovedad,
+  createTipoNovedad,
+  getSubtiposNovedad,
+  createSubtipoNovedad,
+  getEstadosNovedad,
+  createEstadoNovedad,
+  getTiposVehiculo,
+  createTipoVehiculo,
+  getCargos,
+  createCargo,
+  getUnidades,
+  createUnidad,
+  buscarUbigeo,
+  getDepartamentos,
+};

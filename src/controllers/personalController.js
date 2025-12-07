@@ -1,5 +1,7 @@
 /**
- * personalController.js
+ * Ruta: src/controllers/personalController.js
+ * ============================================
+ *
  * Controlador de Personal de Seguridad
  * Gestiona el CRUD del personal del sistema de seguridad ciudadana
  */
@@ -18,7 +20,7 @@ import { Op } from "sequelize";
  * Permisos: todos los usuarios autenticados
  * @route GET /api/personal
  */
-exports.getAllPersonal = async (req, res) => {
+const getAllPersonal = async (req, res) => {
   try {
     const { cargo_id, status, search, page = 1, limit = 50 } = req.query;
 
@@ -101,7 +103,7 @@ exports.getAllPersonal = async (req, res) => {
  * Permisos: todos los usuarios autenticados
  * @route GET /api/personal/:id
  */
-exports.getPersonalById = async (req, res) => {
+const getPersonalById = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -140,7 +142,7 @@ exports.getPersonalById = async (req, res) => {
  * Permisos: supervisor, administrador
  * @route POST /api/personal
  */
-exports.createPersonal = async (req, res) => {
+const createPersonal = async (req, res) => {
   try {
     const {
       doc_tipo,
@@ -247,7 +249,7 @@ exports.createPersonal = async (req, res) => {
  * Permisos: supervisor, administrador
  * @route PUT /api/personal/:id
  */
-exports.updatePersonal = async (req, res) => {
+const updatePersonal = async (req, res) => {
   try {
     const { id } = req.params;
     const datosActualizacion = req.body;
@@ -320,7 +322,7 @@ exports.updatePersonal = async (req, res) => {
  * Permisos: supervisor, administrador
  * @route PATCH /api/personal/:id/estado
  */
-exports.cambiarEstadoPersonal = async (req, res) => {
+const cambiarEstadoPersonal = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, fecha_baja, motivo } = req.body;
@@ -378,7 +380,7 @@ exports.cambiarEstadoPersonal = async (req, res) => {
  * Permisos: administrador
  * @route DELETE /api/personal/:id
  */
-exports.deletePersonal = async (req, res) => {
+const deletePersonal = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -420,7 +422,7 @@ exports.deletePersonal = async (req, res) => {
  * Permisos: operador, supervisor, administrador
  * @route GET /api/personal/disponibles
  */
-exports.getPersonalDisponible = async (req, res) => {
+const getPersonalDisponible = async (req, res) => {
   try {
     const personalDisponible = await PersonalSeguridad.findAll({
       where: {
@@ -461,7 +463,7 @@ exports.getPersonalDisponible = async (req, res) => {
  * Permisos: supervisor, administrador
  * @route GET /api/personal/stats
  */
-exports.getEstadisticasPersonal = async (req, res) => {
+const getEstadisticasPersonal = async (req, res) => {
   try {
     // Total por estado
     const porEstado = await PersonalSeguridad.findAll({
@@ -530,4 +532,13 @@ exports.getEstadisticasPersonal = async (req, res) => {
   }
 };
 
-export default exports;
+export default {
+  getAllPersonal,
+  getPersonalById,
+  createPersonal,
+  updatePersonal,
+  cambiarEstadoPersonal,
+  deletePersonal,
+  getPersonalDisponible,
+  getEstadisticasPersonal,
+};
