@@ -1,6 +1,10 @@
 /**
+ * ============================================
+ * RUTAS: src/routes/sectores.routes.js
+ * ============================================
+ *
  * Rutas de Sectores y Cuadrantes
- * Endpoints para gestión territorial
+ * Endpoints para gestión territorial con control RBAC
  */
 
 import express from "express";
@@ -9,7 +13,6 @@ import sectoresController from "../controllers/sectoresController.js";
 import {
   verificarToken,
   verificarRoles,
-  registrarAccion,
   ROLES,
 } from "../middlewares/authMiddleware.js";
 
@@ -39,7 +42,6 @@ router.post(
   "/",
   verificarToken,
   verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
-  registrarAccion("CREAR_SECTOR"),
   sectoresController.createSector
 );
 
@@ -52,7 +54,6 @@ router.put(
   "/:id",
   verificarToken,
   verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
-  registrarAccion("ACTUALIZAR_SECTOR"),
   sectoresController.updateSector
 );
 
@@ -65,7 +66,6 @@ router.delete(
   "/:id",
   verificarToken,
   verificarRoles([ROLES.ADMINISTRADOR]),
-  registrarAccion("ELIMINAR_SECTOR"),
   sectoresController.deleteSector
 );
 
@@ -99,7 +99,6 @@ router.post(
   "/cuadrantes",
   verificarToken,
   verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
-  registrarAccion("CREAR_CUADRANTE"),
   sectoresController.createCuadrante
 );
 
@@ -112,7 +111,6 @@ router.put(
   "/cuadrantes/:id",
   verificarToken,
   verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
-  registrarAccion("ACTUALIZAR_CUADRANTE"),
   sectoresController.updateCuadrante
 );
 
@@ -125,7 +123,6 @@ router.delete(
   "/cuadrantes/:id",
   verificarToken,
   verificarRoles([ROLES.ADMINISTRADOR]),
-  registrarAccion("ELIMINAR_CUADRANTE"),
   sectoresController.deleteCuadrante
 );
 

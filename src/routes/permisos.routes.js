@@ -33,9 +33,9 @@ import {
 } from "../controllers/permisosController.js";
 
 import {
-  authenticate,
+  verificarToken as authenticate,
   requirePermission,
-  requireRole,
+  requireAnyPermission as requireRole,
 } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();

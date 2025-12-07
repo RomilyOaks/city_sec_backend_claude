@@ -1,7 +1,8 @@
 /**
- * Ruta: src/routes/roles.routes.js
+ * ============================================
+ * RUTAS: src/routes/roles.routes.js
+ * ============================================
  *
- * Descripción:
  * Definición de rutas para la gestión de roles del sistema RBAC.
  * Los roles agrupan permisos y definen niveles de acceso.
  *
@@ -17,8 +18,6 @@
  * - DELETE /api/v1/roles/:id                - Eliminar rol
  * - POST   /api/v1/roles/:id/permisos       - Asignar permisos
  * - DELETE /api/v1/roles/:id/permisos/:permisoId - Quitar permiso
- *
- * @module routes/roles
  */
 
 import express from "express";
@@ -35,9 +34,9 @@ import {
 } from "../controllers/rolesController.js";
 
 import {
-  authenticate,
+  verificarToken,
   requirePermission,
-  requireRole,
+  verificarRoles,
 } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -46,8 +45,8 @@ const router = express.Router();
  * Middleware de autenticación y rol
  * Todas las rutas requieren ser super_admin o admin
  */
-router.use(authenticate);
-router.use(requireRole(["super_admin", "admin"]));
+router.use(verificarToken);
+router.use(verificarRoles(["super_admin", "admin"]));
 
 // ============================================
 // RUTAS DE CONSULTA (READ)

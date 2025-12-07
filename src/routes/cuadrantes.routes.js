@@ -1,7 +1,8 @@
 /**
- * Ruta: src/routes/cuadrantes.routes.js
+ * ============================================
+ * RUTAS: src/routes/cuadrantes.routes.js
+ * ============================================
  *
- * Descripción:
  * Definición de rutas para la gestión de cuadrantes de patrullaje.
  * Todas las rutas requieren autenticación y permisos específicos.
  *
@@ -15,8 +16,6 @@
  * - PUT    /api/v1/cuadrantes/:id             - Actualizar cuadrante
  * - DELETE /api/v1/cuadrantes/:id             - Eliminar cuadrante
  * - PATCH  /api/v1/cuadrantes/:id/estado      - Cambiar estado
- *
- * @module routes/cuadrantes
  */
 
 import express from "express";
@@ -33,7 +32,7 @@ import {
 } from "../controllers/cuadrantesController.js";
 
 import {
-  authenticate,
+  verificarToken,
   requirePermission,
   requireAnyPermission,
 } from "../middlewares/authMiddleware.js";
@@ -45,7 +44,7 @@ const router = express.Router();
  * Middleware de autenticación para todas las rutas
  * Todas las rutas de cuadrantes requieren autenticación
  */
-router.use(authenticate);
+router.use(verificarToken);
 
 // ============================================
 // RUTAS DE CONSULTA (READ)
@@ -55,11 +54,6 @@ router.use(authenticate);
  * @route   GET /api/v1/cuadrantes
  * @desc    Listar cuadrantes con paginación y filtros
  * @access  Private (requiere permiso: catalogos.cuadrantes.read)
- * @query   {number} page - Número de página (default: 1)
- * @query   {number} limit - Items por página (default: 10)
- * @query   {number} sector_id - Filtrar por sector
- * @query   {boolean} activos - Solo activos (default: true)
- * @query   {string} search - Búsqueda por nombre o código
  */
 router.get("/", requirePermission("catalogos.cuadrantes.read"), getCuadrantes);
 
@@ -67,12 +61,8 @@ router.get("/", requirePermission("catalogos.cuadrantes.read"), getCuadrantes);
  * @route   GET /api/v1/cuadrantes/cercanos
  * @desc    Buscar cuadrantes cercanos a una ubicación (geoespacial)
  * @access  Private (requiere permiso: catalogos.cuadrantes.read)
- * @query   {number} lat - Latitud
- * @query   {number} lng - Longitud
- * @query   {number} radius - Radio en km (default: 5)
  *
  * IMPORTANTE: Esta ruta debe estar ANTES de /:id
- * para que /cercanos no se interprete como un ID
  */
 router.get(
   "/cercanos",
@@ -84,7 +74,6 @@ router.get(
  * @route   GET /api/v1/cuadrantes/sector/:sectorId
  * @desc    Obtener cuadrantes de un sector específico
  * @access  Private (requiere permiso: catalogos.cuadrantes.read)
- * @params  {number} sectorId - ID del sector
  */
 router.get(
   "/sector/:sectorId",
@@ -96,7 +85,6 @@ router.get(
  * @route   GET /api/v1/cuadrantes/codigo/:code
  * @desc    Buscar cuadrante por código único
  * @access  Private (requiere permiso: catalogos.cuadrantes.read)
- * @params  {string} code - Código del cuadrante
  */
 router.get(
   "/codigo/:code",
@@ -108,7 +96,6 @@ router.get(
  * @route   GET /api/v1/cuadrantes/:id
  * @desc    Obtener cuadrante específico por ID
  * @access  Private (requiere permiso: catalogos.cuadrantes.read)
- * @params  {number} id - ID del cuadrante
  */
 router.get(
   "/:id",
@@ -124,16 +111,6 @@ router.get(
  * @route   POST /api/v1/cuadrantes
  * @desc    Crear nuevo cuadrante
  * @access  Private (requiere permiso: catalogos.cuadrantes.create)
- * @body    {Object} cuadrante - Datos del cuadrante
- * @body    {string} cuadrante.nombre - Nombre (requerido)
- * @body    {number} cuadrante.sector_id - ID del sector (requerido)
- * @body    {string} [cuadrante.cuadrante_code] - Código (opcional, se genera automático)
- * @body    {string} [cuadrante.zona_code] - Código de zona
- * @body    {number} [cuadrante.latitud] - Latitud
- * @body    {number} [cuadrante.longitud] - Longitud
- * @body    {Object} [cuadrante.poligono_json] - Polígono GeoJSON
- * @body    {number} [cuadrante.radio_metros] - Radio en metros
- * @body    {string} [cuadrante.color_mapa] - Color hex (ej: #10B981)
  */
 router.post(
   "/",
@@ -145,8 +122,6 @@ router.post(
  * @route   PUT /api/v1/cuadrantes/:id
  * @desc    Actualizar cuadrante existente
  * @access  Private (requiere permiso: catalogos.cuadrantes.update)
- * @params  {number} id - ID del cuadrante
- * @body    {Object} cuadrante - Datos a actualizar
  */
 router.put(
   "/:id",
@@ -158,7 +133,6 @@ router.put(
  * @route   DELETE /api/v1/cuadrantes/:id
  * @desc    Eliminar cuadrante (soft delete)
  * @access  Private (requiere permiso: catalogos.cuadrantes.delete)
- * @params  {number} id - ID del cuadrante
  */
 router.delete(
   "/:id",
@@ -170,8 +144,6 @@ router.delete(
  * @route   PATCH /api/v1/cuadrantes/:id/estado
  * @desc    Activar o desactivar cuadrante
  * @access  Private (requiere permiso: catalogos.cuadrantes.update)
- * @params  {number} id - ID del cuadrante
- * @body    {boolean} estado - true para activar, false para desactivar
  */
 router.patch(
   "/:id/estado",
@@ -179,5 +151,4 @@ router.patch(
   cambiarEstado
 );
 
-// Exportar router
 export default router;

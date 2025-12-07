@@ -6,7 +6,13 @@
  */
 
 import bcrypt from "bcryptjs";
-import { Usuario, Rol, Permiso, PersonalSeguridad } from "../models/index.js";
+import {
+  Usuario,
+  Rol,
+  Permiso,
+  PersonalSeguridad,
+  HistorialUsuario,
+} from "../models/index.js";
 import { Op } from "sequelize";
 
 /**

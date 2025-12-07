@@ -1,6 +1,7 @@
 /**
  * ============================================
  * MODELO: HISTORIAL DE USUARIOS
+ * Ruta: src/models/HistorialUsuario.js
  * ============================================
  *
  * Registra todos los cambios realizados en usuarios

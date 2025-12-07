@@ -1,5 +1,8 @@
 /**
- * vehiculos.routes.js
+ * ============================================
+ * RUTAS: src/routes/vehiculos.routes.js
+ * ============================================
+ *
  * Rutas de Vehículos
  * Define los endpoints REST para gestión de vehículos con control RBAC
  */
@@ -10,10 +13,8 @@ import vehiculosController from "../controllers/vehiculosController.js";
 import {
   verificarToken,
   verificarRoles,
-  verificarPermisos,
-  registrarAccion,
+  requireAnyPermission,
   ROLES,
-  PERMISOS,
 } from "../middlewares/authMiddleware.js";
 
 /**
@@ -53,8 +54,7 @@ router.post(
   "/",
   verificarToken,
   verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
-  verificarPermisos([PERMISOS.CREAR_VEHICULO]),
-  registrarAccion("CREAR_VEHICULO"),
+  requireAnyPermission(["vehiculos.vehiculos.create"]),
   vehiculosController.createVehiculo
 );
 
@@ -67,8 +67,7 @@ router.put(
   "/:id",
   verificarToken,
   verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
-  verificarPermisos([PERMISOS.EDITAR_VEHICULO]),
-  registrarAccion("ACTUALIZAR_VEHICULO"),
+  requireAnyPermission(["vehiculos.vehiculos.update"]),
   vehiculosController.updateVehiculo
 );
 
@@ -81,8 +80,7 @@ router.delete(
   "/:id",
   verificarToken,
   verificarRoles([ROLES.ADMINISTRADOR]),
-  verificarPermisos([PERMISOS.ELIMINAR_VEHICULO]),
-  registrarAccion("ELIMINAR_VEHICULO"),
+  requireAnyPermission(["vehiculos.vehiculos.delete"]),
   vehiculosController.deleteVehiculo
 );
 
@@ -96,7 +94,6 @@ router.post(
   "/:id/abastecimiento",
   verificarToken,
   verificarRoles([ROLES.OPERADOR, ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
-  registrarAccion("REGISTRAR_ABASTECIMIENTO"),
   vehiculosController.registrarAbastecimiento
 );
 
