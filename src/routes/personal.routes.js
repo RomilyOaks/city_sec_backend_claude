@@ -9,10 +9,8 @@ import personalController from "../controllers/personalController.js";
 import {
   verificarToken,
   verificarRoles,
-  verificarPermisos,
-  registrarAccion,
+  requireAnyPermission,
   ROLES,
-  PERMISOS,
 } from "../middlewares/authMiddleware.js";
 
 /**
@@ -63,8 +61,7 @@ router.post(
   "/",
   verificarToken,
   verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
-  verificarPermisos([PERMISOS.CREAR_PERSONAL]),
-  registrarAccion("CREAR_PERSONAL"),
+  requireAnyPermission(["personal.personal.create"]),
   personalController.createPersonal
 );
 
@@ -77,8 +74,7 @@ router.put(
   "/:id",
   verificarToken,
   verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
-  verificarPermisos([PERMISOS.EDITAR_PERSONAL]),
-  registrarAccion("ACTUALIZAR_PERSONAL"),
+  requireAnyPermission(["personal.personal.update"]),
   personalController.updatePersonal
 );
 
@@ -91,7 +87,6 @@ router.patch(
   "/:id/estado",
   verificarToken,
   verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
-  registrarAccion("CAMBIAR_ESTADO_PERSONAL"),
   personalController.cambiarEstadoPersonal
 );
 
@@ -104,8 +99,7 @@ router.delete(
   "/:id",
   verificarToken,
   verificarRoles([ROLES.ADMINISTRADOR]),
-  verificarPermisos([PERMISOS.ELIMINAR_PERSONAL]),
-  registrarAccion("ELIMINAR_PERSONAL"),
+  requireAnyPermission(["personal.personal.delete"]),
   personalController.deletePersonal
 );
 

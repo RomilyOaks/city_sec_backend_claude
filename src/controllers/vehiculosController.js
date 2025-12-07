@@ -9,7 +9,6 @@ import {
   Vehiculo,
   TipoVehiculo,
   PersonalSeguridad,
-  AbastecimientoCombustible,
   Novedad,
 } from "../models/index.js";
 import { Op } from "sequelize";

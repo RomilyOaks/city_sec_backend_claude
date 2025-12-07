@@ -10,8 +10,7 @@ import novedadesController from "../controllers/novedadesController.js";
 import {
   verificarToken,
   verificarRoles,
-  verificarPermisos,
-  registrarAccion,
+  requireAnyPermission,
 } from "../middlewares/authMiddleware.js";
 
 /**
@@ -29,7 +28,6 @@ router.get(
  * @route   GET /api/novedades
  * @desc    Obtener todas las novedades con filtros
  * @access  Operador, Supervisor, Administrador
- * @query   fecha_inicio, fecha_fin, estado_id, prioridad, sector_id, page, limit
  */
 router.get(
   "/",
@@ -54,14 +52,12 @@ router.get(
  * @route   POST /api/novedades
  * @desc    Crear una nueva novedad
  * @access  Operador, Supervisor, Administrador
- * @body    tipo_novedad_id, subtipo_novedad_id, fecha_hora, localizacion, etc.
  */
 router.post(
   "/",
   verificarToken,
   verificarRoles(["operador", "supervisor", "admin"]),
-  verificarPermisos([PERMISOS.CREAR_NOVEDAD]),
-  registrarAccion("CREAR_NOVEDAD"),
+  requireAnyPermission(["novedades.incidentes.create"]),
   novedadesController.createNovedad
 );
 
@@ -73,9 +69,8 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles(["operador", "supervisor", "admin"]),
-  verificarPermisos([PERMISOS.EDITAR_NOVEDAD]),
-  registrarAccion("ACTUALIZAR_NOVEDAD"),
+  verificarRoles(["supervisor", "admin"]),
+  requireAnyPermission(["novedades.incidentes.update"]),
   novedadesController.updateNovedad
 );
 
@@ -88,8 +83,7 @@ router.post(
   "/:id/asignar",
   verificarToken,
   verificarRoles(["operador", "supervisor", "admin"]),
-  verificarPermisos([PERMISOS.ASIGNAR_RECURSOS]),
-  registrarAccion("ASIGNAR_RECURSOS"),
+  requireAnyPermission(["novedades.asignacion.execute"]),
   novedadesController.asignarRecursos
 );
 
@@ -101,9 +95,8 @@ router.post(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles("admin"),
-  verificarPermisos([PERMISOS.ELIMINAR_NOVEDAD]),
-  registrarAccion("ELIMINAR_NOVEDAD"),
+  verificarRoles(["admin"]),
+  requireAnyPermission(["novedades.incidentes.delete"]),
   novedadesController.deleteNovedad
 );
 

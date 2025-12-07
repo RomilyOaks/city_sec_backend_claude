@@ -1,12 +1,6 @@
-/**
- * Ruta: src/models/index.js
- * Descripción: Archivo central de modelos que importa todos los modelos
- * y define las asociaciones entre ellos para Sequelize ORM
- * Gestiona las relaciones many-to-many, one-to-many y referencias entre tablas
- *
- * IMPORTANTE: Este archivo debe ser importado después de que todos los modelos
- * individuales estén definidos para que las asociaciones funcionen correctamente
- */
+// Ruta: src/models/index.js
+// Descripción: Archivo central de modelos que importa todos los modelos
+// y define las asociaciones entre ellos para Sequelize ORM
 
 // Importar la instancia de Sequelize configurada
 import sequelize from "../config/database.js";
@@ -306,7 +300,7 @@ Usuario.belongsTo(PersonalSeguridad, {
   as: "personalSeguridad",
 });
 
-// Relación: Usuario -> Usuario (self-reference para auditoría)
+// Relación: Usuario -> Usuario (self-reference para auditoría de la tabla Usuario)
 // created_by
 Usuario.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -410,23 +404,23 @@ HistorialUsuario.belongsTo(Usuario, {
   as: "realizadoPor",
 });
 
-// Usuario -> IntentoLogin
-Usuario.hasMany(IntentoLogin, {
+// Usuario -> LoginIntento
+Usuario.hasMany(LoginIntento, {
   foreignKey: "usuario_id",
   as: "intentosLogin",
 });
 
-IntentoLogin.belongsTo(Usuario, {
+LoginIntento.belongsTo(Usuario, {
   foreignKey: "usuario_id",
   as: "usuario",
 });
 
 // ============================================
-// ASOCIACIONES DE AUDITORÍA GLOBAL
+// ASOCIACIONES DE AUDITORÍA GLOBAL (created_by, updated_by, deleted_by)
 // ============================================
 
 //--------------------------------------------------------------------------
-// Relación: Novedad -> Usuario (creador,actualizador,eliminador)
+// Relación: Novedad -> Usuario
 //--------------------------------------------------------------------------
 Novedad.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -446,7 +440,7 @@ Novedad.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
-// Relación: Vehiculo -> Usuario (creador,actualizador,eliminador)
+// Relación: Vehiculo -> Usuario
 //--------------------------------------------------------------------------
 Vehiculo.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -465,7 +459,7 @@ Vehiculo.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
-// Relación: PersonalSeguridad -> Usuario (creador,actualizador,eliminador)
+// Relación: PersonalSeguridad -> Usuario
 //--------------------------------------------------------------------------
 PersonalSeguridad.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -485,7 +479,7 @@ PersonalSeguridad.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
-// Relación: Cargo -> Usuario (creador,actualizador,eliminador)
+// Relación: Cargo -> Usuario
 //--------------------------------------------------------------------------
 Cargo.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -505,7 +499,7 @@ Cargo.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
-// Relación: Cuadrante -> Usuario (creador,actualizador,eliminador)
+// Relación: Cuadrante -> Usuario
 //--------------------------------------------------------------------------
 Cuadrante.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -525,7 +519,7 @@ Cuadrante.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
-// Relación: EstadoNovedad -> Usuario (creador,actualizador,eliminador)
+// Relación: EstadoNovedad -> Usuario
 //--------------------------------------------------------------------------
 EstadoNovedad.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -545,27 +539,30 @@ EstadoNovedad.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
-// Relación: PersonalSeguridad -> Usuario (creador,actualizador,eliminador)
+// Relación: PersonalSeguridad -> Usuario
 //--------------------------------------------------------------------------
+// NOTA: Esta sección estaba duplicada, se mantiene la definición de PersonalSeguridad
+// hacia Usuario, pero se eliminó la repetición.
+// Mantenemos la estructura para consistencia.
+/*
 PersonalSeguridad.belongsTo(Usuario, {
-  foreignKey: "created_by",
-  as: "creador",
+  foreignKey: "created_by",
+  as: "creador",
 });
 
-// Relación: PersonalSeguridad -> Usuario (actualizador)
 PersonalSeguridad.belongsTo(Usuario, {
-  foreignKey: "updated_by",
-  as: "actualizador",
+  foreignKey: "updated_by",
+  as: "actualizador",
 });
 
-// Relación: PersonalSeguridad -> Usuario (eliminador - si usas soft-delete)
 PersonalSeguridad.belongsTo(Usuario, {
-  foreignKey: "deleted_by",
-  as: "eliminador",
+  foreignKey: "deleted_by",
+  as: "eliminador",
 });
+*/
 
 //--------------------------------------------------------------------------
-// Relación: Rol -> Usuario (creador,actualizador,eliminador)
+// Relación: Rol -> Usuario
 //--------------------------------------------------------------------------
 Rol.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -585,7 +582,7 @@ Rol.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
-// Relación: Sector -> Usuario (creador,actualizador,eliminador)
+// Relación: Sector -> Usuario
 //--------------------------------------------------------------------------
 Sector.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -605,7 +602,7 @@ Sector.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
-// Relación: SubtipoNovedad -> Usuario (creador,actualizador,eliminador)
+// Relación: SubtipoNovedad -> Usuario
 //--------------------------------------------------------------------------
 SubtipoNovedad.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -625,7 +622,7 @@ SubtipoNovedad.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
-// Relación: TipoNovedad -> Usuario (creador,actualizador,eliminador)
+// Relación: TipoNovedad -> Usuario
 //--------------------------------------------------------------------------
 TipoNovedad.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -645,7 +642,7 @@ TipoNovedad.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
-// Relación: TipoVehiculo -> Usuario (creador,actualizador,eliminador)
+// Relación: TipoVehiculo -> Usuario
 //--------------------------------------------------------------------------
 TipoVehiculo.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -665,7 +662,7 @@ TipoVehiculo.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
-// Relación: UnidadOficina -> Usuario (creador,actualizador,eliminador)
+// Relación: UnidadOficina -> Usuario
 //--------------------------------------------------------------------------
 UnidadOficina.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -685,57 +682,36 @@ UnidadOficina.belongsTo(Usuario, {
 });
 
 //--------------------------------------------------------------------------
-// Relación: Usuario -> Usuario (creador,actualizador,eliminador)
+// ** SECCIÓN DUPLICADA ELIMINADA **
 //--------------------------------------------------------------------------
-Usuario.belongsTo(Usuario, {
-  foreignKey: "created_by",
-  as: "creador",
-});
-
-// Relación: Usuario -> Usuario (actualizador)
-Usuario.belongsTo(Usuario, {
-  foreignKey: "updated_by",
-  as: "actualizador",
-});
-
-// Relación: Usuario -> Usuario (eliminador - si usas soft-delete)
-Usuario.belongsTo(Usuario, {
-  foreignKey: "deleted_by",
-  as: "eliminador",
-});
 
 /**
  * EXPORTAR TODOS LOS MODELOS Y LA INSTANCIA DE SEQUELIZE
  */
 const models = {
   // Instancia de Sequelize para poder hacer transacciones
-  sequelize,
+  sequelize, // Modelos de catálogos
 
-  // Modelos de catálogos
   TipoVehiculo,
   TipoNovedad,
   SubtipoNovedad,
   EstadoNovedad,
   Cargo,
-  Ubigeo,
+  Ubigeo, // Modelos operativos
 
-  // Modelos operativos
   Vehiculo,
   Sector,
   Cuadrante,
   UnidadOficina,
-  PersonalSeguridad,
+  PersonalSeguridad, // Modelos de novedades
 
-  // Modelos de novedades
   Novedad,
-  HistorialEstadoNovedad,
+  HistorialEstadoNovedad, // Modelos de autenticación y autorización
 
-  // Modelos de autenticación y autorización
   Usuario,
   Rol,
-  Permiso,
+  Permiso, // Modelos de auditoría
 
-  // Modelos de auditoría
   HistorialUsuario,
   LoginIntento,
 };
@@ -763,5 +739,5 @@ export {
   Novedad,
   HistorialEstadoNovedad,
   HistorialUsuario,
-  IntentoLogin,
+  LoginIntento,
 };
