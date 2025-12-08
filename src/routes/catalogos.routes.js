@@ -1,6 +1,9 @@
 /**
- * Rutas de Catálogos
- * Endpoints para gestión de catálogos maestros del sistema
+ * ============================================
+ * Ruta: src/routes/catalogos.routes.js
+ * ===========================================
+ *
+ * Rutas de Catálogos: Endpoints para gestión de catálogos maestros del sistema
  */
 
 import express from "express";
@@ -9,7 +12,6 @@ import catalogosController from "../controllers/catalogosController.js";
 import {
   verificarToken,
   verificarRoles,
-  ROLES,
 } from "../middlewares/authMiddleware.js";
 
 // ==================== TIPOS DE NOVEDAD ====================
@@ -33,7 +35,7 @@ router.get(
 router.post(
   "/tipos-novedad",
   verificarToken,
-  verificarRoles([ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   catalogosController.createTipoNovedad
 );
 
@@ -59,7 +61,7 @@ router.get(
 router.post(
   "/subtipos-novedad",
   verificarToken,
-  verificarRoles([ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   catalogosController.createSubtipoNovedad
 );
 
@@ -84,7 +86,7 @@ router.get(
 router.post(
   "/estados-novedad",
   verificarToken,
-  verificarRoles([ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   catalogosController.createEstadoNovedad
 );
 
@@ -109,7 +111,7 @@ router.get(
 router.post(
   "/tipos-vehiculo",
   verificarToken,
-  verificarRoles([ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   catalogosController.createTipoVehiculo
 );
 
@@ -130,7 +132,7 @@ router.get("/cargos", verificarToken, catalogosController.getCargos);
 router.post(
   "/cargos",
   verificarToken,
-  verificarRoles([ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   catalogosController.createCargo
 );
 
@@ -152,7 +154,7 @@ router.get("/unidades", verificarToken, catalogosController.getUnidades);
 router.post(
   "/unidades",
   verificarToken,
-  verificarRoles([ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   catalogosController.createUnidad
 );
 

@@ -1,5 +1,6 @@
 /**
- * Ruta: src/controllers/novedadesController.js
+ * ============================================
+ * CONTROLADOR: src/controllers/novedadesController.js
  * ============================================
  *
  * Controlador de Novedades/Incidentes
@@ -17,8 +18,10 @@ import {
   UnidadOficina,
   Vehiculo,
   PersonalSeguridad,
-  //HistorialEstadoNovedad,
+  HistorialEstadoNovedad,
+  Usuario,
 } from "../models/index.js";
+import sequelize from "../config/database.js";
 import { Op } from "sequelize";
 
 /**
@@ -35,6 +38,7 @@ const getAllNovedades = async (req, res) => {
       prioridad,
       sector_id,
       tipo_id,
+      search,
       page = 1,
       limit = 50,
     } = req.query;
@@ -70,6 +74,16 @@ const getAllNovedades = async (req, res) => {
     // Filtro por tipo
     if (tipo_id) {
       whereClause.tipo_novedad_id = tipo_id;
+    }
+
+    // Búsqueda por texto
+    if (search) {
+      whereClause[Op.or] = [
+        { novedad_code: { [Op.like]: `%${search}%` } },
+        { descripcion: { [Op.like]: `%${search}%` } },
+        { localizacion: { [Op.like]: `%${search}%` } },
+        { reportante_nombre: { [Op.like]: `%${search}%` } },
+      ];
     }
 
     // Calcular offset para paginación
@@ -226,6 +240,8 @@ const getNovedadById = async (req, res) => {
  * @route POST /api/novedades
  */
 const createNovedad = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const {
       tipo_novedad_id,
@@ -249,6 +265,7 @@ const createNovedad = async (req, res) => {
 
     // Validar campos requeridos
     if (!tipo_novedad_id || !subtipo_novedad_id || !fecha_hora) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
         message:
@@ -259,9 +276,11 @@ const createNovedad = async (req, res) => {
     // Obtener estado inicial
     const estadoInicial = await EstadoNovedad.findOne({
       where: { es_inicial: 1, estado: 1 },
+      transaction,
     });
 
     if (!estadoInicial) {
+      await transaction.rollback();
       return res.status(500).json({
         success: false,
         message: "No se encontró un estado inicial configurado",
@@ -269,8 +288,12 @@ const createNovedad = async (req, res) => {
     }
 
     // Obtener prioridad del subtipo
-    const subtipo = await SubtipoNovedad.findByPk(subtipo_novedad_id);
+    const subtipo = await SubtipoNovedad.findByPk(subtipo_novedad_id, {
+      transaction,
+    });
+
     if (!subtipo) {
+      await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: "Subtipo de novedad no encontrado",
@@ -280,6 +303,8 @@ const createNovedad = async (req, res) => {
     // Generar código de novedad único
     const ultimaNovedad = await Novedad.findOne({
       order: [["id", "DESC"]],
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     });
 
     const siguienteNumero = ultimaNovedad
@@ -297,30 +322,47 @@ const createNovedad = async (req, res) => {
     }
 
     // Crear la novedad
-    const nuevaNovedad = await Novedad.create({
-      novedad_code,
-      fecha_hora,
-      tipo_icono_novedad,
-      tipo_novedad_id,
-      subtipo_novedad_id,
-      estado_novedad_id: estadoInicial.id,
-      sector_id,
-      cuadrante_id,
-      localizacion,
-      referencia,
-      latitud,
-      longitud,
-      ubigeo,
-      origen_llamada: origen_llamada || "TELEFONO_107",
-      reportante_nombre,
-      reportante_telefono,
-      reportante_dni,
-      descripcion,
-      observaciones,
-      prioridad_actual: subtipo.prioridad,
-      turno,
-      created_by: req.user.id, // Usuario autenticado
-    });
+    const nuevaNovedad = await Novedad.create(
+      {
+        novedad_code,
+        fecha_hora,
+        tipo_icono_novedad,
+        tipo_novedad_id,
+        subtipo_novedad_id,
+        estado_novedad_id: estadoInicial.id,
+        sector_id,
+        cuadrante_id,
+        localizacion,
+        referencia,
+        latitud,
+        longitud,
+        ubigeo,
+        origen_llamada: origen_llamada || "TELEFONO_107",
+        reportante_nombre,
+        reportante_telefono,
+        reportante_dni,
+        descripcion,
+        observaciones,
+        prioridad_actual: subtipo.prioridad,
+        turno,
+        created_by: req.user.id,
+      },
+      { transaction }
+    );
+
+    // Registrar cambio de estado inicial
+    await HistorialEstadoNovedad.create(
+      {
+        novedad_id: nuevaNovedad.id,
+        estado_anterior_id: null,
+        estado_nuevo_id: estadoInicial.id,
+        usuario_id: req.user.id,
+        observaciones: "Novedad creada",
+      },
+      { transaction }
+    );
+
+    await transaction.commit();
 
     // Obtener novedad completa con relaciones
     const novedadCompleta = await Novedad.findByPk(nuevaNovedad.id, {
@@ -339,6 +381,7 @@ const createNovedad = async (req, res) => {
       data: novedadCompleta,
     });
   } catch (error) {
+    await transaction.rollback();
     console.error("Error al crear novedad:", error);
     res.status(500).json({
       success: false,
@@ -354,6 +397,8 @@ const createNovedad = async (req, res) => {
  * @route PUT /api/novedades/:id
  */
 const updateNovedad = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const { id } = req.params;
     const datosActualizacion = req.body;
@@ -361,9 +406,12 @@ const updateNovedad = async (req, res) => {
     // Buscar la novedad
     const novedad = await Novedad.findOne({
       where: { id, estado: 1, deleted_at: null },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     });
 
     if (!novedad) {
+      await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: "Novedad no encontrada",
@@ -376,17 +424,20 @@ const updateNovedad = async (req, res) => {
       datosActualizacion.estado_novedad_id !== novedad.estado_novedad_id
     ) {
       const tiempoEstado = Math.floor(
-        (Date.now() - novedad.updated_at) / 60000
-      ); // minutos
+        (Date.now() - new Date(novedad.updated_at)) / 60000
+      );
 
-      await HistorialEstadoNovedad.create({
-        novedad_id: id,
-        estado_anterior_id: novedad.estado_novedad_id,
-        estado_nuevo_id: datosActualizacion.estado_novedad_id,
-        usuario_id: req.user.id,
-        tiempo_en_estado_min: tiempoEstado,
-        observaciones: datosActualizacion.observaciones_cambio_estado,
-      });
+      await HistorialEstadoNovedad.create(
+        {
+          novedad_id: id,
+          estado_anterior_id: novedad.estado_novedad_id,
+          estado_nuevo_id: datosActualizacion.estado_novedad_id,
+          usuario_id: req.user.id,
+          tiempo_en_estado_min: tiempoEstado,
+          observaciones: datosActualizacion.observaciones_cambio_estado,
+        },
+        { transaction }
+      );
     }
 
     // Calcular tiempo de respuesta si se registra llegada
@@ -400,10 +451,15 @@ const updateNovedad = async (req, res) => {
     }
 
     // Actualizar novedad
-    await novedad.update({
-      ...datosActualizacion,
-      updated_by: req.user.id,
-    });
+    await novedad.update(
+      {
+        ...datosActualizacion,
+        updated_by: req.user.id,
+      },
+      { transaction }
+    );
+
+    await transaction.commit();
 
     // Obtener novedad actualizada con relaciones
     const novedadActualizada = await Novedad.findByPk(id, {
@@ -425,6 +481,7 @@ const updateNovedad = async (req, res) => {
       data: novedadActualizada,
     });
   } catch (error) {
+    await transaction.rollback();
     console.error("Error al actualizar novedad:", error);
     res.status(500).json({
       success: false,
@@ -440,6 +497,8 @@ const updateNovedad = async (req, res) => {
  * @route POST /api/novedades/:id/asignar
  */
 const asignarRecursos = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const { id } = req.params;
     const { unidad_oficina_id, vehiculo_id, personal_cargo_id, km_inicial } =
@@ -447,9 +506,12 @@ const asignarRecursos = async (req, res) => {
 
     const novedad = await Novedad.findOne({
       where: { id, estado: 1, deleted_at: null },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     });
 
     if (!novedad) {
+      await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: "Novedad no encontrada",
@@ -462,19 +524,46 @@ const asignarRecursos = async (req, res) => {
         nombre: { [Op.in]: ["EN RUTA", "DESPACHADO"] },
         estado: 1,
       },
+      transaction,
     });
 
-    await novedad.update({
-      unidad_oficina_id,
-      vehiculo_id,
-      personal_cargo_id,
-      km_inicial,
-      fecha_despacho: new Date(),
-      estado_novedad_id: estadoDespacho
-        ? estadoDespacho.id
-        : novedad.estado_novedad_id,
-      updated_by: req.user.id,
-    });
+    const estadoAnteriorId = novedad.estado_novedad_id;
+
+    await novedad.update(
+      {
+        unidad_oficina_id,
+        vehiculo_id,
+        personal_cargo_id,
+        km_inicial,
+        fecha_despacho: new Date(),
+        estado_novedad_id: estadoDespacho
+          ? estadoDespacho.id
+          : novedad.estado_novedad_id,
+        updated_by: req.user.id,
+      },
+      { transaction }
+    );
+
+    // Registrar cambio de estado si cambió
+    if (estadoDespacho && estadoDespacho.id !== estadoAnteriorId) {
+      const tiempoEstado = Math.floor(
+        (Date.now() - new Date(novedad.updated_at)) / 60000
+      );
+
+      await HistorialEstadoNovedad.create(
+        {
+          novedad_id: id,
+          estado_anterior_id: estadoAnteriorId,
+          estado_nuevo_id: estadoDespacho.id,
+          usuario_id: req.user.id,
+          tiempo_en_estado_min: tiempoEstado,
+          observaciones: "Recursos asignados y unidad despachada",
+        },
+        { transaction }
+      );
+    }
+
+    await transaction.commit();
 
     const novedadActualizada = await Novedad.findByPk(id, {
       include: [
@@ -491,6 +580,7 @@ const asignarRecursos = async (req, res) => {
       data: novedadActualizada,
     });
   } catch (error) {
+    await transaction.rollback();
     console.error("Error al asignar recursos:", error);
     res.status(500).json({
       success: false,
@@ -555,13 +645,18 @@ const getHistorialEstados = async (req, res) => {
       include: [
         {
           model: EstadoNovedad,
-          as: "estado_anterior",
+          as: "estadoAnterior",
           attributes: ["id", "nombre", "color_hex"],
         },
         {
           model: EstadoNovedad,
-          as: "estado_nuevo",
+          as: "estadoNuevo",
           attributes: ["id", "nombre", "color_hex"],
+        },
+        {
+          model: Usuario,
+          as: "usuario",
+          attributes: ["id", "username", "email"],
         },
       ],
       order: [["fecha_cambio", "ASC"]],
@@ -591,53 +686,84 @@ const getDashboardStats = async (req, res) => {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
+    const mañana = new Date(hoy);
+    mañana.setDate(mañana.getDate() + 1);
+
     // Novedades del día agrupadas por estado
-    const novedadesHoy = await Novedad.findAll({
+    const novedadesPorEstado = await Novedad.findAll({
       where: {
-        fecha_hora: { [Op.gte]: hoy },
+        fecha_hora: {
+          [Op.gte]: hoy,
+          [Op.lt]: mañana,
+        },
         estado: 1,
         deleted_at: null,
       },
+      attributes: [
+        "estado_novedad_id",
+        [sequelize.fn("COUNT", sequelize.col("Novedad.id")), "cantidad"],
+      ],
       include: [
         {
           model: EstadoNovedad,
           as: "estado",
-          attributes: ["nombre", "color_hex"],
+          attributes: ["nombre", "color_hex", "icono"],
         },
       ],
-      attributes: [
-        "estado_novedad_id",
-        "prioridad_actual",
-        [sequelize.fn("COUNT", sequelize.col("id")), "cantidad"],
-      ],
-      group: ["estado_novedad_id", "prioridad_actual"],
+      group: ["estado_novedad_id", "estado.id"],
+      raw: false,
     });
 
     // Novedades por tipo del día
     const novedadesPorTipo = await Novedad.findAll({
       where: {
-        fecha_hora: { [Op.gte]: hoy },
+        fecha_hora: {
+          [Op.gte]: hoy,
+          [Op.lt]: mañana,
+        },
         estado: 1,
         deleted_at: null,
       },
+      attributes: [
+        "tipo_novedad_id",
+        [sequelize.fn("COUNT", sequelize.col("Novedad.id")), "cantidad"],
+      ],
       include: [
         {
           model: TipoNovedad,
           as: "tipo",
-          attributes: ["nombre", "color_hex"],
+          attributes: ["nombre", "color_hex", "icono"],
         },
       ],
+      group: ["tipo_novedad_id", "tipo.id"],
+      raw: false,
+    });
+
+    // Novedades por prioridad
+    const novedadesPorPrioridad = await Novedad.findAll({
+      where: {
+        fecha_hora: {
+          [Op.gte]: hoy,
+          [Op.lt]: mañana,
+        },
+        estado: 1,
+        deleted_at: null,
+      },
       attributes: [
-        "tipo_novedad_id",
+        "prioridad_actual",
         [sequelize.fn("COUNT", sequelize.col("id")), "cantidad"],
       ],
-      group: ["tipo_novedad_id"],
+      group: ["prioridad_actual"],
+      raw: true,
     });
 
     // Tiempo promedio de respuesta del día
     const tiempoPromedio = await Novedad.findOne({
       where: {
-        fecha_hora: { [Op.gte]: hoy },
+        fecha_hora: {
+          [Op.gte]: hoy,
+          [Op.lt]: mañana,
+        },
         tiempo_respuesta_min: { [Op.ne]: null },
         estado: 1,
         deleted_at: null,
@@ -648,14 +774,30 @@ const getDashboardStats = async (req, res) => {
           "promedio",
         ],
       ],
+      raw: true,
+    });
+
+    // Total de novedades del día
+    const totalNovedades = await Novedad.count({
+      where: {
+        fecha_hora: {
+          [Op.gte]: hoy,
+          [Op.lt]: mañana,
+        },
+        estado: 1,
+        deleted_at: null,
+      },
     });
 
     res.status(200).json({
       success: true,
       data: {
-        novedadesHoy,
+        totalNovedades,
+        novedadesPorEstado,
         novedadesPorTipo,
-        tiempoPromedioRespuesta: tiempoPromedio?.promedio || 0,
+        novedadesPorPrioridad,
+        tiempoPromedioRespuesta: Math.round(tiempoPromedio?.promedio || 0),
+        fecha: hoy,
       },
     });
   } catch (error) {

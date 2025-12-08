@@ -13,7 +13,6 @@ import sectoresController from "../controllers/sectoresController.js";
 import {
   verificarToken,
   verificarRoles,
-  ROLES,
 } from "../middlewares/authMiddleware.js";
 
 // ==================== SECTORES ====================
@@ -41,7 +40,7 @@ router.get("/:id", verificarToken, sectoresController.getSectorById);
 router.post(
   "/",
   verificarToken,
-  verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   sectoresController.createSector
 );
 
@@ -53,7 +52,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   sectoresController.updateSector
 );
 
@@ -65,7 +64,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles([ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin"]),
   sectoresController.deleteSector
 );
 
@@ -98,7 +97,7 @@ router.get(
 router.post(
   "/cuadrantes",
   verificarToken,
-  verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   sectoresController.createCuadrante
 );
 
@@ -110,7 +109,7 @@ router.post(
 router.put(
   "/cuadrantes/:id",
   verificarToken,
-  verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   sectoresController.updateCuadrante
 );
 
@@ -122,7 +121,7 @@ router.put(
 router.delete(
   "/cuadrantes/:id",
   verificarToken,
-  verificarRoles([ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin"]),
   sectoresController.deleteCuadrante
 );
 

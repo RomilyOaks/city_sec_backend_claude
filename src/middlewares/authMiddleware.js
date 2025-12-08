@@ -1,362 +1,389 @@
 /**
- * Ruta: src/middlewares/authMiddleware.js
- * Descripción: Middleware de autenticación JWT y autorización RBAC
- * Verifica tokens JWT, carga datos del usuario y verifica permisos
- * específicos basados en roles y permisos directos
+ * ============================================
+ * MIDDLEWARE: src/middlewares/authMiddleware.js
+ * ============================================
+ * VERSION CON DEBUG - Agregar console.logs temporalmente
  */
 
 import jwt from "jsonwebtoken";
-import { Usuario, Rol, Permiso } from "../models/index.js";
-
-// DEFINICIÓN DE ROLES
-export const ROLES = Object.freeze({
-  SUPER_ADMIN: "super_admin",
-  ADMINISTRADOR: "admin",
-  OPERADOR: "operador",
-  SUPERVISOR: "supervisor",
-  CONSULTA: "consulta",
-  USUARIO_BASICO: "usuario_basico",
-});
+import { Usuario, Rol, Permiso, UsuarioRol } from "../models/index.js";
 
 /**
- * Middleware principal de autenticación
- * Verifica que el usuario tenga un token JWT válido
+ * Verificar token JWT
  */
 export const verificarToken = async (req, res, next) => {
   try {
-    // Obtener token del header Authorization
+    // 🔍 DEBUG 1: Ver qué headers llegan
+    console.log("=== DEBUG AUTH MIDDLEWARE ===");
+    console.log("1. Headers completos:", req.headers);
+    console.log("2. Authorization header:", req.headers.authorization);
+
+    // Obtener token del header
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log("❌ ERROR: No hay Bearer token");
       return res.status(401).json({
         success: false,
-        message: "Token no proporcionado",
+        message: "No se proporcionó un token de autenticación",
       });
     }
 
-    // Extraer el token (quitar "Bearer ")
-    const token = authHeader.substring(7);
+    const token = authHeader.substring(7); // Remover "Bearer "
 
-    // Verificar el token
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
-      if (error.name === "TokenExpiredError") {
-        return res.status(401).json({
-          success: false,
-          message: "Token expirado",
-          code: "TOKEN_EXPIRED",
-        });
-      }
-      return res.status(401).json({
-        success: false,
-        message: "Token inválido",
-      });
-    }
+    // 🔍 DEBUG 2: Ver el token extraído
+    console.log(
+      "3. Token extraído (primeros 50 chars):",
+      token.substring(0, 50) + "..."
+    );
+    console.log("4. JWT_SECRET existe:", !!process.env.JWT_SECRET);
+    console.log(
+      "5. JWT_SECRET (primeros 20 chars):",
+      process.env.JWT_SECRET?.substring(0, 20) + "..."
+    );
 
-    // TODO: Verificar que el token no esté revocado en tokens_acceso
+    // Verificar token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Verificar que el usuario existe y está activo
-    const usuario = await Usuario.findByPk(decoded.userId, {
-      attributes: ["id", "username", "email", "estado", "deleted_at"],
+    // 🔍 DEBUG 3: Ver el token decodificado
+    console.log("6. Token decodificado exitosamente:", decoded);
+
+    // Buscar usuario con sus roles y permisos
+    const usuario = await Usuario.findByPk(decoded.id, {
+      include: [
+        {
+          model: Rol,
+          as: "roles",
+          through: {
+            model: UsuarioRol,
+            as: "usuarioRol",
+            where: {
+              estado: 1,
+            },
+          },
+          include: [
+            {
+              model: Permiso,
+              as: "permisos",
+              attributes: ["id", "modulo", "recurso", "accion", "slug"],
+              through: { attributes: [] },
+            },
+          ],
+        },
+      ],
     });
 
-    if (!usuario || usuario.deleted_at !== null) {
+    // 🔍 DEBUG 4: Ver si se encontró el usuario
+    console.log(
+      "7. Usuario encontrado:",
+      usuario ? `ID: ${usuario.id}, Username: ${usuario.username}` : "NULL"
+    );
+
+    if (!usuario) {
+      console.log("❌ ERROR: Usuario no encontrado en la base de datos");
       return res.status(401).json({
         success: false,
         message: "Usuario no encontrado",
       });
     }
 
-    if (usuario.estado !== "ACTIVO") {
+    if (usuario.estado !== 1) {
+      console.log("❌ ERROR: Usuario inactivo");
       return res.status(403).json({
         success: false,
-        message: "Usuario inactivo o bloqueado",
+        message: "Usuario inactivo",
       });
     }
 
-    // Agregar información del usuario al request para uso posterior
-    req.usuario = {
-      userId: decoded.userId,
-      username: decoded.username,
-      email: decoded.email,
-      roles: decoded.roles || [],
-      permisos: decoded.permisos || [],
+    // Obtener el rol principal
+    const rolPrincipal =
+      usuario.roles.find((rol) => rol.UsuarioRol?.es_principal === 1) ||
+      usuario.roles[0];
+
+    // 🔍 DEBUG 5: Ver roles y permisos
+    console.log(
+      "8. Roles del usuario:",
+      usuario.roles.map((r) => r.nombre)
+    );
+    console.log("9. Rol principal:", rolPrincipal?.nombre);
+
+    if (!rolPrincipal) {
+      console.log("❌ ERROR: Usuario sin roles asignados");
+      return res.status(403).json({
+        success: false,
+        message: "Usuario sin roles asignados",
+      });
+    }
+
+    // Combinar permisos de todos los roles del usuario
+    const todosLosPermisos = new Set();
+    usuario.roles.forEach((rol) => {
+      if (rol.permisos) {
+        rol.permisos.forEach((permiso) => {
+          todosLosPermisos.add(permiso.slug);
+        });
+      }
+    });
+
+    // 🔍 DEBUG 6: Ver permisos
+    console.log("10. Permisos del usuario:", Array.from(todosLosPermisos));
+
+    // Adjuntar usuario al request
+    req.user = {
+      id: usuario.id,
+      username: usuario.username,
+      email: usuario.email,
+      rol: rolPrincipal.nombre,
+      roles: usuario.roles.map((r) => r.nombre),
+      permisos: Array.from(todosLosPermisos),
     };
 
-    // TODO: Actualizar last_activity_at del usuario
+    console.log("✅ Autenticación exitosa");
+    console.log("=== FIN DEBUG ===\n");
 
     next();
   } catch (error) {
-    console.error("Error en authenticate middleware:", error);
+    // 🔍 DEBUG 7: Ver el error completo
+    console.log("❌ ERROR EN VERIFICAR TOKEN:");
+    console.log("Error name:", error.name);
+    console.log("Error message:", error.message);
+    console.log("Error completo:", error);
+    console.log("=== FIN DEBUG ===\n");
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        success: false,
+        message: "Token inválido",
+        debug: error.message,
+      });
+    }
+
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Token expirado",
+        debug: error.message,
+      });
+    }
+
     return res.status(500).json({
       success: false,
-      message: "Error al verificar autenticación",
+      message: "Error al verificar el token",
       error: error.message,
     });
   }
 };
 
 /**
- * Middleware de autorización por roles
- * Verifica que el usuario tenga al menos uno de los roles especificados
- * @param {Array<string>} rolesPermitidos - Array de slugs de roles permitidos
- * @returns {Function} Middleware function
- *
- * Ejemplo de uso:
- * router.get('/admin', verificarToken, verificarRoles(['super_admin', 'admin']), controller)
+ * Verificar roles permitidos
+ * @param {Array} rolesPermitidos - Array de roles permitidos
  */
 export const verificarRoles = (rolesPermitidos) => {
   return (req, res, next) => {
-    try {
-      // Verificar que el usuario esté autenticado
-      if (!req.usuario) {
-        return res.status(401).json({
-          success: false,
-          message: "Usuario no autenticado",
-        });
-      }
-
-      // Verificar que tenga al menos uno de los roles requeridos
-      const tieneRol = req.usuario.roles.some((rol) =>
-        rolesPermitidos.includes(rol)
-      );
-
-      if (!tieneRol) {
-        return res.status(403).json({
-          success: false,
-          message: "No tienes permisos para acceder a este recurso",
-          requiredRoles: rolesPermitidos,
-        });
-      }
-
-      next();
-    } catch (error) {
-      console.error("Error en verificarRoles middleware:", error);
-      return res.status(500).json({
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        message: "Error al verificar rol",
-        error: error.message,
+        message: "Usuario no autenticado",
       });
     }
+
+    // Verificar si el usuario tiene al menos uno de los roles permitidos
+    const tieneRolPermitido = req.user.roles.some((rol) =>
+      rolesPermitidos.includes(rol)
+    );
+
+    if (!tieneRolPermitido) {
+      return res.status(403).json({
+        success: false,
+        message: "No tienes permisos para realizar esta acción",
+        requiredRoles: rolesPermitidos,
+        userRoles: req.user.roles,
+      });
+    }
+
+    next();
   };
 };
 
 /**
- * Middleware de autorización por permisos
- * Verifica que el usuario tenga el permiso específico requerido
- * @param {string} permisoRequerido - Slug del permiso (ej: 'novedades.incidentes.create')
- * @returns {Function} Middleware function
- *
- * Ejemplo de uso:
- * router.post('/novedades', verificarToken, requirePermission('novedades.incidentes.create'), controller)
- */
-export const requirePermission = (permisoRequerido) => {
-  return (req, res, next) => {
-    try {
-      // Verificar que el usuario esté autenticado
-      if (!req.usuario) {
-        return res.status(401).json({
-          success: false,
-          message: "Usuario no autenticado",
-        });
-      }
-
-      // Verificar que tenga el permiso requerido
-      const tienePermiso = req.usuario.permisos.includes(permisoRequerido);
-
-      if (!tienePermiso) {
-        return res.status(403).json({
-          success: false,
-          message: "No tienes permisos para realizar esta acción",
-          requiredPermission: permisoRequerido,
-        });
-      }
-
-      next();
-    } catch (error) {
-      console.error("Error en requirePermission middleware:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Error al verificar permiso",
-        error: error.message,
-      });
-    }
-  };
-};
-
-/**
- * Middleware de autorización por múltiples permisos
- * Verifica que el usuario tenga TODOS los permisos especificados
- * @param {Array<string>} permisosRequeridos - Array de slugs de permisos
- * @returns {Function} Middleware function
- *
- * Ejemplo de uso:
- * router.put('/config', verificarToken, requireAllPermissions(['config.read', 'config.write']), controller)
- */
-export const requireAllPermissions = (permisosRequeridos) => {
-  return (req, res, next) => {
-    try {
-      if (!req.usuario) {
-        return res.status(401).json({
-          success: false,
-          message: "Usuario no autenticado",
-        });
-      }
-
-      // Verificar que tenga TODOS los permisos requeridos
-      const tieneTodos = permisosRequeridos.every((permiso) =>
-        req.usuario.permisos.includes(permiso)
-      );
-
-      if (!tieneTodos) {
-        return res.status(403).json({
-          success: false,
-          message: "No tienes todos los permisos necesarios para esta acción",
-          requiredPermissions: permisosRequeridos,
-        });
-      }
-
-      next();
-    } catch (error) {
-      console.error("Error en requireAllPermissions middleware:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Error al verificar permisos",
-        error: error.message,
-      });
-    }
-  };
-};
-
-/**
- * Middleware de autorización por alguno de varios permisos
- * Verifica que el usuario tenga AL MENOS UNO de los permisos especificados
- * @param {Array<string>} permisosRequeridos - Array de slugs de permisos
- * @returns {Function} Middleware function
- *
- * Ejemplo de uso:
- * router.get('/reports', verificarToken, requireAnyPermission(['reports.view', 'reports.admin']), controller)
+ * Verificar permisos específicos (formato: modulo.recurso.accion)
+ * Requiere que el usuario tenga AL MENOS UNO de los permisos especificados
+ * @param {Array} permisosRequeridos - Array de slugs de permisos (ej: ['vehiculos.vehiculos.create'])
  */
 export const requireAnyPermission = (permisosRequeridos) => {
   return (req, res, next) => {
-    try {
-      if (!req.usuario) {
-        return res.status(401).json({
-          success: false,
-          message: "Usuario no autenticado",
-        });
-      }
-
-      // Verificar que tenga AL MENOS UNO de los permisos
-      const tieneAlguno = permisosRequeridos.some((permiso) =>
-        req.usuario.permisos.includes(permiso)
-      );
-
-      if (!tieneAlguno) {
-        return res.status(403).json({
-          success: false,
-          message:
-            "No tienes ninguno de los permisos necesarios para esta acción",
-          requiredPermissions: permisosRequeridos,
-        });
-      }
-
-      next();
-    } catch (error) {
-      console.error("Error en requireAnyPermission middleware:", error);
-      return res.status(500).json({
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        message: "Error al verificar permisos",
-        error: error.message,
+        message: "Usuario no autenticado",
       });
     }
+
+    // Super Admin y Admin siempre pasan
+    if (
+      req.user.roles.includes("super_admin") ||
+      req.user.roles.includes("admin")
+    ) {
+      return next();
+    }
+
+    // Verificar si el usuario tiene al menos uno de los permisos requeridos
+    const tienePermiso = permisosRequeridos.some((permiso) =>
+      req.user.permisos.includes(permiso)
+    );
+
+    if (!tienePermiso) {
+      return res.status(403).json({
+        success: false,
+        message: "No tienes los permisos necesarios para realizar esta acción",
+        requiredPermissions: permisosRequeridos,
+        userPermissions: req.user.permisos,
+      });
+    }
+
+    next();
   };
 };
 
 /**
- * Middleware opcional de autenticación
- * Similar a verificarToken pero no falla si no hay token
- * Útil para endpoints que tienen contenido público y contenido para usuarios autenticados
+ * Verificar permisos específicos (formato: modulo.recurso.accion)
+ * Requiere que el usuario tenga TODOS los permisos especificados
+ * @param {Array} permisosRequeridos - Array de slugs de permisos
  */
-export const optionalAuthenticate = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
+export const requireAllPermissions = (permisosRequeridos) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Usuario no autenticado",
+      });
+    }
 
-    // Si no hay header, continuar sin autenticación
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      req.usuario = null;
+    // Super Admin y Admin siempre pasan
+    if (
+      req.user.roles.includes("super_admin") ||
+      req.user.roles.includes("admin")
+    ) {
       return next();
     }
 
+    // Verificar si el usuario tiene todos los permisos requeridos
+    const tieneTodosLosPermisos = permisosRequeridos.every((permiso) =>
+      req.user.permisos.includes(permiso)
+    );
+
+    if (!tieneTodosLosPermisos) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "No tienes todos los permisos necesarios para realizar esta acción",
+        requiredPermissions: permisosRequeridos,
+        userPermissions: req.user.permisos,
+      });
+    }
+
+    next();
+  };
+};
+
+/**
+ * Verificar permiso por módulo (cualquier acción en el módulo)
+ * @param {String} modulo - Nombre del módulo (ej: 'vehiculos')
+ */
+export const requireModuleAccess = (modulo) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Usuario no autenticado",
+      });
+    }
+
+    // Admin siempre pasa
+    if (req.user.roles.includes("admin")) {
+      return next();
+    }
+
+    // Verificar si el usuario tiene algún permiso del módulo
+    const tieneAccesoAlModulo = req.user.permisos.some((permiso) =>
+      permiso.startsWith(`${modulo}.`)
+    );
+
+    if (!tieneAccesoAlModulo) {
+      return res.status(403).json({
+        success: false,
+        message: `No tienes acceso al módulo ${modulo}`,
+      });
+    }
+
+    next();
+  };
+};
+
+/**
+ * Middleware opcional - solo verifica si hay usuario autenticado
+ * pero no requiere permisos específicos
+ */
+export const autenticacionOpcional = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return next(); // Continuar sin usuario
+    }
+
     const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const usuario = await Usuario.findByPk(decoded.id, {
+      include: [
+        {
+          model: Rol,
+          as: "roles",
+          through: {
+            model: UsuarioRol,
+            as: "usuarioRol",
+            where: { estado: 1 },
+          },
+          include: [
+            {
+              model: Permiso,
+              as: "permisos",
+              attributes: ["id", "modulo", "recurso", "accion", "slug"],
+              through: { attributes: [] },
+            },
+          ],
+        },
+      ],
+    });
 
-      const usuario = await Usuario.findByPk(decoded.userId, {
-        attributes: ["id", "username", "email", "estado", "deleted_at"],
+    if (usuario && usuario.estado === 1) {
+      const rolPrincipal =
+        usuario.roles.find((rol) => rol.UsuarioRol?.es_principal === 1) ||
+        usuario.roles[0];
+
+      const todosLosPermisos = new Set();
+      usuario.roles.forEach((rol) => {
+        if (rol.permisos) {
+          rol.permisos.forEach((permiso) => {
+            todosLosPermisos.add(permiso.slug);
+          });
+        }
       });
 
-      if (
-        usuario &&
-        usuario.deleted_at === null &&
-        usuario.estado === "ACTIVO"
-      ) {
-        req.usuario = {
-          userId: decoded.userId,
-          username: decoded.username,
-          email: decoded.email,
-          roles: decoded.roles || [],
-          permisos: decoded.permisos || [],
-        };
-      } else {
-        req.usuario = null;
-      }
-    } catch (error) {
-      // Si el token es inválido, simplemente continuar sin autenticación
-      req.usuario = null;
+      req.user = {
+        id: usuario.id,
+        username: usuario.username,
+        email: usuario.email,
+        rol: rolPrincipal?.nombre,
+        roles: usuario.roles.map((r) => r.nombre),
+        permisos: Array.from(todosLosPermisos),
+      };
     }
 
     next();
   } catch (error) {
-    console.error("Error en optionalAuthenticate middleware:", error);
-    req.usuario = null;
+    // Si hay error, continuar sin usuario
     next();
   }
-};
-
-/**
- * Helper function para verificar si un usuario tiene un permiso específico
- * Útil para usar dentro de controladores
- * @param {Object} usuario - Objeto de usuario de req.usuario
- * @param {string} permisoSlug - Slug del permiso a verificar
- * @returns {boolean}
- */
-export const hasPermission = (usuario, permisoSlug) => {
-  if (!usuario || !usuario.permisos) return false;
-  return usuario.permisos.includes(permisoSlug);
-};
-
-/**
- * Helper function para verificar si un usuario tiene un rol específico
- * @param {Object} usuario - Objeto de usuario de req.usuario
- * @param {string} rolSlug - Slug del rol a verificar
- * @returns {boolean}
- */
-export const hasRole = (usuario, rolSlug) => {
-  if (!usuario || !usuario.roles) return false;
-  return usuario.roles.includes(rolSlug);
-};
-
-export default {
-  verificarToken,
-  verificarRoles,
-  requirePermission,
-  requireAllPermissions,
-  requireAnyPermission,
-  optionalAuthenticate,
-  hasPermission,
-  hasRole,
 };

@@ -1,6 +1,6 @@
 {
   "name": "citizen-security-backend",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "API Backend para Sistema de Seguridad Ciudadana con autenticación JWT y RBAC",
   "type": "module",
   "main": "src/app.js",
@@ -9,6 +9,7 @@
     "dev": "nodemon src/app.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
+    "tree-gen": "find src -path 'src/node_modules' -prune -o -name '.git' -prune -o -print | sed 's|^[^/]*/||g' | sed 's/[^/]*\\//|--/g;s/|--/|  /g' | sed 's/|/|/g'",
     "lint": "eslint src/**/*.js",
     "lint:fix": "eslint src/**/*.js --fix",
     "db:seed": "node src/seeders/index.js",
@@ -52,9 +53,11 @@
     "qrcode": "^1.5.4",
     "sequelize": "^6.37.7",
     "speakeasy": "^2.0.0",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0",
     "winston": "^3.18.3",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston-daily-rotate-file": "^5.0.0",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "eslint": "^8.55.0",
@@ -63,7 +66,9 @@
     "jest": "^29.7.0",
     "nodemon": "^3.1.11",
     "sequelize-cli": "^6.6.2",
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "swagger-autogen": "^2.23.7",
+    "tree-cli": "^0.6.7"
   },
   "engines": {
     "node": ">=18.0.0",

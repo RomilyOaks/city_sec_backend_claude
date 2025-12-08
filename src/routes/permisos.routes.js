@@ -33,9 +33,9 @@ import {
 } from "../controllers/permisosController.js";
 
 import {
-  verificarToken as authenticate,
-  requirePermission,
-  requireAnyPermission as requireRole,
+  verificarToken,
+  verificarRoles as requireRole,
+  requireAnyPermission,
 } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -44,7 +44,7 @@ const router = express.Router();
  * Middleware de autenticación y rol
  * Todas las rutas requieren ser super_admin o admin
  */
-router.use(authenticate);
+router.use(verificarToken);
 router.use(requireRole(["super_admin", "admin"]));
 
 // ============================================
@@ -62,7 +62,7 @@ router.use(requireRole(["super_admin", "admin"]));
  * @query   {boolean} activos - Solo activos (default: true)
  * @query   {string} search - Búsqueda en slug o descripción
  */
-router.get("/", requirePermission("usuarios.permisos.read"), getPermisos);
+router.get("/", requireAnyPermission("usuarios.permisos.read"), getPermisos);
 
 /**
  * @route   GET /api/v1/permisos/modulo/:modulo
@@ -72,7 +72,7 @@ router.get("/", requirePermission("usuarios.permisos.read"), getPermisos);
  */
 router.get(
   "/modulo/:modulo",
-  requirePermission("usuarios.permisos.read"),
+  requireAnyPermission("usuarios.permisos.read"),
   getPermisosByModulo
 );
 
@@ -84,7 +84,7 @@ router.get(
  */
 router.get(
   "/slug/:slug",
-  requirePermission("usuarios.permisos.read"),
+  requireAnyPermission("usuarios.permisos.read"),
   getPermisoBySlug
 );
 
@@ -94,7 +94,11 @@ router.get(
  * @access  Private (super_admin, admin)
  * @params  {number} id - ID del permiso
  */
-router.get("/:id", requirePermission("usuarios.permisos.read"), getPermisoById);
+router.get(
+  "/:id",
+  requireAnyPermission("usuarios.permisos.read"),
+  getPermisoById
+);
 
 // ============================================
 // RUTAS DE MODIFICACIÓN (CREATE, UPDATE, DELETE)
@@ -110,7 +114,11 @@ router.get("/:id", requirePermission("usuarios.permisos.read"), getPermisoById);
  * @body    {string} permiso.accion - Acción (requerido)
  * @body    {string} [permiso.descripcion] - Descripción
  */
-router.post("/", requirePermission("usuarios.permisos.create"), createPermiso);
+router.post(
+  "/",
+  requireAnyPermission("usuarios.permisos.create"),
+  createPermiso
+);
 
 /**
  * @route   PUT /api/v1/permisos/:id
@@ -125,7 +133,7 @@ router.post("/", requirePermission("usuarios.permisos.create"), createPermiso);
  */
 router.put(
   "/:id",
-  requirePermission("usuarios.permisos.update"),
+  requireAnyPermission("usuarios.permisos.update"),
   updatePermiso
 );
 
@@ -139,7 +147,7 @@ router.put(
  */
 router.delete(
   "/:id",
-  requirePermission("usuarios.permisos.delete"),
+  requireAnyPermission("usuarios.permisos.delete"),
   deletePermiso
 );
 
@@ -154,7 +162,7 @@ router.delete(
  */
 router.patch(
   "/:id/estado",
-  requirePermission("usuarios.permisos.update"),
+  requireAnyPermission("usuarios.permisos.update"),
   cambiarEstado
 );
 

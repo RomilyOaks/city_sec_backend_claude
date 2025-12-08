@@ -33,7 +33,7 @@ import {
 
 import {
   verificarToken,
-  requirePermission,
+  verificarRoles,
   requireAnyPermission,
 } from "../middlewares/authMiddleware.js";
 
@@ -55,7 +55,11 @@ router.use(verificarToken);
  * @desc    Listar cuadrantes con paginación y filtros
  * @access  Private (requiere permiso: catalogos.cuadrantes.read)
  */
-router.get("/", requirePermission("catalogos.cuadrantes.read"), getCuadrantes);
+router.get(
+  "/",
+  requireAnyPermission("catalogos.cuadrantes.read"),
+  getCuadrantes
+);
 
 /**
  * @route   GET /api/v1/cuadrantes/cercanos
@@ -66,7 +70,7 @@ router.get("/", requirePermission("catalogos.cuadrantes.read"), getCuadrantes);
  */
 router.get(
   "/cercanos",
-  requirePermission("catalogos.cuadrantes.read"),
+  requireAnyPermission("catalogos.cuadrantes.read"),
   getCuadrantesCercanos
 );
 
@@ -77,7 +81,7 @@ router.get(
  */
 router.get(
   "/sector/:sectorId",
-  requirePermission("catalogos.cuadrantes.read"),
+  requireAnyPermission("catalogos.cuadrantes.read"),
   getCuadrantesBySector
 );
 
@@ -88,7 +92,7 @@ router.get(
  */
 router.get(
   "/codigo/:code",
-  requirePermission("catalogos.cuadrantes.read"),
+  requireAnyPermission("catalogos.cuadrantes.read"),
   getCuadranteByCode
 );
 
@@ -99,7 +103,7 @@ router.get(
  */
 router.get(
   "/:id",
-  requirePermission("catalogos.cuadrantes.read"),
+  requireAnyPermission("catalogos.cuadrantes.read"),
   getCuadranteById
 );
 
@@ -114,7 +118,7 @@ router.get(
  */
 router.post(
   "/",
-  requirePermission("catalogos.cuadrantes.create"),
+  requireAnyPermission("catalogos.cuadrantes.create"),
   createCuadrante
 );
 
@@ -125,7 +129,7 @@ router.post(
  */
 router.put(
   "/:id",
-  requirePermission("catalogos.cuadrantes.update"),
+  requireAnyPermission("catalogos.cuadrantes.update"),
   updateCuadrante
 );
 
@@ -136,7 +140,7 @@ router.put(
  */
 router.delete(
   "/:id",
-  requirePermission("catalogos.cuadrantes.delete"),
+  requireAnyPermission("catalogos.cuadrantes.delete"),
   deleteCuadrante
 );
 
@@ -147,7 +151,7 @@ router.delete(
  */
 router.patch(
   "/:id/estado",
-  requirePermission("catalogos.cuadrantes.update"),
+  requireAnyPermission("catalogos.cuadrantes.update"),
   cambiarEstado
 );
 

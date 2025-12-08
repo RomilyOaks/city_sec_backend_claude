@@ -1,92 +1,80 @@
 /**
  * ============================================
- * MODELO: HISTORIAL DE ESTADOS DE NOVEDAD
+ * MODELO: src/models/HistorialEstadoNovedad.js
  * ============================================
- *
- * Registra todos los cambios de estado de una novedad
- * para tener trazabilidad completa
+ * * Modelo de Historial de Estados de Novedades
  */
 
 import { DataTypes } from "sequelize";
+// Importar la instancia de Sequelize configurada
 import sequelize from "../config/database.js";
 
 const HistorialEstadoNovedad = sequelize.define(
   "HistorialEstadoNovedad",
   {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-
     novedad_id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: false,
       comment: "ID de la novedad",
-      references: {
-        model: "novedades",
-        key: "id",
-      },
     },
-
     estado_anterior_id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: true,
-      comment: "ID del estado anterior",
-      references: {
-        model: "estados_novedad",
-        key: "id",
-      },
+      comment: "Estado anterior de la novedad",
     },
-
     estado_nuevo_id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: false,
-      comment: "ID del nuevo estado",
-      references: {
-        model: "estados_novedad",
-        key: "id",
-      },
+      comment: "Nuevo estado de la novedad",
     },
-
+    usuario_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      comment: "Usuario que realizó el cambio",
+    },
+    tiempo_en_estado_min: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "Tiempo que estuvo en el estado anterior (minutos)",
+    },
     observaciones: {
       type: DataTypes.TEXT,
       allowNull: true,
-      comment: "Motivo o comentario del cambio de estado",
+      comment: "Observaciones del cambio de estado",
     },
-
-    cambiado_por: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
-      comment: "Usuario que realizó el cambio",
-      references: {
-        model: "usuarios",
-        key: "id",
-      },
-    },
-
     fecha_cambio: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
       comment: "Fecha y hora del cambio",
     },
+    metadata: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment:
+        "Datos adicionales del cambio (ubicación, datos complementarios)",
+    },
+    // NOTA: Se eliminan las 'references' aquí porque las asociaciones se manejan en index.js
+    // Esto es estándar en configuraciones centralizadas de Sequelize.
   },
   {
-    tableName: "historial_estados_novedad",
-    timestamps: false,
-    indexes: [
-      {
-        name: "idx_novedad",
-        fields: ["novedad_id"],
-      },
-      {
-        name: "idx_fecha",
-        fields: ["fecha_cambio"],
-      },
-    ],
-    comment: "Historial de cambios de estado de novedades",
+    tableName: "historial_estado_novedades",
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+    underscored: true,
+    // ... otros ajustes
   }
 );
 
-export default HistorialEstadoNovedad;
+// NOTA: Se elimina la función HistorialEstadoNovedad.associate = (models) => { ... }
+// Si la usas de forma centralizada en index.js.
+// Si quisieras mantener la asociación aquí, deberías usar un hook afterDefine o similar.
+// Para mantener el index.js limpio, dejaremos las asociaciones en el index.
+
+export default HistorialEstadoNovedad; // Exporta el MODELO, no la FUNCIÓN

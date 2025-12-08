@@ -33,7 +33,7 @@ const Novedad = sequelize.define(
       comment: "ID único de la novedad",
     },
 
-    codigo: {
+    novedad_code: {
       type: DataTypes.STRING(50),
       allowNull: false,
       unique: true,
@@ -63,7 +63,7 @@ const Novedad = sequelize.define(
       },
     },
 
-    estado_id: {
+    estado_novedad_id: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       defaultValue: 1, // Estado inicial: "Registrado"
@@ -245,7 +245,7 @@ const Novedad = sequelize.define(
       },
     },
 
-    personal_asignado_ids: {
+    personal_asignado_id: {
       type: DataTypes.JSON,
       allowNull: true,
       comment: "Array de IDs de personal asignado [1,2,3]",
@@ -338,7 +338,7 @@ const Novedad = sequelize.define(
     },
   },
   {
-    tableName: "novedades",
+    tableName: "novedades_incidentes",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
@@ -351,7 +351,7 @@ const Novedad = sequelize.define(
       },
       {
         name: "idx_estado",
-        fields: ["estado_id"],
+        fields: ["estado_novedad_id"],
       },
       {
         name: "idx_prioridad",
