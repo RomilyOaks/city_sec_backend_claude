@@ -4,7 +4,7 @@
  * ============================================
  *
  * Rutas de Novedades/Incidentes
- * Define los endpoints REST con control de acceso RBAC
+ * Define los endpoints REST con control de acceso RBAC y validaciones
  */
 
 import express from "express";
@@ -15,38 +15,54 @@ import {
   verificarRoles,
   requireAnyPermission,
 } from "../middlewares/authMiddleware.js";
+import {
+  validateCreateNovedad,
+  validateUpdateNovedad,
+  validateAsignarRecursos,
+  validateQueryNovedades,
+  validateNovedadId,
+} from "../middlewares/novedadValidation.js";
+import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 
 /**
  * @route   GET /api/novedades/dashboard/stats
  * @desc    Obtener estadísticas para el dashboard
  * @access  Todos los usuarios autenticados
- *
- * COMENTADO: Descomentar cuando exista novedadesController.getDashboardStats
+ * IMPORTANTE: Esta ruta debe ir ANTES de /:id para evitar conflictos
  */
-/*
 router.get(
   "/dashboard/stats",
   verificarToken,
   novedadesController.getDashboardStats
 );
-*/
 
 /**
  * @route   GET /api/novedades
  * @desc    Obtener todas las novedades con filtros
  * @access  Operador, Supervisor, Administrador
- * @query   fecha_inicio, fecha_fin, estado_id, prioridad, sector_id, page, limit
- *
- * COMENTADO: Descomentar cuando exista novedadesController.getAllNovedades
+ * @query   fecha_inicio, fecha_fin, estado_id, prioridad, sector_id, tipo_id, search, page, limit
  */
-/*
 router.get(
   "/",
   verificarToken,
-  verificarRoles(["operador", "supervisor", "admin"]),
+  verificarRoles(["operador", "supervisor", "super_admin"]),
+  validateQueryNovedades,
   novedadesController.getAllNovedades
 );
-*/
+
+/**
+ * @route   GET /api/novedades/:id/historial
+ * @desc    Obtener historial de cambios de estado de una novedad
+ * @access  Operador, Supervisor, Administrador
+ * IMPORTANTE: Esta ruta debe ir ANTES de /:id para evitar conflictos
+ */
+router.get(
+  "/:id/historial",
+  verificarToken,
+  verificarRoles(["operador", "supervisor", "super_admin"]),
+  validateNovedadId,
+  novedadesController.getHistorialEstados
+);
 
 /**
  * @route   GET /api/novedades/:id
@@ -56,7 +72,8 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  verificarRoles(["operador", "supervisor", "admin"]),
+  verificarRoles(["operador", "supervisor", "super_admin"]),
+  validateNovedadId,
   novedadesController.getNovedadById
 );
 
@@ -69,8 +86,17 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  verificarRoles(["operador", "supervisor", "admin"]),
-  requireAnyPermission(["novedades.incidentes.create"]),
+  verificarRoles(["operador", "supervisor", "super_admin"]),
+  requireAnyPermission([
+    "novedades.incidentes.create",
+    "novedades.novedades.create",
+  ]),
+  validateCreateNovedad,
+  registrarAuditoria({
+    entidad: "Novedad",
+    severidad: "MEDIA",
+    modulo: "Novedades",
+  }),
   novedadesController.createNovedad
 );
 
@@ -82,8 +108,14 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles(["supervisor", "admin"]),
+  verificarRoles(["supervisor", "super_admin"]),
   requireAnyPermission(["novedades.incidentes.update"]),
+  validateUpdateNovedad,
+  registrarAuditoria({
+    entidad: "Novedad",
+    severidad: "MEDIA",
+    modulo: "Novedades",
+  }),
   novedadesController.updateNovedad
 );
 
@@ -95,8 +127,14 @@ router.put(
 router.post(
   "/:id/asignar",
   verificarToken,
-  verificarRoles(["operador", "supervisor", "admin"]),
+  verificarRoles(["operador", "supervisor", "super_admin"]),
   requireAnyPermission(["novedades.asignacion.execute"]),
+  validateAsignarRecursos,
+  registrarAuditoria({
+    entidad: "Novedad",
+    severidad: "MEDIA",
+    modulo: "Novedades",
+  }),
   novedadesController.asignarRecursos
 );
 
@@ -108,21 +146,15 @@ router.post(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles(["admin"]),
+  verificarRoles(["super_admin"]),
   requireAnyPermission(["novedades.incidentes.delete"]),
+  validateNovedadId,
+  registrarAuditoria({
+    entidad: "Novedad",
+    severidad: "ALTA",
+    modulo: "Novedades",
+  }),
   novedadesController.deleteNovedad
-);
-
-/**
- * @route   GET /api/novedades/:id/historial
- * @desc    Obtener historial de cambios de estado de una novedad
- * @access  Operador, Supervisor, Administrador
- */
-router.get(
-  "/:id/historial",
-  verificarToken,
-  verificarRoles(["operador", "supervisor", "admin"]),
-  novedadesController.getHistorialEstados
 );
 
 export default router;

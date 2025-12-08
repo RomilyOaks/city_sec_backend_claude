@@ -64,6 +64,7 @@ import vehiculosRoutes from "./routes/vehiculos.routes.js";
 import cuadrantesRoutes from "./routes/cuadrantes.routes.js";
 import permisosRoutes from "./routes/permisos.routes.js";
 import rolesRoutes from "./routes/roles.routes.js";
+import auditoriaAccionRoutes from "./routes/auditoriaAcciones.routes.js";
 
 // ============================================
 // CONFIGURACIÓN INICIAL
@@ -80,6 +81,19 @@ const MAX_BODY_SIZE = process.env.MAX_BODY_SIZE || "10mb";
 
 // Crear instancia de Express
 const app = express();
+
+import swaggerUI from "swagger-ui-express";
+import fs from "fs";
+
+const swaggerDocument = JSON.parse(
+  fs.readFileSync(new URL("../swagger_output.json", import.meta.url))
+);
+
+app.use(
+  `/api/${API_VERSION}/docs`,
+  swaggerUI.serve,
+  swaggerUI.setup(swaggerDocument)
+);
 
 // ============================================
 // MIDDLEWARE 1: SEGURIDAD - HELMET
@@ -149,9 +163,14 @@ const corsOptions = {
   },
 
   // Permitir credenciales (cookies, headers de autenticación)
+  /*
+  Permite que el navegador envíe cookies, headers de autenticación (como Authorization), y certificados TLS en la solicitud cross-origin.
+  Esto establece el header Access-Control-Allow-Credentials: true en la respuesta de tu API. Debe ir con origin específico (no *).  
+  */
   credentials: true,
 
-  // Métodos HTTP permitidos
+  // Especifica los verbos HTTP permitidos (GET, POST, etc.)
+  /*Se refleja en el header Access-Control-Allow-Methods. Esto solo afecta a las peticiones preflight (ver maxAge).*/
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 
   // Headers permitidos en las peticiones
@@ -167,10 +186,18 @@ const corsOptions = {
   exposedHeaders: ["Content-Range", "X-Content-Range"],
 
   // Tiempo de cache de la respuesta preflight (OPTIONS)
+  /* En segundos (24 horas). 
+     Aplica al resultado de la petición Preflight (petición OPTIONS). El navegador cacheará esta respuesta y no enviará otra petición OPTIONS durante este tiempo, mejorando la velocidad.
+  */
   maxAge: 86400, // 24 horas
 
-  // Responder con status 204 a preflight (más rápido)
+  /* Responder con status 204 a preflight (más rápido)
+     Un status 204 indica éxito sin cuerpo de respuesta, lo cual es más rápido que el 200 por defecto y es una práctica común para preflights.
+  */
   optionsSuccessStatus: 204,
+
+  /* Middleware de Nivel Superior: app.use(cors(corsOptions)) aplica la configuración de CORS a todas las  rutas de tu aplicación Express.
+     Manejo de Peticiones Preflight: Cuando un navegador realiza una petición cross-origin compleja (ej: POST con un header personalizado o con métodos PUT/DELETE), primero envía una petición OPTIONS (preflight). Este middleware intercepta esa OPTIONS, usa corsOptions para generar los headers de respuesta (como Access-Control-Allow-Origin), y el navegador decide si la petición real debe continuar. */
 };
 
 // Aplicar configuración de CORS
@@ -389,6 +416,11 @@ app.use(`/api/${API_VERSION}/permisos`, permisosRoutes);
  */
 app.use(`/api/${API_VERSION}/roles`, rolesRoutes);
 
+/**
+ * Rutas de Auditoría de Acciones
+ */
+app.use(`/api/${API_VERSION}/roles`, auditoriaAccionRoutes);
+
 // ============================================
 // MANEJO DE RUTAS NO ENCONTRADAS (404)
 // Debe estar DESPUÉS de todas las rutas válidas
@@ -556,14 +588,17 @@ const startServer = async () => {
       console.log("│                                             │");
       console.log(`│  🚀 Servidor iniciado exitosamente          │`);
       console.log("│                                             │");
-      console.log(`│  🌐 URL: http://localhost:${PORT}             │`);
+      console.log(`│  🌐 URL: http://localhost:${PORT}              │`);
       console.log(
-        `│  📚 API: http://localhost:${PORT}/api/${API_VERSION}      │`
+        `│  📚 API: http://localhost:${PORT}/api/${API_VERSION}       │`
       );
-      console.log(`│  ❤️  Health: http://localhost:${PORT}/health  │`);
+      console.log(`│  ❤️  Health: http://localhost:${PORT}/health    │`);
+      console.log(
+        `│  ❤️  Docs: http://localhost:${PORT}/api/${API_VERSION}/docs │`
+      );
       console.log("│                                             │");
-      console.log(`│  🔐 Ambiente: ${NODE_ENV.padEnd(28)}│`);
-      console.log(`│  📦 Versión API: ${API_VERSION.padEnd(24)}│`);
+      console.log(`│  🔐 Ambiente: ${NODE_ENV.padEnd(28)}  │`);
+      console.log(`│  📦 Versión API: ${API_VERSION.padEnd(24)}   │`);
       console.log("│                                             │");
       console.log("└─────────────────────────────────────────────┘\n");
 

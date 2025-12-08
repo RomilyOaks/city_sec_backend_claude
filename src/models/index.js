@@ -1,4 +1,6 @@
+//=============================================
 // Ruta: src/models/index.js
+//=============================================
 // Descripción: Archivo central de modelos que importa todos los modelos
 // y define las asociaciones entre ellos para Sequelize ORM
 
@@ -39,8 +41,9 @@ import UsuarioRol from "./UsuarioRoles.js"; // Tabla intermedia Usuario-Rol
 // Modelos de auditoría
 import HistorialUsuario from "./HistorialUsuario.js";
 import LoginIntento from "./LoginIntento.js";
+import AuditoriaAccion from "./AuditoriaAccion.js";
 
-/**
+/*
  * DEFINICIÓN DE ASOCIACIONES
  * Aquí se definen todas las relaciones entre modelos
  */
@@ -444,6 +447,24 @@ LoginIntento.belongsTo(Usuario, {
 });
 
 // ============================================
+// ASOCIACIONES DE AUDITORÍA (AuditoriaAccion)
+// ============================================
+
+// Usuario -> AuditoriaAccion (1:N)
+Usuario.hasMany(AuditoriaAccion, {
+  foreignKey: "usuario_id",
+  as: "auditorias",
+});
+
+// AuditoriaAccion -> Usuario (N:1)
+AuditoriaAccion.belongsTo(Usuario, {
+  foreignKey: "usuario_id",
+  as: "usuario",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+// ============================================
 // ASOCIACIONES DE AUDITORÍA GLOBAL (created_by, updated_by, deleted_by)
 // ============================================
 
@@ -585,29 +606,6 @@ UsuarioRol.belongsTo(Usuario, {
   foreignKey: "deleted_by",
   as: "eliminador",
 });
-
-//--------------------------------------------------------------------------
-// Relación: PersonalSeguridad -> Usuario
-//--------------------------------------------------------------------------
-// NOTA: Esta sección estaba duplicada, se mantiene la definición de PersonalSeguridad
-// hacia Usuario, pero se eliminó la repetición.
-// Mantenemos la estructura para consistencia.
-/*
-PersonalSeguridad.belongsTo(Usuario, {
-  foreignKey: "created_by",
-  as: "creador",
-});
-
-PersonalSeguridad.belongsTo(Usuario, {
-  foreignKey: "updated_by",
-  as: "actualizador",
-});
-
-PersonalSeguridad.belongsTo(Usuario, {
-  foreignKey: "deleted_by",
-  as: "eliminador",
-});
-*/
 
 //--------------------------------------------------------------------------
 // Relación: Rol -> Usuario
@@ -763,7 +761,15 @@ const models = {
   // Modelos de auditoría
   HistorialUsuario,
   LoginIntento,
+  AuditoriaAccion,
 };
+
+// Configurar asociaciones
+Object.keys(models).forEach((modelName) => {
+  if (models[modelName].associate) {
+    models[modelName].associate(models);
+  }
+});
 
 // Exportación por defecto del objeto models
 export default models;
@@ -790,4 +796,5 @@ export {
   HistorialEstadoNovedad,
   HistorialUsuario,
   LoginIntento,
+  AuditoriaAccion,
 };

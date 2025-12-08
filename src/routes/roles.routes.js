@@ -35,7 +35,7 @@ import {
 
 import {
   verificarToken,
-  requirePermission,
+  requireAnyPermission,
   verificarRoles,
 } from "../middlewares/authMiddleware.js";
 
@@ -62,7 +62,7 @@ router.use(verificarRoles(["super_admin", "admin"]));
  * @query   {boolean} incluir_permisos - Incluir permisos (default: false)
  * @query   {string} search - Búsqueda en nombre o slug
  */
-router.get("/", requirePermission("usuarios.roles.read"), getRoles);
+router.get("/", requireAnyPermission("usuarios.roles.read"), getRoles);
 
 /**
  * @route   GET /api/v1/roles/slug/:slug
@@ -72,7 +72,7 @@ router.get("/", requirePermission("usuarios.roles.read"), getRoles);
  */
 router.get(
   "/slug/:slug",
-  requirePermission("usuarios.roles.read"),
+  requireAnyPermission("usuarios.roles.read"),
   getRolBySlug
 );
 
@@ -82,7 +82,7 @@ router.get(
  * @access  Private (super_admin, admin)
  * @params  {number} id - ID del rol
  */
-router.get("/:id", requirePermission("usuarios.roles.read"), getRolById);
+router.get("/:id", requireAnyPermission("usuarios.roles.read"), getRolById);
 
 /**
  * @route   GET /api/v1/roles/:id/permisos
@@ -92,7 +92,7 @@ router.get("/:id", requirePermission("usuarios.roles.read"), getRolById);
  */
 router.get(
   "/:id/permisos",
-  requirePermission("usuarios.roles.read"),
+  requireAnyPermission("usuarios.roles.read"),
   getPermisosDeRol
 );
 
@@ -112,7 +112,7 @@ router.get(
  * @body    {string} [rol.color] - Color hex (default: #6B7280)
  * @body    {Array<number>} [rol.permisos] - Array de IDs de permisos
  */
-router.post("/", requirePermission("usuarios.roles.create"), createRol);
+router.post("/", requireAnyPermission("usuarios.roles.create"), createRol);
 
 /**
  * @route   PUT /api/v1/roles/:id
@@ -127,7 +127,7 @@ router.post("/", requirePermission("usuarios.roles.create"), createRol);
  *
  * NOTA: No se pueden editar roles del sistema (es_sistema=true)
  */
-router.put("/:id", requirePermission("usuarios.roles.update"), updateRol);
+router.put("/:id", requireAnyPermission("usuarios.roles.update"), updateRol);
 
 /**
  * @route   DELETE /api/v1/roles/:id
@@ -139,7 +139,7 @@ router.put("/:id", requirePermission("usuarios.roles.update"), updateRol);
  * - No se pueden eliminar roles del sistema
  * - No se pueden eliminar roles con usuarios asignados
  */
-router.delete("/:id", requirePermission("usuarios.roles.delete"), deleteRol);
+router.delete("/:id", requireAnyPermission("usuarios.roles.delete"), deleteRol);
 
 // ============================================
 // RUTAS DE GESTIÓN DE PERMISOS DEL ROL
@@ -156,7 +156,7 @@ router.delete("/:id", requirePermission("usuarios.roles.delete"), deleteRol);
  */
 router.post(
   "/:id/permisos",
-  requirePermission("usuarios.roles.assign"),
+  requireAnyPermission("usuarios.roles.assign"),
   asignarPermisos
 );
 
@@ -169,7 +169,7 @@ router.post(
  */
 router.delete(
   "/:id/permisos/:permisoId",
-  requirePermission("usuarios.roles.assign"),
+  requireAnyPermission("usuarios.roles.assign"),
   quitarPermiso
 );
 

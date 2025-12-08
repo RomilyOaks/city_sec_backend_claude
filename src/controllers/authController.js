@@ -1,5 +1,7 @@
-/**
+/*
+ * =============================================
  * Ruta: src/controllers/authController.js
+ * ============================================
  * Descripción: Controlador de autenticación y gestión de usuarios
  * Maneja login, registro, logout, verificación de email, cambio de contraseña
  * y gestión de tokens JWT. Utiliza modelos Sequelize en lugar de queries directas.
@@ -102,6 +104,34 @@ export const register = async (req, res) => {
  */
 export const login = async (req, res) => {
   try {
+    // ✅ DEBUGGING: Verificar variables de entorno
+    console.log("🔍 DEBUG - Variables JWT:");
+    console.log("   JWT_SECRET existe:", !!process.env.JWT_SECRET);
+    console.log("   JWT_SECRET length:", process.env.JWT_SECRET?.length);
+    console.log(
+      "   JWT_REFRESH_SECRET existe:",
+      !!process.env.JWT_REFRESH_SECRET
+    );
+    console.log("   NODE_ENV:", process.env.NODE_ENV);
+
+    // ✅ VALIDACIÓN: Verificar que JWT_SECRET esté configurado
+    if (!process.env.JWT_SECRET) {
+      console.error("❌ ERROR CRÍTICO: JWT_SECRET no está definido");
+      return res.status(500).json({
+        success: false,
+        message: "Error de configuración del servidor",
+        error: "JWT_SECRET no configurado - contacte al administrador",
+      });
+    }
+
+    if (!process.env.JWT_REFRESH_SECRET) {
+      console.error("❌ ERROR CRÍTICO: JWT_REFRESH_SECRET no está definido");
+      return res.status(500).json({
+        success: false,
+        message: "Error de configuración del servidor",
+        error: "JWT_REFRESH_SECRET no configurado - contacte al administrador",
+      });
+    }
     const { username_or_email, password } = req.body;
     const ip_address = req.ip || req.connection.remoteAddress;
     const user_agent = req.headers["user-agent"];
@@ -232,10 +262,20 @@ export const login = async (req, res) => {
       permisos: permisos,
     };
 
+    // ✅ DEBUGGING: Logs antes de generar tokens
+    console.log("🔑 Generando Access Token...");
+    console.log("   Payload:", JSON.stringify(payload, null, 2));
+    console.log("   JWT_SECRET presente:", !!process.env.JWT_SECRET);
+
     // Generar Access Token (válido por 1 hora)
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
+
+    console.log("✅ Access Token generado exitosamente");
+
+    // ✅ DEBUGGING: Logs antes de generar refresh token
+    console.log("🔑 Generando Refresh Token...");
 
     // Generar Refresh Token (válido por 7 días)
     const refreshToken = jwt.sign(
@@ -243,6 +283,8 @@ export const login = async (req, res) => {
       process.env.JWT_REFRESH_SECRET,
       { expiresIn: "7d" }
     );
+
+    console.log("✅ Refresh Token generado exitosamente");
 
     // TODO: Guardar refresh token en la tabla tokens_acceso
 

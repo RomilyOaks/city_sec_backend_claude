@@ -14,7 +14,6 @@ import {
   verificarToken,
   verificarRoles,
   requireAnyPermission,
-  ROLES,
 } from "../middlewares/authMiddleware.js";
 
 /**
@@ -22,16 +21,14 @@ import {
  * @desc    Obtener personal disponible (sin vehículo asignado)
  * @access  Operador, Supervisor, Administrador
  *
- * COMENTADO: Descomentar cuando exista personalController.getPersonalDisponible
  */
-/*
+
 router.get(
   "/disponibles",
   verificarToken,
-  verificarRoles([ROLES.OPERADOR, ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["operador", "super_admin", "admin", "supervisor"]),
   personalController.getPersonalDisponible
 );
-*/
 
 /**
  * @route   GET /api/personal/stats
@@ -40,14 +37,13 @@ router.get(
  *
  * COMENTADO: Descomentar cuando exista personalController.getEstadisticasPersonal
  */
-/*
+
 router.get(
   "/stats",
   verificarToken,
-  verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   personalController.getEstadisticasPersonal
 );
-*/
 
 /**
  * @route   GET /api/personal
@@ -72,7 +68,7 @@ router.get("/:id", verificarToken, personalController.getPersonalById);
 router.post(
   "/",
   verificarToken,
-  verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   requireAnyPermission(["personal.personal.create"]),
   personalController.createPersonal
 );
@@ -85,7 +81,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   requireAnyPermission(["personal.personal.update"]),
   personalController.updatePersonal
 );
@@ -97,14 +93,13 @@ router.put(
  *
  * COMENTADO: Descomentar cuando exista personalController.cambiarEstadoPersonal
  */
-/*
+
 router.patch(
   "/:id/estado",
   verificarToken,
-  verificarRoles([ROLES.SUPERVISOR, ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin", "supervisor"]),
   personalController.cambiarEstadoPersonal
 );
-*/
 
 /**
  * @route   DELETE /api/personal/:id
@@ -114,7 +109,7 @@ router.patch(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles([ROLES.ADMINISTRADOR]),
+  verificarRoles(["super_admin", "admin"]),
   requireAnyPermission(["personal.personal.delete"]),
   personalController.deletePersonal
 );
