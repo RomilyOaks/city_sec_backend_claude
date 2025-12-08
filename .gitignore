@@ -36,3 +36,7 @@ build/
 
 # Testing
 .nyc_output/
+
+# Utility files
+fix-*.js
+convert-to-esm.js
