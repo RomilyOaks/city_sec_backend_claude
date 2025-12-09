@@ -244,6 +244,11 @@ export const getVehiculoById = async (req, res) => {
  * Crear un nuevo vehículo
  * @route POST /api/vehiculos
  */
+/**
+ * Crear un nuevo vehículo
+ * @route POST /api/vehiculos
+ * 🔥 VERSIÓN CORREGIDA - Manejo correcto de transacciones
+ */
 export const createVehiculo = async (req, res) => {
   const transaction = await sequelize.transaction();
 
@@ -254,9 +259,9 @@ export const createVehiculo = async (req, res) => {
       nombre,
       placa,
       marca,
-      modelo,
-      anio,
-      color,
+      modelo_vehiculo, // 🔥 CORREGIDO: era "modelo"
+      anio_vehiculo, // 🔥 CORREGIDO: era "anio"
+      color_vehiculo, // 🔥 CORREGIDO: era "color"
       numero_motor,
       numero_chasis,
       kilometraje_inicial,
@@ -271,11 +276,11 @@ export const createVehiculo = async (req, res) => {
     } = req.body;
 
     // Validar campos requeridos
-    if (!tipo_id || !placa) {
+    if (!tipo_id || !placa || !unidad_oficina_id) {
       await transaction.rollback();
       return res.status(400).json({
         success: false,
-        message: "Faltan campos requeridos: tipo_id, placa",
+        message: "Faltan campos requeridos: tipo_id, placa, unidad_oficina_id",
       });
     }
 
@@ -325,9 +330,9 @@ export const createVehiculo = async (req, res) => {
         nombre,
         placa: placa.toUpperCase(),
         marca,
-        modelo,
-        anio,
-        color,
+        modelo_vehiculo,
+        anio_vehiculo,
+        color_vehiculo,
         numero_motor,
         numero_chasis,
         kilometraje_inicial: kilometraje_inicial || 0,
@@ -345,14 +350,27 @@ export const createVehiculo = async (req, res) => {
       { transaction }
     );
 
+    // 🔥 IMPORTANTE: Hacer el commit ANTES de buscar con relaciones
     await transaction.commit();
 
-    // Obtener vehículo completo con relaciones
+    // 🔥 AHORA SÍ: Buscar el vehículo completo CON relaciones (SIN transacción)
     const vehiculoCompleto = await Vehiculo.findByPk(nuevoVehiculo.id, {
       include: [
-        { model: TipoVehiculo, as: "tipo" },
-        { model: UnidadOficina, as: "unidad" },
-        { model: PersonalSeguridad, as: "conductorAsignado" },
+        {
+          model: TipoVehiculo,
+          as: "tipo",
+          attributes: ["id", "nombre", "descripcion"],
+        },
+        {
+          model: UnidadOficina,
+          as: "unidad",
+          attributes: ["id", "nombre", "codigo"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "conductorAsignado",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        },
       ],
     });
 
@@ -362,12 +380,17 @@ export const createVehiculo = async (req, res) => {
       data: vehiculoCompleto,
     });
   } catch (error) {
-    await transaction.rollback();
+    // Si la transacción aún no se ha finalizado, hacer rollback
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
     console.error("Error al crear vehículo:", error);
     res.status(500).json({
       success: false,
       message: "Error al crear el vehículo",
       error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 };
@@ -444,9 +467,21 @@ export const updateVehiculo = async (req, res) => {
     // Obtener vehículo actualizado con relaciones
     const vehiculoActualizado = await Vehiculo.findByPk(id, {
       include: [
-        { model: TipoVehiculo, as: "tipo" },
-        { model: UnidadOficina, as: "unidad" },
-        { model: PersonalSeguridad, as: "conductorAsignado" },
+        {
+          model: TipoVehiculo,
+          as: "tipo",
+          attributes: ["id", "nombre", "descripcion"],
+        },
+        {
+          model: UnidadOficina,
+          as: "unidad",
+          attributes: ["id", "nombre", "codigo"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "conductorAsignado",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        },
       ],
     });
 
@@ -456,7 +491,9 @@ export const updateVehiculo = async (req, res) => {
       data: vehiculoActualizado,
     });
   } catch (error) {
-    await transaction.rollback();
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
     console.error("Error al actualizar vehículo:", error);
     res.status(500).json({
       success: false,

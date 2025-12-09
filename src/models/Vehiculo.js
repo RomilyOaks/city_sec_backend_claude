@@ -107,17 +107,17 @@ Vehiculo.init(
       allowNull: true,
       comment: "Marca del vehículo",
     },
-    modelo: {
+    modelo_vehiculo: {
       type: DataTypes.STRING(50),
       allowNull: true,
       comment: "Modelo del vehículo",
     },
-    anio: {
+    anio_vehiculo: {
       type: DataTypes.INTEGER,
       allowNull: true,
       comment: "Año de fabricación",
     },
-    color: {
+    color_vehiculo: {
       type: DataTypes.STRING(30),
       allowNull: true,
       comment: "Color del vehículo",
@@ -210,6 +210,11 @@ Vehiculo.init(
       type: DataTypes.DATE,
       allowNull: true,
       comment: "Fecha de eliminación (soft delete)",
+    },
+    deleted_by: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      comment: "Usuario que eliminó",
     },
     created_at: {
       type: DataTypes.DATE,
