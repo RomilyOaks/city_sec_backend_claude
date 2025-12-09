@@ -98,6 +98,100 @@ export const register = async (req, res) => {
 };
 
 /**
+ * ============================================
+ * ENDPOINT DE DEBUG - authController.js
+ * ============================================
+ *
+ * Agregar este endpoint temporalmente para depurar
+ */
+
+// En tu archivo src/controllers/authController.js
+// Agregar esta función:
+
+export const debugToken = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "No se proporcionó token",
+      });
+    }
+
+    const token = authHeader.substring(7);
+
+    // Decodificar sin verificar (solo para debug)
+    const jwt = await import("jsonwebtoken");
+    const decoded = jwt.default.decode(token);
+
+    // Buscar el usuario en la BD
+    const { Usuario, Rol, Permiso } = await import("../models/index.js");
+
+    const usuario = await Usuario.findByPk(decoded.id, {
+      attributes: ["id", "username", "email", "estado"],
+    });
+
+    if (!usuario) {
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado en la base de datos",
+        decoded_token: decoded,
+        user_id_from_token: decoded.id,
+      });
+    }
+
+    // Intentar buscar con roles
+    const usuarioConRoles = await Usuario.findByPk(decoded.id, {
+      include: [
+        {
+          model: Rol,
+          as: "roles",
+          through: {
+            attributes: ["es_principal", "estado"],
+            where: { estado: 1 },
+          },
+          required: false,
+          include: [
+            {
+              model: Permiso,
+              as: "permisos",
+              attributes: ["id", "slug"],
+              through: { attributes: [] },
+              required: false,
+            },
+          ],
+        },
+      ],
+    });
+
+    res.status(200).json({
+      success: true,
+      debug: {
+        token_decoded: decoded,
+        usuario_encontrado: !!usuario,
+        usuario_data: usuario,
+        roles_count: usuarioConRoles?.roles?.length || 0,
+        roles: usuarioConRoles?.roles || [],
+        permisos_total:
+          usuarioConRoles?.roles?.reduce(
+            (acc, rol) => acc + (rol.permisos?.length || 0),
+            0
+          ) || 0,
+      },
+    });
+  } catch (error) {
+    console.error("Error en debug:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error en debug",
+      error: error.message,
+      stack: error.stack,
+    });
+  }
+};
+
+/**
  * POST /api/auth/login
  * Autentica un usuario y genera tokens JWT
  * @body {username_or_email, password}
