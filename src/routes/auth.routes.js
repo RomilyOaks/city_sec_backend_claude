@@ -80,6 +80,19 @@ router.get("/me", authenticate, getMe);
 router.post("/forgot-password", forgotPassword);
 
 /**
+ * ============================================
+ * RUTA DE DEBUG - authRoutes.js
+ * ============================================
+ */
+
+// En tu archivo src/routes/auth.routes.js
+// Agregar esta ruta:
+
+import { debugToken } from "../controllers/authController.js";
+
+router.get("/debug/token", debugToken);
+
+/**
  * TODO: Implementar rutas adicionales:
  *
  * POST /api/auth/reset-password

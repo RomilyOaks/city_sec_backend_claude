@@ -60,7 +60,7 @@ TipoVehiculo.hasMany(Vehiculo, {
 
 Vehiculo.belongsTo(TipoVehiculo, {
   foreignKey: "tipo_id",
-  as: "tipo",
+  as: "tipoVehiculo",
 });
 
 // ============================================
@@ -75,7 +75,7 @@ TipoNovedad.hasMany(SubtipoNovedad, {
 
 SubtipoNovedad.belongsTo(TipoNovedad, {
   foreignKey: "tipo_novedad_id",
-  as: "tipo",
+  as: "subTipoNovedad",
 });
 
 // Relación: Novedad -> TipoNovedad
@@ -308,19 +308,19 @@ Usuario.belongsTo(PersonalSeguridad, {
 // created_by
 Usuario.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "usuarioCreador",
 });
 
 // updated_by
 Usuario.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "usuarioActualizador",
 });
 
 // deleted_by
 Usuario.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "usuarioEliminador",
 });
 
 // ============================================
@@ -473,19 +473,19 @@ AuditoriaAccion.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 Novedad.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorNovedad",
 });
 
 // Relación: Novedad -> Usuario (actualizador)
 Novedad.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorNovedad",
 });
 
 // Relación: Novedad -> Usuario (eliminador - si usas soft-delete)
 Novedad.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorNovedad",
 });
 
 //--------------------------------------------------------------------------
@@ -493,18 +493,18 @@ Novedad.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 Vehiculo.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorVehiculo",
 });
 // Relación: Vehiculo -> Usuario (actualizador)
 Vehiculo.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorVehiculo",
 });
 
 // Relación: Vehiculo -> Usuario (eliminador - si usas soft-delete)
 Vehiculo.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorVehiculo",
 });
 
 //--------------------------------------------------------------------------
@@ -512,19 +512,19 @@ Vehiculo.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 PersonalSeguridad.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorPersonalSeguridad",
 });
 
 // Relación: PersonalSeguridad -> Usuario (actualizador)
 PersonalSeguridad.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorPersonalSeguridad",
 });
 
 // Relación: PersonalSeguridad -> Usuario (eliminador - si usas soft-delete)
 PersonalSeguridad.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorPersonalSeguridad",
 });
 
 //--------------------------------------------------------------------------
@@ -532,19 +532,19 @@ PersonalSeguridad.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 Cargo.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorCargo",
 });
 
 // Relación: Cargo -> Usuario (actualizador)
 Cargo.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorCargo",
 });
 
 // Relación: Cargo -> Usuario (eliminador - si usas soft-delete)
 Cargo.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorCargo",
 });
 
 //--------------------------------------------------------------------------
@@ -552,19 +552,19 @@ Cargo.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 Cuadrante.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorCuadrante",
 });
 
 // Relación: Cuadrante -> Usuario (actualizador)
 Cuadrante.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorCuadrante",
 });
 
 // Relación: Cuadrante -> Usuario (eliminador - si usas soft-delete)
 Cuadrante.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorCuadrante",
 });
 
 //--------------------------------------------------------------------------
@@ -572,19 +572,19 @@ Cuadrante.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 EstadoNovedad.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorEstadoNovedad",
 });
 
 // Relación: EstadoNovedad -> Usuario (actualizador)
 EstadoNovedad.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorEstadoNovedad",
 });
 
 // Relación: EstadoNovedad -> Usuario (eliminador - si usas soft-delete)
 EstadoNovedad.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorEstadoNovedad",
 });
 
 //--------------------------------------------------------------------------
@@ -592,19 +592,19 @@ EstadoNovedad.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 UsuarioRol.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorUsuarioRol",
 });
 
 // Relación: UsuarioRol -> Usuario (actualizador)
 UsuarioRol.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorUsuarioRol",
 });
 
 // Relación: UsuarioRol -> Usuario (eliminador - si usas soft-delete)
 UsuarioRol.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorUsuarioRol",
 });
 
 //--------------------------------------------------------------------------
@@ -612,19 +612,19 @@ UsuarioRol.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 Rol.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorRol",
 });
 
 // Relación: Rol -> Usuario (actualizador)
 Rol.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorRol",
 });
 
 // Relación: Rol -> Usuario (eliminador - si usas soft-delete)
 Rol.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorRol",
 });
 
 //--------------------------------------------------------------------------
@@ -632,19 +632,19 @@ Rol.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 Sector.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorSector",
 });
 
 // Relación: Sector -> Usuario (actualizador)
 Sector.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorSector",
 });
 
 // Relación: Sector -> Usuario (eliminador - si usas soft-delete)
 Sector.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorSector",
 });
 
 //--------------------------------------------------------------------------
@@ -652,19 +652,19 @@ Sector.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 SubtipoNovedad.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorSubtipoNovedad",
 });
 
 // Relación: SubtipoNovedad -> Usuario (actualizador)
 SubtipoNovedad.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorSubtipoNovedad",
 });
 
 // Relación: SubtipoNovedad -> Usuario (eliminador - si usas soft-delete)
 SubtipoNovedad.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorSubtipoNovedad",
 });
 
 //--------------------------------------------------------------------------
@@ -672,19 +672,19 @@ SubtipoNovedad.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 TipoNovedad.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorTipoNovedad",
 });
 
 // Relación: TipoNovedad -> Usuario (actualizador)
 TipoNovedad.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorTipoNovedad",
 });
 
 // Relación: TipoNovedad -> Usuario (eliminador - si usas soft-delete)
 TipoNovedad.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorTipoNovedad",
 });
 
 //--------------------------------------------------------------------------
@@ -692,19 +692,19 @@ TipoNovedad.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 TipoVehiculo.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorTipoVehiculo",
 });
 
 // Relación: TipoVehiculo -> Usuario (actualizador)
 TipoVehiculo.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorTipoVehiculo",
 });
 
 // Relación: TipoVehiculo -> Usuario (eliminador - si usas soft-delete)
 TipoVehiculo.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorTipoVehiculo",
 });
 
 //--------------------------------------------------------------------------
@@ -712,24 +712,20 @@ TipoVehiculo.belongsTo(Usuario, {
 //--------------------------------------------------------------------------
 UnidadOficina.belongsTo(Usuario, {
   foreignKey: "created_by",
-  as: "creador",
+  as: "creadorUnidadOficina",
 });
 
 // Relación: UnidadOficina -> Usuario (actualizador)
 UnidadOficina.belongsTo(Usuario, {
   foreignKey: "updated_by",
-  as: "actualizador",
+  as: "actualizadorUnidadOficina",
 });
 
 // Relación: UnidadOficina -> Usuario (eliminador - si usas soft-delete)
 UnidadOficina.belongsTo(Usuario, {
   foreignKey: "deleted_by",
-  as: "eliminador",
+  as: "eliminadorUnidadOficina",
 });
-
-//--------------------------------------------------------------------------
-// ** SECCIÓN DUPLICADA ELIMINADA **
-//--------------------------------------------------------------------------
 
 /**
  * EXPORTAR TODOS LOS MODELOS Y LA INSTANCIA DE SEQUELIZE

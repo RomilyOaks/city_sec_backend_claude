@@ -1,5 +1,7 @@
-/**
- * Ruta: src/models/Vehiculo.js
+/*
+ ============================================
+ Ruta: src/models/Vehiculo.js
+ ============================================
  *
  * Descripción:
  * Modelo Sequelize para la tabla 'vehiculos' de la base de datos.
@@ -16,33 +18,63 @@
  * - Pertenece a un TipoVehiculo (Many-to-One)
  * - Puede estar asignado a PersonalSeguridad (One-to-Many)
  * - Tiene registros de Abastecimiento (One-to-Many)
+ * - Incluye relación con UnidadOficina
  *
- * @module models/Vehiculo
- * @requires sequelize
- * @requires config/database
  */
 
-import { DataTypes } from "sequelize";
-
+import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Vehiculo = sequelize.define(
-  "Vehiculo",
-  {
-    // ============================================
-    // IDENTIFICACIÓN
-    // ============================================
+class Vehiculo extends Model {
+  /**
+   * Definir asociaciones del modelo
+   */
+  static associate(models) {
+    // Relación con TipoVehiculo (Muchos a Uno)
+    Vehiculo.belongsTo(models.TipoVehiculo, {
+      foreignKey: "tipo_id",
+      as: "tipo",
+    });
 
+    // Relación con UnidadOficina (Muchos a Uno)
+    Vehiculo.belongsTo(models.UnidadOficina, {
+      foreignKey: "unidad_oficina_id",
+      as: "unidad",
+    });
+
+    // Relación con PersonalSeguridad - Conductor Asignado (Muchos a Uno)
+    Vehiculo.belongsTo(models.PersonalSeguridad, {
+      foreignKey: "conductor_asignado_id",
+      as: "conductorAsignado",
+    });
+
+    // Relación con Novedades (Uno a Muchos)
+    Vehiculo.hasMany(models.Novedad, {
+      foreignKey: "vehiculo_asignado_id",
+      as: "novedades",
+    });
+
+    // Relación con Usuario - Creador (Muchos a Uno)
+    Vehiculo.belongsTo(models.Usuario, {
+      foreignKey: "created_by",
+      as: "creador",
+    });
+
+    // Relación con Usuario - Actualizador (Muchos a Uno)
+    Vehiculo.belongsTo(models.Usuario, {
+      foreignKey: "updated_by",
+      as: "actualizador",
+    });
+  }
+}
+
+Vehiculo.init(
+  {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-
-    /**
-     * Foreign Key al tipo de vehículo
-     * Ejemplo: 1=Móvil, 2=Motocicleta, 3=Camioneta
-     */
     tipo_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -50,188 +82,185 @@ const Vehiculo = sequelize.define(
         model: "tipos_vehiculo",
         key: "id",
       },
-      comment: "ID del tipo de vehículo",
+      comment: "Tipo de vehículo (móvil, moto, etc.)",
     },
-
-    /**
-     * Código único del vehículo
-     * Formato sugerido:
-     * - M-01, M-02, M-03... para móviles
-     * - H-01, H-02, H-03... para motocicletas (Honda)
-     * - C-01, C-02, C-03... para camionetas
-     */
     codigo_vehiculo: {
       type: DataTypes.STRING(10),
       allowNull: true,
       unique: true,
-      comment: "Código identificador del vehículo (ej: M-01, H-01)",
+      comment:
+        "Código identificador del vehículo (ej: M-01, M-02 para móviles, H-01, H-02 para motos)",
     },
-
-    /**
-     * Nombre o denominación del vehículo
-     * Ejemplo: 'Móvil 01', 'Moto Patrullero'
-     */
     nombre: {
       type: DataTypes.STRING(100),
       allowNull: true,
-      comment: "Nombre o denominación del vehículo",
+      comment: "Nombre descriptivo del vehículo",
     },
-
-    /**
-     * Placa del vehículo (ÚNICO en la BD)
-     * Formato Perú: ABC-123, A1B-234
-     */
     placa: {
       type: DataTypes.STRING(20),
       allowNull: false,
       unique: true,
-      comment: "Placa del vehículo (único)",
+      comment: "Placa del vehículo",
     },
-
-    /**
-     * Marca del vehículo
-     * Ejemplo: Toyota, Honda, Nissan, KIA
-     */
     marca: {
       type: DataTypes.STRING(50),
       allowNull: true,
       comment: "Marca del vehículo",
     },
-
-    // ============================================
-    // DOCUMENTACIÓN Y MANTENIMIENTO
-    // ============================================
-
-    /**
-     * Número de póliza del SOAT
-     */
+    modelo: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: "Modelo del vehículo",
+    },
+    anio: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "Año de fabricación",
+    },
+    color: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      comment: "Color del vehículo",
+    },
+    numero_motor: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: "Número de motor",
+    },
+    numero_chasis: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: "Número de chasis",
+    },
+    kilometraje_inicial: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+      comment: "Kilometraje al momento del registro",
+    },
+    kilometraje_actual: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+      comment: "Kilometraje actual del vehículo",
+    },
+    capacidad_combustible: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      comment: "Capacidad de tanque en galones",
+    },
+    unidad_oficina_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "unidades_oficina",
+        key: "id",
+      },
+      comment: "Unidad a la que pertenece el vehículo",
+    },
+    conductor_asignado_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "personal_seguridad",
+        key: "id",
+      },
+      comment: "Conductor asignado permanentemente",
+    },
+    estado_operativo: {
+      type: DataTypes.ENUM(
+        "DISPONIBLE",
+        "EN_SERVICIO",
+        "MANTENIMIENTO",
+        "REPARACION",
+        "FUERA_DE_SERVICIO",
+        "INACTIVO"
+      ),
+      allowNull: false,
+      defaultValue: "DISPONIBLE",
+      comment: "Estado operativo actual del vehículo",
+    },
     soat: {
       type: DataTypes.STRING(50),
       allowNull: true,
-      comment: "Número de póliza del SOAT",
+      comment: "Número de póliza SOAT",
     },
-
-    /**
-     * Fecha de vencimiento del SOAT
-     * Importante para alertas de renovación
-     */
     fec_soat: {
       type: DataTypes.DATEONLY,
       allowNull: true,
       comment: "Fecha de vencimiento del SOAT",
     },
-
-    /**
-     * Fecha del próximo mantenimiento
-     * Permite programar mantenimientos preventivos
-     */
     fec_manten: {
       type: DataTypes.DATEONLY,
       allowNull: true,
       comment: "Fecha del próximo mantenimiento",
     },
-
-    // ============================================
-    // CONTROL
-    // ============================================
-
-    /**
-     * Estado del vehículo
-     * true (1) = Activo/Operativo
-     * false (0) = Inactivo/En mantenimiento
-     */
-    estado: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true,
-      comment: "1=Activo/Operativo | 0=Inactivo/Mantenimiento",
+    observaciones: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: "Observaciones adicionales",
     },
-
-    /**
-     * Eliminación lógica
-     */
+    estado: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+      comment: "1=Activo | 0=Inactivo",
+    },
     deleted_at: {
       type: DataTypes.DATE,
       allowNull: true,
+      comment: "Fecha de eliminación (soft delete)",
     },
-
-    // ============================================
-    // AUDITORÍA
-    // ============================================
-
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
     created_by: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      references: {
+        model: "usuarios",
+        key: "id",
+      },
     },
-
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
     updated_by: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      references: {
+        model: "usuarios",
+        key: "id",
+      },
     },
   },
   {
+    sequelize,
+    modelName: "Vehiculo",
     tableName: "vehiculos",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
-
-    indexes: [
-      {
-        unique: true,
-        fields: ["placa"],
-      },
-      {
-        unique: true,
-        fields: ["codigo_vehiculo"],
-      },
-      {
-        fields: ["tipo_id"],
-      },
-      {
-        fields: ["estado"],
-      },
-      {
-        // Índice compuesto para búsquedas comunes
-        fields: ["codigo_vehiculo", "tipo_id"],
-      },
-    ],
-
+    paranoid: false, // No usar paranoid porque usamos soft delete manual
     hooks: {
       /**
-       * Antes de crear: normalizar placa y generar código si no existe
+       * Antes de crear: Generar código automático si no se proporciona
        */
-      beforeCreate: async (vehiculo) => {
-        // Normalizar placa a mayúsculas
-        if (vehiculo.placa) {
-          vehiculo.placa = vehiculo.placa.toUpperCase().trim();
-        }
-
-        // Generar código automático si no se proporcionó
+      beforeCreate: async (vehiculo, options) => {
         if (!vehiculo.codigo_vehiculo) {
-          // Obtener el tipo de vehículo para determinar el prefijo
-          const tipoVehiculo = await sequelize.models.TipoVehiculo.findByPk(
-            vehiculo.tipo_id
-          );
+          // Obtener el tipo de vehículo para generar el código
+          const TipoVehiculo = sequelize.models.TipoVehiculo;
+          const tipo = await TipoVehiculo.findByPk(vehiculo.tipo_id);
 
-          if (tipoVehiculo) {
-            // Determinar prefijo según el tipo
-            let prefijo = "V"; // V=Vehículo genérico
+          if (tipo) {
+            // Generar prefijo según el tipo (primera letra del nombre)
+            const prefijo = tipo.nombre.substring(0, 1).toUpperCase();
 
-            if (tipoVehiculo.nombre.toLowerCase().includes("móvil")) {
-              prefijo = "M";
-            } else if (tipoVehiculo.nombre.toLowerCase().includes("moto")) {
-              prefijo = "H";
-            } else if (
-              tipoVehiculo.nombre.toLowerCase().includes("camioneta")
-            ) {
-              prefijo = "C";
-            } else if (
-              tipoVehiculo.nombre.toLowerCase().includes("bicicleta")
-            ) {
-              prefijo = "B";
-            }
-
-            // Buscar el último vehículo con ese prefijo
+            // Buscar el último código con ese prefijo
             const ultimoVehiculo = await Vehiculo.findOne({
               where: {
                 codigo_vehiculo: {
@@ -239,119 +268,43 @@ const Vehiculo = sequelize.define(
                 },
               },
               order: [["codigo_vehiculo", "DESC"]],
-              attributes: ["codigo_vehiculo"],
+              transaction: options.transaction,
             });
 
-            if (ultimoVehiculo) {
-              // Extraer número y sumar 1
-              const numeroActual = parseInt(
-                ultimoVehiculo.codigo_vehiculo.split("-")[1]
-              );
-              vehiculo.codigo_vehiculo = `${prefijo}-${String(
-                numeroActual + 1
-              ).padStart(2, "0")}`;
-            } else {
-              // Primer vehículo de este tipo
-              vehiculo.codigo_vehiculo = `${prefijo}-01`;
+            let nuevoNumero = 1;
+            if (ultimoVehiculo && ultimoVehiculo.codigo_vehiculo) {
+              const partes = ultimoVehiculo.codigo_vehiculo.split("-");
+              if (partes.length === 2) {
+                const numeroActual = parseInt(partes[1]);
+                if (!isNaN(numeroActual)) {
+                  nuevoNumero = numeroActual + 1;
+                }
+              }
             }
+
+            // Generar código: PREFIJO-NUMERO (ej: M-01, M-02, H-01)
+            vehiculo.codigo_vehiculo = `${prefijo}-${String(
+              nuevoNumero
+            ).padStart(2, "0")}`;
           }
+        }
+
+        // Convertir placa a mayúsculas
+        if (vehiculo.placa) {
+          vehiculo.placa = vehiculo.placa.toUpperCase();
         }
       },
 
       /**
-       * Antes de actualizar: normalizar placa si cambió
+       * Antes de actualizar: Convertir placa a mayúsculas
        */
       beforeUpdate: (vehiculo) => {
-        if (vehiculo.changed("placa")) {
-          vehiculo.placa = vehiculo.placa.toUpperCase().trim();
+        if (vehiculo.changed("placa") && vehiculo.placa) {
+          vehiculo.placa = vehiculo.placa.toUpperCase();
         }
       },
     },
   }
 );
-
-// ============================================
-// MÉTODOS ESTÁTICOS
-// ============================================
-
-/**
- * Obtener vehículos activos
- */
-Vehiculo.findActivos = async function () {
-  return await Vehiculo.findAll({
-    where: {
-      estado: true,
-      deleted_at: null,
-    },
-    include: [
-      {
-        association: "tipo",
-        attributes: ["id", "nombre"],
-      },
-    ],
-    order: [["codigo_vehiculo", "ASC"]],
-  });
-};
-
-/**
- * Buscar por placa
- */
-Vehiculo.findByPlaca = async function (placa) {
-  return await Vehiculo.findOne({
-    where: {
-      placa: placa.toUpperCase(),
-      deleted_at: null,
-    },
-    include: [
-      {
-        association: "tipo",
-      },
-    ],
-  });
-};
-
-/**
- * Obtener vehículos con SOAT próximo a vencer
- */
-Vehiculo.findSOATProximoVencer = async function (diasAntes = 30) {
-  const fechaLimite = new Date();
-  fechaLimite.setDate(fechaLimite.getDate() + diasAntes);
-
-  return await Vehiculo.findAll({
-    where: {
-      fec_soat: {
-        [sequelize.Sequelize.Op.lte]: fechaLimite,
-        [sequelize.Sequelize.Op.gte]: new Date(),
-      },
-      estado: true,
-      deleted_at: null,
-    },
-    order: [["fec_soat", "ASC"]],
-  });
-};
-
-// ============================================
-// MÉTODOS DE INSTANCIA
-// ============================================
-
-/**
- * Verificar si el SOAT está vigente
- */
-Vehiculo.prototype.tieneSOATVigente = function () {
-  if (!this.fec_soat) return false;
-  return new Date(this.fec_soat) >= new Date();
-};
-
-/**
- * Soft delete
- */
-Vehiculo.prototype.softDelete = async function (userId) {
-  this.deleted_at = new Date();
-  this.estado = false;
-  if (userId) {
-    this.updated_by = userId;
-  }
-  await this.save();
-};
 
 export default Vehiculo;
