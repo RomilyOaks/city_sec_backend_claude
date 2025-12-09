@@ -4,7 +4,7 @@
  * ============================================
  *
  * Middleware de autenticación y autorización
- * VERSIÓN FINAL - Corregida y Simplificada
+ * VERSIÓN CORREGIDA - Usa SLUGS para comparación
  */
 
 import jwt from "jsonwebtoken";
@@ -43,7 +43,7 @@ export const verificarToken = async (req, res, next) => {
       });
     }
 
-    if (usuario.estado !== "ACTIVO") {
+    if (!usuario.estado || usuario.estado === 0) {
       return res.status(403).json({
         success: false,
         message: "Usuario inactivo",
@@ -59,6 +59,8 @@ export const verificarToken = async (req, res, next) => {
           through: {
             attributes: [],
           },
+          // 🔥 IMPORTANTE: Ahora incluimos el campo 'slug'
+          attributes: ["id", "nombre", "slug"],
           include: [
             {
               model: Permiso,
@@ -71,12 +73,14 @@ export const verificarToken = async (req, res, next) => {
       ],
     });
 
-    // Obtener el rol principal
+    // Obtener el rol principal y SLUGS
     let rolPrincipal = null;
     let roles = [];
+    let rolSlugs = []; // 🔥 NUEVO: Array de slugs para comparación
 
     if (usuarioConRoles.roles && usuarioConRoles.roles.length > 0) {
       roles = usuarioConRoles.roles.map((r) => r.nombre);
+      rolSlugs = usuarioConRoles.roles.map((r) => r.slug); // 🔥 SLUGS
       rolPrincipal = usuarioConRoles.roles[0].nombre; // Tomar el primero como principal
     }
 
@@ -86,6 +90,7 @@ export const verificarToken = async (req, res, next) => {
         `⚠️ Usuario ${usuario.username} (ID: ${usuario.id}) sin roles asignados`
       );
       roles = ["sin_rol"];
+      rolSlugs = ["sin_rol"];
       rolPrincipal = "sin_rol";
     }
 
@@ -107,9 +112,18 @@ export const verificarToken = async (req, res, next) => {
       username: usuario.username,
       email: usuario.email,
       rol: rolPrincipal,
-      roles: roles,
+      roles: roles, // Nombres legibles
+      rolSlugs: rolSlugs, // 🔥 NUEVO: Slugs para comparación
       permisos: Array.from(todosLosPermisos),
     };
+
+    console.log("✅ Usuario autenticado:", {
+      id: req.user.id,
+      username: req.user.username,
+      roles: req.user.roles,
+      rolSlugs: req.user.rolSlugs, // 🔥 NUEVO LOG
+      total_permisos: req.user.permisos.length,
+    });
 
     next();
   } catch (error) {
@@ -139,7 +153,8 @@ export const verificarToken = async (req, res, next) => {
 
 /**
  * Verificar roles permitidos
- * @param {Array} rolesPermitidos - Array de roles permitidos
+ * 🔥 AHORA USA SLUGS PARA COMPARACIÓN
+ * @param {Array} rolesPermitidos - Array de SLUGS de roles permitidos
  */
 export const verificarRoles = (rolesPermitidos) => {
   return (req, res, next) => {
@@ -150,17 +165,26 @@ export const verificarRoles = (rolesPermitidos) => {
       });
     }
 
+    // 🔥 NUEVO: Usamos rolSlugs directamente (sin normalización)
+    const rolesUsuario = req.user.rolSlugs || [];
+
     // Verificar si el usuario tiene al menos uno de los roles permitidos
-    const tieneRolPermitido = req.user.roles.some((rol) =>
-      rolesPermitidos.includes(rol)
+    const tieneRolPermitido = rolesUsuario.some((rolSlug) =>
+      rolesPermitidos.includes(rolSlug)
     );
+
+    console.log("🔍 Verificación de roles:");
+    console.log("  - Roles permitidos:", rolesPermitidos);
+    console.log("  - Roles usuario (slugs):", rolesUsuario);
+    console.log("  - Tiene permiso:", tieneRolPermitido);
 
     if (!tieneRolPermitido) {
       return res.status(403).json({
         success: false,
         message: "No tienes permisos para realizar esta acción",
         requiredRoles: rolesPermitidos,
-        userRoles: req.user.roles,
+        userRoles: req.user.roles, // Mostramos nombres legibles
+        userRoleSlugs: rolesUsuario, // 🔥 NUEVO: Para debug
       });
     }
 
@@ -182,11 +206,17 @@ export const requireAnyPermission = (permisosRequeridos) => {
       });
     }
 
-    // Super Admin y Admin siempre pasan
-    if (
-      req.user.roles.includes("super_admin") ||
-      req.user.roles.includes("Super Administrador")
-    ) {
+    // 🔥 SIMPLIFICADO: Usamos rolSlugs directamente
+    const rolesUsuario = req.user.rolSlugs || [];
+
+    // Super Admin y Admin siempre pasan (usando slugs)
+    const rolesAdmin = ["super_admin", "admin"];
+    const esAdmin = rolesUsuario.some((rolSlug) =>
+      rolesAdmin.includes(rolSlug)
+    );
+
+    if (esAdmin) {
+      console.log("✅ Usuario es Admin, acceso garantizado");
       return next();
     }
 
@@ -200,7 +230,7 @@ export const requireAnyPermission = (permisosRequeridos) => {
         success: false,
         message: "No tienes los permisos necesarios para realizar esta acción",
         requiredPermissions: permisosRequeridos,
-        userPermissions: req.user.permisos.slice(0, 10), // Solo los primeros 10 para no saturar
+        userPermissions: req.user.permisos.slice(0, 10),
       });
     }
 
@@ -222,11 +252,16 @@ export const requireAllPermissions = (permisosRequeridos) => {
       });
     }
 
-    // Super Admin siempre pasa
-    if (
-      req.user.roles.includes("super_admin") ||
-      req.user.roles.includes("Super Administrador")
-    ) {
+    // 🔥 SIMPLIFICADO: Usamos rolSlugs directamente
+    const rolesUsuario = req.user.rolSlugs || [];
+
+    // Super Admin y Admin siempre pasan
+    const rolesAdmin = ["super_admin", "admin"];
+    const esAdmin = rolesUsuario.some((rolSlug) =>
+      rolesAdmin.includes(rolSlug)
+    );
+
+    if (esAdmin) {
       return next();
     }
 
@@ -261,11 +296,16 @@ export const requireModuleAccess = (modulo) => {
       });
     }
 
-    // Super Admin siempre pasa
-    if (
-      req.user.roles.includes("super_admin") ||
-      req.user.roles.includes("Super Administrador")
-    ) {
+    // 🔥 SIMPLIFICADO: Usamos rolSlugs directamente
+    const rolesUsuario = req.user.rolSlugs || [];
+
+    // Super Admin y Admin siempre pasan
+    const rolesAdmin = ["super_admin", "admin"];
+    const esAdmin = rolesUsuario.some((rolSlug) =>
+      rolesAdmin.includes(rolSlug)
+    );
+
+    if (esAdmin) {
       return next();
     }
 
@@ -306,6 +346,7 @@ export const autenticacionOpcional = async (req, res, next) => {
           model: Rol,
           as: "roles",
           through: { attributes: [] },
+          attributes: ["id", "nombre", "slug"], // 🔥 Incluir slug
           include: [
             {
               model: Permiso,
@@ -320,6 +361,7 @@ export const autenticacionOpcional = async (req, res, next) => {
 
     if (usuario && usuario.estado === 1) {
       const rolPrincipal = usuario.roles?.[0]?.nombre || "sin_rol";
+      const rolSlugs = usuario.roles?.map((r) => r.slug) || ["sin_rol"];
 
       const todosLosPermisos = new Set();
       usuario.roles?.forEach((rol) => {
@@ -334,6 +376,7 @@ export const autenticacionOpcional = async (req, res, next) => {
         email: usuario.email,
         rol: rolPrincipal,
         roles: usuario.roles?.map((r) => r.nombre) || [],
+        rolSlugs: rolSlugs, // 🔥 NUEVO
         permisos: Array.from(todosLosPermisos),
       };
     }

@@ -40,3 +40,6 @@ build/
 # Utility files
 fix-*.js
 convert-to-esm.js
+
+# Exclude specific files
+authMiddleware-copy.js

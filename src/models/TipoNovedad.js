@@ -89,7 +89,11 @@ const TipoNovedad = sequelize.define(
       allowNull: true,
       comment: "Fecha de eliminación lógica",
     },
-
+    deleted_by: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "Usuario que eliminó",
+    },
     // Auditoría
     created_by: {
       type: DataTypes.INTEGER,
