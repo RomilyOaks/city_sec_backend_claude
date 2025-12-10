@@ -2,10 +2,7 @@
  * ============================================
  * CONTROLADOR: src/controllers/novedadesController.js
  * ============================================
- *
- * Controlador de Novedades/Incidentes
- * Gestiona el CRUD de novedades e incidentes de seguridad ciudadana
- * Implementa control de acceso RBAC
+ * VERSIÓN CORREGIDA - Campos y alias consistentes
  */
 
 import {
@@ -25,8 +22,7 @@ import sequelize from "../config/database.js";
 import { Op } from "sequelize";
 
 /**
- * Obtener todas las novedades con filtros opcionales
- * Permisos: operador, supervisor, administrador
+ * Obtener todas las novedades con filtros
  * @route GET /api/novedades
  */
 const getAllNovedades = async (req, res) => {
@@ -43,40 +39,34 @@ const getAllNovedades = async (req, res) => {
       limit = 50,
     } = req.query;
 
-    // Construir filtros dinámicos
     const whereClause = {
       estado: 1,
       deleted_at: null,
     };
 
-    // Filtro por rango de fechas
+    // 🔥 Filtro por rango de fechas (usar fecha_hora_ocurrencia)
     if (fecha_inicio && fecha_fin) {
-      whereClause.fecha_hora = {
+      whereClause.fecha_hora_ocurrencia = {
         [Op.between]: [new Date(fecha_inicio), new Date(fecha_fin)],
       };
     }
 
-    // Filtro por estado de Novedad
     if (estado_novedad_id) {
       whereClause.estado_novedad_id = estado_novedad_id;
     }
 
-    // Filtro por prioridad
-    if (prioridad) {
+    if (prioridad_actual) {
       whereClause.prioridad_actual = prioridad_actual;
     }
 
-    // Filtro por sector
     if (sector_id) {
       whereClause.sector_id = sector_id;
     }
 
-    // Filtro por tipo
     if (tipo_novedad_id) {
       whereClause.tipo_novedad_id = tipo_novedad_id;
     }
 
-    // Búsqueda por texto
     if (search) {
       whereClause[Op.or] = [
         { novedad_code: { [Op.like]: `%${search}%` } },
@@ -86,57 +76,50 @@ const getAllNovedades = async (req, res) => {
       ];
     }
 
-    // Calcular offset para paginación
     const offset = (page - 1) * limit;
 
-    // Consulta con relaciones y paginación
     const { count, rows } = await Novedad.findAndCountAll({
       where: whereClause,
       include: [
         {
           model: TipoNovedad,
-          as: "tipo",
+          as: "novedadTipoNovedad", // 🔥 Usar alias definidos en index.js
           attributes: ["id", "nombre", "color_hex", "icono"],
         },
         {
           model: SubtipoNovedad,
-          as: "subtipo",
+          as: "novedadSubtipoNovedad",
           attributes: ["id", "nombre", "prioridad"],
         },
         {
           model: EstadoNovedad,
-          as: "estado",
+          as: "novedadEstado",
           attributes: ["id", "nombre", "color_hex", "icono"],
         },
         {
           model: Sector,
-          as: "sector",
+          as: "novedadSector",
           attributes: ["id", "nombre", "sector_code"],
         },
         {
           model: Cuadrante,
-          as: "cuadrante",
+          as: "novedadCuadrante",
           attributes: ["id", "nombre", "cuadrante_code"],
         },
         {
           model: UnidadOficina,
-          as: "unidad",
+          as: "novedadUnidadOficina",
           attributes: ["id", "nombre", "codigo"],
         },
         {
           model: Vehiculo,
-          as: "vehiculo",
+          as: "novedadVehiculo",
           attributes: ["id", "codigo_vehiculo", "placa"],
-        },
-        {
-          model: PersonalSeguridad,
-          as: "personal",
-          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
         },
       ],
       order: [
         ["prioridad_actual", "DESC"],
-        ["fecha_hora", "DESC"],
+        ["fecha_hora_ocurrencia", "DESC"],
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
@@ -164,7 +147,6 @@ const getAllNovedades = async (req, res) => {
 
 /**
  * Obtener una novedad por ID
- * Permisos: operador, supervisor, administrador
  * @route GET /api/novedades/:id
  */
 const getNovedadById = async (req, res) => {
@@ -178,38 +160,13 @@ const getNovedadById = async (req, res) => {
         deleted_at: null,
       },
       include: [
-        {
-          model: TipoNovedad,
-          as: "tipo",
-        },
-        {
-          model: SubtipoNovedad,
-          as: "subtipo",
-        },
-        {
-          model: EstadoNovedad,
-          as: "estado",
-        },
-        {
-          model: Sector,
-          as: "sector",
-        },
-        {
-          model: Cuadrante,
-          as: "cuadrante",
-        },
-        {
-          model: UnidadOficina,
-          as: "unidad",
-        },
-        {
-          model: Vehiculo,
-          as: "vehiculo",
-        },
-        {
-          model: PersonalSeguridad,
-          as: "personal",
-        },
+        { model: TipoNovedad, as: "novedadTipoNovedad" },
+        { model: SubtipoNovedad, as: "novedadSubtipoNovedad" },
+        { model: EstadoNovedad, as: "novedadEstado" },
+        { model: Sector, as: "novedadSector" },
+        { model: Cuadrante, as: "novedadCuadrante" },
+        { model: UnidadOficina, as: "novedadUnidadOficina" },
+        { model: Vehiculo, as: "novedadVehiculo" },
       ],
     });
 
@@ -236,7 +193,6 @@ const getNovedadById = async (req, res) => {
 
 /**
  * Crear una nueva novedad
- * Permisos: operador, supervisor, administrador
  * @route POST /api/novedades
  */
 const createNovedad = async (req, res) => {
@@ -246,30 +202,35 @@ const createNovedad = async (req, res) => {
     const {
       tipo_novedad_id,
       subtipo_novedad_id,
-      fecha_hora,
+      fecha_hora_ocurrencia, // 🔥 Campo correcto
       localizacion,
-      referencia,
+      referencia_ubicacion,
       latitud,
       longitud,
-      ubigeo,
+      ubigeo_code,
       origen_llamada,
       reportante_nombre,
       reportante_telefono,
-      reportante_dni,
+      reportante_doc_identidad,
+      es_anonimo,
       descripcion,
       observaciones,
       sector_id,
       cuadrante_id,
-      tipo_icono_novedad,
     } = req.body;
 
     // Validar campos requeridos
-    if (!tipo_novedad_id || !subtipo_novedad_id || !fecha_hora) {
+    if (
+      !tipo_novedad_id ||
+      !subtipo_novedad_id ||
+      !fecha_hora_ocurrencia ||
+      !descripcion
+    ) {
       await transaction.rollback();
       return res.status(400).json({
         success: false,
         message:
-          "Faltan campos requeridos: tipo_novedad_id, subtipo_novedad_id, fecha_hora",
+          "Faltan campos requeridos: tipo_novedad_id, subtipo_novedad_id, fecha_hora_ocurrencia, descripcion",
       });
     }
 
@@ -300,7 +261,7 @@ const createNovedad = async (req, res) => {
       });
     }
 
-    // Generar código de novedad único
+    // Generar código único
     const ultimaNovedad = await Novedad.findOne({
       order: [["id", "DESC"]],
       transaction,
@@ -312,8 +273,8 @@ const createNovedad = async (req, res) => {
       : 1;
     const novedad_code = String(siguienteNumero).padStart(6, "0");
 
-    // Determinar turno basado en la hora
-    const hora = new Date(fecha_hora).getHours();
+    // Determinar turno
+    const hora = new Date(fecha_hora_ocurrencia).getHours();
     let turno = "MAÑANA";
     if (hora >= 14 && hora < 22) {
       turno = "TARDE";
@@ -321,36 +282,38 @@ const createNovedad = async (req, res) => {
       turno = "NOCHE";
     }
 
-    // Crear la novedad
+    // Crear novedad
     const nuevaNovedad = await Novedad.create(
       {
         novedad_code,
-        fecha_hora,
-        tipo_icono_novedad,
+        fecha_hora_ocurrencia, // 🔥 Campo correcto
+        fecha_hora_reporte: new Date(),
         tipo_novedad_id,
         subtipo_novedad_id,
-        estado_novedad_id,
+        estado_novedad_id: estadoInicial.id,
         sector_id,
         cuadrante_id,
         localizacion,
-        referencia,
+        referencia_ubicacion,
         latitud,
         longitud,
-        ubigeo,
+        ubigeo_code,
         origen_llamada: origen_llamada || "TELEFONO_107",
         reportante_nombre,
         reportante_telefono,
-        reportante_dni,
+        reportante_doc_identidad,
+        es_anonimo: es_anonimo || 0,
         descripcion,
         observaciones,
-        prioridad_actual: subtipo.prioridad,
+        prioridad_actual: subtipo.prioridad || "MEDIA",
         turno,
+        usuario_registro: req.user.id, // 🔥 Campo correcto
         created_by: req.user.id,
       },
       { transaction }
     );
 
-    // Registrar cambio de estado inicial
+    // Registrar historial
     await HistorialEstadoNovedad.create(
       {
         novedad_id: nuevaNovedad.id,
@@ -364,14 +327,14 @@ const createNovedad = async (req, res) => {
 
     await transaction.commit();
 
-    // Obtener novedad completa con relaciones
+    // Obtener completa
     const novedadCompleta = await Novedad.findByPk(nuevaNovedad.id, {
       include: [
-        { model: TipoNovedad, as: "tipo" },
-        { model: SubtipoNovedad, as: "subtipo" },
-        { model: EstadoNovedad, as: "estado" },
-        { model: Sector, as: "sector" },
-        { model: Cuadrante, as: "cuadrante" },
+        { model: TipoNovedad, as: "novedadTipoNovedad" },
+        { model: SubtipoNovedad, as: "novedadSubtipoNovedad" },
+        { model: EstadoNovedad, as: "novedadEstado" },
+        { model: Sector, as: "novedadSector" },
+        { model: Cuadrante, as: "novedadCuadrante" },
       ],
     });
 
@@ -381,7 +344,9 @@ const createNovedad = async (req, res) => {
       data: novedadCompleta,
     });
   } catch (error) {
-    await transaction.rollback();
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
     console.error("Error al crear novedad:", error);
     res.status(500).json({
       success: false,
@@ -392,8 +357,7 @@ const createNovedad = async (req, res) => {
 };
 
 /**
- * Actualizar una novedad existente
- * Permisos: supervisor, administrador
+ * Actualizar novedad
  * @route PUT /api/novedades/:id
  */
 const updateNovedad = async (req, res) => {
@@ -403,7 +367,6 @@ const updateNovedad = async (req, res) => {
     const { id } = req.params;
     const datosActualizacion = req.body;
 
-    // Buscar la novedad
     const novedad = await Novedad.findOne({
       where: { id, estado: 1, deleted_at: null },
       transaction,
@@ -440,17 +403,16 @@ const updateNovedad = async (req, res) => {
       );
     }
 
-    // Calcular tiempo de respuesta si se registra llegada
+    // Calcular tiempo de respuesta
     if (datosActualizacion.fecha_llegada && !novedad.fecha_llegada) {
       const tiempoRespuesta = Math.floor(
         (new Date(datosActualizacion.fecha_llegada) -
-          new Date(novedad.fecha_hora)) /
+          new Date(novedad.fecha_hora_ocurrencia)) /
           60000
       );
       datosActualizacion.tiempo_respuesta_min = tiempoRespuesta;
     }
 
-    // Actualizar novedad
     await novedad.update(
       {
         ...datosActualizacion,
@@ -461,17 +423,15 @@ const updateNovedad = async (req, res) => {
 
     await transaction.commit();
 
-    // Obtener novedad actualizada con relaciones
     const novedadActualizada = await Novedad.findByPk(id, {
       include: [
-        { model: TipoNovedad, as: "tipo" },
-        { model: SubtipoNovedad, as: "subtipo" },
-        { model: EstadoNovedad, as: "estado" },
-        { model: Sector, as: "sector" },
-        { model: Cuadrante, as: "cuadrante" },
-        { model: UnidadOficina, as: "unidad" },
-        { model: Vehiculo, as: "vehiculo" },
-        { model: PersonalSeguridad, as: "personal" },
+        { model: TipoNovedad, as: "novedadTipoNovedad" },
+        { model: SubtipoNovedad, as: "novedadSubtipoNovedad" },
+        { model: EstadoNovedad, as: "novedadEstado" },
+        { model: Sector, as: "novedadSector" },
+        { model: Cuadrante, as: "novedadCuadrante" },
+        { model: UnidadOficina, as: "novedadUnidadOficina" },
+        { model: Vehiculo, as: "novedadVehiculo" },
       ],
     });
 
@@ -481,7 +441,9 @@ const updateNovedad = async (req, res) => {
       data: novedadActualizada,
     });
   } catch (error) {
-    await transaction.rollback();
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
     console.error("Error al actualizar novedad:", error);
     res.status(500).json({
       success: false,
@@ -492,8 +454,7 @@ const updateNovedad = async (req, res) => {
 };
 
 /**
- * Asignar unidad y recursos a una novedad
- * Permisos: operador, supervisor, administrador
+ * Asignar recursos a una novedad
  * @route POST /api/novedades/:id/asignar
  */
 const asignarRecursos = async (req, res) => {
@@ -544,7 +505,6 @@ const asignarRecursos = async (req, res) => {
       { transaction }
     );
 
-    // Registrar cambio de estado si cambió
     if (estadoDespacho && estadoDespacho.id !== estadoAnteriorId) {
       const tiempoEstado = Math.floor(
         (Date.now() - new Date(novedad.updated_at)) / 60000
@@ -567,10 +527,9 @@ const asignarRecursos = async (req, res) => {
 
     const novedadActualizada = await Novedad.findByPk(id, {
       include: [
-        { model: UnidadOficina, as: "unidad" },
-        { model: Vehiculo, as: "vehiculo" },
-        { model: PersonalSeguridad, as: "personal" },
-        { model: EstadoNovedad, as: "estado" },
+        { model: UnidadOficina, as: "novedadUnidadOficina" },
+        { model: Vehiculo, as: "novedadVehiculo" },
+        { model: EstadoNovedad, as: "novedadEstado" },
       ],
     });
 
@@ -580,7 +539,9 @@ const asignarRecursos = async (req, res) => {
       data: novedadActualizada,
     });
   } catch (error) {
-    await transaction.rollback();
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
     console.error("Error al asignar recursos:", error);
     res.status(500).json({
       success: false,
@@ -591,8 +552,7 @@ const asignarRecursos = async (req, res) => {
 };
 
 /**
- * Eliminar (soft delete) una novedad
- * Permisos: administrador
+ * Eliminar novedad (soft delete)
  * @route DELETE /api/novedades/:id
  */
 const deleteNovedad = async (req, res) => {
@@ -610,7 +570,6 @@ const deleteNovedad = async (req, res) => {
       });
     }
 
-    // Soft delete
     await novedad.update({
       estado: 0,
       deleted_at: new Date(),
@@ -632,8 +591,7 @@ const deleteNovedad = async (req, res) => {
 };
 
 /**
- * Obtener historial de estados de una novedad
- * Permisos: operador, supervisor, administrador
+ * Obtener historial de estados
  * @route GET /api/novedades/:id/historial
  */
 const getHistorialEstados = async (req, res) => {
@@ -655,7 +613,7 @@ const getHistorialEstados = async (req, res) => {
         },
         {
           model: Usuario,
-          as: "usuario",
+          as: "historialEstadoNovedadUsuario",
           attributes: ["id", "username", "email"],
         },
       ],
@@ -677,8 +635,7 @@ const getHistorialEstados = async (req, res) => {
 };
 
 /**
- * Obtener dashboard con estadísticas de novedades
- * Permisos: todos los usuarios autenticados
+ * Obtener estadísticas del dashboard
  * @route GET /api/novedades/dashboard/stats
  */
 const getDashboardStats = async (req, res) => {
@@ -689,10 +646,22 @@ const getDashboardStats = async (req, res) => {
     const mañana = new Date(hoy);
     mañana.setDate(mañana.getDate() + 1);
 
-    // Novedades del día agrupadas por estado
+    // Total del día
+    const totalNovedades = await Novedad.count({
+      where: {
+        fecha_hora_ocurrencia: {
+          [Op.gte]: hoy,
+          [Op.lt]: mañana,
+        },
+        estado: 1,
+        deleted_at: null,
+      },
+    });
+
+    // Por estado
     const novedadesPorEstado = await Novedad.findAll({
       where: {
-        fecha_hora: {
+        fecha_hora_ocurrencia: {
           [Op.gte]: hoy,
           [Op.lt]: mañana,
         },
@@ -706,18 +675,18 @@ const getDashboardStats = async (req, res) => {
       include: [
         {
           model: EstadoNovedad,
-          as: "estado",
+          as: "novedadEstado",
           attributes: ["nombre", "color_hex", "icono"],
         },
       ],
-      group: ["estado_novedad_id", "estado.id"],
+      group: ["estado_novedad_id", "novedadEstado.id"],
       raw: false,
     });
 
-    // Novedades por tipo del día
+    // Por tipo
     const novedadesPorTipo = await Novedad.findAll({
       where: {
-        fecha_hora: {
+        fecha_hora_ocurrencia: {
           [Op.gte]: hoy,
           [Op.lt]: mañana,
         },
@@ -731,18 +700,18 @@ const getDashboardStats = async (req, res) => {
       include: [
         {
           model: TipoNovedad,
-          as: "tipo",
+          as: "novedadTipoNovedad",
           attributes: ["nombre", "color_hex", "icono"],
         },
       ],
-      group: ["tipo_novedad_id", "tipo.id"],
+      group: ["tipo_novedad_id", "novedadTipoNovedad.id"],
       raw: false,
     });
 
-    // Novedades por prioridad
+    // Por prioridad
     const novedadesPorPrioridad = await Novedad.findAll({
       where: {
-        fecha_hora: {
+        fecha_hora_ocurrencia: {
           [Op.gte]: hoy,
           [Op.lt]: mañana,
         },
@@ -757,10 +726,10 @@ const getDashboardStats = async (req, res) => {
       raw: true,
     });
 
-    // Tiempo promedio de respuesta del día
+    // Tiempo promedio de respuesta
     const tiempoPromedio = await Novedad.findOne({
       where: {
-        fecha_hora: {
+        fecha_hora_ocurrencia: {
           [Op.gte]: hoy,
           [Op.lt]: mañana,
         },
@@ -775,18 +744,6 @@ const getDashboardStats = async (req, res) => {
         ],
       ],
       raw: true,
-    });
-
-    // Total de novedades del día
-    const totalNovedades = await Novedad.count({
-      where: {
-        fecha_hora: {
-          [Op.gte]: hoy,
-          [Op.lt]: mañana,
-        },
-        estado: 1,
-        deleted_at: null,
-      },
     });
 
     res.status(200).json({
@@ -810,6 +767,7 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
+// 🔥 IMPORTANTE: Crear archivo novedadValidation.js con estas validaciones corregidas
 export default {
   getAllNovedades,
   getNovedadById,
@@ -820,3 +778,26 @@ export default {
   getHistorialEstados,
   getDashboardStats,
 };
+
+/**
+ * VALIDACIONES - Crear archivo: src/middlewares/novedadValidation.js
+ *
+ * body("origen_llamada")
+ *   .optional()
+ *   .isIn([
+ *     "TELEFONO_107",
+ *     "BOTON_PANICO",
+ *     "CAMARA",
+ *     "PATRULLAJE",
+ *     "CIUDADANO",
+ *     "INTERVENCION_DIRECTA",
+ *     "OTROS"
+ *   ])
+ *   .withMessage("Origen de llamada no válido"),
+ *
+ * body("fecha_hora_ocurrencia") // 🔥 NO "fecha_hora"
+ *   .notEmpty()
+ *   .withMessage("La fecha y hora son requeridas")
+ *   .isISO8601()
+ *   .withMessage("La fecha debe estar en formato ISO 8601"),
+ */

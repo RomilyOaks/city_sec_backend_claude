@@ -2,9 +2,7 @@
  * ============================================
  * MIDDLEWARE: src/middlewares/novedadValidation.js
  * ============================================
- *
- * Validaciones para operaciones de novedades
- * Implementa validación de datos de entrada
+ * VERSIÓN CORREGIDA - Campos coinciden con BD
  */
 
 import { body, param, query, validationResult } from "express-validator";
@@ -40,11 +38,20 @@ export const validateCreateNovedad = [
     .isInt({ min: 1 })
     .withMessage("El subtipo debe ser un ID válido"),
 
-  body("fecha_hora")
+  // 🔥 CORREGIDO: fecha_hora_ocurrencia (no "fecha_hora")
+  body("fecha_hora_ocurrencia")
     .notEmpty()
     .withMessage("La fecha y hora son requeridas")
     .isISO8601()
     .withMessage("La fecha debe estar en formato ISO 8601"),
+
+  body("descripcion")
+    .notEmpty()
+    .withMessage("La descripción es requerida")
+    .isString()
+    .trim()
+    .isLength({ min: 10, max: 2000 })
+    .withMessage("La descripción debe tener entre 10 y 2000 caracteres"),
 
   body("localizacion")
     .optional()
@@ -53,12 +60,13 @@ export const validateCreateNovedad = [
     .isLength({ max: 500 })
     .withMessage("La localización no puede exceder 500 caracteres"),
 
-  body("referencia")
+  // 🔥 CORREGIDO: referencia_ubicacion (no "referencia")
+  body("referencia_ubicacion")
     .optional()
     .isString()
     .trim()
-    .isLength({ max: 500 })
-    .withMessage("La referencia no puede exceder 500 caracteres"),
+    .isLength({ max: 255 })
+    .withMessage("La referencia no puede exceder 255 caracteres"),
 
   body("latitud")
     .optional()
@@ -80,16 +88,17 @@ export const validateCreateNovedad = [
     })
     .withMessage("La longitud debe estar entre -180 y 180"),
 
+  // 🔥 CORREGIDO: Valores ENUM correctos de la BD
   body("origen_llamada")
     .optional()
     .isIn([
       "TELEFONO_107",
-      "RADIO",
-      "PRESENCIAL",
-      "APP_MOVIL",
-      "EMAIL",
-      "REDES_SOCIALES",
-      "OTRO",
+      "BOTON_PANICO",
+      "CAMARA",
+      "PATRULLAJE",
+      "CIUDADANO",
+      "INTERVENCION_DIRECTA",
+      "OTROS",
     ])
     .withMessage("Origen de llamada no válido"),
 
@@ -97,25 +106,26 @@ export const validateCreateNovedad = [
     .optional()
     .isString()
     .trim()
-    .isLength({ max: 200 })
-    .withMessage("El nombre del reportante no puede exceder 200 caracteres"),
+    .isLength({ max: 150 })
+    .withMessage("El nombre del reportante no puede exceder 150 caracteres"),
 
   body("reportante_telefono")
     .optional()
     .matches(/^[0-9]{7,15}$/)
     .withMessage("El teléfono debe tener entre 7 y 15 dígitos"),
 
-  body("reportante_dni")
-    .optional()
-    .matches(/^[0-9]{8}$/)
-    .withMessage("El DNI debe tener 8 dígitos"),
-
-  body("descripcion")
+  // 🔥 CORREGIDO: reportante_doc_identidad (no "reportante_dni")
+  body("reportante_doc_identidad")
     .optional()
     .isString()
     .trim()
-    .isLength({ max: 2000 })
-    .withMessage("La descripción no puede exceder 2000 caracteres"),
+    .isLength({ max: 30 })
+    .withMessage("El documento de identidad no puede exceder 30 caracteres"),
+
+  body("es_anonimo")
+    .optional()
+    .isInt({ min: 0, max: 1 })
+    .withMessage("es_anonimo debe ser 0 o 1"),
 
   body("observaciones")
     .optional()
@@ -133,6 +143,24 @@ export const validateCreateNovedad = [
     .optional()
     .isInt({ min: 1 })
     .withMessage("El cuadrante debe ser un ID válido"),
+
+  // 🔥 CORREGIDO: ubigeo_code (no "ubigeo")
+  body("ubigeo_code")
+    .optional()
+    .isString()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("El código ubigeo debe tener exactamente 6 caracteres"),
+
+  // 🔥 CORREGIDO: Valores ENUM correctos
+  body("prioridad_actual")
+    .optional()
+    .isIn(["ALTA", "MEDIA", "BAJA"])
+    .withMessage("La prioridad debe ser ALTA, MEDIA o BAJA"),
+
+  body("gravedad")
+    .optional()
+    .isIn(["LEVE", "MODERADA", "GRAVE", "MUY_GRAVE"])
+    .withMessage("La gravedad debe ser LEVE, MODERADA, GRAVE o MUY_GRAVE"),
 
   handleValidationErrors,
 ];
@@ -158,7 +186,8 @@ export const validateUpdateNovedad = [
     .isInt({ min: 1 })
     .withMessage("El estado debe ser un ID válido"),
 
-  body("fecha_hora")
+  // 🔥 CORREGIDO
+  body("fecha_hora_ocurrencia")
     .optional()
     .isISO8601()
     .withMessage("La fecha debe estar en formato ISO 8601"),
@@ -172,23 +201,6 @@ export const validateUpdateNovedad = [
     .optional()
     .isISO8601()
     .withMessage("La fecha de cierre debe estar en formato ISO 8601"),
-
-  body("localizacion")
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 500 })
-    .withMessage("La localización no puede exceder 500 caracteres"),
-
-  body("latitud")
-    .optional()
-    .isDecimal()
-    .withMessage("La latitud debe ser un número decimal"),
-
-  body("longitud")
-    .optional()
-    .isDecimal()
-    .withMessage("La longitud debe ser un número decimal"),
 
   body("descripcion")
     .optional()
@@ -239,14 +251,14 @@ export const validateAsignarRecursos = [
 
   body("km_inicial")
     .optional()
-    .isInt({ min: 0 })
-    .withMessage("El kilometraje inicial debe ser un número positivo"),
+    .isDecimal({ decimal_digits: "0,2" })
+    .withMessage("El kilometraje inicial debe ser un número válido"),
 
   handleValidationErrors,
 ];
 
 /**
- * Validación de parámetros de query para listar novedades
+ * Validación de query para listar novedades
  */
 export const validateQueryNovedades = [
   query("fecha_inicio")
@@ -259,25 +271,26 @@ export const validateQueryNovedades = [
     .isISO8601()
     .withMessage("fecha_fin debe estar en formato ISO 8601"),
 
-  query("estado_id")
+  query("estado_novedad_id")
     .optional()
     .isInt({ min: 1 })
-    .withMessage("estado_id debe ser un número entero positivo"),
+    .withMessage("estado_novedad_id debe ser un número entero positivo"),
 
-  query("prioridad")
+  // 🔥 CORREGIDO: Valores correctos
+  query("prioridad_actual")
     .optional()
-    .isIn(["BAJA", "MEDIA", "ALTA", "CRITICA"])
-    .withMessage("prioridad debe ser BAJA, MEDIA, ALTA o CRITICA"),
+    .isIn(["ALTA", "MEDIA", "BAJA"])
+    .withMessage("prioridad_actual debe ser ALTA, MEDIA o BAJA"),
 
   query("sector_id")
     .optional()
     .isInt({ min: 1 })
     .withMessage("sector_id debe ser un número entero positivo"),
 
-  query("tipo_id")
+  query("tipo_novedad_id")
     .optional()
     .isInt({ min: 1 })
-    .withMessage("tipo_id debe ser un número entero positivo"),
+    .withMessage("tipo_novedad_id debe ser un número entero positivo"),
 
   query("page")
     .optional()
@@ -304,7 +317,6 @@ export const validateQueryNovedades = [
  */
 export const validateNovedadId = [
   param("id").isInt({ min: 1 }).withMessage("ID de novedad inválido"),
-
   handleValidationErrors,
 ];
 
