@@ -3,9 +3,9 @@
  * RUTAS: src/routes/vehiculos.routes.js
  * ============================================
  *
- * Rutas de Vehículos - COMPLETO
+ * Rutas de Vehículos - VERSIÓN CORREGIDA
  * Define los endpoints REST para gestión de vehículos con control RBAC
- * Incluye todas las funciones: CRUD, estadísticas, historial y abastecimientos
+ * Todos los nombres de campos corregidos
  */
 
 import express from "express";
@@ -173,6 +173,7 @@ router.get(
  * @desc    Crear un nuevo vehículo
  * @access  Supervisor, Administrador
  * @body    tipo_id, placa, marca, nombre, etc.
+ * 🔥 CORREGIDO: Validadores usan nombres correctos de campos
  */
 router.post(
   "/",
@@ -185,6 +186,12 @@ router.post(
       .withMessage("El tipo de vehículo es requerido")
       .isInt({ min: 1 })
       .withMessage("tipo_id debe ser un número válido"),
+
+    body("unidad_oficina_id")
+      .notEmpty()
+      .withMessage("La unidad es requerida")
+      .isInt({ min: 1 })
+      .withMessage("unidad_oficina_id debe ser un número válido"),
 
     body("placa")
       .notEmpty()
@@ -207,15 +214,23 @@ router.post(
       .isLength({ max: 50 })
       .withMessage("La marca no puede exceder 50 caracteres"),
 
-    body("modelo")
+    // 🔥 CORREGIDO: modelo_vehiculo (no "modelo")
+    body("modelo_vehiculo")
       .optional()
       .isLength({ max: 50 })
       .withMessage("El modelo no puede exceder 50 caracteres"),
 
-    body("anio")
+    // 🔥 CORREGIDO: anio_vehiculo (no "anio")
+    body("anio_vehiculo")
       .optional()
       .isInt({ min: 1900, max: new Date().getFullYear() + 1 })
       .withMessage("Año inválido"),
+
+    // 🔥 CORREGIDO: color_vehiculo (no "color")
+    body("color_vehiculo")
+      .optional()
+      .isLength({ max: 30 })
+      .withMessage("El color no puede exceder 30 caracteres"),
 
     body("kilometraje_inicial")
       .optional()
@@ -246,6 +261,7 @@ router.post(
  * @route   PUT /api/vehiculos/:id
  * @desc    Actualizar un vehículo existente
  * @access  Supervisor, Administrador
+ * 🔥 CORREGIDO: Validadores usan nombres correctos de campos
  */
 router.put(
   "/:id",
@@ -270,10 +286,23 @@ router.put(
       .isLength({ max: 50 })
       .withMessage("La marca no puede exceder 50 caracteres"),
 
-    body("anio")
+    // 🔥 CORREGIDO: modelo_vehiculo
+    body("modelo_vehiculo")
+      .optional()
+      .isLength({ max: 50 })
+      .withMessage("El modelo no puede exceder 50 caracteres"),
+
+    // 🔥 CORREGIDO: anio_vehiculo
+    body("anio_vehiculo")
       .optional()
       .isInt({ min: 1900, max: new Date().getFullYear() + 1 })
       .withMessage("Año inválido"),
+
+    // 🔥 CORREGIDO: color_vehiculo
+    body("color_vehiculo")
+      .optional()
+      .isLength({ max: 30 })
+      .withMessage("El color no puede exceder 30 caracteres"),
 
     handleValidationErrors,
   ],

@@ -34,10 +34,10 @@ const getAllNovedades = async (req, res) => {
     const {
       fecha_inicio,
       fecha_fin,
-      estado_id,
-      prioridad,
+      estado_novedad_id,
+      prioridad_actual,
       sector_id,
-      tipo_id,
+      tipo_novedad_id,
       search,
       page = 1,
       limit = 50,
@@ -56,14 +56,14 @@ const getAllNovedades = async (req, res) => {
       };
     }
 
-    // Filtro por estado
-    if (estado_id) {
-      whereClause.estado_novedad_id = estado_id;
+    // Filtro por estado de Novedad
+    if (estado_novedad_id) {
+      whereClause.estado_novedad_id = estado_novedad_id;
     }
 
     // Filtro por prioridad
     if (prioridad) {
-      whereClause.prioridad_actual = prioridad;
+      whereClause.prioridad_actual = prioridad_actual;
     }
 
     // Filtro por sector
@@ -72,8 +72,8 @@ const getAllNovedades = async (req, res) => {
     }
 
     // Filtro por tipo
-    if (tipo_id) {
-      whereClause.tipo_novedad_id = tipo_id;
+    if (tipo_novedad_id) {
+      whereClause.tipo_novedad_id = tipo_novedad_id;
     }
 
     // Búsqueda por texto
@@ -329,7 +329,7 @@ const createNovedad = async (req, res) => {
         tipo_icono_novedad,
         tipo_novedad_id,
         subtipo_novedad_id,
-        estado_novedad_id: estadoInicial.id,
+        estado_novedad_id,
         sector_id,
         cuadrante_id,
         localizacion,

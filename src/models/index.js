@@ -70,111 +70,111 @@ Vehiculo.belongsTo(TipoVehiculo, {
 // Relación: TipoNovedad -> SubtipoNovedad (One-to-Many)
 TipoNovedad.hasMany(SubtipoNovedad, {
   foreignKey: "tipo_novedad_id",
-  as: "subtipos",
+  as: "tipoNovedadSubtipoNovedad",
 });
 
 SubtipoNovedad.belongsTo(TipoNovedad, {
   foreignKey: "tipo_novedad_id",
-  as: "subTipoNovedad",
+  as: "subtipoNovedadTipoNovedad",
 });
 
 // Relación: Novedad -> TipoNovedad
 Novedad.belongsTo(TipoNovedad, {
   foreignKey: "tipo_novedad_id",
-  as: "tipoNovedad",
+  as: "novedadTipoNovedad",
 });
 
 TipoNovedad.hasMany(Novedad, {
   foreignKey: "tipo_novedad_id",
-  as: "novedades",
+  as: "tipoNovedadNovedad",
 });
 
 // Relación: Novedad -> SubtipoNovedad
 Novedad.belongsTo(SubtipoNovedad, {
   foreignKey: "subtipo_novedad_id",
-  as: "subtipoNovedad",
+  as: "novedadSubtipoNovedad",
 });
 
 SubtipoNovedad.hasMany(Novedad, {
   foreignKey: "subtipo_novedad_id",
-  as: "novedades",
+  as: "subtipoNovedadNovedad",
 });
 
 // Relación: Novedad -> EstadoNovedad
 Novedad.belongsTo(EstadoNovedad, {
-  foreignKey: "estado_id",
-  as: "estado",
+  foreignKey: "estado_novedad_id",
+  as: "novedadEstado",
 });
 
 EstadoNovedad.hasMany(Novedad, {
-  foreignKey: "estado_id",
-  as: "novedades",
+  foreignKey: "estado_novedad_id",
+  as: "estadoNovedad",
 });
 
 // Relación: Novedad -> Usuario (reportado por)
 Novedad.belongsTo(Usuario, {
-  foreignKey: "reportado_por",
-  as: "reportadoPor",
+  foreignKey: "usuario_registro",
+  as: "novedadUsuarioRegistro",
 });
 
 Usuario.hasMany(Novedad, {
-  foreignKey: "reportado_por",
-  as: "novedadesReportadas",
+  foreignKey: "usuario_registro",
+  as: "usuarioNovedad",
 });
 
 // Relación: Novedad -> Sector
 Novedad.belongsTo(Sector, {
   foreignKey: "sector_id",
-  as: "sector",
+  as: "novedadSector",
 });
 
 Sector.hasMany(Novedad, {
   foreignKey: "sector_id",
-  as: "novedades",
+  as: "sectorNovedad",
 });
 
 // Relación: Novedad -> Cuadrante
 Novedad.belongsTo(Cuadrante, {
   foreignKey: "cuadrante_id",
-  as: "cuadrante",
+  as: "novedadCuadrante",
 });
 
 Cuadrante.hasMany(Novedad, {
   foreignKey: "cuadrante_id",
-  as: "novedades",
+  as: "cuadranteNovedad",
 });
 
 // Relación: Novedad -> UnidadOficina
 Novedad.belongsTo(UnidadOficina, {
-  foreignKey: "unidad_asignada_id",
-  as: "unidadAsignada",
+  foreignKey: "unidad_oficina_id",
+  as: "novedadUnidadOficina",
 });
 
 UnidadOficina.hasMany(Novedad, {
-  foreignKey: "unidad_asignada_id",
-  as: "novedadesAsignadas",
+  foreignKey: "unidad_oficina_id",
+  as: "unidadOficinaNovedad",
 });
 
 // Relación: Novedad -> Vehiculo
 Novedad.belongsTo(Vehiculo, {
-  foreignKey: "vehiculo_asignado_id",
-  as: "vehiculoAsignado",
+  foreignKey: "vehiculo_id",
+  as: "novedadVehiculo",
 });
 
 Vehiculo.hasMany(Novedad, {
-  foreignKey: "vehiculo_asignado_id",
-  as: "novedadesAsignadas",
+  foreignKey: "vehiculo_id",
+  as: "vehiculoNovedad",
 });
 
 // Relación: Novedad -> HistorialEstadoNovedad
 Novedad.hasMany(HistorialEstadoNovedad, {
   foreignKey: "novedad_id",
-  as: "historialEstados",
+  as: "novedadHistorialEstadoNovedad",
 });
 
 HistorialEstadoNovedad.belongsTo(Novedad, {
   foreignKey: "novedad_id",
-  as: "novedad",
+  as: "historialEstadoNovedades",
 });
 
 // Relación: HistorialEstadoNovedad -> EstadoNovedad (estado anterior)
@@ -191,8 +191,8 @@ HistorialEstadoNovedad.belongsTo(EstadoNovedad, {
 
 // Relación: HistorialEstadoNovedad -> Usuario (quien cambió)
 HistorialEstadoNovedad.belongsTo(Usuario, {
-  foreignKey: "cambiado_por",
-  as: "cambiadoPor",
+  foreignKey: "usuario_id",
+  as: "historialEstadoNovedadUsuario",
 });
 
 // ============================================
@@ -202,51 +202,51 @@ HistorialEstadoNovedad.belongsTo(Usuario, {
 // Relación: Sector -> Cuadrante (One-to-Many)
 Sector.hasMany(Cuadrante, {
   foreignKey: "sector_id",
-  as: "cuadrantes",
+  as: "sectorCuadrante",
 });
 
 Cuadrante.belongsTo(Sector, {
   foreignKey: "sector_id",
-  as: "sector",
+  as: "cuadranteSector",
 });
 
 // Relación: Ubigeo -> Sector (One-to-Many)
 Ubigeo.hasMany(Sector, {
   foreignKey: "ubigeo",
   sourceKey: "ubigeo_code",
-  as: "sectores",
+  as: "ubigeoSector",
 });
 
 Sector.belongsTo(Ubigeo, {
   foreignKey: "ubigeo",
   targetKey: "ubigeo_code",
-  as: "ubicacion",
+  as: "sectorUbigeo",
 });
 
 // Relación: Ubigeo -> UnidadOficina (One-to-Many)
 Ubigeo.hasMany(UnidadOficina, {
   foreignKey: "ubigeo",
   sourceKey: "ubigeo_code",
-  as: "unidades",
+  as: "ubigeoUnidadOficina",
 });
 
 UnidadOficina.belongsTo(Ubigeo, {
   foreignKey: "ubigeo",
   targetKey: "ubigeo_code",
-  as: "ubicacion",
+  as: "unidadOficinaUbigeo",
 });
 
 // Relación: Ubigeo -> Novedad
 Ubigeo.hasMany(Novedad, {
   foreignKey: "ubigeo_code",
   sourceKey: "ubigeo_code",
-  as: "novedades",
+  as: "ubigeoNovedad",
 });
 
 Novedad.belongsTo(Ubigeo, {
   foreignKey: "ubigeo_code",
   targetKey: "ubigeo_code",
-  as: "ubicacion",
+  as: "novedadUbigeo",
 });
 
 // ============================================
@@ -256,37 +256,37 @@ Novedad.belongsTo(Ubigeo, {
 // Relación: Cargo -> PersonalSeguridad (One-to-Many)
 Cargo.hasMany(PersonalSeguridad, {
   foreignKey: "cargo_id",
-  as: "personal",
+  as: "cargoPersonalSeguridad",
 });
 
 PersonalSeguridad.belongsTo(Cargo, {
   foreignKey: "cargo_id",
-  as: "cargo",
+  as: "PersonalSeguridadCargo",
 });
 
 // Relación: Ubigeo -> PersonalSeguridad (One-to-Many)
 Ubigeo.hasMany(PersonalSeguridad, {
   foreignKey: "ubigeo_code",
   sourceKey: "ubigeo_code",
-  as: "personal",
+  as: "ubigeoPersonalSeguridad",
 });
 
 PersonalSeguridad.belongsTo(Ubigeo, {
   foreignKey: "ubigeo_code",
   targetKey: "ubigeo_code",
-  as: "ubicacion",
+  as: "PersonalSeguridadUbigeo",
 });
 
 // Relación: Vehiculo -> PersonalSeguridad (One-to-Many)
 // Un vehículo puede estar asignado a varios personal en diferentes momentos
-Vehiculo.hasMany(PersonalSeguridad, {
+Vehiculo.hasOne(PersonalSeguridad, {
   foreignKey: "vehiculo_id",
-  as: "personalAsignado",
+  as: "vehiculoPersonalSeguridad",
 });
 
 PersonalSeguridad.belongsTo(Vehiculo, {
   foreignKey: "vehiculo_id",
-  as: "vehiculoAsignado",
+  as: "PersonalSeguridadVehiculo",
 });
 
 // ============================================
@@ -296,12 +296,12 @@ PersonalSeguridad.belongsTo(Vehiculo, {
 // Relación: PersonalSeguridad -> Usuario (One-to-One)
 PersonalSeguridad.hasOne(Usuario, {
   foreignKey: "personal_seguridad_id",
-  as: "usuario",
+  as: "PersonalSeguridadUsuario",
 });
 
 Usuario.belongsTo(PersonalSeguridad, {
   foreignKey: "personal_seguridad_id",
-  as: "personalSeguridad",
+  as: "usuarioPersonalSeguridad",
 });
 
 // Relación: Usuario -> Usuario (self-reference para auditoría de la tabla Usuario)
@@ -334,7 +334,7 @@ Usuario.belongsToMany(Rol, {
   through: "UsuarioRol",
   foreignKey: "usuario_id",
   otherKey: "rol_id",
-  as: "roles",
+  as: "usuarioRol",
   timestamps: true,
 });
 
@@ -342,7 +342,7 @@ Rol.belongsToMany(Usuario, {
   through: "UsuarioRol",
   foreignKey: "rol_id",
   otherKey: "usuario_id",
-  as: "usuarios",
+  as: "rolUsuario",
   timestamps: true,
 });
 
@@ -350,13 +350,13 @@ Rol.belongsToMany(Usuario, {
 // UsuarioRol tiene un Usuario asociado (el usuario al que pertenece el rol)
 UsuarioRol.belongsTo(Usuario, {
   foreignKey: "usuario_id",
-  as: "usuario",
+  as: "UsuarioRolUsuario",
 });
 
 // UsuarioRol tiene un Rol asociado
 UsuarioRol.belongsTo(Rol, {
   foreignKey: "rol_id",
-  as: "rol",
+  as: "UsuarioRolRol",
 });
 
 // 3. Relación de Auditoría para el campo 'asignado_por'

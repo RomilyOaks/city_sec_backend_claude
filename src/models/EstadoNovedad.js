@@ -11,7 +11,7 @@ import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 
 const EstadoNovedad = sequelize.define(
-  "EstadoNovedad",
+  "estadoNovedad",
   {
     // ID principal
     id: {
@@ -98,7 +98,11 @@ const EstadoNovedad = sequelize.define(
       allowNull: true,
       comment: "Fecha de eliminación lógica",
     },
-
+    deleted_by: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      comment: "Usuario que eliminó",
+    },
     // Auditoría
     created_by: {
       type: DataTypes.INTEGER,

@@ -49,8 +49,9 @@ class Vehiculo extends Model {
     });
 
     // Relación con Novedades (Uno a Muchos)
+    // Vehículo puede tener múltiples novedades asociadas
     Vehiculo.hasMany(models.Novedad, {
-      foreignKey: "vehiculo_asignado_id",
+      foreignKey: "vehiculo_id",
       as: "novedades",
     });
 

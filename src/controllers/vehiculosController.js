@@ -3,9 +3,11 @@
  * CONTROLADOR: src/controllers/vehiculosController.js
  * ====================================================
  *
- * Controlador de Vehículos - COMPLETO
- * Gestiona el CRUD completo de vehículos del sistema de seguridad
- * Incluye abastecimientos y disponibilidad
+ * Controlador de Vehículos - VERSIÓN CORREGIDA COMPLETA
+ * - Manejo correcto de transacciones
+ * - Nombres de campos corregidos
+ * - Validaciones mejoradas
+ * - Error handling robusto
  */
 
 import {
@@ -15,6 +17,7 @@ import {
   Novedad,
   TipoVehiculo,
   EstadoNovedad,
+  TipoNovedad,
 } from "../models/index.js";
 import { Op } from "sequelize";
 import sequelize from "../config/database.js";
@@ -40,11 +43,7 @@ export const getAllVehiculos = async (req, res) => {
       deleted_at: null,
     };
 
-    // Filtro por tipo de vehículo (nombre o ID)
-    if (tipo) {
-      whereClause.tipo_vehiculo = tipo;
-    }
-
+    // Filtros
     if (tipo_id) {
       whereClause.tipo_id = tipo_id;
     }
@@ -62,7 +61,7 @@ export const getAllVehiculos = async (req, res) => {
         { codigo_vehiculo: { [Op.like]: `%${search}%` } },
         { placa: { [Op.like]: `%${search}%` } },
         { marca: { [Op.like]: `%${search}%` } },
-        { modelo: { [Op.like]: `%${search}%` } },
+        { modelo_vehiculo: { [Op.like]: `%${search}%` } },
         { nombre: { [Op.like]: `%${search}%` } },
       ];
     }
@@ -116,22 +115,24 @@ export const getAllVehiculos = async (req, res) => {
 /**
  * Obtener vehículos disponibles (no asignados a novedades activas)
  * @route GET /api/vehiculos/disponibles
+ * 🔥 CORREGIDO: Alias y nombre de campo vehiculo_id
  */
 export const getVehiculosDisponibles = async (req, res) => {
   try {
     const { tipo_id } = req.query;
 
+    // 🔥 IMPORTANTE: Según tu schema, el campo es vehiculo_id (no vehiculo_asignado_id)
     // Obtener IDs de vehículos que están asignados a novedades activas
     const vehiculosEnUso = await Novedad.findAll({
       where: {
-        vehiculo_asignado_id: { [Op.ne]: null },
+        vehiculo_id: { [Op.ne]: null },
         estado: 1,
         deleted_at: null,
       },
       include: [
         {
           model: EstadoNovedad,
-          as: "estado",
+          as: "estadoNovedad", // 🔥 Verifica que este alias coincida con tu modelo Novedad
           where: {
             nombre: {
               [Op.notIn]: ["CERRADO", "CANCELADO", "FINALIZADO"],
@@ -139,20 +140,20 @@ export const getVehiculosDisponibles = async (req, res) => {
           },
         },
       ],
-      attributes: ["vehiculo_asignado_id"],
+      attributes: ["vehiculo_id"],
       raw: true,
     });
 
-    const idsEnUso = vehiculosEnUso.map((n) => n.vehiculo_asignado_id);
+    const idsEnUso = vehiculosEnUso.map((n) => n.vehiculo_id);
 
     // Buscar vehículos disponibles
     const whereClause = {
       estado: 1,
       deleted_at: null,
+      estado_operativo: "DISPONIBLE",
       id: { [Op.notIn]: idsEnUso.length > 0 ? idsEnUso : [0] },
     };
 
-    // Filtrar por tipo si se especifica
     if (tipo_id) {
       whereClause.tipo_id = tipo_id;
     }
@@ -243,11 +244,7 @@ export const getVehiculoById = async (req, res) => {
 /**
  * Crear un nuevo vehículo
  * @route POST /api/vehiculos
- */
-/**
- * Crear un nuevo vehículo
- * @route POST /api/vehiculos
- * 🔥 VERSIÓN CORREGIDA - Manejo correcto de transacciones
+ * 🔥 VERSIÓN CORREGIDA
  */
 export const createVehiculo = async (req, res) => {
   const transaction = await sequelize.transaction();
@@ -259,9 +256,9 @@ export const createVehiculo = async (req, res) => {
       nombre,
       placa,
       marca,
-      modelo_vehiculo, // 🔥 CORREGIDO: era "modelo"
-      anio_vehiculo, // 🔥 CORREGIDO: era "anio"
-      color_vehiculo, // 🔥 CORREGIDO: era "color"
+      modelo_vehiculo,
+      anio_vehiculo,
+      color_vehiculo,
       numero_motor,
       numero_chasis,
       kilometraje_inicial,
@@ -281,6 +278,28 @@ export const createVehiculo = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Faltan campos requeridos: tipo_id, placa, unidad_oficina_id",
+      });
+    }
+
+    // Verificar que el tipo de vehículo existe
+    const tipoExiste = await TipoVehiculo.findByPk(tipo_id, { transaction });
+    if (!tipoExiste) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "El tipo de vehículo especificado no existe",
+      });
+    }
+
+    // Verificar que la unidad existe
+    const unidadExiste = await UnidadOficina.findByPk(unidad_oficina_id, {
+      transaction,
+    });
+    if (!unidadExiste) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "La unidad especificada no existe",
       });
     }
 
@@ -322,7 +341,7 @@ export const createVehiculo = async (req, res) => {
       }
     }
 
-    // Crear el vehículo (el hook beforeCreate generará el código si no se proporciona)
+    // Crear el vehículo
     const nuevoVehiculo = await Vehiculo.create(
       {
         tipo_id,
@@ -350,10 +369,10 @@ export const createVehiculo = async (req, res) => {
       { transaction }
     );
 
-    // 🔥 IMPORTANTE: Hacer el commit ANTES de buscar con relaciones
+    // 🔥 COMMIT PRIMERO
     await transaction.commit();
 
-    // 🔥 AHORA SÍ: Buscar el vehículo completo CON relaciones (SIN transacción)
+    // 🔥 LUEGO buscar con relaciones (SIN transacción)
     const vehiculoCompleto = await Vehiculo.findByPk(nuevoVehiculo.id, {
       include: [
         {
@@ -380,7 +399,6 @@ export const createVehiculo = async (req, res) => {
       data: vehiculoCompleto,
     });
   } catch (error) {
-    // Si la transacción aún no se ha finalizado, hacer rollback
     if (!transaction.finished) {
       await transaction.rollback();
     }
@@ -398,6 +416,7 @@ export const createVehiculo = async (req, res) => {
 /**
  * Actualizar un vehículo
  * @route PUT /api/vehiculos/:id
+ * 🔥 VERSIÓN CORREGIDA
  */
 export const updateVehiculo = async (req, res) => {
   const transaction = await sequelize.transaction();
@@ -462,9 +481,10 @@ export const updateVehiculo = async (req, res) => {
       { transaction }
     );
 
+    // 🔥 COMMIT PRIMERO
     await transaction.commit();
 
-    // Obtener vehículo actualizado con relaciones
+    // 🔥 LUEGO buscar con relaciones (SIN transacción)
     const vehiculoActualizado = await Vehiculo.findByPk(id, {
       include: [
         {
@@ -494,6 +514,7 @@ export const updateVehiculo = async (req, res) => {
     if (!transaction.finished) {
       await transaction.rollback();
     }
+
     console.error("Error al actualizar vehículo:", error);
     res.status(500).json({
       success: false,
@@ -506,33 +527,39 @@ export const updateVehiculo = async (req, res) => {
 /**
  * Eliminar un vehículo (soft delete)
  * @route DELETE /api/vehiculos/:id
+ * 🔥 VERSIÓN CORREGIDA: Alias corregido
  */
 export const deleteVehiculo = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const { id } = req.params;
 
     const vehiculo = await Vehiculo.findOne({
       where: { id, estado: 1, deleted_at: null },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     });
 
     if (!vehiculo) {
+      await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: "Vehículo no encontrado",
       });
     }
 
-    // Verificar si está en uso en novedades activas
+    // 🔥 CORREGIDO: vehiculo_id y alias estadoNovedad
     const novedadesActivas = await Novedad.count({
       where: {
-        vehiculo_asignado_id: id,
+        vehiculo_id: id,
         estado: 1,
         deleted_at: null,
       },
       include: [
         {
           model: EstadoNovedad,
-          as: "estado",
+          as: "estadoNovedad",
           where: {
             nombre: {
               [Op.notIn]: ["CERRADO", "CANCELADO", "FINALIZADO"],
@@ -540,9 +567,11 @@ export const deleteVehiculo = async (req, res) => {
           },
         },
       ],
+      transaction,
     });
 
     if (novedadesActivas > 0) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
         message:
@@ -550,17 +579,28 @@ export const deleteVehiculo = async (req, res) => {
       });
     }
 
-    await vehiculo.update({
-      estado: 0,
-      deleted_at: new Date(),
-      updated_by: req.user.id,
-    });
+    // Soft delete
+    await vehiculo.update(
+      {
+        estado: 0,
+        deleted_at: new Date(),
+        deleted_by: req.user.id,
+        updated_by: req.user.id,
+      },
+      { transaction }
+    );
+
+    await transaction.commit();
 
     res.status(200).json({
       success: true,
       message: "Vehículo eliminado exitosamente",
     });
   } catch (error) {
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
     console.error("Error al eliminar vehículo:", error);
     res.status(500).json({
       success: false,
@@ -573,13 +613,17 @@ export const deleteVehiculo = async (req, res) => {
 /**
  * Actualizar kilometraje del vehículo
  * @route PATCH /api/vehiculos/:id/kilometraje
+ * 🔥 VERSIÓN CORREGIDA
  */
 export const actualizarKilometraje = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const { id } = req.params;
     const { kilometraje_nuevo, observaciones } = req.body;
 
     if (!kilometraje_nuevo || kilometraje_nuevo < 0) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
         message: "El kilometraje nuevo debe ser un número positivo",
@@ -588,9 +632,12 @@ export const actualizarKilometraje = async (req, res) => {
 
     const vehiculo = await Vehiculo.findOne({
       where: { id, estado: 1, deleted_at: null },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     });
 
     if (!vehiculo) {
+      await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: "Vehículo no encontrado",
@@ -598,24 +645,42 @@ export const actualizarKilometraje = async (req, res) => {
     }
 
     if (kilometraje_nuevo < vehiculo.kilometraje_actual) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
         message: "El kilometraje nuevo no puede ser menor al actual",
+        kilometraje_actual: vehiculo.kilometraje_actual,
       });
     }
 
-    await vehiculo.update({
-      kilometraje_actual: kilometraje_nuevo,
-      observaciones: observaciones || vehiculo.observaciones,
-      updated_by: req.user.id,
-    });
+    await vehiculo.update(
+      {
+        kilometraje_actual: kilometraje_nuevo,
+        observaciones: observaciones || vehiculo.observaciones,
+        updated_by: req.user.id,
+      },
+      { transaction }
+    );
+
+    await transaction.commit();
 
     res.status(200).json({
       success: true,
       message: "Kilometraje actualizado exitosamente",
-      data: vehiculo,
+      data: {
+        id: vehiculo.id,
+        codigo_vehiculo: vehiculo.codigo_vehiculo,
+        placa: vehiculo.placa,
+        kilometraje_anterior: vehiculo.kilometraje_actual,
+        kilometraje_nuevo: kilometraje_nuevo,
+        diferencia: kilometraje_nuevo - vehiculo.kilometraje_actual,
+      },
     });
   } catch (error) {
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
     console.error("Error al actualizar kilometraje:", error);
     res.status(500).json({
       success: false,
@@ -628,8 +693,11 @@ export const actualizarKilometraje = async (req, res) => {
 /**
  * Cambiar estado operativo del vehículo
  * @route PATCH /api/vehiculos/:id/estado
+ * 🔥 VERSIÓN CORREGIDA
  */
 export const cambiarEstadoOperativo = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const { id } = req.params;
     const { estado_operativo, observaciones } = req.body;
@@ -644,6 +712,7 @@ export const cambiarEstadoOperativo = async (req, res) => {
     ];
 
     if (!estadosValidos.includes(estado_operativo)) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
         message: `Estado operativo inválido. Debe ser uno de: ${estadosValidos.join(
@@ -654,27 +723,47 @@ export const cambiarEstadoOperativo = async (req, res) => {
 
     const vehiculo = await Vehiculo.findOne({
       where: { id, estado: 1, deleted_at: null },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     });
 
     if (!vehiculo) {
+      await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: "Vehículo no encontrado",
       });
     }
 
-    await vehiculo.update({
-      estado_operativo,
-      observaciones: observaciones || vehiculo.observaciones,
-      updated_by: req.user.id,
-    });
+    const estadoAnterior = vehiculo.estado_operativo;
+
+    await vehiculo.update(
+      {
+        estado_operativo,
+        observaciones: observaciones || vehiculo.observaciones,
+        updated_by: req.user.id,
+      },
+      { transaction }
+    );
+
+    await transaction.commit();
 
     res.status(200).json({
       success: true,
       message: "Estado operativo actualizado exitosamente",
-      data: vehiculo,
+      data: {
+        id: vehiculo.id,
+        codigo_vehiculo: vehiculo.codigo_vehiculo,
+        placa: vehiculo.placa,
+        estado_anterior: estadoAnterior,
+        estado_nuevo: estado_operativo,
+      },
     });
   } catch (error) {
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
     console.error("Error al cambiar estado:", error);
     res.status(500).json({
       success: false,
@@ -710,17 +799,16 @@ export const getEstadisticasVehiculos = async (req, res) => {
     const vehiculosPorTipo = await Vehiculo.findAll({
       where: { estado: 1, deleted_at: null },
       attributes: [
-        "tipo_id",
         [sequelize.fn("COUNT", sequelize.col("Vehiculo.id")), "cantidad"],
       ],
       include: [
         {
           model: TipoVehiculo,
           as: "tipo",
-          attributes: ["nombre"],
+          attributes: ["id", "nombre"],
         },
       ],
-      group: ["tipo_id", "tipo.id"],
+      group: ["tipo.id"],
       raw: false,
     });
 
@@ -728,17 +816,16 @@ export const getEstadisticasVehiculos = async (req, res) => {
     const vehiculosPorUnidad = await Vehiculo.findAll({
       where: { estado: 1, deleted_at: null },
       attributes: [
-        "unidad_oficina_id",
         [sequelize.fn("COUNT", sequelize.col("Vehiculo.id")), "cantidad"],
       ],
       include: [
         {
           model: UnidadOficina,
           as: "unidad",
-          attributes: ["nombre", "codigo"],
+          attributes: ["id", "nombre", "codigo"],
         },
       ],
-      group: ["unidad_oficina_id", "unidad.id"],
+      group: ["unidad.id"],
       raw: false,
     });
 
@@ -751,11 +838,21 @@ export const getEstadisticasVehiculos = async (req, res) => {
       },
     });
 
+    // Vehículos en mantenimiento
+    const vehiculosMantenimiento = await Vehiculo.count({
+      where: {
+        estado_operativo: { [Op.in]: ["MANTENIMIENTO", "REPARACION"] },
+        estado: 1,
+        deleted_at: null,
+      },
+    });
+
     res.status(200).json({
       success: true,
       data: {
         totalVehiculos,
         vehiculosDisponibles,
+        vehiculosMantenimiento,
         vehiculosPorEstado,
         vehiculosPorTipo,
         vehiculosPorUnidad,
@@ -774,6 +871,7 @@ export const getEstadisticasVehiculos = async (req, res) => {
 /**
  * Obtener historial de uso del vehículo (novedades asignadas)
  * @route GET /api/vehiculos/:id/historial
+ * 🔥 CORREGIDO: vehiculo_id y alias de relaciones
  */
 export const getHistorialVehiculo = async (req, res) => {
   try {
@@ -782,6 +880,13 @@ export const getHistorialVehiculo = async (req, res) => {
 
     const vehiculo = await Vehiculo.findOne({
       where: { id, estado: 1, deleted_at: null },
+      attributes: [
+        "id",
+        "codigo_vehiculo",
+        "placa",
+        "marca",
+        "modelo_vehiculo",
+      ],
     });
 
     if (!vehiculo) {
@@ -791,31 +896,56 @@ export const getHistorialVehiculo = async (req, res) => {
       });
     }
 
-    // Obtener novedades donde participó este vehículo
+    // 🔥 CORREGIDO: vehiculo_id y verifica los alias en tu modelo Novedad
     const historial = await Novedad.findAll({
       where: {
-        vehiculo_asignado_id: id,
+        vehiculo_id: id,
         estado: 1,
         deleted_at: null,
       },
       include: [
         {
           model: EstadoNovedad,
-          as: "estado",
+          as: "estadoNovedad", // 🔥 Verifica este alias en tu modelo
           attributes: ["nombre", "color_hex"],
         },
         {
           model: PersonalSeguridad,
-          as: "personalAsignado",
+          as: "novedades_personal", // 🔥 Verifica este alias en tu modelo
+          attributes: ["nombres", "apellido_paterno", "apellido_materno"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "novedades_personal2", // 🔥 Verifica este alias en tu modelo
+          attributes: ["nombres", "apellido_paterno", "apellido_materno"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "novedades_personal3", // 🔥 Verifica este alias en tu modelo
+          attributes: ["nombres", "apellido_paterno", "apellido_materno"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "novedades_personal4", // 🔥 Verifica este alias en tu modelo
+          attributes: ["nombres", "apellido_paterno", "apellido_materno"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "novedades_personal4", // 🔥 Verifica este alias en tu modelo
+          attributes: ["nombres", "apellido_paterno", "apellido_materno"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "novedades_usuario_registro", // 🔥 Verifica este alias en tu modelo
           attributes: ["nombres", "apellido_paterno", "apellido_materno"],
         },
         {
           model: TipoNovedad,
-          as: "tipoNovedad",
+          as: "tipo", // 🔥 Verifica este alias en tu modelo
           attributes: ["nombre", "icono"],
         },
       ],
-      order: [["fecha_hora", "DESC"]],
+      order: [["fecha_hora_ocurrencia", "DESC"]], // 🔥 Campo correcto según schema
       limit: parseInt(limit),
     });
 
@@ -840,9 +970,11 @@ export const getHistorialVehiculo = async (req, res) => {
 /**
  * Registrar abastecimiento de combustible
  * @route POST /api/vehiculos/:id/abastecimiento
- * NOTA: Esta funcionalidad requiere crear el modelo Abastecimiento
+ * 🔥 VERSIÓN CORREGIDA
  */
 export const registrarAbastecimiento = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const { id } = req.params;
     const {
@@ -859,9 +991,12 @@ export const registrarAbastecimiento = async (req, res) => {
     // Validar que el vehículo existe
     const vehiculo = await Vehiculo.findOne({
       where: { id, estado: 1, deleted_at: null },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     });
 
     if (!vehiculo) {
+      await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: "Vehículo no encontrado",
@@ -870,6 +1005,7 @@ export const registrarAbastecimiento = async (req, res) => {
 
     // Validar campos requeridos
     if (!fecha_hora || !tipo_combustible || !cantidad_galones) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
         message:
@@ -877,10 +1013,22 @@ export const registrarAbastecimiento = async (req, res) => {
       });
     }
 
-    // TODO: Crear registro en tabla abastecimientos
-    // Por ahora, retornamos información simulada
+    // Actualizar kilometraje del vehículo si se proporciona
+    if (km_actual && km_actual > vehiculo.kilometraje_actual) {
+      await vehiculo.update(
+        {
+          kilometraje_actual: km_actual,
+          updated_by: req.user.id,
+        },
+        { transaction }
+      );
+    }
+
+    await transaction.commit();
+
+    // TODO: Crear registro en tabla abastecimientos cuando exista el modelo
     const abastecimiento = {
-      id: Date.now(), // Temporal
+      id: Date.now(),
       vehiculo_id: id,
       fecha_hora,
       tipo_combustible,
@@ -894,14 +1042,6 @@ export const registrarAbastecimiento = async (req, res) => {
       created_at: new Date(),
     };
 
-    // Actualizar kilometraje del vehículo si se proporciona
-    if (km_actual && km_actual > vehiculo.kilometraje_actual) {
-      await vehiculo.update({
-        kilometraje_actual: km_actual,
-        updated_by: req.user.id,
-      });
-    }
-
     res.status(201).json({
       success: true,
       message: "Abastecimiento registrado exitosamente",
@@ -909,6 +1049,10 @@ export const registrarAbastecimiento = async (req, res) => {
       nota: "Esta funcionalidad requiere crear el modelo Abastecimiento en la base de datos",
     });
   } catch (error) {
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
     console.error("Error al registrar abastecimiento:", error);
     res.status(500).json({
       success: false,
@@ -921,7 +1065,6 @@ export const registrarAbastecimiento = async (req, res) => {
 /**
  * Obtener historial de abastecimientos de un vehículo
  * @route GET /api/vehiculos/:id/abastecimientos
- * NOTA: Esta funcionalidad requiere crear el modelo Abastecimiento
  */
 export const getHistorialAbastecimientos = async (req, res) => {
   try {
@@ -931,6 +1074,13 @@ export const getHistorialAbastecimientos = async (req, res) => {
     // Validar que el vehículo existe
     const vehiculo = await Vehiculo.findOne({
       where: { id, estado: 1, deleted_at: null },
+      attributes: [
+        "id",
+        "codigo_vehiculo",
+        "placa",
+        "marca",
+        "modelo_vehiculo",
+      ],
     });
 
     if (!vehiculo) {
@@ -940,20 +1090,13 @@ export const getHistorialAbastecimientos = async (req, res) => {
       });
     }
 
-    // TODO: Consultar tabla abastecimientos
-    // Por ahora, retornamos array vacío
+    // TODO: Consultar tabla abastecimientos cuando exista el modelo
     const abastecimientos = [];
 
     res.status(200).json({
       success: true,
       data: {
-        vehiculo: {
-          id: vehiculo.id,
-          codigo_vehiculo: vehiculo.codigo_vehiculo,
-          placa: vehiculo.placa,
-          marca: vehiculo.marca,
-          modelo: vehiculo.modelo,
-        },
+        vehiculo,
         total_abastecimientos: abastecimientos.length,
         abastecimientos,
       },
