@@ -334,7 +334,7 @@ Usuario.belongsToMany(Rol, {
   through: "UsuarioRol",
   foreignKey: "usuario_id",
   otherKey: "rol_id",
-  as: "usuarioRol",
+  as: "roles",
   timestamps: true,
 });
 
@@ -342,7 +342,7 @@ Rol.belongsToMany(Usuario, {
   through: "UsuarioRol",
   foreignKey: "rol_id",
   otherKey: "usuario_id",
-  as: "rolUsuario",
+  as: "usuarios",
   timestamps: true,
 });
 
@@ -350,13 +350,13 @@ Rol.belongsToMany(Usuario, {
 // UsuarioRol tiene un Usuario asociado (el usuario al que pertenece el rol)
 UsuarioRol.belongsTo(Usuario, {
   foreignKey: "usuario_id",
-  as: "UsuarioRolUsuario",
+  as: "usuario",
 });
 
 // UsuarioRol tiene un Rol asociado
 UsuarioRol.belongsTo(Rol, {
   foreignKey: "rol_id",
-  as: "UsuarioRolRol",
+  as: "rol",
 });
 
 // 3. Relación de Auditoría para el campo 'asignado_por'
