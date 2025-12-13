@@ -43,3 +43,6 @@ convert-to-esm.js
 
 # Exclude specific files
 authMiddleware-copy.js
+PersonalSeguridad-copy.js
+
+previous-versions/

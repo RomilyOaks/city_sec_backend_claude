@@ -1,9 +1,20 @@
 /**
- * Ruta: src/controllers/personalController.js
- * ============================================
+ * ===================================================
+ * CONTROLADOR: PersonalSeguridad (COMPLETO)
+ * ===================================================
  *
- * Controlador de Personal de Seguridad
- * Gestiona el CRUD del personal del sistema de seguridad ciudadana
+ * Ruta: src/controllers/personalController.js
+ *
+ * CORRECCIONES APLICADAS:
+ * - ✅ TipoVehiculo, TipoNovedad, EstadoNovedad importados
+ * - ✅ Alias 'tipoVehiculo' corregido en getPersonalById
+ * - ✅ Duplicados eliminados en getPersonalPorCargo y getPersonalPorStatus
+ * - ✅ Todas las funciones completas y funcionales
+ * - ✅ Función asignarVehiculo completada
+ * - ✅ Todas las funciones pendientes implementadas
+ *
+ * @version 2.0.0
+ * @date 2025-12-10
  */
 
 import {
@@ -11,75 +22,125 @@ import {
   Cargo,
   Ubigeo,
   Vehiculo,
-  sequelize,
+  TipoVehiculo,
+  Usuario,
+  Novedad,
+  TipoNovedad,
+  EstadoNovedad,
 } from "../models/index.js";
 import { Op } from "sequelize";
+import sequelize from "../config/database.js";
+
+// ==========================================
+// CRUD BÁSICO
+// ==========================================
 
 /**
- * Obtener todo el personal con filtros
- * Permisos: todos los usuarios autenticados
- * @route GET /api/personal
+ * Obtener todos los registros de personal con filtros y paginación
+ * GET /api/v1/personal
  */
-const getAllPersonal = async (req, res) => {
+export const getAllPersonal = async (req, res) => {
   try {
-    const { cargo_id, status, search, page = 1, limit = 50 } = req.query;
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      cargo_id,
+      status,
+      doc_tipo,
+      regimen,
+      tiene_licencia,
+      tiene_vehiculo,
+      ubigeo_code,
+      sort = "apellido_paterno",
+      order = "ASC",
+    } = req.query;
 
-    // Construir filtros
     const whereClause = {
       estado: 1,
       deleted_at: null,
     };
 
-    if (cargo_id) {
-      whereClause.cargo_id = cargo_id;
-    }
-
-    if (status) {
-      whereClause.status = status;
-    }
-
-    // Búsqueda por nombre, apellidos o documento
+    // Búsqueda por texto
     if (search) {
       whereClause[Op.or] = [
         { nombres: { [Op.like]: `%${search}%` } },
         { apellido_paterno: { [Op.like]: `%${search}%` } },
         { apellido_materno: { [Op.like]: `%${search}%` } },
         { doc_numero: { [Op.like]: `%${search}%` } },
+        { codigo_acceso: { [Op.like]: `%${search}%` } },
       ];
     }
 
+    // Filtros específicos
+    if (cargo_id) whereClause.cargo_id = cargo_id;
+    if (status) whereClause.status = status;
+    if (doc_tipo) whereClause.doc_tipo = doc_tipo;
+    if (regimen) whereClause.regimen = regimen;
+    if (ubigeo_code) whereClause.ubigeo_code = ubigeo_code;
+
+    // Filtro por licencia
+    if (tiene_licencia === "true") {
+      whereClause.licencia = { [Op.ne]: null };
+    } else if (tiene_licencia === "false") {
+      whereClause.licencia = null;
+    }
+
+    // Filtro por vehículo
+    if (tiene_vehiculo === "true") {
+      whereClause.vehiculo_id = { [Op.ne]: null };
+    } else if (tiene_vehiculo === "false") {
+      whereClause.vehiculo_id = null;
+    }
+
     const offset = (page - 1) * limit;
+    const sortFields = [
+      "apellido_paterno",
+      "apellido_materno",
+      "nombres",
+      "doc_numero",
+      "fecha_ingreso",
+      "status",
+      "codigo_acceso",
+      "created_at",
+    ];
+    const orderField = sortFields.includes(sort) ? sort : "apellido_paterno";
+    const orderDir = order.toUpperCase() === "DESC" ? "DESC" : "ASC";
 
     const { count, rows } = await PersonalSeguridad.findAndCountAll({
       where: whereClause,
       include: [
         {
           model: Cargo,
-          as: "cargo",
+          as: "PersonalSeguridadCargo",
           attributes: ["id", "nombre"],
         },
         {
           model: Ubigeo,
-          as: "ubigeo",
+          as: "PersonalSeguridadUbigeo",
           attributes: ["ubigeo_code", "departamento", "provincia", "distrito"],
         },
         {
           model: Vehiculo,
-          as: "vehiculo_asignado",
-          attributes: ["id", "codigo_vehiculo", "placa"],
+          as: "PersonalSeguridadVehiculo",
+          attributes: [
+            "id",
+            "codigo_vehiculo",
+            "placa",
+            "marca",
+            "modelo_vehiculo",
+          ],
         },
       ],
-      order: [
-        ["apellido_paterno", "ASC"],
-        ["apellido_materno", "ASC"],
-        ["nombres", "ASC"],
-      ],
+      order: [[orderField, orderDir]],
       limit: parseInt(limit),
       offset: parseInt(offset),
+      distinct: true,
     });
 
     res.status(200).json({
       success: true,
+      message: "Personal obtenido exitosamente",
       data: rows,
       pagination: {
         total: count,
@@ -89,7 +150,7 @@ const getAllPersonal = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error al obtener personal:", error);
+    console.error("❌ Error en getAllPersonal:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener el personal",
@@ -99,20 +160,59 @@ const getAllPersonal = async (req, res) => {
 };
 
 /**
- * Obtener personal por ID
- * Permisos: todos los usuarios autenticados
- * @route GET /api/personal/:id
+ * Obtener un personal por ID
+ * GET /api/v1/personal/:id
  */
-const getPersonalById = async (req, res) => {
+export const getPersonalById = async (req, res) => {
   try {
     const { id } = req.params;
 
     const personal = await PersonalSeguridad.findOne({
-      where: { id, estado: 1, deleted_at: null },
+      where: {
+        id,
+        estado: 1,
+        deleted_at: null,
+      },
       include: [
-        { model: Cargo, as: "cargo" },
-        { model: Ubigeo, as: "ubigeo" },
-        { model: Vehiculo, as: "vehiculo_asignado" },
+        {
+          model: Cargo,
+          as: "PersonalSeguridadCargo",
+          attributes: ["id", "nombre"],
+        },
+        {
+          model: Ubigeo,
+          as: "PersonalSeguridadUbigeo",
+          attributes: ["ubigeo_code", "departamento", "provincia", "distrito"],
+        },
+        {
+          model: Vehiculo,
+          as: "PersonalSeguridadVehiculo",
+          attributes: [
+            "id",
+            "codigo_vehiculo",
+            "placa",
+            "marca",
+            "modelo_vehiculo",
+            "tipo_id",
+          ],
+          include: [
+            {
+              model: TipoVehiculo,
+              as: "tipoVehiculo",
+              attributes: ["id", "nombre"],
+            },
+          ],
+        },
+        {
+          model: Usuario,
+          as: "creadorPersonalSeguridad",
+          attributes: ["id", "username"],
+        },
+        {
+          model: Usuario,
+          as: "actualizadorPersonalSeguridad",
+          attributes: ["id", "username"],
+        },
       ],
     });
 
@@ -125,10 +225,11 @@ const getPersonalById = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: "Personal obtenido exitosamente",
       data: personal,
     });
   } catch (error) {
-    console.error("Error al obtener personal:", error);
+    console.error("❌ Error en getPersonalById:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener el personal",
@@ -138,93 +239,138 @@ const getPersonalById = async (req, res) => {
 };
 
 /**
- * Crear nuevo personal
- * Permisos: supervisor, administrador
- * @route POST /api/personal
+ * Crear un nuevo personal
+ * POST /api/v1/personal
  */
-const createPersonal = async (req, res) => {
+export const createPersonal = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
-    const {
-      doc_tipo,
-      doc_numero,
-      apellido_paterno,
-      apellido_materno,
-      nombres,
-      sexo,
-      fecha_nacimiento,
-      nacionalidad,
-      direccion,
-      ubigeo_code,
-      cargo_id,
-      fecha_ingreso,
-      status,
-      licencia,
-      categoria,
-      vigencia,
-      regimen,
-      vehiculo_id,
-      codigo_acceso,
-      foto,
-    } = req.body;
+    const datosPersonal = req.body;
 
-    // Validar campos requeridos
-    if (!doc_numero || !apellido_paterno || !apellido_materno || !nombres) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Faltan campos requeridos: doc_numero, apellido_paterno, apellido_materno, nombres",
-      });
-    }
-
-    // Verificar si el documento ya existe
+    // Verificar si ya existe personal con el mismo documento
     const personalExistente = await PersonalSeguridad.findOne({
       where: {
-        doc_numero,
-        doc_tipo: doc_tipo || "DNI",
+        doc_tipo: datosPersonal.doc_tipo,
+        doc_numero: datosPersonal.doc_numero,
+        estado: 1,
         deleted_at: null,
       },
+      transaction,
     });
 
     if (personalExistente) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
-        message: "Ya existe personal registrado con este número de documento",
+        message: `Ya existe un personal con ${datosPersonal.doc_tipo}: ${datosPersonal.doc_numero}`,
       });
     }
 
-    // Crear personal
-    const nuevoPersonal = await PersonalSeguridad.create({
-      doc_tipo: doc_tipo || "DNI",
-      doc_numero,
-      apellido_paterno,
-      apellido_materno,
-      nombres,
-      sexo,
-      fecha_nacimiento,
-      nacionalidad,
-      direccion,
-      ubigeo_code,
-      cargo_id,
-      fecha_ingreso: fecha_ingreso || new Date(),
-      status: status || "Activo",
-      licencia,
-      categoria,
-      vigencia,
-      regimen,
-      vehiculo_id,
-      codigo_acceso,
-      foto,
-      created_by: req.user.id,
-    });
+    // Validar cargo si se proporciona
+    if (datosPersonal.cargo_id) {
+      const cargoExiste = await Cargo.findByPk(datosPersonal.cargo_id, {
+        transaction,
+      });
+      if (!cargoExiste) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "El cargo especificado no existe",
+        });
+      }
+    }
 
-    // Obtener personal completo con relaciones
+    // Validar ubigeo si se proporciona
+    if (datosPersonal.ubigeo_code) {
+      const ubigeoExiste = await Ubigeo.findOne({
+        where: { ubigeo_code: datosPersonal.ubigeo_code },
+        transaction,
+      });
+      if (!ubigeoExiste) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "El código de ubigeo especificado no existe",
+        });
+      }
+    }
+
+    // Validar vehículo si se asigna
+    if (datosPersonal.vehiculo_id) {
+      const vehiculo = await Vehiculo.findOne({
+        where: {
+          id: datosPersonal.vehiculo_id,
+          estado_operativo: "DISPONIBLE",
+          estado: 1,
+          deleted_at: null,
+        },
+        transaction,
+      });
+
+      if (!vehiculo) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "El vehículo especificado no existe o no está disponible",
+        });
+      }
+
+      // Verificar que tenga licencia vigente
+      if (!datosPersonal.licencia || !datosPersonal.vigencia) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message:
+            "Para asignar un vehículo, el personal debe tener licencia y vigencia",
+        });
+      }
+
+      if (new Date(datosPersonal.vigencia) < new Date()) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "No se puede asignar un vehículo con licencia vencida",
+        });
+      }
+    }
+
+    // Crear el personal
+    const nuevoPersonal = await PersonalSeguridad.create(
+      {
+        ...datosPersonal,
+        created_by: req.user.id,
+      },
+      { transaction }
+    );
+
+    await transaction.commit();
+
+    // Obtener el personal con relaciones
     const personalCompleto = await PersonalSeguridad.findByPk(
       nuevoPersonal.id,
       {
         include: [
-          { model: Cargo, as: "cargo" },
-          { model: Ubigeo, as: "ubigeo" },
-          { model: Vehiculo, as: "vehiculo_asignado" },
+          {
+            model: Cargo,
+            as: "PersonalSeguridadCargo",
+            attributes: ["id", "nombre"],
+          },
+          {
+            model: Ubigeo,
+            as: "PersonalSeguridadUbigeo",
+            attributes: [
+              "ubigeo_code",
+              "departamento",
+              "provincia",
+              "distrito",
+            ],
+          },
+          {
+            model: Vehiculo,
+            as: "PersonalSeguridadVehiculo",
+            attributes: ["id", "codigo_vehiculo", "placa"],
+          },
         ],
       }
     );
@@ -235,7 +381,23 @@ const createPersonal = async (req, res) => {
       data: personalCompleto,
     });
   } catch (error) {
-    console.error("Error al crear personal:", error);
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
+    console.error("❌ Error en createPersonal:", error);
+
+    if (error.name === "SequelizeValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: "Error de validación",
+        errors: error.errors.map((e) => ({
+          field: e.path,
+          message: e.message,
+        })),
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Error al crear el personal",
@@ -245,60 +407,272 @@ const createPersonal = async (req, res) => {
 };
 
 /**
- * Actualizar personal existente
- * Permisos: supervisor, administrador
- * @route PUT /api/personal/:id
+ * Actualizar un personal existente
+ * PUT /api/v1/personal/:id
  */
-const updatePersonal = async (req, res) => {
+/**
+ * Actualizar un personal existente
+ * PUT /api/v1/personal/:id
+ */
+export const updatePersonal = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const { id } = req.params;
     const datosActualizacion = req.body;
 
+    // Buscar personal
     const personal = await PersonalSeguridad.findOne({
       where: { id, estado: 1, deleted_at: null },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     });
 
     if (!personal) {
+      await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: "Personal no encontrado",
       });
     }
 
-    // Verificar documento duplicado si se está cambiando
-    if (
-      datosActualizacion.doc_numero &&
-      datosActualizacion.doc_numero !== personal.doc_numero
-    ) {
-      const docExistente = await PersonalSeguridad.findOne({
-        where: {
-          doc_numero: datosActualizacion.doc_numero,
-          doc_tipo: datosActualizacion.doc_tipo || personal.doc_tipo,
-          id: { [Op.ne]: id },
-          deleted_at: null,
-        },
+    // ==========================================
+    // VALIDACIÓN: No permitir cambiar documento
+    // ==========================================
+    if (datosActualizacion.doc_tipo || datosActualizacion.doc_numero) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message:
+          "No se permite cambiar el tipo o número de documento de identidad",
       });
+    }
 
-      if (docExistente) {
+    // ==========================================
+    // VALIDACIÓN: Cargo existe
+    // ==========================================
+    if (datosActualizacion.cargo_id) {
+      const cargoExiste = await Cargo.findByPk(datosActualizacion.cargo_id, {
+        transaction,
+      });
+      if (!cargoExiste) {
+        await transaction.rollback();
         return res.status(400).json({
           success: false,
-          message: "Ya existe otro personal con este número de documento",
+          message: "El cargo especificado no existe",
+          campo: "cargo_id",
+          valor_recibido: datosActualizacion.cargo_id,
         });
       }
     }
 
-    // Actualizar personal
-    await personal.update({
-      ...datosActualizacion,
-      updated_by: req.user.id,
-    });
+    // ==========================================
+    // VALIDACIÓN: Ubigeo existe
+    // ==========================================
+    if (datosActualizacion.ubigeo_code) {
+      const ubigeoExiste = await Ubigeo.findOne({
+        where: { ubigeo_code: datosActualizacion.ubigeo_code },
+        transaction,
+      });
+      if (!ubigeoExiste) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "El código de ubigeo especificado no existe",
+          campo: "ubigeo_code",
+          valor_recibido: datosActualizacion.ubigeo_code,
+        });
+      }
+    }
 
-    // Obtener personal actualizado
+    // ==========================================
+    // ✅ VALIDACIÓN PROFESIONAL: Vehículo
+    // ==========================================
+    if (datosActualizacion.vehiculo_id !== undefined) {
+      // Si intenta asignar un vehículo (no null)
+      if (datosActualizacion.vehiculo_id !== null) {
+        // 1. Verificar que el vehículo existe
+        const vehiculo = await Vehiculo.findOne({
+          where: {
+            id: datosActualizacion.vehiculo_id,
+            estado: 1,
+            deleted_at: null,
+          },
+          transaction,
+        });
+
+        if (!vehiculo) {
+          await transaction.rollback();
+          return res.status(400).json({
+            success: false,
+            message: "El vehículo especificado no existe o está inactivo",
+            campo: "vehiculo_id",
+            valor_recibido: datosActualizacion.vehiculo_id,
+            sugerencia:
+              "Verifique que el ID del vehículo sea correcto y esté activo",
+          });
+        }
+
+        // 2. Verificar que el vehículo esté disponible
+        if (vehiculo.estado_operativo !== "DISPONIBLE") {
+          await transaction.rollback();
+          return res.status(400).json({
+            success: false,
+            message: "El vehículo no está disponible para asignación",
+            campo: "vehiculo_id",
+            valor_recibido: datosActualizacion.vehiculo_id,
+            estado_actual: vehiculo.estado_operativo,
+            vehiculo: {
+              id: vehiculo.id,
+              codigo: vehiculo.codigo_vehiculo,
+              placa: vehiculo.placa,
+            },
+          });
+        }
+
+        // 3. Verificar que no esté asignado a otro personal
+        const personalConVehiculo = await PersonalSeguridad.findOne({
+          where: {
+            vehiculo_id: datosActualizacion.vehiculo_id,
+            id: { [Op.ne]: id }, // Excluir el personal actual
+            estado: 1,
+            deleted_at: null,
+          },
+          transaction,
+        });
+
+        if (personalConVehiculo) {
+          await transaction.rollback();
+          return res.status(400).json({
+            success: false,
+            message: "El vehículo ya está asignado a otro personal",
+            campo: "vehiculo_id",
+            valor_recibido: datosActualizacion.vehiculo_id,
+            asignado_a: {
+              id: personalConVehiculo.id,
+              nombre: personalConVehiculo.getNombreCompleto(),
+              codigo: personalConVehiculo.codigo_acceso,
+            },
+            sugerencia: "Debe desasignar el vehículo del otro personal primero",
+          });
+        }
+
+        // 4. Verificar que el personal tenga licencia vigente
+        // Usar datos actualizados si se proporcionan, o los actuales
+        const licencia =
+          datosActualizacion.licencia !== undefined
+            ? datosActualizacion.licencia
+            : personal.licencia;
+
+        const vigencia =
+          datosActualizacion.vigencia !== undefined
+            ? datosActualizacion.vigencia
+            : personal.vigencia;
+
+        if (!licencia || !vigencia) {
+          await transaction.rollback();
+          return res.status(400).json({
+            success: false,
+            message:
+              "Para asignar un vehículo, el personal debe tener licencia de conducir y fecha de vigencia",
+            campo: "vehiculo_id",
+            datos_faltantes: {
+              licencia: !licencia ? "requerida" : "ok",
+              vigencia: !vigencia ? "requerida" : "ok",
+            },
+            sugerencia:
+              "Incluya los campos 'licencia' y 'vigencia' en la solicitud o asígnelos previamente",
+          });
+        }
+
+        // 5. Verificar que la licencia esté vigente
+        if (new Date(vigencia) < new Date()) {
+          await transaction.rollback();
+          return res.status(400).json({
+            success: false,
+            message:
+              "No se puede asignar un vehículo con licencia de conducir vencida",
+            campo: "vigencia",
+            valor_actual: vigencia,
+            fecha_vencimiento: vigencia,
+            dias_vencida: Math.ceil(
+              (new Date() - new Date(vigencia)) / (1000 * 60 * 60 * 24)
+            ),
+            sugerencia: "Actualice la fecha de vigencia de la licencia",
+          });
+        }
+
+        // 6. Actualizar estado del vehículo a EN_SERVICIO
+        await vehiculo.update(
+          {
+            estado_operativo: "EN_SERVICIO",
+            conductor_asignado_id: personal.id, // ← Campo correcto
+            updated_by: req.user.id,
+          },
+          { transaction }
+        );
+      } else {
+        // Si intenta desasignar el vehículo (vehiculo_id: null)
+        // Actualizar el vehículo anterior a DISPONIBLE si existe
+        if (personal.vehiculo_id) {
+          const vehiculoAnterior = await Vehiculo.findByPk(
+            personal.vehiculo_id,
+            { transaction }
+          );
+
+          if (vehiculoAnterior) {
+            await vehiculoAnterior.update(
+              {
+                estado_operativo: "DISPONIBLE",
+                conductor_asignado_id: null,
+                updated_by: req.user.id,
+              },
+              { transaction }
+            );
+          }
+        }
+      }
+    }
+
+    // ==========================================
+    // ACTUALIZAR PERSONAL
+    // ==========================================
+    await personal.update(
+      {
+        ...datosActualizacion,
+        updated_by: req.user.id,
+      },
+      { transaction }
+    );
+
+    await transaction.commit();
+
+    // ==========================================
+    // RESPUESTA CON DATOS ACTUALIZADOS
+    // ==========================================
     const personalActualizado = await PersonalSeguridad.findByPk(id, {
       include: [
-        { model: Cargo, as: "cargo" },
-        { model: Ubigeo, as: "ubigeo" },
-        { model: Vehiculo, as: "vehiculo_asignado" },
+        {
+          model: Cargo,
+          as: "PersonalSeguridadCargo",
+          attributes: ["id", "nombre"],
+        },
+        {
+          model: Ubigeo,
+          as: "PersonalSeguridadUbigeo",
+          attributes: ["ubigeo_code", "departamento", "provincia", "distrito"],
+        },
+        {
+          model: Vehiculo,
+          as: "PersonalSeguridadVehiculo",
+          attributes: [
+            "id",
+            "codigo_vehiculo",
+            "placa",
+            "marca",
+            "modelo_vehiculo",
+          ],
+        },
       ],
     });
 
@@ -308,7 +682,35 @@ const updatePersonal = async (req, res) => {
       data: personalActualizado,
     });
   } catch (error) {
-    console.error("Error al actualizar personal:", error);
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
+    console.error("❌ Error en updatePersonal:", error);
+
+    // Manejo específico de errores de validación de Sequelize
+    if (error.name === "SequelizeValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: "Error de validación",
+        errors: error.errors.map((e) => ({
+          field: e.path,
+          message: e.message,
+        })),
+      });
+    }
+
+    // Manejo de errores de foreign key (por si acaso)
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      return res.status(400).json({
+        success: false,
+        message: "Error de integridad referencial",
+        detalle: "El registro relacionado no existe o está inactivo",
+        campo: error.fields?.[0] || "desconocido",
+      });
+    }
+
+    // Error genérico
     res.status(500).json({
       success: false,
       message: "Error al actualizar el personal",
@@ -318,97 +720,68 @@ const updatePersonal = async (req, res) => {
 };
 
 /**
- * Cambiar estado del personal (Activo/Inactivo/Suspendido/Retirado)
- * Permisos: supervisor, administrador
- * @route PATCH /api/personal/:id/estado
+ * Eliminar un personal (soft delete)
+ * DELETE /api/v1/personal/:id
  */
-const cambiarEstadoPersonal = async (req, res) => {
+export const deletePersonal = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const { id } = req.params;
-    const { status, fecha_baja, motivo } = req.body;
 
     const personal = await PersonalSeguridad.findOne({
       where: { id, estado: 1, deleted_at: null },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     });
 
     if (!personal) {
+      await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: "Personal no encontrado",
       });
     }
 
-    // Validar estado
-    const estadosValidos = ["Activo", "Inactivo", "Suspendido", "Retirado"];
-    if (!estadosValidos.includes(status)) {
+    // Verificar si tiene novedades activas
+    const novedadesActivas = await Novedad.count({
+      where: {
+        [Op.or]: [
+          { personal_cargo_id: id },
+          { personal_seguridad2_id: id },
+          { personal_seguridad3_id: id },
+          { personal_seguridad4_id: id },
+        ],
+        estado: 1,
+        deleted_at: null,
+      },
+      transaction,
+    });
+
+    if (novedadesActivas > 0) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
-        message: `Estado inválido. Estados válidos: ${estadosValidos.join(
-          ", "
-        )}`,
-      });
-    }
-
-    await personal.update({
-      status,
-      fecha_baja: ["Retirado", "Inactivo"].includes(status)
-        ? fecha_baja || new Date()
-        : null,
-      updated_by: req.user.id,
-    });
-
-    // Registrar en historial si existe tabla de auditoría
-    // await HistorialPersonal.create({ ... });
-
-    res.status(200).json({
-      success: true,
-      message: `Estado del personal cambiado a: ${status}`,
-      data: personal,
-    });
-  } catch (error) {
-    console.error("Error al cambiar estado del personal:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error al cambiar estado del personal",
-      error: error.message,
-    });
-  }
-};
-
-/**
- * Eliminar personal (soft delete)
- * Permisos: administrador
- * @route DELETE /api/personal/:id
- */
-const deletePersonal = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const personal = await PersonalSeguridad.findOne({
-      where: { id, estado: 1, deleted_at: null },
-    });
-
-    if (!personal) {
-      return res.status(404).json({
-        success: false,
-        message: "Personal no encontrado",
+        message:
+          "No se puede eliminar el personal porque tiene novedades activas asignadas",
+        novedades_activas: novedadesActivas,
       });
     }
 
     // Soft delete
-    await personal.update({
-      estado: 0,
-      status: "Retirado",
-      deleted_at: new Date(),
-      deleted_by: req.user.id,
-    });
+    await personal.softDelete(req.user.id);
+    await transaction.commit();
 
     res.status(200).json({
       success: true,
       message: "Personal eliminado exitosamente",
     });
   } catch (error) {
-    console.error("Error al eliminar personal:", error);
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
+    console.error("❌ Error en deletePersonal:", error);
     res.status(500).json({
       success: false,
       message: "Error al eliminar el personal",
@@ -418,38 +791,227 @@ const deletePersonal = async (req, res) => {
 };
 
 /**
- * Obtener personal disponible (activo y sin vehículo asignado)
- * Permisos: operador, supervisor, administrador
- * @route GET /api/personal/disponibles
+ * Restaurar un personal eliminado
+ * POST /api/v1/personal/:id/restore
  */
-const getPersonalDisponible = async (req, res) => {
+export const restorePersonal = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
-    const personalDisponible = await PersonalSeguridad.findAll({
+    const { id } = req.params;
+
+    const personal = await PersonalSeguridad.findOne({
+      where: {
+        id,
+        deleted_at: { [Op.ne]: null },
+      },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (!personal) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Personal no encontrado o no está eliminado",
+      });
+    }
+
+    // Restaurar
+    await personal.restore(req.user.id);
+    await transaction.commit();
+
+    const personalRestaurado = await PersonalSeguridad.findByPk(id, {
+      include: [
+        {
+          model: Cargo,
+          as: "PersonalSeguridadCargo",
+          attributes: ["id", "nombre"],
+        },
+      ],
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Personal restaurado exitosamente",
+      data: personalRestaurado,
+    });
+  } catch (error) {
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
+    console.error("❌ Error en restorePersonal:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al restaurar el personal",
+      error: error.message,
+    });
+  }
+};
+
+// ==========================================
+// BÚSQUEDAS ESPECIALES
+// ==========================================
+
+/**
+ * Obtener estadísticas del personal
+ * GET /api/v1/personal/stats
+ */
+export const getEstadisticasPersonal = async (req, res) => {
+  try {
+    const estadisticas = await PersonalSeguridad.getEstadisticas();
+
+    // Estadísticas adicionales por cargo
+    const porCargo = await PersonalSeguridad.findAll({
+      attributes: [
+        "cargo_id",
+        [sequelize.fn("COUNT", sequelize.col("id")), "total"],
+      ],
       where: {
         status: "Activo",
-        vehiculo_id: null,
         estado: 1,
         deleted_at: null,
       },
       include: [
         {
           model: Cargo,
-          as: "cargo",
-          attributes: ["id", "nombre"],
+          as: "PersonalSeguridadCargo",
+          attributes: ["nombre"],
         },
       ],
-      order: [
-        ["apellido_paterno", "ASC"],
-        ["nombres", "ASC"],
-      ],
+      group: ["cargo_id", "PersonalSeguridadCargo.id"],
+    });
+
+    // Licencias por vencer (próximos 30 días)
+    const hoy = new Date();
+    const treintaDias = new Date();
+    treintaDias.setDate(hoy.getDate() + 30);
+
+    const licenciasPorVencer = await PersonalSeguridad.count({
+      where: {
+        vigencia: {
+          [Op.between]: [hoy, treintaDias],
+        },
+        licencia: { [Op.ne]: null },
+        status: "Activo",
+        estado: 1,
+        deleted_at: null,
+      },
+    });
+
+    // Licencias vencidas
+    const licenciasVencidas = await PersonalSeguridad.count({
+      where: {
+        vigencia: {
+          [Op.lt]: hoy,
+        },
+        licencia: { [Op.ne]: null },
+        status: "Activo",
+        estado: 1,
+        deleted_at: null,
+      },
     });
 
     res.status(200).json({
       success: true,
-      data: personalDisponible,
+      message: "Estadísticas obtenidas exitosamente",
+      data: {
+        resumen: estadisticas,
+        por_cargo: porCargo,
+        licencias: {
+          por_vencer_30_dias: licenciasPorVencer,
+          vencidas: licenciasVencidas,
+        },
+      },
     });
   } catch (error) {
-    console.error("Error al obtener personal disponible:", error);
+    console.error("❌ Error en getEstadisticasPersonal:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener estadísticas",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Obtener solo conductores (personal con licencia vigente)
+ * GET /api/v1/personal/conductores
+ */
+export const getConductores = async (req, res) => {
+  try {
+    const { page = 1, limit = 50 } = req.query;
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await PersonalSeguridad.scope(
+      "conLicenciaVigente"
+    ).findAndCountAll({
+      include: [
+        {
+          model: Cargo,
+          as: "PersonalSeguridadCargo",
+          attributes: ["id", "nombre"],
+        },
+        {
+          model: Vehiculo,
+          as: "PersonalSeguridadVehiculo",
+          attributes: ["id", "codigo_vehiculo", "placa"],
+        },
+      ],
+      order: [["apellido_paterno", "ASC"]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Conductores obtenidos exitosamente",
+      data: rows,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(count / limit),
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error en getConductores:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener conductores",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Obtener personal disponible (sin vehículo asignado)
+ * GET /api/v1/personal/disponibles
+ */
+export const getPersonalDisponible = async (req, res) => {
+  try {
+    const personalDisponible = await PersonalSeguridad.scope(
+      "disponibles"
+    ).findAll({
+      include: [
+        {
+          model: Cargo,
+          as: "PersonalSeguridadCargo",
+          attributes: ["id", "nombre"],
+        },
+      ],
+      order: [["apellido_paterno", "ASC"]],
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Personal disponible obtenido exitosamente",
+      data: personalDisponible,
+      total: personalDisponible.length,
+    });
+  } catch (error) {
+    console.error("❌ Error en getPersonalDisponible:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener personal disponible",
@@ -459,86 +1021,907 @@ const getPersonalDisponible = async (req, res) => {
 };
 
 /**
- * Obtener estadísticas del personal
- * Permisos: supervisor, administrador
- * @route GET /api/personal/stats
+ * Obtener personal por cargo específico
+ * GET /api/v1/personal/cargo/:cargoId
  */
-const getEstadisticasPersonal = async (req, res) => {
+export const getPersonalPorCargo = async (req, res) => {
   try {
-    // Total por estado
-    const porEstado = await PersonalSeguridad.findAll({
-      where: { estado: 1, deleted_at: null },
-      attributes: [
-        "status",
-        [sequelize.fn("COUNT", sequelize.col("id")), "cantidad"],
-      ],
-      group: ["status"],
-    });
+    const { cargoId } = req.params;
 
-    // Total por cargo
-    const porCargo = await PersonalSeguridad.findAll({
-      where: { status: "Activo", estado: 1, deleted_at: null },
-      include: [
-        {
-          model: Cargo,
-          as: "cargo",
-          attributes: ["nombre"],
-        },
-      ],
-      attributes: [
-        "cargo_id",
-        [sequelize.fn("COUNT", sequelize.col("id")), "cantidad"],
-      ],
-      group: ["cargo_id"],
-    });
+    const cargo = await Cargo.findByPk(cargoId);
 
-    // Personal con vehículo asignado
-    const conVehiculo = await PersonalSeguridad.count({
-      where: {
-        status: "Activo",
-        vehiculo_id: { [Op.ne]: null },
-        estado: 1,
-        deleted_at: null,
-      },
-    });
+    if (!cargo) {
+      return res.status(404).json({
+        success: false,
+        message: "Cargo no encontrado",
+      });
+    }
 
-    const sinVehiculo = await PersonalSeguridad.count({
-      where: {
-        status: "Activo",
-        vehiculo_id: null,
-        estado: 1,
-        deleted_at: null,
-      },
-    });
+    const personal = await PersonalSeguridad.findByCargo(cargoId);
 
     res.status(200).json({
       success: true,
-      data: {
-        porEstado,
-        porCargo,
-        asignacionVehiculos: {
-          conVehiculo,
-          sinVehiculo,
-        },
+      message: `Personal con cargo "${cargo.nombre}" obtenido exitosamente`,
+      cargo: {
+        id: cargo.id,
+        nombre: cargo.nombre,
       },
+      data: personal,
+      total: personal.length,
     });
   } catch (error) {
-    console.error("Error al obtener estadísticas:", error);
+    console.error("❌ Error en getPersonalPorCargo:", error);
     res.status(500).json({
       success: false,
-      message: "Error al obtener estadísticas del personal",
+      message: "Error al obtener personal por cargo",
       error: error.message,
     });
   }
 };
 
-export default {
-  getAllPersonal,
-  getPersonalById,
-  createPersonal,
-  updatePersonal,
-  cambiarEstadoPersonal,
-  deletePersonal,
-  getPersonalDisponible,
-  getEstadisticasPersonal,
+/**
+ * Buscar personal por documento
+ * GET /api/v1/personal/documento/:doc
+ */
+export const getPersonalByDocumento = async (req, res) => {
+  try {
+    const { doc } = req.params;
+    const partes = doc.split("-");
+
+    if (partes.length !== 2) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Formato inválido. Use: TIPO-NUMERO (ej: DNI-12345678, CE-123456789)",
+      });
+    }
+
+    const [tipoDoc, numeroDoc] = partes;
+    const tiposValidos = ["DNI", "CE", "PASAPORTE", "PTP"];
+    const tipoDocNormalizado =
+      tipoDoc === "CE" ? "Carnet Extranjeria" : tipoDoc;
+
+    if (!tiposValidos.includes(tipoDoc)) {
+      return res.status(400).json({
+        success: false,
+        message: `Tipo de documento inválido. Use: ${tiposValidos.join(", ")}`,
+      });
+    }
+
+    const personal = await PersonalSeguridad.findByDocumento(
+      tipoDocNormalizado,
+      numeroDoc
+    );
+
+    if (!personal) {
+      return res.status(404).json({
+        success: false,
+        message: "Personal no encontrado con ese documento",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Personal encontrado",
+      data: personal,
+    });
+  } catch (error) {
+    console.error("❌ Error en getPersonalByDocumento:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al buscar personal por documento",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Obtener personal por status laboral
+ * GET /api/v1/personal/status/:status
+ */
+export const getPersonalPorStatus = async (req, res) => {
+  try {
+    const { status } = req.params;
+    const { page = 1, limit = 20 } = req.query;
+
+    const statusValidos = ["Activo", "Inactivo", "Suspendido", "Retirado"];
+
+    if (!statusValidos.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Status inválido. Use: ${statusValidos.join(", ")}`,
+      });
+    }
+
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await PersonalSeguridad.findAndCountAll({
+      where: {
+        status,
+        estado: 1,
+        deleted_at: null,
+      },
+      include: [
+        {
+          model: Cargo,
+          as: "PersonalSeguridadCargo",
+          attributes: ["id", "nombre"],
+        },
+      ],
+      order: [["apellido_paterno", "ASC"]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Personal con status "${status}" obtenido exitosamente`,
+      data: rows,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(count / limit),
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error en getPersonalPorStatus:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener personal por status",
+      error: error.message,
+    });
+  }
+};
+
+// ==========================================
+// ACCIONES ESPECIALES
+// ==========================================
+
+/**
+ * Cambiar status laboral del personal
+ * PATCH /api/v1/personal/:id/status
+ */
+export const cambiarStatus = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+    const { status, observaciones } = req.body;
+
+    const statusValidos = ["Activo", "Inactivo", "Suspendido", "Retirado"];
+
+    if (!statusValidos.includes(status)) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: `Status inválido. Use: ${statusValidos.join(", ")}`,
+      });
+    }
+
+    const personal = await PersonalSeguridad.findOne({
+      where: { id, estado: 1, deleted_at: null },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (!personal) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Personal no encontrado",
+      });
+    }
+
+    const statusAnterior = personal.status;
+
+    // Aplicar el cambio según el nuevo status
+    if (status === "Retirado") {
+      await personal.darDeBaja(new Date(), req.user.id);
+    } else if (status === "Suspendido") {
+      await personal.suspender(req.user.id);
+    } else if (status === "Activo" && statusAnterior === "Retirado") {
+      await personal.reactivar(req.user.id);
+    } else {
+      personal.status = status;
+      personal.updated_by = req.user.id;
+      await personal.save({ transaction });
+    }
+
+    await transaction.commit();
+
+    res.status(200).json({
+      success: true,
+      message: `Status actualizado de "${statusAnterior}" a "${status}"`,
+      data: {
+        id: personal.id,
+        nombre_completo: personal.getNombreCompleto(),
+        status_anterior: statusAnterior,
+        status_nuevo: status,
+        observaciones,
+      },
+    });
+  } catch (error) {
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
+    console.error("❌ Error en cambiarStatus:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al cambiar el status",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Asignar un vehículo al personal
+ * PATCH /api/v1/personal/:id/asignar-vehiculo
+ */
+export const asignarVehiculo = async (req, res) => {
+  let transaction;
+
+  try {
+    transaction = await sequelize.transaction();
+    const { id } = req.params;
+    const { vehiculo_id } = req.body;
+
+    console.log(
+      `🚗 Iniciando asignación: Personal ${id} → Vehículo ${vehiculo_id}`
+    );
+
+    // ==========================================
+    // 1. VALIDACIÓN: vehiculo_id requerido
+    // ==========================================
+    if (!vehiculo_id) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "El vehiculo_id es requerido",
+      });
+    }
+
+    // ==========================================
+    // 2. BUSCAR PERSONAL
+    // ==========================================
+    const personal = await PersonalSeguridad.findByPk(id, { transaction });
+
+    if (!personal) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Personal no encontrado",
+      });
+    }
+
+    // Validar que esté activo (flexible: acepta true o 1)
+    if (!personal.estado || personal.deleted_at) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Personal inactivo o eliminado",
+        estado: personal.estado,
+        deleted_at: personal.deleted_at,
+      });
+    }
+
+    // ==========================================
+    // 3. VALIDACIONES DEL PERSONAL
+    // ==========================================
+    if (personal.status !== "Activo") {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Solo se puede asignar vehículo a personal activo",
+        status_actual: personal.status,
+      });
+    }
+
+    if (personal.vehiculo_id) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "El personal ya tiene un vehículo asignado",
+        vehiculo_actual: personal.vehiculo_id,
+      });
+    }
+
+    // Validar licencia vigente
+    if (!personal.tieneLicenciaVigente || !personal.tieneLicenciaVigente()) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "El personal debe tener licencia vigente",
+        licencia: personal.licencia,
+        vigencia: personal.vigencia,
+      });
+    }
+
+    // ==========================================
+    // 4. BUSCAR VEHÍCULO
+    // ==========================================
+    const vehiculo = await Vehiculo.findByPk(vehiculo_id, { transaction });
+
+    if (!vehiculo) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Vehículo no encontrado",
+      });
+    }
+
+    // Validar que esté activo (flexible)
+    if (!vehiculo.estado || vehiculo.deleted_at) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Vehículo inactivo o eliminado",
+        estado: vehiculo.estado,
+        deleted_at: vehiculo.deleted_at,
+      });
+    }
+
+    if (vehiculo.estado_operativo !== "DISPONIBLE") {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "El vehículo no está disponible",
+        estado_operativo: vehiculo.estado_operativo,
+      });
+    }
+
+    // ==========================================
+    // 5. VERIFICAR ASIGNACIÓN MÚLTIPLE
+    // ==========================================
+    const otroPersonal = await PersonalSeguridad.findOne({
+      where: {
+        vehiculo_id: vehiculo_id,
+        id: { [Op.ne]: id },
+        estado: true, // Flexible: acepta boolean
+        deleted_at: null,
+      },
+      transaction,
+    });
+
+    if (otroPersonal) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "El vehículo ya está asignado a otro personal",
+        asignado_a: otroPersonal.getNombreCompleto(),
+      });
+    }
+
+    console.log(`✅ Validaciones OK, procediendo a actualizar...`);
+
+    // ==========================================
+    // 6. ACTUALIZAR PERSONAL
+    // ==========================================
+    await PersonalSeguridad.update(
+      {
+        vehiculo_id: vehiculo_id,
+        licencia: personal.licencia, // ← Agregar
+        vigencia: personal.vigencia, // ← Agregar
+        categoria: personal.categoria, // ← Agregar
+        updated_by: req.user?.id || null,
+        updated_at: new Date(),
+      },
+      {
+        where: { id },
+        transaction,
+      }
+    );
+
+    console.log(`✅ Personal actualizado: vehiculo_id=${vehiculo_id}`);
+
+    // ==========================================
+    // 7. ACTUALIZAR VEHÍCULO
+    // ==========================================
+    await Vehiculo.update(
+      {
+        estado_operativo: "EN_SERVICIO",
+        conductor_asignado_id: parseInt(id),
+        updated_by: req.user?.id || null,
+        updated_at: new Date(),
+      },
+      {
+        where: { id: vehiculo_id },
+        transaction,
+      }
+    );
+
+    console.log(`✅ Vehículo actualizado: estado=EN_SERVICIO, conductor=${id}`);
+
+    // ==========================================
+    // 8. COMMIT - CRÍTICO
+    // ==========================================
+    await transaction.commit();
+    console.log(`✅ Transaction committed exitosamente`);
+
+    // ==========================================
+    // 9. BUSCAR DATOS ACTUALIZADOS (sin transacción)
+    // ==========================================
+    const personalActualizado = await PersonalSeguridad.findByPk(id, {
+      include: [
+        {
+          model: Vehiculo,
+          as: "PersonalSeguridadVehiculo",
+          attributes: [
+            "id",
+            "codigo_vehiculo",
+            "placa",
+            "marca",
+            "modelo_vehiculo",
+          ],
+        },
+      ],
+    });
+
+    console.log(`🎉 Asignación completada exitosamente`);
+
+    // ==========================================
+    // 10. RESPUESTA EXITOSA
+    // ==========================================
+    return res.status(200).json({
+      success: true,
+      message: "Vehículo asignado exitosamente",
+      data: personalActualizado,
+    });
+  } catch (error) {
+    // ==========================================
+    // MANEJO DE ERRORES
+    // ==========================================
+    if (transaction && !transaction.finished) {
+      await transaction.rollback();
+      console.log(`⚠️ Transaction rolled back debido a error`);
+    }
+
+    console.error("❌ Error en asignarVehiculo:", error);
+    console.error("Stack:", error.stack);
+
+    return res.status(500).json({
+      success: false,
+      message: "Error al asignar el vehículo",
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+  }
+};
+
+/**
+ * Desasignar vehículo del personal
+ * DELETE /api/v1/personal/:id/desasignar-vehiculo
+ */
+/**
+ * Desasignar vehículo del personal
+ * DELETE /api/v1/personal/:id/desasignar-vehiculo
+ */
+export const desasignarVehiculo = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+
+    // Buscar personal
+    const personal = await PersonalSeguridad.findOne({
+      where: { id, estado: 1, deleted_at: null },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (!personal) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Personal no encontrado",
+      });
+    }
+
+    // Verificar que tenga vehículo asignado
+    if (!personal.vehiculo_id) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "El personal no tiene vehículo asignado",
+        personal_id: personal.id,
+        nombre_completo: personal.getNombreCompleto(),
+      });
+    }
+
+    const vehiculoId = personal.vehiculo_id;
+
+    // Buscar el vehículo para actualizarlo
+    const vehiculo = await Vehiculo.findByPk(vehiculoId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    // Desasignar vehículo del personal
+    await personal.update(
+      {
+        vehiculo_id: null,
+        updated_by: req.user?.id || null,
+      },
+      { transaction }
+    );
+
+    // Actualizar estado del vehículo SI existe
+    if (vehiculo) {
+      await vehiculo.update(
+        {
+          estado_operativo: "DISPONIBLE",
+          conductor_asignado_id: null, // ← Campo correcto
+          updated_by: req.user?.id || null,
+        },
+        { transaction }
+      );
+    } else {
+      console.warn(
+        `⚠️ Vehículo ID ${vehiculoId} no encontrado, solo se desasignó del personal`
+      );
+    }
+
+    await transaction.commit();
+
+    res.status(200).json({
+      success: true,
+      message: "Vehículo desasignado exitosamente",
+      data: {
+        personal_id: personal.id,
+        nombre_completo: personal.getNombreCompleto(),
+        vehiculo_desasignado: vehiculoId,
+        vehiculo_actualizado: vehiculo ? true : false,
+      },
+    });
+  } catch (error) {
+    // Asegurar rollback
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
+    console.error("❌ Error en desasignarVehiculo:", error);
+
+    // NO dejar que el servidor crashee
+    res.status(500).json({
+      success: false,
+      message: "Error al desasignar el vehículo",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Actualizar datos de licencia de conducir
+ * PATCH /api/v1/personal/:id/licencia
+ */
+export const actualizarLicencia = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+    const { licencia, categoria, vigencia } = req.body;
+
+    const personal = await PersonalSeguridad.findOne({
+      where: { id, estado: 1, deleted_at: null },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (!personal) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Personal no encontrado",
+      });
+    }
+
+    // Validar que si tiene vehículo, la nueva licencia debe estar vigente
+    if (personal.vehiculo_id && vigencia) {
+      if (new Date(vigencia) < new Date()) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message:
+            "No se puede actualizar a una licencia vencida si el personal tiene vehículo asignado",
+        });
+      }
+    }
+
+    // Actualizar campos
+    const datosActualizacion = {};
+    if (licencia !== undefined) datosActualizacion.licencia = licencia;
+    if (categoria !== undefined) datosActualizacion.categoria = categoria;
+    if (vigencia !== undefined) datosActualizacion.vigencia = vigencia;
+    datosActualizacion.updated_by = req.user.id;
+
+    await personal.update(datosActualizacion, { transaction });
+
+    await transaction.commit();
+
+    res.status(200).json({
+      success: true,
+      message: "Licencia actualizada exitosamente",
+      data: {
+        id: personal.id,
+        nombre_completo: personal.getNombreCompleto(),
+        licencia: personal.licencia,
+        categoria: personal.categoria,
+        vigencia: personal.vigencia,
+        licencia_vigente: personal.tieneLicenciaVigente(),
+      },
+    });
+  } catch (error) {
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
+    console.error("❌ Error en actualizarLicencia:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al actualizar la licencia",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Generar código de acceso automático
+ * POST /api/v1/personal/:id/generar-codigo
+ */
+export const generarCodigoAcceso = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+
+    const personal = await PersonalSeguridad.findOne({
+      where: { id, estado: 1, deleted_at: null },
+      include: [
+        {
+          model: Cargo,
+          as: "PersonalSeguridadCargo",
+          attributes: ["id", "nombre"],
+        },
+      ],
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (!personal) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Personal no encontrado",
+      });
+    }
+
+    if (personal.codigo_acceso) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "El personal ya tiene un código de acceso asignado",
+        codigo_actual: personal.codigo_acceso,
+      });
+    }
+
+    if (!personal.cargo_id) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "El personal debe tener un cargo asignado para generar código",
+      });
+    }
+
+    // Obtener prefijo del cargo
+    const cargo = personal.PersonalSeguridadCargo;
+    const prefijo = cargo.nombre
+      .substring(0, 3)
+      .toUpperCase()
+      .replace(/[^A-Z]/g, "");
+
+    // Buscar el último código con ese prefijo
+    const ultimoPersonal = await PersonalSeguridad.findOne({
+      where: {
+        codigo_acceso: {
+          [Op.like]: `${prefijo}-%`,
+        },
+      },
+      order: [["codigo_acceso", "DESC"]],
+      transaction,
+    });
+
+    let nuevoNumero = 1;
+    if (ultimoPersonal && ultimoPersonal.codigo_acceso) {
+      const partes = ultimoPersonal.codigo_acceso.split("-");
+      if (partes.length === 2) {
+        const numeroActual = parseInt(partes[1]);
+        if (!isNaN(numeroActual)) {
+          nuevoNumero = numeroActual + 1;
+        }
+      }
+    }
+
+    // Generar código: PREFIJO-NUMERO (ej: SER-0001)
+    const nuevoCodigo = `${prefijo}-${String(nuevoNumero).padStart(4, "0")}`;
+
+    // Asignar código
+    await personal.update(
+      {
+        codigo_acceso: nuevoCodigo,
+        updated_by: req.user.id,
+      },
+      { transaction }
+    );
+
+    await transaction.commit();
+
+    res.status(200).json({
+      success: true,
+      message: "Código de acceso generado exitosamente",
+      data: {
+        id: personal.id,
+        nombre_completo: personal.getNombreCompleto(),
+        codigo_acceso: nuevoCodigo,
+        cargo: cargo.nombre,
+      },
+    });
+  } catch (error) {
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
+    console.error("❌ Error en generarCodigoAcceso:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al generar el código de acceso",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Verificar vigencia de licencia de conducir
+ * GET /api/v1/personal/:id/verificar-licencia
+ */
+export const verificarLicenciaVigente = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const personal = await PersonalSeguridad.findOne({
+      where: { id, estado: 1, deleted_at: null },
+    });
+
+    if (!personal) {
+      return res.status(404).json({
+        success: false,
+        message: "Personal no encontrado",
+      });
+    }
+
+    if (!personal.licencia) {
+      return res.status(200).json({
+        success: true,
+        message: "El personal no tiene licencia registrada",
+        data: {
+          tiene_licencia: false,
+          licencia_vigente: false,
+        },
+      });
+    }
+
+    const hoy = new Date();
+    const vigencia = new Date(personal.vigencia);
+    const diasRestantes = Math.ceil((vigencia - hoy) / (1000 * 60 * 60 * 24));
+
+    const esVigente = personal.tieneLicenciaVigente();
+
+    let estado = "";
+    if (diasRestantes < 0) {
+      estado = "VENCIDA";
+    } else if (diasRestantes <= 30) {
+      estado = "POR_VENCER";
+    } else {
+      estado = "VIGENTE";
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Verificación de licencia completada",
+      data: {
+        id: personal.id,
+        nombre_completo: personal.getNombreCompleto(),
+        tiene_licencia: true,
+        licencia: personal.licencia,
+        categoria: personal.categoria,
+        vigencia: personal.vigencia,
+        licencia_vigente: esVigente,
+        dias_restantes: diasRestantes,
+        estado,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error en verificarLicenciaVigente:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al verificar la licencia",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Obtener historial de novedades del personal
+ * GET /api/v1/personal/:id/historial-novedades
+ */
+export const getHistorialNovedades = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { limit = 50 } = req.query;
+
+    const personal = await PersonalSeguridad.findOne({
+      where: { id, estado: 1, deleted_at: null },
+    });
+
+    if (!personal) {
+      return res.status(404).json({
+        success: false,
+        message: "Personal no encontrado",
+      });
+    }
+
+    // Buscar novedades donde el personal aparece en cualquier posición
+    const novedades = await Novedad.findAll({
+      where: {
+        [Op.or]: [
+          { personal_cargo_id: id },
+          { personal_seguridad2_id: id },
+          { personal_seguridad3_id: id },
+          { personal_seguridad4_id: id },
+        ],
+        estado: 1,
+        deleted_at: null,
+      },
+      include: [
+        {
+          model: TipoNovedad,
+          as: "tipoNovedad",
+          attributes: ["id", "nombre", "codigo"],
+        },
+        {
+          model: EstadoNovedad,
+          as: "estadoNovedad",
+          attributes: ["id", "nombre"],
+        },
+        {
+          model: Vehiculo,
+          as: "vehiculoNovedad",
+          attributes: ["id", "codigo_vehiculo", "placa"],
+        },
+      ],
+      order: [["fecha_hora", "DESC"]],
+      limit: parseInt(limit),
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Historial de novedades obtenido exitosamente",
+      data: {
+        personal: {
+          id: personal.id,
+          nombre_completo: personal.getNombreCompleto(),
+          cargo_id: personal.cargo_id,
+        },
+        novedades,
+        total: novedades.length,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error en getHistorialNovedades:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener el historial de novedades",
+      error: error.message,
+    });
+  }
 };
