@@ -1,13 +1,72 @@
 /**
+ * ===================================================
+ * MODELO: Unidad de Oficina
+ * ===================================================
+ *
  * Ruta: src/models/UnidadOficina.js
- * Descripción: Modelo Sequelize para la tabla 'unidades_oficina'
- * Define unidades operativas que atienden novedades
- * Ejemplos: Comisarías PNP, Estaciones de Bomberos, Centros de Salud, Serenazgo
+ *
+ * VERSIÓN: 2.0.0
+ * FECHA: 2025-12-14
+ *
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ✅ Documentación JSDoc completa
+ * ✅ Headers profesionales con versionado
+ * ✅ Comentarios mejorados en métodos
+ *
+ * Descripción:
+ * Modelo Sequelize para la tabla 'unidades_oficina'.
+ * Define unidades operativas que atienden novedades.
+ *
+ * Ejemplos de unidades:
+ * - Comisarías PNP
+ * - Estaciones de Bomberos
+ * - Centros de Salud
+ * - Bases de Serenazgo
+ * - Unidades de Tránsito
+ *
+ * Características:
+ * - Código único de unidad
+ * - Tipo de unidad (ENUM)
+ * - Ubicación geográfica (lat/lng)
+ * - Radio de cobertura
+ * - Horarios de operación
+ * - Validaciones de negocio
+ *
+ * Tipos de Unidad:
+ * - SERENAZGO
+ * - PNP
+ * - BOMBEROS
+ * - AMBULANCIA
+ * - DEFENSA_CIVIL
+ * - TRANSITO
+ * - OTROS
+ *
+ * Métodos Estáticos:
+ * - findActivas() - Obtener unidades activas
+ * - findByTipo() - Filtrar por tipo
+ * - findByCode() - Buscar por código
+ * - findCercanas() - Buscar cercanas a coordenadas
+ * - findOperativasAhora() - Unidades operando ahora
+ * - getEstadisticasPorTipo() - Estadísticas agrupadas
+ *
+ * Métodos de Instancia:
+ * - activar() - Activar unidad
+ * - desactivar() - Desactivar unidad
+ * - softDelete() - Eliminación lógica
+ * - estaOperativaEn() - Verificar si opera en horario
+ * - estaOperativaAhora() - Verificar si opera ahora
+ * - tieneCoordenadas() - Verificar coordenadas
+ * - calcularDistanciaA() - Calcular distancia a punto
+ * - getResumen() - Obtener info resumida
+ *
+ * @module models/UnidadOficina
+ * @requires sequelize
+ * @version 2.0.0
+ * @date 2025-12-14
  */
 
 import { DataTypes } from "sequelize";
 
-//import sequelize from "../config/database.js";
 import sequelize from "../config/database.js";
 
 const UnidadOficina = sequelize.define(

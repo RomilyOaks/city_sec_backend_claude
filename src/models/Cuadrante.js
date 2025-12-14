@@ -1,28 +1,53 @@
 /**
+ * ===================================================
+ * MODELO: Cuadrante
+ * ===================================================
+ *
  * Ruta: src/models/Cuadrante.js
  *
+ * VERSIÓN: 2.0.0
+ * FECHA: 2025-12-14
+ *
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ✅ Documentación JSDoc completa
+ * ✅ Headers profesionales con versionado
+ * ✅ Sin cambios funcionales
+ *
  * Descripción:
- * Modelo Sequelize para la tabla 'cuadrantes' de la base de datos.
- * Los cuadrantes son subdivisiones de los sectores que permiten un control
- * territorial más granular para el patrullaje y vigilancia urbana.
+ * Modelo Sequelize para la tabla 'cuadrantes'.
+ * Los cuadrantes son subdivisiones de los sectores que permiten
+ * un control territorial más granular para patrullaje.
  *
  * Características:
  * - Código único de identificación
  * - Pertenece a un sector específico
- * - Puede tener coordenadas geográficas (latitud/longitud)
- * - Soporta polígonos en formato GeoJSON para definir límites
+ * - Coordenadas geográficas (lat/lng)
+ * - Polígonos GeoJSON para límites
  * - Radio de cobertura configurable
- * - Color personalizable para visualización en mapas
- * - Eliminación lógica (soft delete)
- * - Auditoría completa de cambios
+ * - Color personalizable para mapas
+ * - Soft delete con auditoría
  *
  * Relaciones:
  * - Pertenece a un Sector (Many-to-One)
- * - Puede tener múltiples Novedades asociadas (One-to-Many)
+ * - Tiene muchas Novedades (One-to-Many)
+ *
+ * Métodos Estáticos:
+ * - findBySector() - Cuadrantes de un sector
+ * - findByCode() - Buscar por código
+ * - findNearby() - Búsqueda geoespacial
+ *
+ * Métodos de Instancia:
+ * - activar() - Activar cuadrante
+ * - desactivar() - Desactivar cuadrante
+ * - softDelete() - Eliminación lógica
+ * - tieneCoordenadas() - Verificar coordenadas
+ * - tienePoligono() - Verificar polígono
+ * - getResumen() - Info resumida
  *
  * @module models/Cuadrante
  * @requires sequelize
- * @requires config/database
+ * @version 2.0.0
+ * @date 2025-12-14
  */
 
 import { DataTypes } from "sequelize";
@@ -224,6 +249,10 @@ const Cuadrante = sequelize.define(
     created_by: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      references: {
+        model: "usuarios",
+        key: "id",
+      },
       comment: "ID del usuario que creó el registro",
     },
 
@@ -234,6 +263,10 @@ const Cuadrante = sequelize.define(
     updated_by: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      references: {
+        model: "usuarios",
+        key: "id",
+      },
       comment: "ID del usuario que actualizó el registro",
     },
   },

@@ -1,108 +1,53 @@
 /**
  * ===================================================
- * CONSTANTS - VALIDACIONES CENTRALIZADAS
+ * CONSTANTES DE VALIDACIÓN - SISTEMA COMPLETO
  * ===================================================
  *
- * Archivo: src/constants/validations.js
+ * Ruta: src/constants/validations.js
  *
- * FUENTE ÚNICA DE VERDAD para todas las validaciones del sistema.
+ * VERSIÓN: 3.1.0
+ * FECHA: 2025-12-14
  *
- * Principios:
- * - DRY (Don't Repeat Yourself)
- * - Single Source of Truth
- * - Fácil mantenimiento
- * - Consistencia garantizada
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ✅ Agregadas constantes de sectores y cuadrantes
+ * ✅ Agregados patterns de validación geográfica
+ * ✅ Agregados helpers de normalización territorial
+ *
+ * Descripción:
+ * Single Source of Truth para todas las constantes de validación
+ * del sistema. Incluye enums, patrones, límites y helpers.
+ *
+ * MÓDULOS:
+ * - Personal Seguridad ✅
+ * - Novedades/Incidentes ✅
+ * - Vehículos ✅
+ * - Unidades/Oficinas ✅
+ * - Sectores/Cuadrantes ✅ NEW
  *
  * @module constants/validations
- * @version 1.0.0
+ * @version 3.1.0
+ * @date 2025-12-14
  */
 
 // ==========================================
-// PERSONAL - TIPOS DE DOCUMENTO
+// PERSONAL SEGURIDAD
 // ==========================================
 
-export const TIPOS_DOCUMENTO = {
-  DNI: "DNI",
-  CARNET_EXTRANJERIA: "Carnet Extranjeria",
-  PASAPORTE: "Pasaporte",
-  PTP: "PTP",
-};
-
-export const TIPOS_DOCUMENTO_ARRAY = Object.values(TIPOS_DOCUMENTO);
-
-// ==========================================
-// PERSONAL - STATUS LABORAL
-// ==========================================
-
-export const STATUS_LABORAL = {
-  ACTIVO: "Activo",
-  INACTIVO: "Inactivo",
-  SUSPENDIDO: "Suspendido",
-  RETIRADO: "Retirado",
-};
-
-export const STATUS_LABORAL_ARRAY = Object.values(STATUS_LABORAL);
-
-// ==========================================
-// PERSONAL - SEXO
-// ==========================================
-
-export const SEXO = {
-  MASCULINO: "Masculino",
-  FEMENINO: "Femenino",
-};
-
-export const SEXO_ARRAY = Object.values(SEXO);
-
-// ==========================================
-// PERSONAL - RÉGIMEN LABORAL
-// ==========================================
-
-export const REGIMEN_LABORAL = {
-  R256: "256",
-  R276: "276",
-  R728: "728",
-  CAS: "1057 CAS",
-  ORDEN_SERVICIO: "Orden Servicio",
-  PRACTICANTE: "Practicante",
-};
-
-export const REGIMEN_LABORAL_ARRAY = Object.values(REGIMEN_LABORAL);
-
-// ==========================================
-// LICENCIAS DE CONDUCIR - CATEGORÍAS
-// ==========================================
-
-/**
- * Categorías de licencia de conducir según Reglamento Nacional (Perú)
- *
- * CLASE A: Motocicletas y vehículos menores
- * CLASE B: Automóviles y vehículos de transporte
- *
- * IMPORTANTE: Todas en MAYÚSCULAS para consistencia
- */
 export const CATEGORIAS_LICENCIA = {
-  // CLASE A - Motocicletas
-  A_I: "A-I", // Motocicletas hasta 125cc
-  A_IIA: "A-IIA", // Motocicletas hasta 400cc
-  A_IIB: "A-IIB", // Motocicletas sin límite
-  A_IIIA: "A-IIIA", // Mototaxis
-  A_IIIB: "A-IIIB", // Trimotos de carga
-  A_IIIC: "A-IIIC", // Vehículos especiales
-
-  // CLASE B - Automóviles
-  B_I: "B-I", // Automóviles particulares
-  B_IIA: "B-IIA", // Taxis, colectivos
-  B_IIB: "B-IIB", // Camiones, buses
-  B_IIC: "B-IIC", // Vehículos pesados especiales
+  A_I: "A-I",
+  A_IIA: "A-IIA",
+  A_IIB: "A-IIB",
+  A_IIIA: "A-IIIA",
+  A_IIIB: "A-IIIB",
+  A_IIIC: "A-IIIC",
+  B_I: "B-I",
+  B_IIA: "B-IIA",
+  B_IIB: "B-IIB",
+  B_IIC: "B-IIC",
 };
 
 export const CATEGORIAS_LICENCIA_ARRAY = Object.values(CATEGORIAS_LICENCIA);
 
-/**
- * Descripción detallada de cada categoría
- * Para mostrar en interfaces o mensajes de error
- */
 export const CATEGORIAS_LICENCIA_DESCRIPCION = {
   "A-I": "Motocicletas hasta 125cc",
   "A-IIA": "Motocicletas hasta 400cc",
@@ -116,184 +61,283 @@ export const CATEGORIAS_LICENCIA_DESCRIPCION = {
   "B-IIC": "Vehículos pesados especiales",
 };
 
+export const TIPOS_DOCUMENTO = {
+  DNI: "DNI",
+  CARNET_EXTRANJERIA: "Carnet Extranjeria",
+  PASAPORTE: "Pasaporte",
+  PTP: "PTP",
+};
+
+export const TIPOS_DOCUMENTO_ARRAY = Object.values(TIPOS_DOCUMENTO);
+
+export const STATUS_LABORAL = {
+  ACTIVO: "Activo",
+  INACTIVO: "Inactivo",
+  SUSPENDIDO: "Suspendido",
+  RETIRADO: "Retirado",
+};
+
+export const STATUS_LABORAL_ARRAY = Object.values(STATUS_LABORAL);
+
+export const REGIMEN_LABORAL = {
+  D256: "256",
+  D276: "276",
+  D728: "728",
+  CAS_1057: "1057 CAS",
+  ORDEN_SERVICIO: "Orden Servicio",
+  PRACTICANTE: "Practicante",
+};
+
+export const REGIMEN_LABORAL_ARRAY = Object.values(REGIMEN_LABORAL);
+
+export const SEXO = {
+  MASCULINO: "Masculino",
+  FEMENINO: "Femenino",
+};
+
+export const SEXO_ARRAY = Object.values(SEXO);
+
+// ==========================================
+// NOVEDADES/INCIDENTES
+// ==========================================
+
+export const ORIGEN_LLAMADA = {
+  TELEFONO_107: "TELEFONO_107",
+  BOTON_PANICO: "BOTON_PANICO",
+  CAMARA: "CAMARA",
+  PATRULLAJE: "PATRULLAJE",
+  CIUDADANO: "CIUDADANO",
+  INTERVENCION_DIRECTA: "INTERVENCION_DIRECTA",
+  OTROS: "OTROS",
+};
+
+export const ORIGEN_LLAMADA_ARRAY = Object.values(ORIGEN_LLAMADA);
+
+export const PRIORIDAD = {
+  ALTA: "ALTA",
+  MEDIA: "MEDIA",
+  BAJA: "BAJA",
+};
+
+export const PRIORIDAD_ARRAY = Object.values(PRIORIDAD);
+
+export const GRAVEDAD = {
+  LEVE: "LEVE",
+  MODERADA: "MODERADA",
+  GRAVE: "GRAVE",
+  MUY_GRAVE: "MUY_GRAVE",
+};
+
+export const GRAVEDAD_ARRAY = Object.values(GRAVEDAD);
+
+export const TURNO = {
+  MAÑANA: "MAÑANA",
+  TARDE: "TARDE",
+  NOCHE: "NOCHE",
+};
+
+export const TURNO_ARRAY = Object.values(TURNO);
+
+// ==========================================
+// VEHÍCULOS
+// ==========================================
+
+export const ESTADO_OPERATIVO_VEHICULO = {
+  DISPONIBLE: "DISPONIBLE",
+  EN_SERVICIO: "EN_SERVICIO",
+  MANTENIMIENTO: "MANTENIMIENTO",
+  REPARACION: "REPARACION",
+  FUERA_DE_SERVICIO: "FUERA_DE_SERVICIO",
+  INACTIVO: "INACTIVO",
+};
+
+export const ESTADO_OPERATIVO_VEHICULO_ARRAY = Object.values(
+  ESTADO_OPERATIVO_VEHICULO
+);
+
+export const TIPO_COMBUSTIBLE = {
+  GASOLINA_84: "GASOLINA_84",
+  GASOLINA_90: "GASOLINA_90",
+  GASOLINA_95: "GASOLINA_95",
+  GASOLINA_97: "GASOLINA_97",
+  DIESEL: "DIESEL",
+  GLP: "GLP",
+  GNV: "GNV",
+};
+
+export const TIPO_COMBUSTIBLE_ARRAY = Object.values(TIPO_COMBUSTIBLE);
+
+export const TIPO_COMBUSTIBLE_DESCRIPCION = {
+  GASOLINA_84: "Gasolina 84 octanos",
+  GASOLINA_90: "Gasolina 90 octanos",
+  GASOLINA_95: "Gasolina 95 octanos",
+  GASOLINA_97: "Gasolina 97 octanos (Premium)",
+  DIESEL: "Petróleo Diesel",
+  GLP: "Gas Licuado de Petróleo",
+  GNV: "Gas Natural Vehicular",
+};
+
+// ==========================================
+// UNIDADES/OFICINAS
+// ==========================================
+
+export const TIPO_UNIDAD = {
+  SERENAZGO: "SERENAZGO",
+  PNP: "PNP",
+  BOMBEROS: "BOMBEROS",
+  AMBULANCIA: "AMBULANCIA",
+  DEFENSA_CIVIL: "DEFENSA_CIVIL",
+  TRANSITO: "TRANSITO",
+  OTROS: "OTROS",
+};
+
+export const TIPO_UNIDAD_ARRAY = Object.values(TIPO_UNIDAD);
+
+// ==========================================
+// SECTORES Y CUADRANTES ✅ NEW
+// ==========================================
+
 /**
- * Mensaje de error formateado para categorías
+ * Colores predefinidos para visualización en mapas
+ * Paleta de colores optimizada para mapas de seguridad
  */
-export const CATEGORIAS_LICENCIA_ERROR_MESSAGE = `Categoría no válida.
+export const COLORES_MAPA = {
+  AZUL: "#3B82F6",
+  VERDE: "#10B981",
+  AMARILLO: "#F59E0B",
+  ROJO: "#EF4444",
+  MORADO: "#8B5CF6",
+  ROSA: "#EC4899",
+  CYAN: "#06B6D4",
+  NARANJA: "#F97316",
+};
 
-Categorías válidas en Perú:
-
-CLASE A (Motocicletas):
-  • A-I: Motocicletas hasta 125cc
-  • A-IIA: Motocicletas hasta 400cc
-  • A-IIB: Motocicletas sin límite
-  • A-IIIA: Mototaxis
-  • A-IIIB: Trimotos de carga
-  • A-IIIC: Vehículos especiales
-
-CLASE B (Automóviles):
-  • B-I: Automóviles particulares
-  • B-IIA: Taxis, colectivos
-  • B-IIB: Camiones, buses
-  • B-IIC: Vehículos pesados`;
+export const COLORES_MAPA_ARRAY = Object.values(COLORES_MAPA);
 
 // ==========================================
-// LICENCIAS - PATRONES DE VALIDACIÓN
+// PATRONES DE VALIDACIÓN
 // ==========================================
 
-/**
- * Patrón para número de licencia de conducir
- * Formato: Una letra seguida de 8 dígitos (ej: Q12345678)
- */
-export const LICENCIA_REGEX = /^[A-Z]\d{8}$/;
-
-export const LICENCIA_FORMATO_MENSAJE =
-  "Formato de licencia inválido. Debe ser: letra + 8 dígitos (ej: Q12345678)";
-
-// ==========================================
-// DOCUMENTOS - PATRONES DE VALIDACIÓN
-// ==========================================
-
-export const DOCUMENTO_PATTERNS = {
+export const PATTERNS = {
+  // Documentos
   DNI: /^\d{8}$/,
   CARNET_EXTRANJERIA: /^[A-Z0-9]{9}$/,
   PASAPORTE: /^[A-Z0-9]{6,12}$/,
+  LICENCIA: /^[A-Z]\d{8}$/,
+
+  // Contacto
+  TELEFONO: /^[0-9]{7,15}$/,
+  EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+
+  // Vehículos
+  PLACA_VEHICULO: /^[A-Z0-9-]{6,10}$/i,
+  CODIGO_VEHICULO: /^[A-Z0-9-]{1,10}$/,
+  NUMERO_MOTOR: /^[A-Z0-9]{1,50}$/i,
+  NUMERO_CHASIS: /^[A-Z0-9]{1,50}$/i,
+  SOAT: /^[A-Z0-9-]{1,50}$/i,
+
+  // Sectores y Cuadrantes
+  SECTOR_CODE: /^[A-Z0-9-]{1,10}$/i,
+  CUADRANTE_CODE: /^[A-Z0-9-]{1,10}$/i,
+  ZONA_CODE: /^[A-Z0-9-]{1,20}$/i,
+  COLOR_HEX: /^#[0-9A-F]{6}$/i,
+  UBIGEO: /^\d{6}$/,
 };
-
-export const DOCUMENTO_MENSAJES = {
-  DNI: "El DNI debe tener exactamente 8 dígitos numéricos",
-  CARNET_EXTRANJERIA:
-    "El Carnet de Extranjería debe tener 9 caracteres alfanuméricos",
-  PASAPORTE: "El Pasaporte debe tener entre 6 y 12 caracteres alfanuméricos",
-};
-
-// ==========================================
-// UBIGEO
-// ==========================================
-
-export const UBIGEO_REGEX = /^\d{6}$/;
-export const UBIGEO_MENSAJE =
-  "El código de ubigeo debe tener exactamente 6 dígitos";
-
-// ==========================================
-// CÓDIGO DE ACCESO
-// ==========================================
-
-export const CODIGO_ACCESO_REGEX = /^[A-Z]{3}-\d{4}$/;
-export const CODIGO_ACCESO_MENSAJE = "Formato: XXX-0000 (ej: SER-0001)";
-
-// ==========================================
-// LÍMITES DE EDAD
-// ==========================================
-
-export const EDAD_MINIMA = 18;
-export const EDAD_MAXIMA = 100;
 
 // ==========================================
 // LÍMITES DE TEXTO
 // ==========================================
 
 export const LIMITES_TEXTO = {
-  NOMBRE: { min: 2, max: 50 },
-  APELLIDO: { min: 2, max: 50 },
-  DIRECCION: { min: 5, max: 150 },
-  NACIONALIDAD: { min: 4, max: 50 },
-  OBSERVACIONES: { max: 500 },
-  CODIGO_ACCESO: { min: 4, max: 45 },
-  LICENCIA: { min: 5, max: 20 },
-  CATEGORIA: { max: 20 },
+  // Nombres y apellidos
+  NOMBRE_MIN: 2,
+  NOMBRE_MAX: 50,
+  APELLIDO_MIN: 2,
+  APELLIDO_MAX: 50,
+
+  // Descripciones
+  DESCRIPCION_MIN: 10,
+  DESCRIPCION_MAX: 2000,
+  OBSERVACIONES_MAX: 2000,
+
+  // Direcciones
+  DIRECCION_MIN: 5,
+  DIRECCION_MAX: 150,
+  LOCALIZACION_MAX: 500,
+  REFERENCIA_MAX: 255,
+
+  // Contacto
+  TELEFONO_MIN: 7,
+  TELEFONO_MAX: 15,
+  EMAIL_MAX: 100,
+
+  // Vehículos
+  PLACA_MIN: 6,
+  PLACA_MAX: 10,
+  CODIGO_VEHICULO_MAX: 10,
+  MARCA_MAX: 50,
+  MODELO_MAX: 50,
+  COLOR_MAX: 30,
+  NUMERO_MOTOR_MAX: 50,
+  NUMERO_CHASIS_MAX: 50,
+  SOAT_MAX: 50,
+
+  // Sectores y Cuadrantes
+  SECTOR_CODE_MAX: 10,
+  CUADRANTE_CODE_MAX: 10,
+  SECTOR_NOMBRE_MIN: 3,
+  SECTOR_NOMBRE_MAX: 100,
+  CUADRANTE_NOMBRE_MIN: 3,
+  CUADRANTE_NOMBRE_MAX: 100,
+  ZONA_CODE_MAX: 20,
+  COLOR_HEX_LENGTH: 7,
 };
 
 // ==========================================
-// PATRONES DE TEXTO
+// LÍMITES NUMÉRICOS
 // ==========================================
 
-export const TEXTO_SOLO_LETRAS_REGEX = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
-export const TEXTO_SOLO_LETRAS_MENSAJE =
-  "Solo puede contener letras y espacios";
+export const LIMITES_NUMERICOS = {
+  // Personal
+  EDAD_MINIMA: 18,
+  EDAD_MAXIMA: 100,
 
-// ==========================================
-// VEHÍCULOS - ESTADOS OPERATIVOS
-// ==========================================
+  // Coordenadas
+  LATITUD_MIN: -90,
+  LATITUD_MAX: 90,
+  LONGITUD_MIN: -180,
+  LONGITUD_MAX: 180,
 
-export const ESTADOS_OPERATIVOS_VEHICULO = {
-  DISPONIBLE: "DISPONIBLE",
-  EN_SERVICIO: "EN_SERVICIO",
-  MANTENIMIENTO: "MANTENIMIENTO",
-  AVERIADO: "AVERIADO",
-  INACTIVO: "INACTIVO",
-};
+  // Ubicación
+  UBIGEO_LENGTH: 6,
 
-export const ESTADOS_OPERATIVOS_VEHICULO_ARRAY = Object.values(
-  ESTADOS_OPERATIVOS_VEHICULO
-);
+  // Vehículos
+  KM_MIN: 0,
+  KM_MAX: 999999.99,
+  ANIO_VEHICULO_MIN: 1900,
+  ANIO_VEHICULO_MAX: new Date().getFullYear() + 1,
+  CAPACIDAD_COMBUSTIBLE_MIN: 0.1,
+  CAPACIDAD_COMBUSTIBLE_MAX: 999.99,
+  PRECIO_GALON_MIN: 0,
+  PRECIO_GALON_MAX: 999.99,
+  CANTIDAD_GALONES_MIN: 0.1,
+  CANTIDAD_GALONES_MAX: 999.99,
 
-// ==========================================
-// AUDITORÍA - RESULTADOS
-// ==========================================
+  // Unidades
+  RADIO_COBERTURA_MIN: 0.1,
+  RADIO_COBERTURA_MAX: 999.99,
 
-export const RESULTADOS_AUDITORIA = {
-  EXITO: "EXITO",
-  FALLO: "FALLO",
-  DENEGADO: "DENEGADO",
-};
-
-export const RESULTADOS_AUDITORIA_ARRAY = Object.values(RESULTADOS_AUDITORIA);
-
-// ==========================================
-// AUDITORÍA - SEVERIDAD
-// ==========================================
-
-export const SEVERIDAD_AUDITORIA = {
-  BAJA: "BAJA",
-  MEDIA: "MEDIA",
-  ALTA: "ALTA",
-  CRITICA: "CRITICA",
-};
-
-export const SEVERIDAD_AUDITORIA_ARRAY = Object.values(SEVERIDAD_AUDITORIA);
-
-// ==========================================
-// PAGINACIÓN
-// ==========================================
-
-export const PAGINACION = {
-  PAGE_DEFAULT: 1,
-  LIMIT_DEFAULT: 20,
-  LIMIT_MIN: 1,
-  LIMIT_MAX: 100,
+  // Sectores y Cuadrantes
+  RADIO_METROS_MIN: 10,
+  RADIO_METROS_MAX: 50000,
 };
 
 // ==========================================
-// HELPERS
+// HELPERS DE NORMALIZACIÓN
 // ==========================================
 
-/**
- * Verificar si una categoría de licencia es válida
- * @param {string} categoria - Categoría a verificar
- * @returns {boolean}
- */
-export const esCategoriaLicenciaValida = (categoria) => {
-  if (!categoria) return false;
-
-  // Normalizar
-  const categoriaNormalizada = categoria
-    .trim()
-    .toUpperCase()
-    .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D−–—]/g, "-")
-    .replace(/\s+/g, "");
-
-  return CATEGORIAS_LICENCIA_ARRAY.includes(categoriaNormalizada);
-};
-
-/**
- * Normalizar categoría de licencia
- * @param {string} categoria - Categoría a normalizar
- * @returns {string}
- */
 export const normalizarCategoriaLicencia = (categoria) => {
   if (!categoria) return null;
-
   return categoria
     .trim()
     .toUpperCase()
@@ -301,77 +345,261 @@ export const normalizarCategoriaLicencia = (categoria) => {
     .replace(/\s+/g, "");
 };
 
+export const normalizarDocumento = (documento) => {
+  if (!documento) return null;
+  return documento.trim().toUpperCase();
+};
+
+export const normalizarNombre = (nombre) => {
+  if (!nombre) return null;
+  return nombre
+    .trim()
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
+export const normalizarApellido = (apellido) => {
+  if (!apellido) return null;
+  return apellido.trim().toUpperCase();
+};
+
+export const normalizarTelefono = (telefono) => {
+  if (!telefono) return null;
+  return telefono.replace(/\D/g, "");
+};
+
+export const normalizarPlaca = (placa) => {
+  if (!placa) return null;
+  return placa.trim().toUpperCase().replace(/\s+/g, "");
+};
+
+export const normalizarCodigoVehiculo = (codigo) => {
+  if (!codigo) return null;
+  return codigo.trim().toUpperCase();
+};
+
 /**
- * Validar documento según tipo
- * @param {string} tipo - Tipo de documento
- * @param {string} numero - Número de documento
- * @returns {boolean}
+ * Normalizar código de sector (MAYÚSCULAS)
  */
-export const validarDocumento = (tipo, numero) => {
-  const pattern = DOCUMENTO_PATTERNS[tipo];
-  if (!pattern) return false;
-  return pattern.test(numero.trim().toUpperCase());
+export const normalizarCodigoSector = (codigo) => {
+  if (!codigo) return null;
+  return codigo.trim().toUpperCase();
+};
+
+/**
+ * Normalizar código de cuadrante (MAYÚSCULAS)
+ */
+export const normalizarCodigoCuadrante = (codigo) => {
+  if (!codigo) return null;
+  return codigo.trim().toUpperCase();
+};
+
+/**
+ * Normalizar código de zona (MAYÚSCULAS)
+ */
+export const normalizarCodigoZona = (codigo) => {
+  if (!codigo) return null;
+  return codigo.trim().toUpperCase();
+};
+
+/**
+ * Normalizar color hexadecimal
+ */
+export const normalizarColorHex = (color) => {
+  if (!color) return null;
+  const hex = color.trim().toUpperCase();
+  return hex.startsWith("#") ? hex : `#${hex}`;
 };
 
 // ==========================================
-// EXPORTACIÓN DEFAULT
+// HELPERS DE VALIDACIÓN
+// ==========================================
+
+export const validarEdad = (fechaNacimiento) => {
+  const hoy = new Date();
+  const nacimiento = new Date(fechaNacimiento);
+  const edad = Math.floor((hoy - nacimiento) / (365.25 * 24 * 60 * 60 * 1000));
+
+  return {
+    valida:
+      edad >= LIMITES_NUMERICOS.EDAD_MINIMA &&
+      edad <= LIMITES_NUMERICOS.EDAD_MAXIMA,
+    edad,
+    mensaje:
+      edad < LIMITES_NUMERICOS.EDAD_MINIMA
+        ? `Debe ser mayor de ${LIMITES_NUMERICOS.EDAD_MINIMA} años`
+        : edad > LIMITES_NUMERICOS.EDAD_MAXIMA
+        ? "Fecha de nacimiento inválida"
+        : null,
+  };
+};
+
+export const validarCoordenadas = (latitud, longitud) => {
+  const lat = parseFloat(latitud);
+  const lng = parseFloat(longitud);
+
+  return {
+    valida:
+      lat >= LIMITES_NUMERICOS.LATITUD_MIN &&
+      lat <= LIMITES_NUMERICOS.LATITUD_MAX &&
+      lng >= LIMITES_NUMERICOS.LONGITUD_MIN &&
+      lng <= LIMITES_NUMERICOS.LONGITUD_MAX,
+    mensaje:
+      lat < LIMITES_NUMERICOS.LATITUD_MIN || lat > LIMITES_NUMERICOS.LATITUD_MAX
+        ? `Latitud debe estar entre ${LIMITES_NUMERICOS.LATITUD_MIN} y ${LIMITES_NUMERICOS.LATITUD_MAX}`
+        : `Longitud debe estar entre ${LIMITES_NUMERICOS.LONGITUD_MIN} y ${LIMITES_NUMERICOS.LONGITUD_MAX}`,
+  };
+};
+
+export const validarFormatoDocumento = (tipo, numero) => {
+  const patterns = {
+    DNI: PATTERNS.DNI,
+    "Carnet Extranjeria": PATTERNS.CARNET_EXTRANJERIA,
+    Pasaporte: PATTERNS.PASAPORTE,
+  };
+
+  const pattern = patterns[tipo];
+  if (!pattern) return { valida: true };
+
+  return {
+    valida: pattern.test(numero),
+    mensaje: !pattern.test(numero) ? `Formato inválido para ${tipo}` : null,
+  };
+};
+
+export const validarAnioVehiculo = (anio) => {
+  const anioNum = parseInt(anio);
+  const anioActual = new Date().getFullYear();
+
+  return {
+    valida:
+      anioNum >= LIMITES_NUMERICOS.ANIO_VEHICULO_MIN &&
+      anioNum <= anioActual + 1,
+    mensaje:
+      anioNum < LIMITES_NUMERICOS.ANIO_VEHICULO_MIN
+        ? `El año no puede ser menor a ${LIMITES_NUMERICOS.ANIO_VEHICULO_MIN}`
+        : anioNum > anioActual + 1
+        ? `El año no puede ser mayor a ${anioActual + 1}`
+        : null,
+  };
+};
+
+export const validarKilometraje = (kmNuevo, kmActual) => {
+  const nuevo = parseFloat(kmNuevo);
+  const actual = parseFloat(kmActual);
+
+  return {
+    valida: nuevo >= actual && nuevo <= LIMITES_NUMERICOS.KM_MAX,
+    mensaje:
+      nuevo < actual
+        ? "El kilometraje nuevo no puede ser menor al actual"
+        : nuevo > LIMITES_NUMERICOS.KM_MAX
+        ? `El kilometraje no puede exceder ${LIMITES_NUMERICOS.KM_MAX}`
+        : null,
+  };
+};
+
+/**
+ * Validar color hexadecimal
+ */
+export const validarColorHex = (color) => {
+  if (!color) return { valida: true };
+
+  const normalizado = normalizarColorHex(color);
+  return {
+    valida: PATTERNS.COLOR_HEX.test(normalizado),
+    mensaje: !PATTERNS.COLOR_HEX.test(normalizado)
+      ? "Color debe ser formato hexadecimal (#RRGGBB)"
+      : null,
+  };
+};
+
+/**
+ * Validar radio de cobertura
+ */
+export const validarRadioMetros = (radio) => {
+  const radioNum = parseInt(radio);
+
+  return {
+    valida:
+      radioNum >= LIMITES_NUMERICOS.RADIO_METROS_MIN &&
+      radioNum <= LIMITES_NUMERICOS.RADIO_METROS_MAX,
+    mensaje:
+      radioNum < LIMITES_NUMERICOS.RADIO_METROS_MIN
+        ? `El radio debe ser mínimo ${LIMITES_NUMERICOS.RADIO_METROS_MIN} metros`
+        : radioNum > LIMITES_NUMERICOS.RADIO_METROS_MAX
+        ? `El radio no puede exceder ${LIMITES_NUMERICOS.RADIO_METROS_MAX} metros`
+        : null,
+  };
+};
+
+// ==========================================
+// EXPORTACIÓN POR DEFECTO
 // ==========================================
 
 export default {
-  // Tipos de documento
-  TIPOS_DOCUMENTO,
-  TIPOS_DOCUMENTO_ARRAY,
-
-  // Status laboral
-  STATUS_LABORAL,
-  STATUS_LABORAL_ARRAY,
-
-  // Sexo
-  SEXO,
-  SEXO_ARRAY,
-
-  // Régimen laboral
-  REGIMEN_LABORAL,
-  REGIMEN_LABORAL_ARRAY,
-
-  // Licencias
+  // Personal
   CATEGORIAS_LICENCIA,
   CATEGORIAS_LICENCIA_ARRAY,
   CATEGORIAS_LICENCIA_DESCRIPCION,
-  CATEGORIAS_LICENCIA_ERROR_MESSAGE,
-  LICENCIA_REGEX,
-  LICENCIA_FORMATO_MENSAJE,
+  TIPOS_DOCUMENTO,
+  TIPOS_DOCUMENTO_ARRAY,
+  STATUS_LABORAL,
+  STATUS_LABORAL_ARRAY,
+  REGIMEN_LABORAL,
+  REGIMEN_LABORAL_ARRAY,
+  SEXO,
+  SEXO_ARRAY,
 
-  // Documentos
-  DOCUMENTO_PATTERNS,
-  DOCUMENTO_MENSAJES,
-
-  // Otros
-  UBIGEO_REGEX,
-  UBIGEO_MENSAJE,
-  CODIGO_ACCESO_REGEX,
-  CODIGO_ACCESO_MENSAJE,
-  EDAD_MINIMA,
-  EDAD_MAXIMA,
-  LIMITES_TEXTO,
-  TEXTO_SOLO_LETRAS_REGEX,
-  TEXTO_SOLO_LETRAS_MENSAJE,
+  // Novedades
+  ORIGEN_LLAMADA,
+  ORIGEN_LLAMADA_ARRAY,
+  PRIORIDAD,
+  PRIORIDAD_ARRAY,
+  GRAVEDAD,
+  GRAVEDAD_ARRAY,
+  TURNO,
+  TURNO_ARRAY,
 
   // Vehículos
-  ESTADOS_OPERATIVOS_VEHICULO,
-  ESTADOS_OPERATIVOS_VEHICULO_ARRAY,
+  ESTADO_OPERATIVO_VEHICULO,
+  ESTADO_OPERATIVO_VEHICULO_ARRAY,
+  TIPO_COMBUSTIBLE,
+  TIPO_COMBUSTIBLE_ARRAY,
+  TIPO_COMBUSTIBLE_DESCRIPCION,
 
-  // Auditoría
-  RESULTADOS_AUDITORIA,
-  RESULTADOS_AUDITORIA_ARRAY,
-  SEVERIDAD_AUDITORIA,
-  SEVERIDAD_AUDITORIA_ARRAY,
+  // Unidades
+  TIPO_UNIDAD,
+  TIPO_UNIDAD_ARRAY,
 
-  // Paginación
-  PAGINACION,
+  // Sectores y Cuadrantes
+  COLORES_MAPA,
+  COLORES_MAPA_ARRAY,
+
+  // Patrones y límites
+  PATTERNS,
+  LIMITES_TEXTO,
+  LIMITES_NUMERICOS,
 
   // Helpers
-  esCategoriaLicenciaValida,
   normalizarCategoriaLicencia,
-  validarDocumento,
+  normalizarDocumento,
+  normalizarNombre,
+  normalizarApellido,
+  normalizarTelefono,
+  normalizarPlaca,
+  normalizarCodigoVehiculo,
+  normalizarCodigoSector,
+  normalizarCodigoCuadrante,
+  normalizarCodigoZona,
+  normalizarColorHex,
+  validarEdad,
+  validarCoordenadas,
+  validarFormatoDocumento,
+  validarAnioVehiculo,
+  validarKilometraje,
+  validarColorHex,
+  validarRadioMetros,
 };

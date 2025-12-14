@@ -1,8 +1,52 @@
 /**
+ * ===================================================
+ * MODELO: Tipo de Vehículo
+ * ===================================================
+ *
  * Ruta: src/models/TipoVehiculo.js
- * Descripción: Modelo Sequelize para la tabla 'tipos_vehiculo'
- * Define los tipos de vehículos utilizados en seguridad ciudadana
- * Ejemplos: Móvil, Motocicleta, Camioneta, Bicicleta, etc.
+ *
+ * VERSIÓN: 2.0.0
+ * FECHA: 2025-12-14
+ *
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ✅ Documentación JSDoc completa
+ * ✅ Headers profesionales con versionado
+ * ✅ Comentarios mejorados en métodos
+ *
+ * Descripción:
+ * Modelo Sequelize para la tabla 'tipos_vehiculo'.
+ * Define los tipos de vehículos utilizados en seguridad ciudadana.
+ *
+ * Ejemplos de tipos:
+ * - Móvil (patrullero)
+ * - Motocicleta
+ * - Camioneta
+ * - Bicicleta
+ * - Cuatrimoto
+ *
+ * Características:
+ * - Nombre único del tipo
+ * - Descripción opcional
+ * - Métodos estáticos para consultas
+ * - Métodos de instancia para operaciones
+ * - Hooks de normalización
+ *
+ * Métodos Estáticos:
+ * - findActivos() - Obtener tipos activos
+ * - findByNombre() - Buscar por nombre
+ * - contarVehiculos() - Contar vehículos del tipo
+ * - getEstadisticas() - Estadísticas por tipo
+ *
+ * Métodos de Instancia:
+ * - activar() - Activar tipo
+ * - desactivar() - Desactivar tipo
+ * - softDelete() - Eliminación lógica
+ * - getVehiculos() - Obtener vehículos del tipo
+ *
+ * @module models/TipoVehiculo
+ * @requires sequelize
+ * @version 2.0.0
+ * @date 2025-12-14
  */
 
 import { DataTypes } from "sequelize";

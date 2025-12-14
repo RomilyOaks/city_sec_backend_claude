@@ -1,7 +1,18 @@
-/*
- ============================================
- Ruta: src/models/Vehiculo.js
- ============================================
+/**
+ * ===================================================
+ * MODELO: Vehículo
+ * ===================================================
+ *
+ * Ruta: src/models/Vehiculo.js
+ *
+ * VERSIÓN: 2.0.0
+ * FECHA: 2025-12-14
+ *
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ✅ Documentación JSDoc completa
+ * ✅ Headers profesionales con versionado
+ * ✅ Hooks optimizados
+ * ✅ Sin validaciones inline (ahora en validators)
  *
  * Descripción:
  * Modelo Sequelize para la tabla 'vehiculos' de la base de datos.
@@ -20,6 +31,10 @@
  * - Tiene registros de Abastecimiento (One-to-Many)
  * - Incluye relación con UnidadOficina
  *
+ * @module models/Vehiculo
+ * @requires sequelize
+ * @version 2.0.0
+ * @date 2025-12-14
  */
 
 import { DataTypes, Model } from "sequelize";

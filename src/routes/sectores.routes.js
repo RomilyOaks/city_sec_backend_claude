@@ -1,10 +1,31 @@
 /**
- * ============================================
- * RUTAS: src/routes/sectores.routes.js
- * ============================================
+ * ===================================================
+ * RUTAS: Sectores
+ * ===================================================
  *
- * Rutas de Sectores y Cuadrantes
- * Endpoints para gestión territorial con control RBAC
+ * Ruta: src/routes/sectores.routes.js
+ *
+ * VERSIÓN: 2.0.0
+ * FECHA: 2025-12-14
+ *
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ✅ Validaciones centralizadas
+ * ✅ Headers profesionales
+ * ✅ Imports actualizados
+ *
+ * Descripción:
+ * Define endpoints REST para gestión de sectores territoriales.
+ *
+ * Endpoints (5):
+ * - GET    /sectores - Listar sectores
+ * - GET    /sectores/:id - Obtener sector
+ * - POST   /sectores - Crear sector
+ * - PUT    /sectores/:id - Actualizar sector
+ * - DELETE /sectores/:id - Eliminar sector
+ *
+ * @module routes/sectores
+ * @version 2.0.0
+ * @date 2025-12-14
  */
 
 import express from "express";
@@ -15,114 +36,54 @@ import {
   verificarRoles,
 } from "../middlewares/authMiddleware.js";
 
-// ==================== SECTORES ====================
+import {
+  validateCreateSector,
+  validateUpdateSector,
+  validateSectorId,
+  validateQuerySectores,
+} from "../validators/sector.validator.js";
 
-/**
- * @route   GET /api/sectores
- * @desc    Obtener todos los sectores
- * @access  Todos los usuarios autenticados
- * @query   estado, zona_code
- */
-router.get("/", verificarToken, sectoresController.getAllSectores);
+// GET /sectores
+router.get(
+  "/",
+  verificarToken,
+  validateQuerySectores,
+  sectoresController.getAllSectores
+);
 
-/**
- * @route   GET /api/sectores/:id
- * @desc    Obtener un sector por ID
- * @access  Todos los usuarios autenticados
- */
-router.get("/:id", verificarToken, sectoresController.getSectorById);
+// GET /sectores/:id
+router.get(
+  "/:id",
+  verificarToken,
+  validateSectorId,
+  sectoresController.getSectorById
+);
 
-/**
- * @route   POST /api/sectores
- * @desc    Crear un nuevo sector
- * @access  Supervisor, Administrador
- */
+// POST /sectores
 router.post(
   "/",
   verificarToken,
   verificarRoles(["super_admin", "admin", "supervisor"]),
+  validateCreateSector,
   sectoresController.createSector
 );
 
-/**
- * @route   PUT /api/sectores/:id
- * @desc    Actualizar un sector
- * @access  Supervisor, Administrador
- */
+// PUT /sectores/:id
 router.put(
   "/:id",
   verificarToken,
   verificarRoles(["super_admin", "admin", "supervisor"]),
+  validateUpdateSector,
   sectoresController.updateSector
 );
 
-/**
- * @route   DELETE /api/sectores/:id
- * @desc    Eliminar un sector (soft delete)
- * @access  Administrador
- */
+// DELETE /sectores/:id
 router.delete(
   "/:id",
   verificarToken,
   verificarRoles(["super_admin", "admin"]),
+  validateSectorId,
   sectoresController.deleteSector
-);
-
-// ==================== CUADRANTES ====================
-
-/**
- * @route   GET /api/cuadrantes
- * @desc    Obtener todos los cuadrantes
- * @access  Todos los usuarios autenticados
- * @query   sector_id, estado
- */
-router.get("/cuadrantes", verificarToken, sectoresController.getAllCuadrantes);
-
-/**
- * @route   GET /api/cuadrantes/:id
- * @desc    Obtener un cuadrante por ID
- * @access  Todos los usuarios autenticados
- */
-router.get(
-  "/cuadrantes/:id",
-  verificarToken,
-  sectoresController.getCuadranteById
-);
-
-/**
- * @route   POST /api/cuadrantes
- * @desc    Crear un nuevo cuadrante
- * @access  Supervisor, Administrador
- */
-router.post(
-  "/cuadrantes",
-  verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  sectoresController.createCuadrante
-);
-
-/**
- * @route   PUT /api/cuadrantes/:id
- * @desc    Actualizar un cuadrante
- * @access  Supervisor, Administrador
- */
-router.put(
-  "/cuadrantes/:id",
-  verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  sectoresController.updateCuadrante
-);
-
-/**
- * @route   DELETE /api/cuadrantes/:id
- * @desc    Eliminar un cuadrante (soft delete)
- * @access  Administrador
- */
-router.delete(
-  "/cuadrantes/:id",
-  verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  sectoresController.deleteCuadrante
 );
 
 export default router;

@@ -1,9 +1,39 @@
 /**
- * Ruta: src/controllers/sectoresController.js
- * ============================================
+ * ===================================================
+ * CONTROLADOR: Sectores
+ * ===================================================
  *
- * Controlador de Sectores y Cuadrantes
- * Gestiona la división territorial para patrullaje
+ * Ruta: src/controllers/sectoresController.js
+ *
+ * VERSIÓN: 2.2.0
+ * FECHA: 2025-12-14
+ *
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ❌ Eliminados console.logs de debugging
+ * ✅ Solo logs de errores críticos
+ * ✅ Código limpio y profesional
+ *
+ * Descripción:
+ * Controlador para gestión de sectores y cuadrantes territoriales.
+ * Maneja CRUD completo con validaciones y soft delete.
+ *
+ * Funciones - SECTORES (5):
+ * - getAllSectores() - GET /sectores
+ * - getSectorById() - GET /sectores/:id
+ * - createSector() - POST /sectores
+ * - updateSector() - PUT /sectores/:id
+ * - deleteSector() - DELETE /sectores/:id
+ *
+ * Funciones - CUADRANTES (5):
+ * - getAllCuadrantes() - GET /cuadrantes
+ * - getCuadranteById() - GET /cuadrantes/:id
+ * - createCuadrante() - POST /cuadrantes
+ * - updateCuadrante() - PUT /cuadrantes/:id
+ * - deleteCuadrante() - DELETE /cuadrantes/:id
+ *
+ * @module controllers/sectoresController
+ * @version 2.2.0
+ * @date 2025-12-14
  */
 
 import { Sector, Cuadrante, Ubigeo } from "../models/index.js";
@@ -55,7 +85,6 @@ const getAllSectores = async (req, res) => {
       data: sectores,
     });
   } catch (error) {
-    console.error("Error al obtener sectores:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener los sectores",
@@ -101,7 +130,6 @@ const getSectorById = async (req, res) => {
       data: sector,
     });
   } catch (error) {
-    console.error("Error al obtener sector:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener el sector",
@@ -170,7 +198,6 @@ const createSector = async (req, res) => {
       data: sectorCompleto,
     });
   } catch (error) {
-    console.error("Error al crear sector:", error);
     res.status(500).json({
       success: false,
       message: "Error al crear el sector",
@@ -241,7 +268,6 @@ const updateSector = async (req, res) => {
       data: sectorActualizado,
     });
   } catch (error) {
-    console.error("Error al actualizar sector:", error);
     res.status(500).json({
       success: false,
       message: "Error al actualizar el sector",
@@ -299,7 +325,6 @@ const deleteSector = async (req, res) => {
       message: "Sector eliminado exitosamente",
     });
   } catch (error) {
-    console.error("Error al eliminar sector:", error);
     res.status(500).json({
       success: false,
       message: "Error al eliminar el sector",
@@ -348,7 +373,6 @@ const getAllCuadrantes = async (req, res) => {
       data: cuadrantes,
     });
   } catch (error) {
-    console.error("Error al obtener cuadrantes:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener los cuadrantes",
@@ -388,7 +412,6 @@ const getCuadranteById = async (req, res) => {
       data: cuadrante,
     });
   } catch (error) {
-    console.error("Error al obtener cuadrante:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener el cuadrante",
@@ -473,7 +496,6 @@ const createCuadrante = async (req, res) => {
       data: cuadranteCompleto,
     });
   } catch (error) {
-    console.error("Error al crear cuadrante:", error);
     res.status(500).json({
       success: false,
       message: "Error al crear el cuadrante",
@@ -541,7 +563,6 @@ const updateCuadrante = async (req, res) => {
       data: cuadranteActualizado,
     });
   } catch (error) {
-    console.error("Error al actualizar cuadrante:", error);
     res.status(500).json({
       success: false,
       message: "Error al actualizar el cuadrante",
@@ -582,7 +603,6 @@ const deleteCuadrante = async (req, res) => {
       message: "Cuadrante eliminado exitosamente",
     });
   } catch (error) {
-    console.error("Error al eliminar cuadrante:", error);
     res.status(500).json({
       success: false,
       message: "Error al eliminar el cuadrante",
