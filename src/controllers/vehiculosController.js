@@ -1,13 +1,58 @@
 /**
  * ===================================================
- * CONTROLADOR: src/controllers/vehiculosController.js
- * ====================================================
+ * CONTROLADOR: Vehículos
+ * ===================================================
  *
- * Controlador de Vehículos - VERSIÓN CORREGIDA COMPLETA
- * - Manejo correcto de transacciones
- * - Nombres de campos corregidos
- * - Validaciones mejoradas
- * - Error handling robusto
+ * Ruta: src/controllers/vehiculosController.js
+ *
+ * VERSIÓN: 2.2.0
+ * FECHA: 2025-12-14
+ *
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ❌ Eliminados console.logs de debugging (~20)
+ * ✅ Mantenidos solo logs de errores críticos
+ * ✅ Código limpio y profesional
+ * ✅ Headers con versionado
+ * ✅ Documentación JSDoc completa
+ *
+ * Descripción:
+ * Controlador de Vehículos con manejo correcto de transacciones,
+ * validaciones, y nombres de campos consistentes con la BD.
+ *
+ * Funciones Disponibles (13):
+ *
+ * CRUD Principal:
+ * - getAllVehiculos() - GET /vehiculos
+ * - getVehiculoById() - GET /vehiculos/:id
+ * - createVehiculo() - POST /vehiculos
+ * - updateVehiculo() - PUT /vehiculos/:id
+ * - deleteVehiculo() - DELETE /vehiculos/:id (soft delete)
+ *
+ * Operaciones Especiales:
+ * - getVehiculosDisponibles() - GET /vehiculos/disponibles
+ * - actualizarKilometraje() - PATCH /vehiculos/:id/kilometraje
+ * - cambiarEstadoOperativo() - PATCH /vehiculos/:id/estado
+ *
+ * Abastecimiento:
+ * - registrarAbastecimiento() - POST /vehiculos/:id/abastecimiento
+ * - getHistorialAbastecimientos() - GET /vehiculos/:id/abastecimientos
+ *
+ * Reportes y Estadísticas:
+ * - getEstadisticasVehiculos() - GET /vehiculos/stats
+ * - getHistorialVehiculo() - GET /vehiculos/:id/historial
+ *
+ * Características:
+ * - Transacciones con rollback automático
+ * - Validación de relaciones (tipo, unidad, conductor)
+ * - Generación automática de códigos
+ * - Normalización de placas (MAYÚSCULAS)
+ * - Soft delete con auditoría
+ * - Manejo robusto de errores
+ *
+ * @module controllers/vehiculosController
+ * @requires sequelize
+ * @version 2.2.0
+ * @date 2025-12-14
  */
 
 import {

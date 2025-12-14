@@ -1,8 +1,39 @@
 /**
+ * ===================================================
+ * MODELO: Sector
+ * ===================================================
+ *
  * Ruta: src/models/Sector.js
- * Descripción: Modelo Sequelize para la tabla 'sectores'
- * Define sectores de vigilancia y patrullaje urbano
- * Los sectores agrupan cuadrantes y definen zonas de responsabilidad
+ *
+ * VERSIÓN: 2.0.0
+ * FECHA: 2025-12-14
+ *
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ✅ Documentación JSDoc completa
+ * ✅ Headers profesionales con versionado
+ * ✅ Sin cambios funcionales
+ *
+ * Descripción:
+ * Modelo Sequelize para la tabla 'sectores'.
+ * Define sectores de vigilancia y patrullaje urbano.
+ * Los sectores agrupan cuadrantes y definen zonas de responsabilidad.
+ *
+ * Características:
+ * - Código único de identificación
+ * - Polígonos GeoJSON para límites
+ * - Color personalizable para mapas
+ * - Relación con cuadrantes y ubigeo
+ * - Soft delete con auditoría
+ *
+ * Relaciones:
+ * - Tiene muchos Cuadrantes (One-to-Many)
+ * - Pertenece a un Ubigeo (Many-to-One)
+ * - Tiene muchas Novedades (One-to-Many)
+ *
+ * @module models/Sector
+ * @requires sequelize
+ * @version 2.0.0
+ * @date 2025-12-14
  */
 
 import { DataTypes } from "sequelize";

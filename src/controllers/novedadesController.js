@@ -1,8 +1,33 @@
 /**
- * ============================================
- * CONTROLADOR: src/controllers/novedadesController.js
- * ============================================
- * VERSIÓN CORREGIDA - Campos y alias consistentes
+ * ===================================================
+ * CONTROLADOR: Novedades/Incidentes
+ * ===================================================
+ *
+ * Ruta: src/controllers/novedadesController.js
+ *
+ * VERSIÓN: 2.2.0
+ * FECHA: 2025-12-14
+ *
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ✅ Eliminados console.logs de debugging
+ * ✅ Mantenidos solo logs de errores críticos
+ * ✅ Código limpio y profesional
+ * ✅ Documentación completa
+ * ✅ Validaciones en rutas (no en controlador)
+ *
+ * VERSIONES ANTERIORES:
+ * - v1.0.0: Versión inicial
+ *
+ * Características:
+ * - CRUD completo de novedades
+ * - Gestión de estados
+ * - Asignación de recursos
+ * - Dashboard y estadísticas
+ * - Historial de cambios
+ *
+ * @module controllers/novedadesController
+ * @version 2.2.0
+ * @date 2025-12-14
  */
 
 import {
@@ -23,9 +48,9 @@ import { Op } from "sequelize";
 
 /**
  * Obtener todas las novedades con filtros
- * @route GET /api/novedades
+ * GET /api/v1/novedades
  */
-const getAllNovedades = async (req, res) => {
+export const getAllNovedades = async (req, res) => {
   try {
     const {
       fecha_inicio,
@@ -44,7 +69,6 @@ const getAllNovedades = async (req, res) => {
       deleted_at: null,
     };
 
-    // 🔥 Filtro por rango de fechas (usar fecha_hora_ocurrencia)
     if (fecha_inicio && fecha_fin) {
       whereClause.fecha_hora_ocurrencia = {
         [Op.between]: [new Date(fecha_inicio), new Date(fecha_fin)],
@@ -83,7 +107,7 @@ const getAllNovedades = async (req, res) => {
       include: [
         {
           model: TipoNovedad,
-          as: "novedadTipoNovedad", // 🔥 Usar alias definidos en index.js
+          as: "novedadTipoNovedad",
           attributes: ["id", "nombre", "color_hex", "icono"],
         },
         {
@@ -127,6 +151,7 @@ const getAllNovedades = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: "Novedades obtenidas exitosamente",
       data: rows,
       pagination: {
         total: count,
@@ -136,7 +161,7 @@ const getAllNovedades = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error al obtener novedades:", error);
+    console.error("❌ Error en getAllNovedades:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener las novedades",
@@ -147,9 +172,9 @@ const getAllNovedades = async (req, res) => {
 
 /**
  * Obtener una novedad por ID
- * @route GET /api/novedades/:id
+ * GET /api/v1/novedades/:id
  */
-const getNovedadById = async (req, res) => {
+export const getNovedadById = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -179,10 +204,11 @@ const getNovedadById = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: "Novedad obtenida exitosamente",
       data: novedad,
     });
   } catch (error) {
-    console.error("Error al obtener novedad:", error);
+    console.error("❌ Error en getNovedadById:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener la novedad",
@@ -193,16 +219,16 @@ const getNovedadById = async (req, res) => {
 
 /**
  * Crear una nueva novedad
- * @route POST /api/novedades
+ * POST /api/v1/novedades
  */
-const createNovedad = async (req, res) => {
+export const createNovedad = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
     const {
       tipo_novedad_id,
       subtipo_novedad_id,
-      fecha_hora_ocurrencia, // 🔥 Campo correcto
+      fecha_hora_ocurrencia,
       localizacion,
       referencia_ubicacion,
       latitud,
@@ -219,22 +245,6 @@ const createNovedad = async (req, res) => {
       cuadrante_id,
     } = req.body;
 
-    // Validar campos requeridos
-    if (
-      !tipo_novedad_id ||
-      !subtipo_novedad_id ||
-      !fecha_hora_ocurrencia ||
-      !descripcion
-    ) {
-      await transaction.rollback();
-      return res.status(400).json({
-        success: false,
-        message:
-          "Faltan campos requeridos: tipo_novedad_id, subtipo_novedad_id, fecha_hora_ocurrencia, descripcion",
-      });
-    }
-
-    // Obtener estado inicial
     const estadoInicial = await EstadoNovedad.findOne({
       where: { es_inicial: 1, estado: 1 },
       transaction,
@@ -248,7 +258,6 @@ const createNovedad = async (req, res) => {
       });
     }
 
-    // Obtener prioridad del subtipo
     const subtipo = await SubtipoNovedad.findByPk(subtipo_novedad_id, {
       transaction,
     });
@@ -261,7 +270,6 @@ const createNovedad = async (req, res) => {
       });
     }
 
-    // Generar código único
     const ultimaNovedad = await Novedad.findOne({
       order: [["id", "DESC"]],
       transaction,
@@ -273,7 +281,6 @@ const createNovedad = async (req, res) => {
       : 1;
     const novedad_code = String(siguienteNumero).padStart(6, "0");
 
-    // Determinar turno
     const hora = new Date(fecha_hora_ocurrencia).getHours();
     let turno = "MAÑANA";
     if (hora >= 14 && hora < 22) {
@@ -282,11 +289,10 @@ const createNovedad = async (req, res) => {
       turno = "NOCHE";
     }
 
-    // Crear novedad
     const nuevaNovedad = await Novedad.create(
       {
         novedad_code,
-        fecha_hora_ocurrencia, // 🔥 Campo correcto
+        fecha_hora_ocurrencia,
         fecha_hora_reporte: new Date(),
         tipo_novedad_id,
         subtipo_novedad_id,
@@ -307,13 +313,12 @@ const createNovedad = async (req, res) => {
         observaciones,
         prioridad_actual: subtipo.prioridad || "MEDIA",
         turno,
-        usuario_registro: req.user.id, // 🔥 Campo correcto
+        usuario_registro: req.user.id,
         created_by: req.user.id,
       },
       { transaction }
     );
 
-    // Registrar historial
     await HistorialEstadoNovedad.create(
       {
         novedad_id: nuevaNovedad.id,
@@ -327,7 +332,6 @@ const createNovedad = async (req, res) => {
 
     await transaction.commit();
 
-    // Obtener completa
     const novedadCompleta = await Novedad.findByPk(nuevaNovedad.id, {
       include: [
         { model: TipoNovedad, as: "novedadTipoNovedad" },
@@ -347,7 +351,7 @@ const createNovedad = async (req, res) => {
     if (!transaction.finished) {
       await transaction.rollback();
     }
-    console.error("Error al crear novedad:", error);
+    console.error("❌ Error en createNovedad:", error);
     res.status(500).json({
       success: false,
       message: "Error al crear la novedad",
@@ -358,9 +362,9 @@ const createNovedad = async (req, res) => {
 
 /**
  * Actualizar novedad
- * @route PUT /api/novedades/:id
+ * PUT /api/v1/novedades/:id
  */
-const updateNovedad = async (req, res) => {
+export const updateNovedad = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
@@ -381,7 +385,6 @@ const updateNovedad = async (req, res) => {
       });
     }
 
-    // Registrar cambio de estado si aplica
     if (
       datosActualizacion.estado_novedad_id &&
       datosActualizacion.estado_novedad_id !== novedad.estado_novedad_id
@@ -403,7 +406,6 @@ const updateNovedad = async (req, res) => {
       );
     }
 
-    // Calcular tiempo de respuesta
     if (datosActualizacion.fecha_llegada && !novedad.fecha_llegada) {
       const tiempoRespuesta = Math.floor(
         (new Date(datosActualizacion.fecha_llegada) -
@@ -444,7 +446,7 @@ const updateNovedad = async (req, res) => {
     if (!transaction.finished) {
       await transaction.rollback();
     }
-    console.error("Error al actualizar novedad:", error);
+    console.error("❌ Error en updateNovedad:", error);
     res.status(500).json({
       success: false,
       message: "Error al actualizar la novedad",
@@ -455,9 +457,9 @@ const updateNovedad = async (req, res) => {
 
 /**
  * Asignar recursos a una novedad
- * @route POST /api/novedades/:id/asignar
+ * POST /api/v1/novedades/:id/asignar
  */
-const asignarRecursos = async (req, res) => {
+export const asignarRecursos = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
@@ -479,7 +481,6 @@ const asignarRecursos = async (req, res) => {
       });
     }
 
-    // Buscar estado "EN RUTA" o "DESPACHADO"
     const estadoDespacho = await EstadoNovedad.findOne({
       where: {
         nombre: { [Op.in]: ["EN RUTA", "DESPACHADO"] },
@@ -542,7 +543,7 @@ const asignarRecursos = async (req, res) => {
     if (!transaction.finished) {
       await transaction.rollback();
     }
-    console.error("Error al asignar recursos:", error);
+    console.error("❌ Error en asignarRecursos:", error);
     res.status(500).json({
       success: false,
       message: "Error al asignar recursos",
@@ -553,9 +554,9 @@ const asignarRecursos = async (req, res) => {
 
 /**
  * Eliminar novedad (soft delete)
- * @route DELETE /api/novedades/:id
+ * DELETE /api/v1/novedades/:id
  */
-const deleteNovedad = async (req, res) => {
+export const deleteNovedad = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -581,7 +582,7 @@ const deleteNovedad = async (req, res) => {
       message: "Novedad eliminada exitosamente",
     });
   } catch (error) {
-    console.error("Error al eliminar novedad:", error);
+    console.error("❌ Error en deleteNovedad:", error);
     res.status(500).json({
       success: false,
       message: "Error al eliminar la novedad",
@@ -592,9 +593,9 @@ const deleteNovedad = async (req, res) => {
 
 /**
  * Obtener historial de estados
- * @route GET /api/novedades/:id/historial
+ * GET /api/v1/novedades/:id/historial
  */
-const getHistorialEstados = async (req, res) => {
+export const getHistorialEstados = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -622,10 +623,12 @@ const getHistorialEstados = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: "Historial obtenido exitosamente",
       data: historial,
+      total: historial.length,
     });
   } catch (error) {
-    console.error("Error al obtener historial:", error);
+    console.error("❌ Error en getHistorialEstados:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener el historial de estados",
@@ -636,9 +639,9 @@ const getHistorialEstados = async (req, res) => {
 
 /**
  * Obtener estadísticas del dashboard
- * @route GET /api/novedades/dashboard/stats
+ * GET /api/v1/novedades/dashboard/stats
  */
-const getDashboardStats = async (req, res) => {
+export const getDashboardStats = async (req, res) => {
   try {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
@@ -646,7 +649,6 @@ const getDashboardStats = async (req, res) => {
     const mañana = new Date(hoy);
     mañana.setDate(mañana.getDate() + 1);
 
-    // Total del día
     const totalNovedades = await Novedad.count({
       where: {
         fecha_hora_ocurrencia: {
@@ -658,7 +660,6 @@ const getDashboardStats = async (req, res) => {
       },
     });
 
-    // Por estado
     const novedadesPorEstado = await Novedad.findAll({
       where: {
         fecha_hora_ocurrencia: {
@@ -683,7 +684,6 @@ const getDashboardStats = async (req, res) => {
       raw: false,
     });
 
-    // Por tipo
     const novedadesPorTipo = await Novedad.findAll({
       where: {
         fecha_hora_ocurrencia: {
@@ -708,7 +708,6 @@ const getDashboardStats = async (req, res) => {
       raw: false,
     });
 
-    // Por prioridad
     const novedadesPorPrioridad = await Novedad.findAll({
       where: {
         fecha_hora_ocurrencia: {
@@ -726,7 +725,6 @@ const getDashboardStats = async (req, res) => {
       raw: true,
     });
 
-    // Tiempo promedio de respuesta
     const tiempoPromedio = await Novedad.findOne({
       where: {
         fecha_hora_ocurrencia: {
@@ -748,6 +746,7 @@ const getDashboardStats = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: "Estadísticas obtenidas exitosamente",
       data: {
         totalNovedades,
         novedadesPorEstado,
@@ -758,7 +757,7 @@ const getDashboardStats = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error al obtener estadísticas:", error);
+    console.error("❌ Error en getDashboardStats:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener estadísticas del dashboard",
@@ -767,7 +766,6 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
-// 🔥 IMPORTANTE: Crear archivo novedadValidation.js con estas validaciones corregidas
 export default {
   getAllNovedades,
   getNovedadById,
@@ -778,26 +776,3 @@ export default {
   getHistorialEstados,
   getDashboardStats,
 };
-
-/**
- * VALIDACIONES - Crear archivo: src/middlewares/novedadValidation.js
- *
- * body("origen_llamada")
- *   .optional()
- *   .isIn([
- *     "TELEFONO_107",
- *     "BOTON_PANICO",
- *     "CAMARA",
- *     "PATRULLAJE",
- *     "CIUDADANO",
- *     "INTERVENCION_DIRECTA",
- *     "OTROS"
- *   ])
- *   .withMessage("Origen de llamada no válido"),
- *
- * body("fecha_hora_ocurrencia") // 🔥 NO "fecha_hora"
- *   .notEmpty()
- *   .withMessage("La fecha y hora son requeridas")
- *   .isISO8601()
- *   .withMessage("La fecha debe estar en formato ISO 8601"),
- */

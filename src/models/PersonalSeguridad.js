@@ -10,16 +10,20 @@
  * Seguridad Ciudadana. Gestiona toda la información del personal que
  * trabaja en la institución (serenos, supervisores, operadores, etc.)
  *
- * VERSIÓN: 2.1.1 - Se eliminaron logs de depuración en validación de categoría
+ * VERSIÓN: 2.2.0
  * FECHA: 2025-12-14
  *
- * CAMBIOS RELEVANTES EN ESTA VERSIÓN:
- * - ✅ Corregida validación vehiculoRequiereLicencia
- * - ✅ Mejorado manejo de errores en beforeCreate
- * - ✅ Optimizado método getEstadisticas (1 query en lugar de 4)
- * - ✅ Agregada unicidad a campo licencia
- * - ✅ Corregido scope conLicenciaVigente
- * - ✅ Agregados métodos renovarLicencia y validaciones adicionales
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ✅ Eliminada validación de categoría del modelo (ahora en rutas)
+ * ✅ Eliminados console.logs de debugging
+ * ✅ Mantenida normalización en beforeSave
+ * ✅ Código limpio y profesional
+ * ✅ Documentación actualizada
+ *
+ * VERSIONES ANTERIORES:
+ * - v2.1.1: Eliminados logs de depuración en validación de categoría
+ * - v2.1.0: Corregida validación vehiculoRequiereLicencia
+ * - v2.0.0: Mejorado manejo de errores en beforeCreate
  *
  * Características:
  * - Validaciones robustas (DNI, edad, fechas)
@@ -40,8 +44,8 @@
  * @module models/PersonalSeguridad
  * @requires sequelize
  * @author Sistema de Seguridad Ciudadana
- * @version 2.1.0
- * @date 2025-12-12
+ * @version 2.2.0
+ * @date 2025-12-14
  */
 
 import { DataTypes, Op } from "sequelize";
@@ -448,7 +452,7 @@ const PersonalSeguridad = sequelize.define(
 
     /**
      * Número de licencia de conducir
-     * ✅ CORREGIDO: Agregada unicidad para evitar duplicados
+     * Debe ser único para evitar duplicados
      */
     licencia: {
       type: DataTypes.STRING(20),
@@ -477,73 +481,14 @@ const PersonalSeguridad = sequelize.define(
     /**
      * Categoría de licencia
      * Según Reglamento Nacional de Licencias de Conducir
+     *
+     * NOTA: La validación se realiza en las rutas (personal.routes.js)
+     * y en el hook beforeSave para normalización
      */
     categoria: {
       type: DataTypes.STRING(20),
       allowNull: true,
       comment: "Categoría de licencia (A-I, A-IIA, A-IIB, A-IIIA, etc.)",
-      validate: {
-        validarCategoria(value) {
-          if (value) {
-            // Normalizar: trim + MAYÚSCULAS
-            const valorNormalizado = value.trim().toUpperCase();
-            /*
-            // ✅ Categorías válidas según Reglamento Nacional de Licencias
-            const categoriasValidas = [
-              "A-I", // Motocicletas hasta 125cc
-              "A-IIA", // Motocicletas hasta 400cc
-              "A-IIB", // Motocicletas sin límite
-              "A-IIIA", // Mototaxis
-              "A-IIIB", // Trimotos de carga
-              "A-IIIC", // Vehículos especiales
-              "B-I", // Autos particulares
-              "B-IIA", // Taxis, colectivos
-              "B-IIB", // Camiones, buses
-              "B-IIC", // Vehículos pesados especiales
-            ];
-*/
-
-            // Buscar match exacto
-            const matchExacto = categoriasValidas.includes(valorNormalizado);
-
-            // Buscar matches parciales (para debug)
-            const matchesParciales = categoriasValidas.filter((cat) => {
-              const esIgual = cat === valorNormalizado;
-
-              /*              if (!esIgual && cat.includes(valorNormalizado.substring(0, 3))) { }*/
-              return esIgual;
-            });
-
-            if (!categoriasValidas.includes(valorNormalizado)) {
-              // ✅ Mensaje de error mejorado
-              const mensaje = [
-                "Categoría no válida.",
-                "",
-                "Categorías válidas en Perú:",
-                "",
-                "CLASE A (Motocicletas):",
-                "  • A-I: Motocicletas hasta 125cc",
-                "  • A-IIA: Motocicletas hasta 400cc",
-                "  • A-IIB: Motocicletas sin límite",
-                "  • A-IIIA: Mototaxis",
-                "  • A-IIIB: Trimotos de carga",
-                "  • A-IIIC: Vehículos especiales",
-                "",
-                "CLASE B (Automóviles):",
-                "  • B-I: Automóviles particulares",
-                "  • B-IIA: Taxis, colectivos",
-                "  • B-IIB: Camiones, buses",
-                "  • B-IIC: Vehículos pesados",
-                "",
-                `Valor recibido: "${value}"`,
-                `Valor normalizado: "${valorNormalizado}"`,
-              ].join("\n");
-
-              throw new Error(mensaje);
-            }
-          }
-        },
-      },
     },
 
     /**
@@ -619,7 +564,6 @@ const PersonalSeguridad = sequelize.define(
       allowNull: true,
       comment: "URL o ruta de la foto del personal",
       validate: {
-        // ✅ MEJORADO: Validación más flexible para URLs y rutas
         isUrlOrPath(value) {
           if (value) {
             const urlPattern =
@@ -692,11 +636,10 @@ const PersonalSeguridad = sequelize.define(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
-    paranoid: false, // No usar paranoid porque manejamos soft delete manual
+    paranoid: false,
 
     // ==========================================
     // ÍNDICES
-    // ✅ MEJORADO: Agregados índices compuestos para optimización
     // ==========================================
     indexes: [
       {
@@ -737,7 +680,6 @@ const PersonalSeguridad = sequelize.define(
         name: "idx_activos",
         fields: ["estado", "deleted_at", "status"],
       },
-      // ✅ NUEVOS ÍNDICES COMPUESTOS
       {
         name: "idx_activos_disponibles",
         fields: ["status", "vehiculo_id", "estado", "deleted_at"],
@@ -768,14 +710,9 @@ const PersonalSeguridad = sequelize.define(
       },
 
       /**
-       * ✅ CORREGIDO: Validar que si tiene vehículo asignado, debe tener licencia vigente
-       * Ahora valida también cuando se modifica la licencia o vigencia
+       * Validar que si tiene vehículo asignado, debe tener licencia vigente
        */
       vehiculoRequiereLicencia() {
-        // Validar en estas condiciones:
-        // 1. Se está asignando un vehículo nuevo (changed vehiculo_id)
-        // 2. Ya tiene vehículo y se modificó la licencia o vigencia
-        // 3. Es un nuevo registro con vehículo
         const debeValidar =
           (this.changed("vehiculo_id") && this.vehiculo_id) ||
           (this.vehiculo_id &&
@@ -783,16 +720,14 @@ const PersonalSeguridad = sequelize.define(
           (this.isNewRecord && this.vehiculo_id);
 
         if (debeValidar) {
-          // Verificar que tenga licencia y vigencia
           if (!this.licencia || !this.vigencia) {
             throw new Error(
               "Para tener vehículo asignado, el personal debe tener licencia y vigencia registradas"
             );
           }
 
-          // Verificar que la licencia esté vigente
           const hoy = new Date();
-          hoy.setHours(0, 0, 0, 0); // Normalizar a medianoche
+          hoy.setHours(0, 0, 0, 0);
           const vigencia = new Date(this.vigencia);
           vigencia.setHours(0, 0, 0, 0);
 
@@ -823,7 +758,7 @@ const PersonalSeguridad = sequelize.define(
       },
 
       /**
-       * ✅ NUEVO: Validar que si tiene licencia, debe tener categoría y vigencia
+       * Validar que si tiene licencia, debe tener categoría y vigencia
        */
       licenciaCompleta() {
         if (this.licencia) {
@@ -847,7 +782,7 @@ const PersonalSeguridad = sequelize.define(
     hooks: {
       /**
        * Antes de guardar (create o update)
-       * Normaliza nombres, apellidos y documento
+       * Normaliza nombres, apellidos, documento y categoría
        */
       beforeSave: (personal) => {
         // Normalizar nombres a Title Case
@@ -873,7 +808,7 @@ const PersonalSeguridad = sequelize.define(
             .toUpperCase();
         }
 
-        // Normalizar número de documento (trim y mayúsculas)
+        // Normalizar número de documento
         if (personal.doc_numero) {
           personal.doc_numero = personal.doc_numero.trim().toUpperCase();
         }
@@ -883,44 +818,13 @@ const PersonalSeguridad = sequelize.define(
           personal.licencia = personal.licencia.trim().toUpperCase();
         }
 
-        // Normalizar categoría de licencia
+        // ✅ Normalizar categoría de licencia
         if (personal.categoria) {
-          // ✅ Normalización AGRESIVA
-          let categoríaNormalizada = personal.categoria
+          personal.categoria = personal.categoria
             .trim()
             .toUpperCase()
-            // Reemplazar TODOS los tipos de guiones por guion normal
             .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D−–—]/g, "-")
-            // Remover espacios internos
             .replace(/\s+/g, "");
-
-          // ✅ Validar categorías
-          const categoriasValidas = [
-            "A-I",
-            "A-IIA",
-            "A-IIB",
-            "A-IIIA",
-            "A-IIIB",
-            "A-IIIC",
-            "B-I",
-            "B-IIA",
-            "B-IIB",
-            "B-IIC",
-          ];
-
-          if (!categoriasValidas.includes(categoríaNormalizada)) {
-            throw new Error(
-              `Categoría no válida.\n\n` +
-                `Categorías válidas:\n` +
-                `CLASE A: A-I, A-IIA, A-IIB, A-IIIA, A-IIIB, A-IIIC\n` +
-                `CLASE B: B-I, B-IIA, B-IIB, B-IIC\n\n` +
-                `Recibido: "${personal.categoria}"\n` +
-                `Normalizado: "${categoríaNormalizada}"`
-            );
-          }
-
-          // Asignar valor normalizado
-          personal.categoria = categoríaNormalizada;
         }
 
         // Si status es Retirado y no hay fecha_baja, asignar hoy
@@ -930,28 +834,24 @@ const PersonalSeguridad = sequelize.define(
       },
 
       /**
-       * ✅ MEJORADO: Antes de crear
-       * Genera código de acceso con mejor manejo de errores
+       * Antes de crear
+       * Genera código de acceso automático si no existe
        */
       beforeCreate: async (personal, options) => {
-        // Si no tiene código de acceso, generar uno automático
         if (!personal.codigo_acceso) {
           try {
             if (personal.cargo_id) {
-              // Obtener prefijo según cargo
               const Cargo = sequelize.models.Cargo;
               const cargo = await Cargo.findByPk(personal.cargo_id, {
                 transaction: options.transaction,
               });
 
               if (cargo) {
-                // Obtener las primeras 3 letras del cargo
                 const prefijo = cargo.nombre
                   .substring(0, 3)
                   .toUpperCase()
                   .replace(/[^A-Z]/g, "");
 
-                // Buscar el último código con ese prefijo
                 const ultimoPersonal = await PersonalSeguridad.findOne({
                   where: {
                     codigo_acceso: {
@@ -973,23 +873,19 @@ const PersonalSeguridad = sequelize.define(
                   }
                 }
 
-                // Generar código: PREFIJO-NUMERO (ej: SER-0001, SUP-0005)
                 personal.codigo_acceso = `${prefijo}-${String(
                   nuevoNumero
                 ).padStart(4, "0")}`;
               } else {
-                // Si no se encontró el cargo, generar código genérico
                 personal.codigo_acceso = `PER-${Date.now()
                   .toString()
                   .slice(-6)}`;
               }
             } else {
-              // Si no tiene cargo, generar código genérico basado en timestamp
               personal.codigo_acceso = `PER-${Date.now().toString().slice(-6)}`;
             }
           } catch (error) {
             console.error("Error al generar código de acceso:", error);
-            // ✅ MEJORADO: Siempre generar un código, aunque sea genérico
             personal.codigo_acceso = `PER-${Date.now().toString().slice(-6)}`;
           }
         }
@@ -1000,12 +896,10 @@ const PersonalSeguridad = sequelize.define(
        * Si se cambia a Retirado, desasignar vehículo
        */
       beforeUpdate: (personal) => {
-        // Si cambia a Retirado, desasignar vehículo
         if (personal.changed("status") && personal.status === "Retirado") {
           personal.vehiculo_id = null;
         }
 
-        // Si se desactiva (estado = false), cambiar status
         if (personal.changed("estado") && personal.estado === false) {
           if (personal.status === "Activo") {
             personal.status = "Inactivo";
@@ -1030,8 +924,7 @@ const PersonalSeguridad = sequelize.define(
       },
 
       /**
-       * ✅ CORREGIDO: Solo personal con licencia vigente
-       * Usa sequelize.fn para mejor compatibilidad
+       * Solo personal con licencia vigente
        */
       conLicenciaVigente: {
         where: {
@@ -1103,7 +996,6 @@ const PersonalSeguridad = sequelize.define(
 
 /**
  * Buscar solo personal activo
- * @returns {Promise<Array>} Array de personal activo
  */
 PersonalSeguridad.findActivos = async function () {
   return await PersonalSeguridad.scope("activos", "conRelaciones").findAll({
@@ -1116,9 +1008,6 @@ PersonalSeguridad.findActivos = async function () {
 
 /**
  * Buscar personal por documento
- * @param {string} tipoDoc - Tipo de documento
- * @param {string} numeroDoc - Número de documento
- * @returns {Promise<Object|null>} Personal encontrado o null
  */
 PersonalSeguridad.findByDocumento = async function (tipoDoc, numeroDoc) {
   return await PersonalSeguridad.scope("conRelaciones").findOne({
@@ -1131,8 +1020,6 @@ PersonalSeguridad.findByDocumento = async function (tipoDoc, numeroDoc) {
 
 /**
  * Buscar personal por cargo
- * @param {number} cargoId - ID del cargo
- * @returns {Promise<Array>} Array de personal con ese cargo
  */
 PersonalSeguridad.findByCargo = async function (cargoId) {
   return await PersonalSeguridad.scope("activos").findAll({
@@ -1143,7 +1030,6 @@ PersonalSeguridad.findByCargo = async function (cargoId) {
 
 /**
  * Obtener personal con licencia vigente
- * @returns {Promise<Array>} Array de personal conductor
  */
 PersonalSeguridad.findConLicenciaVigente = async function () {
   return await PersonalSeguridad.scope("conLicenciaVigente").findAll({
@@ -1153,7 +1039,6 @@ PersonalSeguridad.findConLicenciaVigente = async function () {
 
 /**
  * Obtener personal disponible (sin vehículo asignado)
- * @returns {Promise<Array>} Array de personal disponible
  */
 PersonalSeguridad.findDisponibles = async function () {
   return await PersonalSeguridad.scope("disponibles", "conRelaciones").findAll({
@@ -1163,8 +1048,6 @@ PersonalSeguridad.findDisponibles = async function () {
 
 /**
  * Buscar por código de acceso
- * @param {string} codigo - Código de acceso
- * @returns {Promise<Object|null>} Personal encontrado o null
  */
 PersonalSeguridad.findByCodigo = async function (codigo) {
   return await PersonalSeguridad.scope("conRelaciones").findOne({
@@ -1178,8 +1061,6 @@ PersonalSeguridad.findByCodigo = async function (codigo) {
 
 /**
  * Contar personal por cargo
- * @param {number} cargoId - ID del cargo
- * @returns {Promise<number>} Cantidad de personal
  */
 PersonalSeguridad.countByCargo = async function (cargoId) {
   return await PersonalSeguridad.count({
@@ -1193,17 +1074,13 @@ PersonalSeguridad.countByCargo = async function (cargoId) {
 };
 
 /**
- * ✅ OPTIMIZADO: Obtener estadísticas generales
- * Ahora usa 1 sola query en lugar de 4 separadas
- * @returns {Promise<Object>} Objeto con estadísticas
+ * Obtener estadísticas generales
  */
 PersonalSeguridad.getEstadisticas = async function () {
-  // Query 1: Total
   const total = await PersonalSeguridad.count({
     where: { deleted_at: null },
   });
 
-  // Query 2: Activos
   const activos = await PersonalSeguridad.count({
     where: {
       status: "Activo",
@@ -1211,7 +1088,6 @@ PersonalSeguridad.getEstadisticas = async function () {
     },
   });
 
-  // Query 3: Conductores
   const conductores = await PersonalSeguridad.count({
     where: {
       licencia: { [Op.ne]: null },
@@ -1219,7 +1095,6 @@ PersonalSeguridad.getEstadisticas = async function () {
     },
   });
 
-  // Query 4: Disponibles
   const disponibles = await PersonalSeguridad.count({
     where: {
       vehiculo_id: null,
@@ -1228,7 +1103,6 @@ PersonalSeguridad.getEstadisticas = async function () {
     },
   });
 
-  // Query 5: Con licencia vigente
   const con_licencia_vigente = await PersonalSeguridad.count({
     where: {
       licencia: { [Op.ne]: null },
@@ -1251,9 +1125,7 @@ PersonalSeguridad.getEstadisticas = async function () {
 };
 
 /**
- * ✅ NUEVO: Obtener personal con licencia por vencer
- * @param {number} dias - Días antes del vencimiento (por defecto 30)
- * @returns {Promise<Array>} Array de personal con licencia por vencer
+ * Obtener personal con licencia por vencer
  */
 PersonalSeguridad.findLicenciasPorVencer = async function (dias = 30) {
   const fechaLimite = new Date();
@@ -1279,7 +1151,6 @@ PersonalSeguridad.findLicenciasPorVencer = async function (dias = 30) {
 
 /**
  * Obtener nombre completo del personal
- * @returns {string} Nombre completo
  */
 PersonalSeguridad.prototype.getNombreCompleto = function () {
   return `${this.nombres} ${this.apellido_paterno} ${this.apellido_materno}`;
@@ -1287,7 +1158,6 @@ PersonalSeguridad.prototype.getNombreCompleto = function () {
 
 /**
  * Obtener nombre en formato: APELLIDOS, Nombres
- * @returns {string} Nombre formateado
  */
 PersonalSeguridad.prototype.getNombreFormateado = function () {
   return `${this.apellido_paterno} ${this.apellido_materno}, ${this.nombres}`;
@@ -1295,7 +1165,6 @@ PersonalSeguridad.prototype.getNombreFormateado = function () {
 
 /**
  * Obtener solo apellidos completos
- * @returns {string} Apellidos
  */
 PersonalSeguridad.prototype.getApellidos = function () {
   return `${this.apellido_paterno} ${this.apellido_materno}`;
@@ -1303,7 +1172,6 @@ PersonalSeguridad.prototype.getApellidos = function () {
 
 /**
  * Calcular edad actual del personal
- * @returns {number|null} Edad en años o null si no hay fecha de nacimiento
  */
 PersonalSeguridad.prototype.getEdad = function () {
   if (!this.fecha_nacimiento) return null;
@@ -1322,7 +1190,6 @@ PersonalSeguridad.prototype.getEdad = function () {
 
 /**
  * Calcular años de servicio
- * @returns {number|null} Años de servicio o null
  */
 PersonalSeguridad.prototype.getAniosServicio = function () {
   if (!this.fecha_ingreso) return null;
@@ -1341,7 +1208,6 @@ PersonalSeguridad.prototype.getAniosServicio = function () {
 
 /**
  * Verificar si tiene licencia vigente
- * @returns {boolean} true si tiene licencia vigente
  */
 PersonalSeguridad.prototype.tieneLicenciaVigente = function () {
   if (!this.licencia || !this.vigencia) return false;
@@ -1354,7 +1220,6 @@ PersonalSeguridad.prototype.tieneLicenciaVigente = function () {
 
 /**
  * Verificar si está activo laboralmente
- * @returns {boolean} true si está activo
  */
 PersonalSeguridad.prototype.estaActivo = function () {
   return (
@@ -1364,15 +1229,13 @@ PersonalSeguridad.prototype.estaActivo = function () {
 
 /**
  * Verificar si tiene vehículo asignado
- * @returns {boolean} true si tiene vehículo
  */
 PersonalSeguridad.prototype.tieneVehiculo = function () {
   return this.vehiculo_id !== null;
 };
 
 /**
- * Verificar si puede conducir (licencia vigente y no tiene vehículo)
- * @returns {boolean} true si puede ser asignado a un vehículo
+ * Verificar si puede conducir
  */
 PersonalSeguridad.prototype.puedeConducir = function () {
   return (
@@ -1381,8 +1244,7 @@ PersonalSeguridad.prototype.puedeConducir = function () {
 };
 
 /**
- * ✅ NUEVO: Obtener días restantes para vencimiento de licencia
- * @returns {number|null} Días restantes o null si no tiene licencia
+ * Obtener días restantes para vencimiento de licencia
  */
 PersonalSeguridad.prototype.getDiasVigenciaLicencia = function () {
   if (!this.vigencia) return null;
@@ -1399,9 +1261,7 @@ PersonalSeguridad.prototype.getDiasVigenciaLicencia = function () {
 };
 
 /**
- * ✅ NUEVO: Verificar si la licencia está por vencer
- * @param {number} dias - Días de anticipación (por defecto 30)
- * @returns {boolean} true si está por vencer
+ * Verificar si la licencia está por vencer
  */
 PersonalSeguridad.prototype.licenciaPorVencer = function (dias = 30) {
   const diasRestantes = this.getDiasVigenciaLicencia();
@@ -1411,9 +1271,6 @@ PersonalSeguridad.prototype.licenciaPorVencer = function (dias = 30) {
 
 /**
  * Dar de baja al personal
- * @param {Date} fecha - Fecha de baja (opcional, por defecto hoy)
- * @param {number} userId - ID del usuario que realiza la baja
- * @returns {Promise<Object>} Personal actualizado
  */
 PersonalSeguridad.prototype.darDeBaja = async function (
   fecha = null,
@@ -1421,7 +1278,7 @@ PersonalSeguridad.prototype.darDeBaja = async function (
 ) {
   this.fecha_baja = fecha || new Date();
   this.status = "Retirado";
-  this.vehiculo_id = null; // Desasignar vehículo
+  this.vehiculo_id = null;
   if (userId) {
     this.updated_by = userId;
   }
@@ -1429,84 +1286,7 @@ PersonalSeguridad.prototype.darDeBaja = async function (
 };
 
 /**
- * Reactivar personal
- * @param {number} userId - ID del usuario que reactiva
- * @returns {Promise<Object>} Personal actualizado
- */
-
-PersonalSeguridad.prototype.reactivar = async function () {
-  const transaction = await sequelize.transaction();
-
-  try {
-    await this.update(
-      {
-        status: "Activo",
-        deleted_at: null,
-        estado: true,
-      },
-      { transaction }
-    );
-
-    await transaction.commit();
-    console.log(`✅ Personal reactivado: ${this.nombres_completos}`);
-    return this;
-  } catch (error) {
-    await transaction.rollback();
-    throw error;
-  }
-};
-
-/**
- * Suspender personal temporalmente
- * @param {number} userId - ID del usuario que suspende
- * @returns {Promise<Object>} Personal actualizado
- */
-PersonalSeguridad.prototype.suspender = async function () {
-  const maxRetries = 3;
-  let attempt = 0;
-
-  while (attempt < maxRetries) {
-    try {
-      // ✅ Sin isolation level
-      const transaction = await sequelize.transaction();
-
-      try {
-        await this.update(
-          {
-            status: "Suspendido",
-          },
-          { transaction }
-        );
-
-        await transaction.commit();
-        console.log(`✅ Personal suspendido: ${this.nombres_completos}`);
-        return this;
-      } catch (error) {
-        await transaction.rollback();
-        throw error;
-      }
-    } catch (error) {
-      if (
-        error.parent?.code === "ER_LOCK_WAIT_TIMEOUT" &&
-        attempt < maxRetries - 1
-      ) {
-        attempt++;
-        console.log(`⚠️  Reintento ${attempt}/${maxRetries}...`);
-        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
-        continue;
-      }
-
-      throw error;
-    }
-  }
-};
-
-/**
  * Soft delete del personal
- * Marca el registro como eliminado sin borrarlo físicamente
- *
- * @param {number} userId - ID del usuario que elimina
- * @returns {Promise<PersonalSeguridad>} Personal actualizado
  */
 PersonalSeguridad.prototype.softDelete = async function (userId = null) {
   this.deleted_at = new Date();
@@ -1514,14 +1294,11 @@ PersonalSeguridad.prototype.softDelete = async function (userId = null) {
   this.status = "Inactivo";
   if (userId) this.updated_by = userId;
   await this.save();
-  console.log(`✅ Personal eliminado: ${this.getNombreCompleto()}`);
   return this;
 };
 
 /**
- * Restaurar personal eliminado (soft delete)
- * @param {number} userId - ID del usuario que restaura
- * @returns {Promise<Object>} Personal actualizado
+ * Restaurar personal eliminado
  */
 PersonalSeguridad.prototype.restore = async function (userId = null) {
   const transaction = await sequelize.transaction();
@@ -1538,7 +1315,6 @@ PersonalSeguridad.prototype.restore = async function (userId = null) {
     );
 
     await transaction.commit();
-    console.log(`✅ Personal restaurado: ${this.getNombreCompleto()}`);
     return this;
   } catch (error) {
     await transaction.rollback();
@@ -1548,7 +1324,6 @@ PersonalSeguridad.prototype.restore = async function (userId = null) {
 
 /**
  * Suspender personal temporalmente
- * @returns {Promise<Object>} Personal actualizado
  */
 PersonalSeguridad.prototype.suspender = async function () {
   const transaction = await sequelize.transaction();
@@ -1562,7 +1337,6 @@ PersonalSeguridad.prototype.suspender = async function () {
     );
 
     await transaction.commit();
-    console.log(`✅ Personal suspendido: ${this.getNombreCompleto()}`);
     return this;
   } catch (error) {
     await transaction.rollback();
@@ -1572,7 +1346,6 @@ PersonalSeguridad.prototype.suspender = async function () {
 
 /**
  * Reactivar personal
- * @returns {Promise<Object>} Personal actualizado
  */
 PersonalSeguridad.prototype.reactivar = async function () {
   const transaction = await sequelize.transaction();
@@ -1588,71 +1361,20 @@ PersonalSeguridad.prototype.reactivar = async function () {
     );
 
     await transaction.commit();
-    console.log(`✅ Personal reactivado: ${this.getNombreCompleto()}`);
     return this;
   } catch (error) {
     await transaction.rollback();
     throw error;
   }
-};
-
-/**
- * Retirar personal (dar de baja)
- * @param {number} userId - ID del usuario que retira
- * @returns {Promise<Object>} Personal actualizado
- */
-PersonalSeguridad.prototype.retirar = async function (userId = null) {
-  const transaction = await sequelize.transaction();
-
-  try {
-    await this.update(
-      {
-        status: "Retirado",
-        fecha_baja: new Date(),
-        updated_by: userId,
-      },
-      { transaction }
-    );
-
-    await transaction.commit();
-    console.log(`✅ Personal retirado: ${this.getNombreCompleto()}`);
-    return this;
-  } catch (error) {
-    await transaction.rollback();
-    throw error;
-  }
-};
-
-/**
- * Dar de baja al personal
- * @param {Date} fecha - Fecha de baja (opcional, por defecto hoy)
- * @param {number} userId - ID del usuario que realiza la baja
- * @returns {Promise<Object>} Personal actualizado
- */
-PersonalSeguridad.prototype.darDeBaja = async function (
-  fecha = null,
-  userId = null
-) {
-  this.fecha_baja = fecha || new Date();
-  this.status = "Retirado";
-  this.vehiculo_id = null; // Desasignar vehículo
-  if (userId) {
-    this.updated_by = userId;
-  }
-  return await this.save();
 };
 
 /**
  * Asignar vehículo al personal
- * @param {number} vehiculoId - ID del vehículo
- * @param {number} userId - ID del usuario que asigna
- * @returns {Promise<Object>} Personal actualizado
  */
 PersonalSeguridad.prototype.asignarVehiculo = async function (
   vehiculoId,
   userId = null
 ) {
-  // Verificar que tiene licencia vigente
   if (!this.tieneLicenciaVigente()) {
     throw new Error(
       "El personal debe tener licencia vigente para asignar vehículo"
@@ -1668,8 +1390,6 @@ PersonalSeguridad.prototype.asignarVehiculo = async function (
 
 /**
  * Desasignar vehículo del personal
- * @param {number} userId - ID del usuario que desasigna
- * @returns {Promise<Object>} Personal actualizado
  */
 PersonalSeguridad.prototype.desasignarVehiculo = async function (
   userId = null
@@ -1682,11 +1402,7 @@ PersonalSeguridad.prototype.desasignarVehiculo = async function (
 };
 
 /**
- * ✅ NUEVO: Renovar licencia de conducir
- * @param {Date} nuevaVigencia - Nueva fecha de vigencia
- * @param {string} nuevaCategoria - Nueva categoría (opcional)
- * @param {number} userId - ID del usuario que renueva
- * @returns {Promise<Object>} Personal actualizado
+ * Renovar licencia de conducir
  */
 PersonalSeguridad.prototype.renovarLicencia = async function (
   nuevaVigencia,
@@ -1697,7 +1413,6 @@ PersonalSeguridad.prototype.renovarLicencia = async function (
     throw new Error("El personal no tiene licencia registrada para renovar");
   }
 
-  // Validar que la nueva vigencia sea futura
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
   const vigencia = new Date(nuevaVigencia);
@@ -1719,77 +1434,11 @@ PersonalSeguridad.prototype.renovarLicencia = async function (
 };
 
 /**
- * Obtener personal con licencias por vencer
- * GET /api/v1/personal/licencias-por-vencer?dias=30
- */
-export const getLicenciasPorVencer = async (req, res) => {
-  try {
-    const { dias = 30 } = req.query;
-
-    const hoy = new Date();
-    const fechaLimite = new Date();
-    fechaLimite.setDate(hoy.getDate() + parseInt(dias));
-
-    const personal = await PersonalSeguridad.findAll({
-      where: {
-        licencia: { [Op.ne]: null },
-        vigencia: {
-          [Op.between]: [hoy, fechaLimite],
-        },
-        status: "Activo",
-        estado: 1,
-        deleted_at: null,
-      },
-      include: [
-        {
-          model: Cargo,
-          as: "PersonalSeguridadCargo",
-          attributes: ["id", "nombre"],
-        },
-      ],
-      order: [["vigencia", "ASC"]],
-    });
-
-    // Calcular días restantes para cada uno
-    const personalConDias = personal.map((p) => {
-      const vigencia = new Date(p.vigencia);
-      const diffTime = vigencia - hoy;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      return {
-        ...p.toJSON(),
-        dias_restantes: diffDays,
-      };
-    });
-
-    res.status(200).json({
-      success: true,
-      message: `Personal con licencias por vencer en los próximos ${dias} días`,
-      data: personalConDias,
-      total: personalConDias.length,
-      filtros: {
-        dias_adelante: parseInt(dias),
-        fecha_limite: fechaLimite.toISOString().split("T")[0],
-      },
-    });
-  } catch (error) {
-    console.error("❌ Error en getLicenciasPorVencer:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error al obtener licencias por vencer",
-      error: error.message,
-    });
-  }
-};
-
-/**
  * Personalizar JSON para respuestas API
- * Agrega campos calculados
  */
 PersonalSeguridad.prototype.toJSON = function () {
   const values = Object.assign({}, this.get());
 
-  // Agregar campos calculados
   values.nombre_completo = this.getNombreCompleto();
   values.nombre_formateado = this.getNombreFormateado();
   values.edad = this.getEdad();

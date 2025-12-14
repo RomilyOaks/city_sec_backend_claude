@@ -1,42 +1,100 @@
 /**
- * ============================================
- * RUTAS: src/routes/vehiculos.routes.js
- * ============================================
+ * ===================================================
+ * RUTAS: Vehículos
+ * ===================================================
  *
- * Rutas de Vehículos - VERSIÓN CORREGIDA
- * Define los endpoints REST para gestión de vehículos con control RBAC
- * Todos los nombres de campos corregidos
+ * Ruta: src/routes/vehiculos.routes.js
+ *
+ * VERSIÓN: 2.0.0
+ * FECHA: 2025-12-14
+ *
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ✅ Imports actualizados a validators/vehiculo.validator.js
+ * ✅ Validaciones centralizadas (sin inline)
+ * ✅ Headers con versionado
+ * ✅ Documentación completa
+ *
+ * Descripción:
+ * Define los endpoints REST para gestión de vehículos con control RBAC.
+ * Todos los nombres de campos corregidos según schema de BD.
+ *
+ * Endpoints Disponibles (13):
+ *
+ * Consultas:
+ * - GET    /vehiculos/stats - Estadísticas
+ * - GET    /vehiculos/disponibles - Vehículos disponibles
+ * - GET    /vehiculos - Listar con filtros
+ * - GET    /vehiculos/:id - Obtener uno
+ *
+ * CRUD:
+ * - POST   /vehiculos - Crear vehículo
+ * - PUT    /vehiculos/:id - Actualizar
+ * - DELETE /vehiculos/:id - Eliminar (soft)
+ *
+ * Operaciones:
+ * - PATCH  /vehiculos/:id/kilometraje - Actualizar KM
+ * - PATCH  /vehiculos/:id/estado - Cambiar estado
+ *
+ * Historial:
+ * - GET    /vehiculos/:id/historial - Historial de novedades
+ * - GET    /vehiculos/:id/abastecimientos - Historial combustible
+ * - POST   /vehiculos/:id/abastecimiento - Registrar carga
+ *
+ * Permisos Requeridos:
+ * - Lectura: operador, supervisor, admin
+ * - Escritura: supervisor, admin
+ * - Eliminación: admin
+ *
+ * @module routes/vehiculos
+ * @requires express
+ * @version 2.0.0
+ * @date 2025-12-14
  */
 
 import express from "express";
 const router = express.Router();
+
+// ==========================================
+// IMPORTAR CONTROLADOR
+// ==========================================
 import * as vehiculosController from "../controllers/vehiculosController.js";
+
+// ==========================================
+// IMPORTAR MIDDLEWARES DE AUTENTICACIÓN
+// ==========================================
 import {
   verificarToken,
   verificarRoles,
   requireAnyPermission,
 } from "../middlewares/authMiddleware.js";
-import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
-import { body, param, query, validationResult } from "express-validator";
 
-// Middleware de validación de errores
-const handleValidationErrors = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({
-      success: false,
-      message: "Errores de validación",
-      errors: errors.array(),
-    });
-  }
-  next();
-};
+// ==========================================
+// IMPORTAR VALIDADORES CENTRALIZADOS ✅
+// ==========================================
+import {
+  validateCreateVehiculo,
+  validateUpdateVehiculo,
+  validateActualizarKilometraje,
+  validateCambiarEstado,
+  validateRegistrarAbastecimiento,
+  validateVehiculoId,
+  validateQueryParams,
+} from "../validators/vehiculo.validator.js";
+
+// ==========================================
+// IMPORTAR MIDDLEWARE DE AUDITORÍA
+// ==========================================
+import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
+
+// ==========================================
+// RUTAS ESPECIALES (ANTES DE /:id)
+// ==========================================
 
 /**
- * @route   GET /api/vehiculos/stats
+ * @route   GET /api/v1/vehiculos/stats
  * @desc    Obtener estadísticas de vehículos
  * @access  Todos los usuarios autenticados
- * IMPORTANTE: Esta ruta debe ir ANTES de /api/vehiculos/disponibles y /:id
+ * IMPORTANTE: Esta ruta debe ir ANTES de /:id
  */
 router.get(
   "/stats",
@@ -45,210 +103,88 @@ router.get(
 );
 
 /**
- * @route   GET /api/vehiculos/disponibles
+ * @route   GET /api/v1/vehiculos/disponibles
  * @desc    Obtener vehículos disponibles (no asignados a novedades activas)
  * @access  Operador, Supervisor, Administrador
- * @query   tipo_id
+ * @query   tipo_id (opcional)
  */
 router.get(
   "/disponibles",
   verificarToken,
   verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
-  [
-    query("tipo_id")
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage("tipo_id debe ser un número positivo"),
-    handleValidationErrors,
-  ],
   vehiculosController.getVehiculosDisponibles
 );
 
+// ==========================================
+// RUTAS CRUD PRINCIPALES
+// ==========================================
+
 /**
- * @route   GET /api/vehiculos
+ * @route   GET /api/v1/vehiculos
  * @desc    Obtener todos los vehículos con filtros opcionales
  * @access  Todos los usuarios autenticados
- * @query   tipo, tipo_id, estado_operativo, unidad_id, search, page, limit
+ * @query   tipo_id, estado_operativo, unidad_id, search, page, limit
  */
 router.get(
   "/",
   verificarToken,
-  [
-    query("tipo").optional().isString().trim(),
-    query("tipo_id")
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage("tipo_id debe ser un número positivo"),
-    query("estado_operativo")
-      .optional()
-      .isIn([
-        "DISPONIBLE",
-        "EN_SERVICIO",
-        "MANTENIMIENTO",
-        "REPARACION",
-        "FUERA_DE_SERVICIO",
-        "INACTIVO",
-      ])
-      .withMessage("Estado operativo no válido"),
-    query("unidad_id")
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage("unidad_id debe ser un número positivo"),
-    query("search").optional().isString().trim(),
-    query("page")
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage("page debe ser un número positivo"),
-    query("limit")
-      .optional()
-      .isInt({ min: 1, max: 100 })
-      .withMessage("limit debe estar entre 1 y 100"),
-    handleValidationErrors,
-  ],
+  validateQueryParams,
   vehiculosController.getAllVehiculos
 );
 
 /**
- * @route   GET /api/vehiculos/:id/historial
+ * @route   GET /api/v1/vehiculos/:id/historial
  * @desc    Obtener historial de uso del vehículo (novedades)
  * @access  Todos los usuarios autenticados
- * @query   limit
+ * @query   limit (opcional)
+ * IMPORTANTE: Esta ruta debe ir ANTES de /:id
  */
 router.get(
   "/:id/historial",
   verificarToken,
-  [
-    param("id").isInt({ min: 1 }).withMessage("ID de vehículo inválido"),
-    query("limit")
-      .optional()
-      .isInt({ min: 1, max: 100 })
-      .withMessage("limit debe estar entre 1 y 100"),
-    handleValidationErrors,
-  ],
+  validateVehiculoId,
   vehiculosController.getHistorialVehiculo
 );
 
 /**
- * @route   GET /api/vehiculos/:id/abastecimientos
+ * @route   GET /api/v1/vehiculos/:id/abastecimientos
  * @desc    Obtener historial de abastecimientos de un vehículo
  * @access  Todos los usuarios autenticados
- * @query   fecha_inicio, fecha_fin, limit
+ * @query   fecha_inicio, fecha_fin, limit (opcionales)
+ * IMPORTANTE: Esta ruta debe ir ANTES de /:id
  */
 router.get(
   "/:id/abastecimientos",
   verificarToken,
-  [
-    param("id").isInt({ min: 1 }).withMessage("ID de vehículo inválido"),
-    query("fecha_inicio")
-      .optional()
-      .isISO8601()
-      .withMessage("Fecha inicio inválida"),
-    query("fecha_fin").optional().isISO8601().withMessage("Fecha fin inválida"),
-    query("limit")
-      .optional()
-      .isInt({ min: 1, max: 100 })
-      .withMessage("limit debe estar entre 1 y 100"),
-    handleValidationErrors,
-  ],
+  validateVehiculoId,
   vehiculosController.getHistorialAbastecimientos
 );
 
 /**
- * @route   GET /api/vehiculos/:id
+ * @route   GET /api/v1/vehiculos/:id
  * @desc    Obtener un vehículo específico por ID
  * @access  Todos los usuarios autenticados
  */
 router.get(
   "/:id",
   verificarToken,
-  [
-    param("id").isInt({ min: 1 }).withMessage("ID de vehículo inválido"),
-    handleValidationErrors,
-  ],
+  validateVehiculoId,
   vehiculosController.getVehiculoById
 );
 
 /**
- * @route   POST /api/vehiculos
+ * @route   POST /api/v1/vehiculos
  * @desc    Crear un nuevo vehículo
  * @access  Supervisor, Administrador
- * @body    tipo_id, placa, marca, nombre, etc.
- * 🔥 CORREGIDO: Validadores usan nombres correctos de campos
+ * @body    tipo_id, placa, unidad_oficina_id (requeridos)
+ *          marca, modelo_vehiculo, anio_vehiculo, color_vehiculo, etc (opcionales)
  */
 router.post(
   "/",
   verificarToken,
   verificarRoles(["super_admin", "admin"]),
   requireAnyPermission(["vehiculos.vehiculos.create"]),
-  [
-    body("tipo_id")
-      .notEmpty()
-      .withMessage("El tipo de vehículo es requerido")
-      .isInt({ min: 1 })
-      .withMessage("tipo_id debe ser un número válido"),
-
-    body("unidad_oficina_id")
-      .notEmpty()
-      .withMessage("La unidad es requerida")
-      .isInt({ min: 1 })
-      .withMessage("unidad_oficina_id debe ser un número válido"),
-
-    body("placa")
-      .notEmpty()
-      .withMessage("La placa es requerida")
-      .matches(/^[A-Z0-9-]{6,10}$/i)
-      .withMessage("Formato de placa inválido (6-10 caracteres alfanuméricos)"),
-
-    body("codigo_vehiculo")
-      .optional()
-      .isLength({ max: 10 })
-      .withMessage("El código no puede exceder 10 caracteres"),
-
-    body("nombre")
-      .optional()
-      .isLength({ max: 100 })
-      .withMessage("El nombre no puede exceder 100 caracteres"),
-
-    body("marca")
-      .optional()
-      .isLength({ max: 50 })
-      .withMessage("La marca no puede exceder 50 caracteres"),
-
-    // 🔥 CORREGIDO: modelo_vehiculo (no "modelo")
-    body("modelo_vehiculo")
-      .optional()
-      .isLength({ max: 50 })
-      .withMessage("El modelo no puede exceder 50 caracteres"),
-
-    // 🔥 CORREGIDO: anio_vehiculo (no "anio")
-    body("anio_vehiculo")
-      .optional()
-      .isInt({ min: 1900, max: new Date().getFullYear() + 1 })
-      .withMessage("Año inválido"),
-
-    // 🔥 CORREGIDO: color_vehiculo (no "color")
-    body("color_vehiculo")
-      .optional()
-      .isLength({ max: 30 })
-      .withMessage("El color no puede exceder 30 caracteres"),
-
-    body("kilometraje_inicial")
-      .optional()
-      .isInt({ min: 0 })
-      .withMessage("El kilometraje inicial debe ser un número positivo"),
-
-    body("fec_soat")
-      .optional()
-      .isISO8601()
-      .withMessage("Fecha de SOAT inválida"),
-
-    body("fec_manten")
-      .optional()
-      .isISO8601()
-      .withMessage("Fecha de mantenimiento inválida"),
-
-    handleValidationErrors,
-  ],
+  validateCreateVehiculo,
   registrarAuditoria({
     entidad: "Vehiculo",
     severidad: "MEDIA",
@@ -258,54 +194,16 @@ router.post(
 );
 
 /**
- * @route   PUT /api/vehiculos/:id
+ * @route   PUT /api/v1/vehiculos/:id
  * @desc    Actualizar un vehículo existente
  * @access  Supervisor, Administrador
- * 🔥 CORREGIDO: Validadores usan nombres correctos de campos
  */
 router.put(
   "/:id",
   verificarToken,
   verificarRoles(["super_admin", "admin", "supervisor"]),
   requireAnyPermission(["vehiculos.vehiculos.update"]),
-  [
-    param("id").isInt({ min: 1 }).withMessage("ID de vehículo inválido"),
-
-    body("placa")
-      .optional()
-      .matches(/^[A-Z0-9-]{6,10}$/i)
-      .withMessage("Formato de placa inválido"),
-
-    body("codigo_vehiculo")
-      .optional()
-      .isLength({ max: 10 })
-      .withMessage("El código no puede exceder 10 caracteres"),
-
-    body("marca")
-      .optional()
-      .isLength({ max: 50 })
-      .withMessage("La marca no puede exceder 50 caracteres"),
-
-    // 🔥 CORREGIDO: modelo_vehiculo
-    body("modelo_vehiculo")
-      .optional()
-      .isLength({ max: 50 })
-      .withMessage("El modelo no puede exceder 50 caracteres"),
-
-    // 🔥 CORREGIDO: anio_vehiculo
-    body("anio_vehiculo")
-      .optional()
-      .isInt({ min: 1900, max: new Date().getFullYear() + 1 })
-      .withMessage("Año inválido"),
-
-    // 🔥 CORREGIDO: color_vehiculo
-    body("color_vehiculo")
-      .optional()
-      .isLength({ max: 30 })
-      .withMessage("El color no puede exceder 30 caracteres"),
-
-    handleValidationErrors,
-  ],
+  validateUpdateVehiculo,
   registrarAuditoria({
     entidad: "Vehiculo",
     severidad: "MEDIA",
@@ -314,10 +212,15 @@ router.put(
   vehiculosController.updateVehiculo
 );
 
+// ==========================================
+// RUTAS DE OPERACIONES ESPECIALES
+// ==========================================
+
 /**
- * @route   PATCH /api/vehiculos/:id/kilometraje
+ * @route   PATCH /api/v1/vehiculos/:id/kilometraje
  * @desc    Actualizar kilometraje del vehículo
  * @access  Operador, Supervisor, Administrador
+ * @body    kilometraje_nuevo (requerido), observaciones (opcional)
  */
 router.patch(
   "/:id/kilometraje",
@@ -327,22 +230,7 @@ router.patch(
     "vehiculos.kilometraje.update",
     "vehiculos.vehiculos.update",
   ]),
-  [
-    param("id").isInt({ min: 1 }).withMessage("ID de vehículo inválido"),
-
-    body("kilometraje_nuevo")
-      .notEmpty()
-      .withMessage("El kilometraje nuevo es requerido")
-      .isInt({ min: 0 })
-      .withMessage("El kilometraje debe ser un número positivo"),
-
-    body("observaciones")
-      .optional()
-      .isLength({ max: 500 })
-      .withMessage("Las observaciones no pueden exceder 500 caracteres"),
-
-    handleValidationErrors,
-  ],
+  validateActualizarKilometraje,
   registrarAuditoria({
     entidad: "Vehiculo",
     severidad: "BAJA",
@@ -352,9 +240,10 @@ router.patch(
 );
 
 /**
- * @route   PATCH /api/vehiculos/:id/estado
+ * @route   PATCH /api/v1/vehiculos/:id/estado
  * @desc    Cambiar estado operativo del vehículo
  * @access  Operador, Supervisor, Administrador
+ * @body    estado_operativo (requerido), observaciones (opcional)
  */
 router.patch(
   "/:id/estado",
@@ -364,29 +253,7 @@ router.patch(
     "vehiculos.estado.update",
     "vehiculos.vehiculos.update",
   ]),
-  [
-    param("id").isInt({ min: 1 }).withMessage("ID de vehículo inválido"),
-
-    body("estado_operativo")
-      .notEmpty()
-      .withMessage("El estado operativo es requerido")
-      .isIn([
-        "DISPONIBLE",
-        "EN_SERVICIO",
-        "MANTENIMIENTO",
-        "REPARACION",
-        "FUERA_DE_SERVICIO",
-        "INACTIVO",
-      ])
-      .withMessage("Estado operativo no válido"),
-
-    body("observaciones")
-      .optional()
-      .isLength({ max: 500 })
-      .withMessage("Las observaciones no pueden exceder 500 caracteres"),
-
-    handleValidationErrors,
-  ],
+  validateCambiarEstado,
   registrarAuditoria({
     entidad: "Vehiculo",
     severidad: "MEDIA",
@@ -396,10 +263,11 @@ router.patch(
 );
 
 /**
- * @route   POST /api/vehiculos/:id/abastecimiento
+ * @route   POST /api/v1/vehiculos/:id/abastecimiento
  * @desc    Registrar abastecimiento de combustible
  * @access  Operador, Supervisor, Administrador
- * @body    fecha_hora, tipo_combustible, cantidad_galones, km_actual, etc.
+ * @body    fecha_hora, tipo_combustible, cantidad_galones (requeridos)
+ *          precio_galon, km_actual, grifo, observaciones (opcionales)
  */
 router.post(
   "/:id/abastecimiento",
@@ -409,47 +277,7 @@ router.post(
     "vehiculos.abastecimiento.create",
     "vehiculos.vehiculos.update",
   ]),
-  [
-    param("id").isInt({ min: 1 }).withMessage("ID de vehículo inválido"),
-
-    body("fecha_hora")
-      .notEmpty()
-      .withMessage("La fecha y hora son requeridas")
-      .isISO8601()
-      .withMessage("Formato de fecha inválido"),
-
-    body("tipo_combustible")
-      .notEmpty()
-      .withMessage("El tipo de combustible es requerido")
-      .isIn([
-        "GASOLINA_84",
-        "GASOLINA_90",
-        "GASOLINA_95",
-        "GASOLINA_97",
-        "DIESEL",
-        "GLP",
-        "GNV",
-      ])
-      .withMessage("Tipo de combustible no válido"),
-
-    body("cantidad_galones")
-      .notEmpty()
-      .withMessage("La cantidad es requerida")
-      .isFloat({ min: 0.1 })
-      .withMessage("La cantidad debe ser mayor a 0"),
-
-    body("precio_galon")
-      .optional()
-      .isFloat({ min: 0 })
-      .withMessage("El precio debe ser un número positivo"),
-
-    body("km_actual")
-      .optional()
-      .isInt({ min: 0 })
-      .withMessage("El kilometraje debe ser un número positivo"),
-
-    handleValidationErrors,
-  ],
+  validateRegistrarAbastecimiento,
   registrarAuditoria({
     entidad: "Abastecimiento",
     severidad: "BAJA",
@@ -459,7 +287,7 @@ router.post(
 );
 
 /**
- * @route   DELETE /api/vehiculos/:id
+ * @route   DELETE /api/v1/vehiculos/:id
  * @desc    Eliminar un vehículo (soft delete)
  * @access  Administrador
  */
@@ -468,10 +296,7 @@ router.delete(
   verificarToken,
   verificarRoles(["super_admin", "admin"]),
   requireAnyPermission(["vehiculos.vehiculos.delete"]),
-  [
-    param("id").isInt({ min: 1 }).withMessage("ID de vehículo inválido"),
-    handleValidationErrors,
-  ],
+  validateVehiculoId,
   registrarAuditoria({
     entidad: "Vehiculo",
     severidad: "ALTA",

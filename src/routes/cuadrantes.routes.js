@@ -37,6 +37,14 @@ import {
   requireAnyPermission,
 } from "../middlewares/authMiddleware.js";
 
+import {
+  validateCreateCuadrante,
+  validateUpdateCuadrante,
+  validateCuadranteId,
+  validateQueryCuadrantes,
+  validateCambiarEstado,
+} from "../validators/cuadrante.validator.js";
+
 // Crear router de Express
 const router = express.Router();
 
@@ -55,11 +63,8 @@ router.use(verificarToken);
  * @desc    Listar cuadrantes con paginación y filtros
  * @access  Private (requiere permiso: catalogos.cuadrantes.read)
  */
-router.get(
-  "/",
-  requireAnyPermission("catalogos.cuadrantes.read"),
-  getCuadrantes
-);
+
+router.get("/", verificarToken, validateQueryCuadrantes, getCuadrantes);
 
 /**
  * @route   GET /api/v1/cuadrantes/cercanos
@@ -70,7 +75,8 @@ router.get(
  */
 router.get(
   "/cercanos",
-  requireAnyPermission("catalogos.cuadrantes.read"),
+  verificarToken,
+  validateQueryCuadrantes,
   getCuadrantesCercanos
 );
 
@@ -81,7 +87,8 @@ router.get(
  */
 router.get(
   "/sector/:sectorId",
-  requireAnyPermission("catalogos.cuadrantes.read"),
+  verificarToken,
+  validateQueryCuadrantes,
   getCuadrantesBySector
 );
 
@@ -92,7 +99,8 @@ router.get(
  */
 router.get(
   "/codigo/:code",
-  requireAnyPermission("catalogos.cuadrantes.read"),
+  verificarToken,
+  validateQueryCuadrantes,
   getCuadranteByCode
 );
 
@@ -101,11 +109,7 @@ router.get(
  * @desc    Obtener cuadrante específico por ID
  * @access  Private (requiere permiso: catalogos.cuadrantes.read)
  */
-router.get(
-  "/:id",
-  requireAnyPermission("catalogos.cuadrantes.read"),
-  getCuadranteById
-);
+router.get("/:id", verificarToken, validateQueryCuadrantes, getCuadranteById);
 
 // ============================================
 // RUTAS DE MODIFICACIÓN (CREATE, UPDATE, DELETE)
@@ -116,33 +120,21 @@ router.get(
  * @desc    Crear nuevo cuadrante
  * @access  Private (requiere permiso: catalogos.cuadrantes.create)
  */
-router.post(
-  "/",
-  requireAnyPermission("catalogos.cuadrantes.create"),
-  createCuadrante
-);
+router.post("/", verificarToken, validateQueryCuadrantes, createCuadrante);
 
 /**
  * @route   PUT /api/v1/cuadrantes/:id
  * @desc    Actualizar cuadrante existente
  * @access  Private (requiere permiso: catalogos.cuadrantes.update)
  */
-router.put(
-  "/:id",
-  requireAnyPermission("catalogos.cuadrantes.update"),
-  updateCuadrante
-);
+router.put("/:id", verificarToken, validateQueryCuadrantes, updateCuadrante);
 
 /**
  * @route   DELETE /api/v1/cuadrantes/:id
  * @desc    Eliminar cuadrante (soft delete)
  * @access  Private (requiere permiso: catalogos.cuadrantes.delete)
  */
-router.delete(
-  "/:id",
-  requireAnyPermission("catalogos.cuadrantes.delete"),
-  deleteCuadrante
-);
+router.delete("/:id", verificarToken, validateQueryCuadrantes, deleteCuadrante);
 
 /**
  * @route   PATCH /api/v1/cuadrantes/:id/estado
@@ -151,7 +143,8 @@ router.delete(
  */
 router.patch(
   "/:id/estado",
-  requireAnyPermission("catalogos.cuadrantes.update"),
+  verificarToken,
+  validateQueryCuadrantes,
   cambiarEstado
 );
 

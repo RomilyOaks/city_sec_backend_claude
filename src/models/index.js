@@ -431,12 +431,12 @@ HistorialEstadoNovedad.belongsTo(Usuario, {
  */
 Sector.hasMany(Cuadrante, {
   foreignKey: "sector_id",
-  as: "sectorCuadrante",
+  as: "cuadrantes",
 });
 
 Cuadrante.belongsTo(Sector, {
   foreignKey: "sector_id",
-  as: "cuadranteSector",
+  as: "sector",
 });
 
 /**
@@ -445,13 +445,13 @@ Cuadrante.belongsTo(Sector, {
 Ubigeo.hasMany(Sector, {
   foreignKey: "ubigeo",
   sourceKey: "ubigeo_code",
-  as: "ubigeoSector",
+  as: "ubigeo_rel",
 });
 
 Sector.belongsTo(Ubigeo, {
   foreignKey: "ubigeo",
   targetKey: "ubigeo_code",
-  as: "sectorUbigeo",
+  as: "sector",
 });
 
 /**

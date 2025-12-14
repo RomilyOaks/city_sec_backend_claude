@@ -1,34 +1,36 @@
 /**
+ * ===================================================
+ * CONTROLADOR: Cuadrantes
+ * ===================================================
+ *
  * Ruta: src/controllers/cuadrantesController.js
  *
+ * VERSIÓN: 2.2.0
+ * FECHA: 2025-12-14
+ *
+ * CAMBIOS EN ESTA VERSIÓN:
+ * ❌ Eliminados console.logs de debugging
+ * ✅ Solo logs de errores críticos
+ * ✅ Código limpio y profesional
+ *
  * Descripción:
- * Controlador para la gestión de cuadrantes del sistema de seguridad ciudadana.
- * Los cuadrantes son subdivisiones de sectores que permiten un control territorial
- * más granular para patrullaje y asignación de recursos.
+ * Controlador para gestión avanzada de cuadrantes.
+ * Incluye búsqueda geoespacial y filtros complejos.
  *
- * Funcionalidades:
- * - CRUD completo de cuadrantes
- * - Búsqueda por sector
- * - Búsqueda por código único
- * - Búsqueda geoespacial (cuadrantes cercanos)
- * - Estadísticas por sector
- * - Activar/desactivar cuadrantes
- * - Validación de datos de entrada
- *
- * Endpoints:
- * - GET    /api/v1/cuadrantes           - Listar todos
- * - GET    /api/v1/cuadrantes/:id       - Obtener por ID
- * - GET    /api/v1/cuadrantes/sector/:sectorId - Por sector
- * - GET    /api/v1/cuadrantes/codigo/:code - Por código
- * - GET    /api/v1/cuadrantes/cercanos   - Búsqueda geoespacial
- * - POST   /api/v1/cuadrantes           - Crear nuevo
- * - PUT    /api/v1/cuadrantes/:id       - Actualizar
- * - DELETE /api/v1/cuadrantes/:id       - Eliminar (soft delete)
- * - PATCH  /api/v1/cuadrantes/:id/estado - Activar/desactivar
+ * Funciones (9):
+ * - getCuadrantes() - GET /cuadrantes (con paginación)
+ * - getCuadranteById() - GET /cuadrantes/:id
+ * - getCuadrantesBySector() - GET /cuadrantes/sector/:sectorId
+ * - getCuadranteByCode() - GET /cuadrantes/codigo/:code
+ * - getCuadrantesCercanos() - GET /cuadrantes/cercanos (geoespacial)
+ * - createCuadrante() - POST /cuadrantes
+ * - updateCuadrante() - PUT /cuadrantes/:id
+ * - deleteCuadrante() - DELETE /cuadrantes/:id
+ * - cambiarEstado() - PATCH /cuadrantes/:id/estado
  *
  * @module controllers/cuadrantesController
- * @requires models/Cuadrante
- * @requires models/Sector
+ * @version 2.2.0
+ * @date 2025-12-14
  */
 
 import { Cuadrante, Sector } from "../models/index.js";
@@ -367,8 +369,8 @@ export const createCuadrante = async (req, res) => {
       radio_metros,
       color_mapa,
     } = req.body;
-
-    const created_by = req.usuario.userId;
+    //    console.log("req.usuario:", req.usuario);
+    const created_by = req.usuario.id;
 
     // Validar campos requeridos
     if (!nombre || !sector_id) {
@@ -468,7 +470,7 @@ export const updateCuadrante = async (req, res) => {
       color_mapa,
     } = req.body;
 
-    const updated_by = req.usuario.userId;
+    const updated_by = req.usuario.id;
 
     // Buscar cuadrante
     const cuadrante = await Cuadrante.findByPk(id);
@@ -536,7 +538,7 @@ export const updateCuadrante = async (req, res) => {
 export const deleteCuadrante = async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted_by = req.usuario.userId;
+    const deleted_by = req.usuario.id;
 
     // Buscar cuadrante
     const cuadrante = await Cuadrante.findByPk(id);
@@ -583,7 +585,7 @@ export const cambiarEstado = async (req, res) => {
   try {
     const { id } = req.params;
     const { estado } = req.body;
-    const updated_by = req.usuario.userId;
+    const updated_by = req.usuario.id;
 
     // Validar parámetro estado
     if (typeof estado !== "boolean") {
