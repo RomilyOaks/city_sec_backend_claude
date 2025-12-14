@@ -74,7 +74,7 @@ const AuditoriaAccion = sequelize.define(
       comment: "User agent del navegador",
     },
     resultado: {
-      type: DataTypes.ENUM("EXITO", "FALLO", "DENEGADO"),
+      type: DataTypes.ENUM("EXITO", "FALLO", "DENEGADO", "SUCCESS", "ERROR"),
       defaultValue: "EXITO",
       comment: "Resultado de la operación",
     },

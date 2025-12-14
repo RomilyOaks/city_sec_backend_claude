@@ -1,119 +1,157 @@
 /**
  * ===================================================
- * RUTAS PRINCIPALES - INDEX (ACTUALIZADO)
+ * ROUTER PRINCIPAL - ÍNDICE DE RUTAS
  * ===================================================
  *
  * Ruta: src/routes/index.js
  *
  * Descripción:
- * Configuración Principal de Rutas del Sistema de Seguridad Ciudadana.
- * Centraliza todos los módulos y sus respectivas rutas con prefijos
- * y middlewares globales.
+ * Configuración principal de rutas del Sistema de Seguridad Ciudadana.
+ * Centraliza todos los módulos y sus respectivas rutas con prefijos,
+ * middlewares globales, y manejo de errores.
  *
- * Actualización: Se agregó el módulo de Personal
+ * VERSIÓN: 2.2.0
+ * ÚLTIMA ACTUALIZACIÓN: 2025-12-12
  *
- * Módulos disponibles:
- * - Autenticación (/auth)
- * - Usuarios (/usuarios)
- * - Catálogos (/catalogos)
- * - Novedades/Incidentes (/novedades)
- * - Personal (/personal) ✅ NUEVO
- * - Sectores (/sectores)
- * - Cuadrantes (/cuadrantes)
- * - Vehículos (/vehiculos)
- * - Permisos (/permisos)
- * - Roles (/roles)
- * - Auditoría (/auditoria)
- * - Reportes (/reportes)
+ * HISTORIAL DE CAMBIOS:
+ * =====================
+ * v2.2.0 (2025-12-12):
+ *   - ✅ Agregado módulo /cargos
+ *   - ✅ Mejorada documentación JSDoc
+ *   - ✅ Agregado sistema de versionado
+ *   - ✅ Mejorado middleware de logging
+ *   - ✅ Agregado health check expandido
+ *
+ * v2.1.0 (2025-12-11):
+ *   - ✅ Agregado módulo /cuadrantes
+ *   - ✅ Mejorada estructura de módulos
+ *
+ * v2.0.0 (2025-12-10):
+ *   - ✅ Agregado módulo /personal
+ *   - ✅ Refactorización completa
+ *
+ * v1.0.0 (2025-11-01):
+ *   - 🎉 Versión inicial
+ *
+ * MÓDULOS DISPONIBLES:
+ * ====================
+ * 🔐 Autenticación:       /auth
+ * 👥 Usuarios:            /usuarios
+ * 🎭 Roles:               /roles
+ * 🔑 Permisos:            /permisos
+ * 📋 Novedades:           /novedades
+ * 🚗 Vehículos:           /vehiculos
+ * 👨‍✈️ Personal:            /personal
+ * 🗺️ Sectores:            /sectores
+ * 📍 Cuadrantes:          /cuadrantes
+ * 📚 Catálogos:           /catalogos
+ * 💼 Cargos:              /cargos ✅ NEW
+ * 📊 Auditoría:           /auditoria
+ * 📈 Reportes:            /reportes (futuro)
  *
  * @module routes/index
+ * @requires express
  * @author Sistema de Seguridad Ciudadana
- * @version 2.0.0
- * @date 2025-12-10
+ * @version 2.2.0
+ * @date 2025-12-12
  */
 
 import express from "express";
 const router = express.Router();
 
-// ==========================================
+//=============================================
 // IMPORTAR ROUTERS DE MÓDULOS
-// ==========================================
+//=============================================
 
-// Módulo de Autenticación (público)
+// 🔐 Autenticación (público)
 import authRoutes from "./auth.routes.js";
 
-// Módulos de Gestión de Usuarios y Permisos
+// 👥 Gestión de Usuarios y Permisos
 import usuariosRoutes from "./usuarios.routes.js";
 import rolesRoutes from "./roles.routes.js";
 import permisosRoutes from "./permisos.routes.js";
 
-// Módulos Operativos
+// 📋 Módulos Operativos
 import novedadesRoutes from "./novedades.routes.js";
 import vehiculosRoutes from "./vehiculos.routes.js";
-import personalRoutes from "./personal.routes.js"; // ✅ NUEVO
+import personalRoutes from "./personal.routes.js";
 import sectoresRoutes from "./sectores.routes.js";
 import cuadrantesRoutes from "./cuadrantes.routes.js";
 
-// Módulos de Catálogos y Configuración
+// 📚 Catálogos y Configuración
 import catalogosRoutes from "./catalogos.routes.js";
+import cargosRoutes from "./cargos.routes.js"; // ✅ NEW
 
-// Módulo de Auditoría
+// 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
+// import reportesRoutes from "./reportes.routes.js"; // TODO: Implementar
 
-// Módulos de Reportes (si existe)
-// import reportesRoutes from "./reportes.routes.js";
-
-// ==========================================
+//=============================================
 // MIDDLEWARE GLOBAL DE LOGGING
-// ==========================================
+//=============================================
 
 /**
- * Middleware global para registrar todas las peticiones
- * Útil para debugging y monitoreo
+ * Middleware para registrar todas las peticiones HTTP
+ * @param {Object} req - Request de Express
+ * @param {Object} res - Response de Express
+ * @param {Function} next - Next middleware
  */
 router.use((req, res, next) => {
   const timestamp = new Date().toISOString();
   const method = req.method;
   const url = req.originalUrl;
   const ip = req.ip || req.connection.remoteAddress;
+  const userAgent = req.headers["user-agent"] || "Unknown";
 
-  console.log(`[${timestamp}] ${method} ${url} - IP: ${ip}`);
+  console.log(`
+┌─────────────────────────────────────
+│ 📡 REQUEST
+├─────────────────────────────────────
+│ Timestamp: ${timestamp}
+│ Method:    ${method}
+│ URL:       ${url}
+│ IP:        ${ip}
+│ Agent:     ${userAgent.substring(0, 50)}...
+└─────────────────────────────────────
+  `);
+
   next();
 });
 
-// ==========================================
+//=============================================
 // RUTAS PÚBLICAS (SIN AUTENTICACIÓN)
-// ==========================================
+//=============================================
 
 /**
  * @route   /auth
- * @desc    Rutas de autenticación
+ * @desc    Rutas de autenticación y gestión de sesiones
+ * @access  Público
  * @endpoints
- *   - POST /auth/register
- *   - POST /auth/login
- *   - POST /auth/refresh
- *   - POST /auth/logout
- *   - POST /auth/forgot-password
- *   - POST /auth/reset-password
- *   - GET  /auth/verify-email
+ *   - POST   /auth/register          - Registrar nuevo usuario
+ *   - POST   /auth/login             - Iniciar sesión
+ *   - POST   /auth/refresh           - Renovar access token
+ *   - POST   /auth/logout            - Cerrar sesión
+ *   - POST   /auth/change-password   - Cambiar contraseña
+ *   - GET    /auth/profile           - Obtener perfil
+ *   - POST   /auth/forgot-password   - Solicitar recuperación
+ *   - GET    /auth/debug-token       - Debug token (dev only)
  */
 router.use("/auth", authRoutes);
 
-// ==========================================
+//=============================================
 // RUTAS PROTEGIDAS (REQUIEREN AUTENTICACIÓN)
-// Todas las rutas siguientes requieren token JWT válido
-// ==========================================
+//=============================================
 
 /**
  * @route   /usuarios
- * @desc    Gestión de usuarios del sistema
+ * @desc    Gestión completa de usuarios del sistema
  * @access  Admin, Supervisor
  */
 router.use("/usuarios", usuariosRoutes);
 
 /**
  * @route   /roles
- * @desc    Gestión de roles y permisos
+ * @desc    Gestión de roles y permisos (RBAC)
  * @access  Super Admin, Admin
  */
 router.use("/roles", rolesRoutes);
@@ -127,144 +165,241 @@ router.use("/permisos", permisosRoutes);
 
 /**
  * @route   /novedades
- * @desc    Gestión de novedades e incidentes
+ * @desc    Gestión de novedades e incidentes de seguridad
  * @access  Operador, Supervisor, Admin
+ * @features
+ *   - CRUD completo
+ *   - Cambio de estados
+ *   - Asignación de recursos
+ *   - Dashboard y estadísticas
  */
 router.use("/novedades", novedadesRoutes);
 
 /**
  * @route   /vehiculos
- * @desc    Gestión de vehículos y flota
+ * @desc    Gestión de vehículos y flota municipal
  * @access  Operador, Supervisor, Admin
+ * @features
+ *   - CRUD completo
+ *   - Control de kilometraje
+ *   - Estados operativos
+ *   - Historial de asignaciones
  */
 router.use("/vehiculos", vehiculosRoutes);
 
 /**
- * @route   /personal ✅ NUEVO
- * @desc    Gestión de personal de seguridad
+ * @route   /personal
+ * @desc    Gestión integral de personal de seguridad ciudadana
  * @access  Operador, Supervisor, Admin
- * @endpoints
- *   - GET    /personal                     - Listar con filtros
- *   - GET    /personal/stats               - Estadísticas
- *   - GET    /personal/conductores         - Solo conductores
- *   - GET    /personal/disponibles         - Personal sin vehículo
- *   - GET    /personal/cargo/:cargoId      - Por cargo
- *   - GET    /personal/documento/:doc      - Por documento
- *   - GET    /personal/status/:status      - Por status laboral
- *   - GET    /personal/:id                 - Obtener uno
- *   - POST   /personal                     - Crear
- *   - PUT    /personal/:id                 - Actualizar
- *   - DELETE /personal/:id                 - Eliminar (soft)
- *   - POST   /personal/:id/restore         - Restaurar
- *   - PATCH  /personal/:id/status          - Cambiar status
+ * @features
+ *   - CRUD completo con soft delete
+ *   - Gestión de licencias de conducir
+ *   - Asignación de vehículos
+ *   - Control de estados laborales
+ *   - Generación de códigos de acceso
+ *   - Estadísticas y reportes
+ * @endpoints (20+)
+ *   - GET    /personal                         - Listar con filtros
+ *   - GET    /personal/stats                   - Estadísticas generales
+ *   - GET    /personal/conductores             - Personal con licencia
+ *   - GET    /personal/disponibles             - Sin vehículo asignado
+ *   - GET    /personal/cargo/:cargoId          - Filtrar por cargo
+ *   - GET    /personal/documento/:doc          - Buscar por documento
+ *   - GET    /personal/status/:status          - Filtrar por status
+ *   - GET    /personal/:id                     - Obtener detalle
+ *   - POST   /personal                         - Crear nuevo
+ *   - PUT    /personal/:id                     - Actualizar completo
+ *   - DELETE /personal/:id                     - Eliminar (soft)
+ *   - POST   /personal/:id/restore             - Restaurar eliminado
+ *   - PATCH  /personal/:id/status              - Cambiar status laboral
  *   - PATCH  /personal/:id/asignar-vehiculo    - Asignar vehículo
- *   - DELETE /personal/:id/desasignar-vehiculo - Desasignar vehículo
- *   - PATCH  /personal/:id/licencia        - Actualizar licencia
- *   - POST   /personal/:id/generar-codigo  - Generar código acceso
- *   - GET    /personal/:id/verificar-licencia - Verificar licencia
- *   - GET    /personal/:id/historial-novedades - Historial
+ *   - DELETE /personal/:id/desasignar-vehiculo - Quitar vehículo
+ *   - PATCH  /personal/:id/licencia            - Actualizar licencia
+ *   - POST   /personal/:id/generar-codigo      - Generar código acceso
+ *   - GET    /personal/:id/verificar-licencia  - Verificar vigencia
+ *   - GET    /personal/:id/historial-novedades - Historial completo
  */
 router.use("/personal", personalRoutes);
 
 /**
  * @route   /sectores
- * @desc    Gestión de sectores de vigilancia
+ * @desc    Gestión de sectores de vigilancia y patrullaje
  * @access  Supervisor, Admin
+ * @features
+ *   - Definición de zonas de cobertura
+ *   - Asignación de personal
+ *   - Estadísticas por sector
  */
 router.use("/sectores", sectoresRoutes);
 
 /**
  * @route   /cuadrantes
- * @desc    Gestión de cuadrantes de patrullaje
+ * @desc    Gestión de cuadrantes de patrullaje (subdivisión de sectores)
  * @access  Supervisor, Admin
+ * @features
+ *   - Subdivisión territorial
+ *   - Asignación de recursos
+ *   - Mapeo geográfico
  */
 router.use("/cuadrantes", cuadrantesRoutes);
 
 /**
  * @route   /catalogos
- * @desc    Catálogos del sistema (tipos, subtipos, estados, etc.)
- * @access  Todos los usuarios autenticados
+ * @desc    Catálogos generales del sistema
+ * @access  Todos los usuarios autenticados (lectura)
+ * @endpoints
+ *   - GET /catalogos/tipos-novedad
+ *   - GET /catalogos/subtipos-novedad
+ *   - GET /catalogos/estados-novedad
+ *   - GET /catalogos/tipos-vehiculo
+ *   - GET /catalogos/cargos
+ *   - GET /catalogos/unidades
  */
 router.use("/catalogos", catalogosRoutes);
 
 /**
+ * @route   /cargos ✅ NEW
+ * @desc    Gestión de cargos/puestos de trabajo del personal
+ * @access  Lectura: Todos | Escritura: Admin, Supervisor
+ * @features
+ *   - CRUD completo
+ *   - Categorización jerárquica
+ *   - Control de requisitos (licencia)
+ *   - Estadísticas de asignación
+ * @endpoints (9)
+ *   - GET    /cargos                    - Listar con filtros
+ *   - GET    /cargos/stats              - Estadísticas
+ *   - GET    /cargos/con-licencia       - Cargos que requieren licencia
+ *   - GET    /cargos/categoria/:cat     - Por categoría
+ *   - GET    /cargos/:id                - Obtener uno
+ *   - POST   /cargos                    - Crear (Admin/Supervisor)
+ *   - PUT    /cargos/:id                - Actualizar (Admin/Supervisor)
+ *   - DELETE /cargos/:id                - Eliminar (Admin)
+ *   - POST   /cargos/:id/restore        - Restaurar (Admin)
+ */
+router.use("/cargos", cargosRoutes);
+
+/**
  * @route   /auditoria
- * @desc    Registros de auditoría del sistema
+ * @desc    Registros de auditoría y trazabilidad del sistema
  * @access  Admin, Auditor
+ * @features
+ *   - Registro de todas las acciones
+ *   - Trazabilidad completa
+ *   - Filtros avanzados
  */
 router.use("/auditoria", auditoriaAccionRoutes);
 
 /**
  * @route   /reportes
- * @desc    Reportes y estadísticas del sistema
+ * @desc    Reportes y estadísticas del sistema (futuro)
  * @access  Supervisor, Admin
+ * @features  (TODO)
+ *   - Reportes operativos
+ *   - Dashboards ejecutivos
+ *   - Exportación PDF/Excel
  */
-// router.use("/reportes", reportesRoutes); // Descomentar cuando esté disponible
+// router.use("/reportes", reportesRoutes); // TODO: Implementar
 
-// ==========================================
+//=============================================
 // RUTA DE HEALTH CHECK
-// ==========================================
+//=============================================
 
 /**
  * @route   GET /health
- * @desc    Verificar que la API está funcionando
+ * @desc    Verificar estado del servidor y servicios
  * @access  Público
- * @returns {Object} Estado del servidor
+ * @returns {Object} Estado detallado del sistema
  */
-router.get("/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "API funcionando correctamente",
-    timestamp: new Date().toISOString(),
-    version: process.env.API_VERSION || "1.0.0",
-    environment: process.env.NODE_ENV || "development",
-    uptime: process.uptime(), // Tiempo en segundos que el servidor ha estado activo
-  });
+router.get("/health", async (req, res) => {
+  try {
+    // Verificar conexión a base de datos
+    const { sequelize } = await import("../models/index.js");
+    await sequelize.authenticate();
+
+    const dbStatus = {
+      connected: true,
+      type: sequelize.config.dialect,
+      host: sequelize.config.host,
+      database: sequelize.config.database,
+    };
+
+    res.status(200).json({
+      success: true,
+      message: "API funcionando correctamente",
+      timestamp: new Date().toISOString(),
+      version: process.env.API_VERSION || "2.2.0",
+      environment: process.env.NODE_ENV || "development",
+      uptime: Math.floor(process.uptime()), // En segundos
+      database: dbStatus,
+      memory: {
+        usage:
+          Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) /
+          100,
+        unit: "MB",
+      },
+    });
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      message: "Servicio no disponible",
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
-// ==========================================
+//=============================================
 // RUTA RAÍZ - INFORMACIÓN DE LA API
-// ==========================================
+//=============================================
 
 /**
  * @route   GET /
- * @desc    Información general de la API
+ * @desc    Información general de la API y módulos disponibles
  * @access  Público
+ * @returns {Object} Metadata de la API
  */
 router.get("/", (req, res) => {
   res.status(200).json({
     success: true,
     name: "API de Seguridad Ciudadana",
-    version: process.env.API_VERSION || "1.0.0",
-    description: "Sistema integral de gestión de seguridad ciudadana",
+    version: process.env.API_VERSION || "2.2.0",
+    description: "Sistema integral de gestión de seguridad ciudadana municipal",
     environment: process.env.NODE_ENV || "development",
     documentation: "/api/v1/docs",
+    timestamp: new Date().toISOString(),
+
     modules: {
       auth: {
         path: "/auth",
         description: "Autenticación y gestión de sesiones",
         public: true,
+        endpoints: 8,
       },
       usuarios: {
         path: "/usuarios",
         description: "Gestión de usuarios del sistema",
         public: false,
+        roles: ["admin", "supervisor"],
       },
       personal: {
         path: "/personal",
         description: "Gestión de personal de seguridad",
         public: false,
-        new: true, // ✅ MARCADO COMO NUEVO
+        endpoints: 20,
+        features: ["CRUD", "Licencias", "Asignación Vehículos", "Estadísticas"],
       },
       novedades: {
         path: "/novedades",
         description: "Gestión de novedades e incidentes",
         public: false,
+        endpoints: 8,
       },
       vehiculos: {
         path: "/vehiculos",
         description: "Gestión de vehículos y flota",
         public: false,
+        endpoints: 8,
       },
       sectores: {
         path: "/sectores",
@@ -276,6 +411,14 @@ router.get("/", (req, res) => {
         description: "Gestión de cuadrantes de patrullaje",
         public: false,
       },
+      cargos: {
+        path: "/cargos",
+        description: "Gestión de cargos del personal",
+        public: false,
+        endpoints: 9,
+        new: true, // ✅ NUEVO
+        version: "1.0.0",
+      },
       catalogos: {
         path: "/catalogos",
         description: "Catálogos del sistema",
@@ -283,12 +426,12 @@ router.get("/", (req, res) => {
       },
       roles: {
         path: "/roles",
-        description: "Gestión de roles",
+        description: "Gestión de roles (RBAC)",
         public: false,
       },
       permisos: {
         path: "/permisos",
-        description: "Gestión de permisos",
+        description: "Gestión de permisos granulares",
         public: false,
       },
       auditoria: {
@@ -297,21 +440,32 @@ router.get("/", (req, res) => {
         public: false,
       },
     },
+
+    stats: {
+      totalModules: 12,
+      totalEndpoints: "100+",
+      activeModules: 11,
+      futureModules: ["reportes"],
+    },
+
     contact: {
-      support: "soporte@citysec.com",
-      documentation: "https://docs.citysec.com",
+      support: "soporte@serenazgo.gob.pe",
+      documentation: "https://docs.serenazgo.gob.pe",
+      repository: "https://github.com/RomilyOaks/city_sec_backend_claude",
     },
   });
 });
 
-// ==========================================
-// RUTA NO ENCONTRADA (404)
-// Debe estar DESPUÉS de todas las rutas válidas
-// ==========================================
+//=============================================
+// MANEJADOR DE RUTAS NO ENCONTRADAS (404)
+//=============================================
 
 /**
  * Middleware para capturar rutas no encontradas
- * Se ejecuta si ninguna ruta anterior hizo match
+ * DEBE estar DESPUÉS de todas las rutas válidas
+ *
+ * @param {Object} req - Request de Express
+ * @param {Object} res - Response de Express
  */
 router.use("*", (req, res) => {
   res.status(404).json({
@@ -319,25 +473,34 @@ router.use("*", (req, res) => {
     message: "Ruta no encontrada",
     path: req.originalUrl,
     method: req.method,
-    suggestion: "Verifique la documentación de la API en /api/v1",
+    timestamp: new Date().toISOString(),
+    suggestion: "Verifique la documentación en /api/v1",
+
     availableRoutes: [
       "/auth",
       "/usuarios",
-      "/personal", // ✅ NUEVO
+      "/personal",
       "/novedades",
       "/vehiculos",
       "/sectores",
       "/cuadrantes",
       "/catalogos",
+      "/cargos", // ✅ NEW
       "/roles",
       "/permisos",
       "/auditoria",
+      "/health",
     ],
+
+    helpLinks: {
+      documentation: "/api/v1",
+      health: "/api/v1/health",
+    },
   });
 });
 
-// ==========================================
+//=============================================
 // EXPORTAR ROUTER
-// ==========================================
+//=============================================
 
 export default router;

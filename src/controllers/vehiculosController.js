@@ -121,8 +121,6 @@ export const getVehiculosDisponibles = async (req, res) => {
   try {
     const { tipo_id } = req.query;
 
-    // 🔥 IMPORTANTE: Según tu schema, el campo es vehiculo_id (no vehiculo_asignado_id)
-    // Obtener IDs de vehículos que están asignados a novedades activas
     const vehiculosEnUso = await Novedad.findAll({
       where: {
         vehiculo_id: { [Op.ne]: null },
@@ -132,7 +130,7 @@ export const getVehiculosDisponibles = async (req, res) => {
       include: [
         {
           model: EstadoNovedad,
-          as: "estadoNovedad", // 🔥 Verifica que este alias coincida con tu modelo Novedad
+          as: "novedadEstado", // ✅ Cambiado de "estadoNovedad" a "novedadEstado"
           where: {
             nombre: {
               [Op.notIn]: ["CERRADO", "CANCELADO", "FINALIZADO"],
@@ -146,7 +144,6 @@ export const getVehiculosDisponibles = async (req, res) => {
 
     const idsEnUso = vehiculosEnUso.map((n) => n.vehiculo_id);
 
-    // Buscar vehículos disponibles
     const whereClause = {
       estado: 1,
       deleted_at: null,
@@ -163,7 +160,7 @@ export const getVehiculosDisponibles = async (req, res) => {
       include: [
         {
           model: TipoVehiculo,
-          as: "tipo",
+          as: "tipoVehiculo", // ✅ Verificar que este alias también esté bien
           attributes: ["id", "nombre"],
         },
         {

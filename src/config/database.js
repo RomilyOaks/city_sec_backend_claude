@@ -2,7 +2,17 @@
  * ============================================
  * CONFIGURACIÓN DE BASE DE DATOS (SEQUELIZE)
  * ============================================
+ *
  * Ruta: src/config/database.js
+ *
+ * VERSIÓN: 2.1.0
+ * ÚLTIMA ACTUALIZACIÓN: 2025-12-13
+ *
+ * CAMBIOS v2.1.0:
+ * - ✅ Pool configurado desde .env (sin valores hardcodeados)
+ * - ✅ Retry logic agregado
+ * - ✅ Evict interval para limpieza de conexiones
+ *
  * Configuración de Sequelize para conectar a MySQL.
  * Sequelize es un ORM (Object-Relational Mapping) que:
  * - Abstrae las consultas SQL
@@ -17,8 +27,40 @@ import dotenv from "dotenv";
 // Cargar variables de entorno
 dotenv.config();
 
-// Dialecto de base de datos
-const DB_DIALECT = "mysql";
+// ============================================
+// VARIABLES DE ENTORNO
+// ============================================
+
+const NODE_ENV = process.env.NODE_ENV || "development";
+const DB_DIALECT = process.env.DB_DIALECT || "mysql";
+
+// Conexión
+const DB_HOST = process.env.DB_HOST || "127.0.0.1";
+const DB_PORT = parseInt(process.env.DB_PORT) || 3306;
+const DB_USER = process.env.DB_USER || "root";
+const DB_PASSWORD = process.env.DB_PASSWORD || "";
+const DB_NAME = process.env.DB_NAME || "citizen_security_v2";
+const DB_NAME_TEST = process.env.DB_NAME_TEST || "citizen_security_test";
+
+// Pool de conexiones (desde .env)
+const POOL_MAX =
+  parseInt(process.env.DB_POOL_MAX) || (NODE_ENV === "production" ? 20 : 10);
+const POOL_MIN =
+  parseInt(process.env.DB_POOL_MIN) || (NODE_ENV === "production" ? 5 : 2);
+const POOL_ACQUIRE = parseInt(process.env.DB_POOL_ACQUIRE) || 60000; // 60 segundos
+const POOL_IDLE = parseInt(process.env.DB_POOL_IDLE) || 10000; // 10 segundos
+const POOL_EVICT = parseInt(process.env.DB_POOL_EVICT) || 1000; // 1 segundo
+
+// Retry (desde .env)
+const RETRY_MAX = parseInt(process.env.DB_RETRY_MAX) || 3;
+const RETRY_TIMEOUT = parseInt(process.env.DB_RETRY_TIMEOUT) || 3000;
+
+// Timezone
+const DB_TIMEZONE = process.env.DB_TIMEZONE || "-05:00"; // Perú GMT-5
+
+// Logging
+const ENABLE_LOGGING =
+  process.env.DB_LOGGING === "true" || NODE_ENV === "development";
 
 /**
  * Configuraciones por entorno
@@ -29,102 +71,152 @@ const config = {
   // ENTORNO DE DESARROLLO
   // ========================================
   development: {
-    username: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "",
-    database: process.env.DB_NAME || "citizen_security_v2",
-    host: process.env.DB_HOST || "127.0.0.1",
-    port: process.env.DB_PORT || 3306,
+    username: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_NAME,
+    host: DB_HOST,
+    port: DB_PORT,
     dialect: DB_DIALECT,
-    logging: console.log, // Mostrar queries SQL en consola
+    logging: ENABLE_LOGGING ? console.log : false,
+
     pool: {
-      max: 10, // Máximo de conexiones en el pool
-      min: 0, // Mínimo de conexiones en el pool
-      acquire: 30000, // Tiempo máximo (ms) para obtener conexión
-      idle: 10000, // Tiempo máximo (ms) de inactividad antes de liberar conexión
+      max: POOL_MAX,
+      min: POOL_MIN,
+      acquire: POOL_ACQUIRE,
+      idle: POOL_IDLE,
+      evict: POOL_EVICT,
     },
+
+    retry: {
+      max: RETRY_MAX,
+      timeout: RETRY_TIMEOUT,
+      match: [
+        /ER_LOCK_WAIT_TIMEOUT/,
+        /SQLITE_BUSY/,
+        /ECONNRESET/,
+        /ETIMEDOUT/,
+        /ENOTFOUND/,
+        /ENETUNREACH/,
+        /ECONNREFUSED/,
+      ],
+    },
+
     define: {
       charset: "utf8mb4",
       collate: "utf8mb4_unicode_ci",
-      timestamps: false, // Desactivar timestamps por defecto (lo manejamos manualmente)
+      timestamps: false,
     },
+
     dialectOptions: {
       charset: "utf8mb4",
       dateStrings: true,
       typeCast: true,
     },
-    timezone: "-05:00", // Zona horaria de Perú (GMT-5)
+
+    timezone: DB_TIMEZONE,
   },
 
   // ========================================
   // ENTORNO DE TESTING
   // ========================================
   test: {
-    username: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "",
-    database: process.env.DB_NAME_TEST || "citizen_security_test",
-    host: process.env.DB_HOST || "127.0.0.1",
-    port: process.env.DB_PORT || 3306,
+    username: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_NAME_TEST,
+    host: DB_HOST,
+    port: DB_PORT,
     dialect: DB_DIALECT,
     logging: false, // Desactivar logs en tests
+
     pool: {
       max: 5,
       min: 0,
-      acquire: 30000,
-      idle: 10000,
+      acquire: POOL_ACQUIRE,
+      idle: POOL_IDLE,
+      evict: POOL_EVICT,
     },
+
+    retry: {
+      max: RETRY_MAX,
+      timeout: RETRY_TIMEOUT,
+      match: [/ER_LOCK_WAIT_TIMEOUT/, /SQLITE_BUSY/],
+    },
+
     define: {
       charset: "utf8mb4",
       collate: "utf8mb4_unicode_ci",
       timestamps: false,
     },
+
     dialectOptions: {
       charset: "utf8mb4",
       dateStrings: true,
       typeCast: true,
     },
-    timezone: "-05:00",
+
+    timezone: DB_TIMEZONE,
   },
 
   // ========================================
   // ENTORNO DE PRODUCCIÓN
   // ========================================
   production: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 3306,
+    username: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_NAME,
+    host: DB_HOST,
+    port: DB_PORT,
     dialect: DB_DIALECT,
     logging: false, // Desactivar logs en producción
+
     pool: {
-      max: 20, // Más conexiones en producción
-      min: 5,
-      acquire: 30000,
-      idle: 10000,
+      max: POOL_MAX,
+      min: POOL_MIN,
+      acquire: POOL_ACQUIRE,
+      idle: POOL_IDLE,
+      evict: POOL_EVICT,
     },
+
+    retry: {
+      max: RETRY_MAX,
+      timeout: RETRY_TIMEOUT,
+      match: [
+        /ER_LOCK_WAIT_TIMEOUT/,
+        /ECONNRESET/,
+        /ETIMEDOUT/,
+        /ENOTFOUND/,
+        /ENETUNREACH/,
+        /ECONNREFUSED/,
+      ],
+    },
+
     define: {
       charset: "utf8mb4",
       collate: "utf8mb4_unicode_ci",
       timestamps: false,
     },
+
     dialectOptions: {
       charset: "utf8mb4",
       dateStrings: true,
       typeCast: true,
-      ssl: {
-        require: true,
-        rejectUnauthorized: false, // Para conexiones SSL en producción
-      },
+      ssl:
+        process.env.DB_SSL === "true"
+          ? {
+              require: true,
+              rejectUnauthorized: false,
+            }
+          : undefined,
     },
-    timezone: "-05:00",
+
+    timezone: DB_TIMEZONE,
   },
 };
 
 /**
  * Determinar entorno actual y obtener configuración correspondiente
  */
-const env = process.env.NODE_ENV || "development";
-const dbConfig = config[env];
+const dbConfig = config[NODE_ENV];
 
 /**
  * Crear instancia de Sequelize con la configuración del entorno actual
@@ -143,11 +235,20 @@ sequelize
   .authenticate()
   .then(() => {
     console.log(
-      `✅ Conexión a base de datos exitosa - Entorno: ${env.toUpperCase()}`
+      `✅ Conexión a base de datos exitosa - Entorno: ${NODE_ENV.toUpperCase()}`
+    );
+    console.log(`   📊 Base de datos: ${dbConfig.database}`);
+    console.log(`   🖥️  Host: ${dbConfig.host}:${dbConfig.port}`);
+    console.log(
+      `   🔌 Pool: max=${dbConfig.pool.max}, min=${dbConfig.pool.min}`
     );
   })
   .catch((error) => {
-    console.error("❌ Error al conectar a la base de datos:", error.message);
+    console.error("❌ Error al conectar a la base de datos:");
+    console.error(`   Host: ${dbConfig.host}:${dbConfig.port}`);
+    console.error(`   Database: ${dbConfig.database}`);
+    console.error(`   User: ${dbConfig.username}`);
+    console.error(`   Error: ${error.message}`);
   });
 
 // Exportar la instancia de Sequelize (export default)
