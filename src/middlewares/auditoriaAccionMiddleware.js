@@ -93,7 +93,7 @@ export const registrarAuditoria = (options = {}) => {
           },
           severidad,
           modulo: options.modulo || entidad,
-          resultado: data.success === false ? "FALLIDO" : "EXITOSO",
+          resultado: data.success === false ? "FALLO" : "EXITO",
           error_mensaje:
             data.message && data.success === false ? data.message : null,
           duracion_ms: duracion,
