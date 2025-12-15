@@ -237,6 +237,14 @@ const Cuadrante = sequelize.define(
       allowNull: true,
       comment: "Fecha de eliminación lógica",
     },
+    /**     * ID del usuario que realizó la eliminación lógica
+     * Referencia a la tabla usuarios
+     */
+    deleted_by: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "Usuario que eliminó",
+    },
 
     // ============================================
     // AUDITORÍA
