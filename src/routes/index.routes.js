@@ -10,11 +10,14 @@
  * Centraliza todos los módulos y sus respectivas rutas con prefijos,
  * middlewares globales, y manejo de errores.
  *
- * VERSIÓN: 2.2.0
- * ÚLTIMA ACTUALIZACIÓN: 2025-12-12
+ * VERSIÓN: 2.3.0
+ * ÚLTIMA ACTUALIZACIÓN: 2025-12-14
  *
  * HISTORIAL DE CAMBIOS:
  * =====================
+ *
+ * v2.3.0 (2025-12-14):
+ *   - ✅ Agregado módulo /estados-novedad, /tipos-novedad, /subtipos-novedad
  * v2.2.0 (2025-12-12):
  *   - ✅ Agregado módulo /cargos
  *   - ✅ Mejorada documentación JSDoc
@@ -80,7 +83,10 @@ import cuadrantesRoutes from "./cuadrantes.routes.js";
 
 // 📚 Catálogos y Configuración
 import catalogosRoutes from "./catalogos.routes.js";
-import cargosRoutes from "./cargos.routes.js"; // ✅ NEW
+import cargosRoutes from "./cargos.routes.js";
+import tipoNovedadRoutes from "./tipo-novedad.routes.js"; // ✅ NEW
+import subtipoNovedadRoutes from "./subtipo-novedad.routes.js"; // ✅ NEW
+import estadoNovedadRoutes from "./estado-novedad.routes.js"; // ✅ NEW
 
 // 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
@@ -278,6 +284,10 @@ router.use("/catalogos", catalogosRoutes);
  *   - POST   /cargos/:id/restore        - Restaurar (Admin)
  */
 router.use("/cargos", cargosRoutes);
+
+router.use("/tipos-novedad", tipoNovedadRoutes);
+router.use("/subtipos-novedad", subtipoNovedadRoutes);
+router.use("/estados-novedad", estadoNovedadRoutes);
 
 /**
  * @route   /auditoria

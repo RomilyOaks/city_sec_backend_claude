@@ -54,6 +54,9 @@ import auditoriaAccionRoutes from "./routes/auditoriaAcciones.routes.js";
 
 // ✅ AGREGADO: Rutas de cargos
 import cargosRoutes from "./routes/cargos.routes.js";
+import tipoNovedadRoutes from "./routes/tipo-novedad.routes.js";
+import subtipoNovedadRoutes from "./routes/subtipo-novedad.routes.js";
+import estadoNovedadRoutes from "./routes/estado-novedad.routes.js";
 
 // ============================================
 // CONFIGURACIÓN INICIAL
@@ -238,6 +241,9 @@ app.get(`/api/${API_VERSION}`, (req, res) => {
       vehiculos: `/api/${API_VERSION}/vehiculos`,
       cuadrantes: `/api/${API_VERSION}/cuadrantes`,
       cargos: `/api/${API_VERSION}/cargos`, // ✅ AGREGADO
+      tipos_novedad: `/api/${API_VERSION}/tipos-novedad`, // ✅ NUEVO
+      subtipos_novedad: `/api/${API_VERSION}/subtipos-novedad`, // ✅ NUEVO
+      estados_novedad: `/api/${API_VERSION}/estados-novedad`, // ✅ NUEVO
     },
     contact: {
       support: "soporte@citysec.com",
@@ -264,6 +270,11 @@ app.use(`/api/${API_VERSION}/auditoria`, auditoriaAccionRoutes);
 
 // ✅ AGREGADO: Rutas de cargos
 app.use(`/api/${API_VERSION}/cargos`, cargosRoutes);
+
+// ✅ AGREGADO: Rutas de Tipos, Subtipos y Estados de Novedad
+app.use(`/api/${API_VERSION}/tipos-novedad`, tipoNovedadRoutes);
+app.use(`/api/${API_VERSION}/subtipos-novedad`, subtipoNovedadRoutes);
+app.use(`/api/${API_VERSION}/estados-novedad`, estadoNovedadRoutes);
 
 // ============================================
 // ✅ HEALTH CHECK DENTRO DE VERSIONAMIENTO
@@ -437,31 +448,32 @@ const startServer = async () => {
     }
 
     app.listen(PORT, () => {
-      console.log("┌─────────────────────────────────────────────┐");
-      console.log("│                                             │");
-      console.log(`│  🚀 Servidor iniciado exitosamente          │`);
-      console.log("│                                             │");
-      console.log(`│  🌐 URL: http://localhost:${PORT}              │`);
+      console.log("┌─────────────────────────────────────────────────┐");
+      console.log("│                                                 │");
+      console.log(`│  🚀 Servidor iniciado exitosamente              │`);
+      console.log("│                                                 │");
+      console.log(`│  🌐 URL: http://localhost:${PORT}                  │`);
       console.log(
-        `│  📚 API: http://localhost:${PORT}/api/${API_VERSION}       │`
-      );
-      console.log(`│  ❤️  Health: http://localhost:${PORT}/health    │`);
-      console.log(
-        `│  💚 Health (v1): http://localhost:${PORT}/api/${API_VERSION}/health │`
+        `│  📚 API: http://localhost:${PORT}/api/${API_VERSION}           │`
       );
       console.log(
-        `│  📖 Docs: http://localhost:${PORT}/api/${API_VERSION}/docs │`
+        `│  ❤️  Health: http://localhost:${PORT}/api/${API_VERSION}/health │`
       );
-      console.log("│                                             │");
-      console.log(`│  🔐 Ambiente: ${NODE_ENV.padEnd(28)}  │`);
-      console.log(`│  📦 Versión API: ${API_VERSION.padEnd(24)}   │`);
-      console.log("│                                             │");
-      console.log("└─────────────────────────────────────────────┘\n");
+      console.log(
+        `│  📖 Docs: http://localhost:${PORT}/api/${API_VERSION}/docs     │`
+      );
+      console.log("│                                                 │");
+      console.log(`│  🔐 Ambiente: ${NODE_ENV.padEnd(28)}      │`);
+      console.log(`│  📦 Versión API: ${API_VERSION.padEnd(24)}       │`);
+      console.log("│                                                 │");
+      console.log("└─────────────────────────────────────────────────┘\n");
 
       console.log("💡 Endpoints principales:");
       console.log(`  • POST   /api/${API_VERSION}/auth/login`);
       console.log(`  • GET    /api/${API_VERSION}/personal`);
       console.log(`  • GET    /api/${API_VERSION}/cargos         ✅ NEW`);
+      console.log(`  • GET    /api/${API_VERSION}/tipos-novedad  ✅ NEW`);
+      console.log(`  • GET    /api/${API_VERSION}/subtipos-novedad  ✅ NEW`);
       console.log(`  • GET    /api/${API_VERSION}/vehiculos`);
       console.log(`  • GET    /api/${API_VERSION}/novedades`);
       console.log("");
