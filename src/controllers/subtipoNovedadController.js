@@ -1,0 +1,367 @@
+/**
+ * ===================================================
+ * CONTROLADOR: Subtipos de Novedad
+ * ===================================================
+ *
+ * Ruta: src/controllers/subtipoNovedadController.js
+ *
+ * VERSIÓN: 1.0.1 (CORREGIDO)
+ * FECHA: 2025-12-14
+ *
+ * Descripción:
+ * Controlador para gestión de subtipos de novedad.
+ * Maneja CRUD completo con validaciones y soft delete.
+ *
+ * @module controllers/subtipoNovedadController
+ * @version 1.0.0
+ */
+
+import { SubtipoNovedad, TipoNovedad } from "../models/index.js";
+import { Op } from "sequelize";
+
+// ==========================================
+// LISTAR SUBTIPOS (GET /)
+// ==========================================
+
+const getAll = async (req, res) => {
+  try {
+    const { tipo_novedad_id, estado, search } = req.query;
+
+    const whereClause = { deleted_at: null };
+
+    // Filtro por estado
+    if (estado !== undefined) {
+      whereClause.estado = estado === "true" || estado === "1";
+    }
+
+    // Filtro por tipo de novedad
+    if (tipo_novedad_id) {
+      whereClause.tipo_novedad_id = tipo_novedad_id;
+    }
+
+    // Búsqueda por nombre o código
+    if (search) {
+      whereClause[Op.or] = [
+        { nombre: { [Op.like]: `%${search}%` } },
+        { subtipo_code: { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    const items = await SubtipoNovedad.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: TipoNovedad,
+          as: "subtipoNovedadTipoNovedad",
+          attributes: ["id", "nombre", "tipo_code"],
+        },
+      ],
+      order: [
+        ["orden", "ASC"],
+        ["nombre", "ASC"],
+      ],
+    });
+
+    res.status(200).json({
+      success: true,
+      data: items,
+    });
+  } catch (error) {
+    console.error("Error en getAll subtipos:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener subtipos de novedad",
+      error: error.message,
+    });
+  }
+};
+
+// ==========================================
+// OBTENER POR ID (GET /:id)
+// ==========================================
+
+const getById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const item = await SubtipoNovedad.findOne({
+      where: { id, deleted_at: null },
+      include: [
+        {
+          model: TipoNovedad,
+          as: "subtipoNovedadTipoNovedad",
+          attributes: ["id", "nombre", "tipo_code"],
+        },
+      ],
+    });
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Subtipo de novedad no encontrado",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: item,
+    });
+  } catch (error) {
+    console.error("Error en getById subtipo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener subtipo de novedad",
+      error: error.message,
+    });
+  }
+};
+
+// ==========================================
+// CREAR (POST /)
+// ==========================================
+
+const create = async (req, res) => {
+  try {
+    const {
+      nombre,
+      tipo_novedad_id,
+      descripcion,
+      subtipo_code,
+      color_hex,
+      icono,
+      orden,
+      prioridad,
+      tiempo_respuesta_min,
+      requiere_ambulancia,
+      requiere_bomberos,
+      requiere_pnp,
+    } = req.body;
+
+    // Validar que el tipo de novedad existe
+    const tipoNovedad = await TipoNovedad.findOne({
+      where: { id: tipo_novedad_id, estado: true, deleted_at: null },
+    });
+
+    if (!tipoNovedad) {
+      return res.status(404).json({
+        success: false,
+        message: "Tipo de novedad no encontrado o inactivo",
+      });
+    }
+
+    // Verificar código duplicado
+    if (subtipo_code) {
+      const existente = await SubtipoNovedad.findOne({
+        where: { subtipo_code, deleted_at: null },
+      });
+
+      if (existente) {
+        return res.status(400).json({
+          success: false,
+          message: "Ya existe un subtipo de novedad con este código",
+        });
+      }
+    }
+
+    // Crear subtipo
+    const nuevo = await SubtipoNovedad.create({
+      nombre,
+      tipo_novedad_id,
+      descripcion,
+      subtipo_code,
+      color_hex,
+      icono,
+      orden,
+      prioridad,
+      tiempo_respuesta_min,
+      requiere_ambulancia,
+      requiere_bomberos,
+      requiere_pnp,
+      created_by: req.user.id,
+    });
+
+    // Obtener subtipo completo con relación
+    const subtipoCompleto = await SubtipoNovedad.findByPk(nuevo.id, {
+      include: [
+        {
+          model: TipoNovedad,
+          as: "subtipoNovedadTipoNovedad",
+          attributes: ["id", "nombre", "tipo_code"],
+        },
+      ],
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Subtipo de novedad creado exitosamente",
+      data: subtipoCompleto,
+    });
+  } catch (error) {
+    console.error("Error en create subtipo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al crear subtipo de novedad",
+      error: error.message,
+    });
+  }
+};
+
+// ==========================================
+// ACTUALIZAR (PUT /:id)
+// ==========================================
+
+const update = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const datosActualizacion = req.body;
+
+    const item = await SubtipoNovedad.findOne({
+      where: { id, deleted_at: null },
+    });
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Subtipo de novedad no encontrado",
+      });
+    }
+
+    // Validar tipo_novedad_id si se está actualizando
+    if (datosActualizacion.tipo_novedad_id) {
+      const tipoNovedad = await TipoNovedad.findOne({
+        where: {
+          id: datosActualizacion.tipo_novedad_id,
+          estado: true,
+          deleted_at: null,
+        },
+      });
+
+      if (!tipoNovedad) {
+        return res.status(404).json({
+          success: false,
+          message: "Tipo de novedad no encontrado o inactivo",
+        });
+      }
+    }
+
+    // Verificar código duplicado si cambió
+    if (
+      datosActualizacion.subtipo_code &&
+      datosActualizacion.subtipo_code !== item.subtipo_code
+    ) {
+      const existente = await SubtipoNovedad.findOne({
+        where: {
+          subtipo_code: datosActualizacion.subtipo_code,
+          id: { [Op.ne]: id },
+          deleted_at: null,
+        },
+      });
+
+      if (existente) {
+        return res.status(400).json({
+          success: false,
+          message: "Ya existe otro subtipo de novedad con este código",
+        });
+      }
+    }
+
+    // Actualizar
+    await item.update({
+      ...datosActualizacion,
+      updated_by: req.user.id,
+    });
+
+    // Obtener subtipo actualizado
+    const subtipoActualizado = await SubtipoNovedad.findByPk(id, {
+      include: [
+        {
+          model: TipoNovedad,
+          as: "subtipoNovedadTipoNovedad",
+          attributes: ["id", "nombre", "tipo_code"],
+        },
+      ],
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Subtipo de novedad actualizado exitosamente",
+      data: subtipoActualizado,
+    });
+  } catch (error) {
+    console.error("Error en update subtipo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al actualizar subtipo de novedad",
+      error: error.message,
+    });
+  }
+};
+
+// ==========================================
+// ELIMINAR (DELETE /:id)
+// ==========================================
+
+const remove = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const item = await SubtipoNovedad.findOne({
+      where: { id, deleted_at: null },
+    });
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Subtipo de novedad no encontrado",
+      });
+    }
+
+    // Verificar si tiene novedades asociadas
+    const { Novedad } = await import("../models/index.js");
+    const tieneNovedades = await Novedad.count({
+      where: {
+        subtipo_novedad_id: id,
+        deleted_at: null,
+      },
+    });
+
+    if (tieneNovedades > 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "No se puede eliminar. Tiene novedades asociadas a este subtipo",
+      });
+    }
+
+    // Soft delete
+    await item.update({
+      estado: false,
+      deleted_at: new Date(),
+      deleted_by: req.user.id,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Subtipo de novedad eliminado exitosamente",
+    });
+  } catch (error) {
+    console.error("Error en remove subtipo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al eliminar subtipo de novedad",
+      error: error.message,
+    });
+  }
+};
+
+// ==========================================
+// EXPORTAR
+// ==========================================
+
+export default {
+  getAll,
+  getById,
+  create,
+  update,
+  remove,
+};
