@@ -351,7 +351,7 @@ export const getCuadrantesCercanos = async (req, res) => {
  *
  * @param {Object} req - Request de Express
  * @param {Object} req.body - Datos del cuadrante
- * @param {Object} req.usuario - Usuario autenticado (del middleware)
+ * @param {Object} req.user - Usuario autenticado (del middleware)
  * @param {Object} res - Response de Express
  *
  * @returns {Object} JSON con cuadrante creado
@@ -369,8 +369,8 @@ export const createCuadrante = async (req, res) => {
       radio_metros,
       color_mapa,
     } = req.body;
-    //    console.log("req.usuario:", req.usuario);
-    const created_by = req.usuario.id;
+
+    const created_by = req.user.id;
 
     // Validar campos requeridos
     if (!nombre || !sector_id) {
@@ -452,7 +452,7 @@ export const createCuadrante = async (req, res) => {
  * @param {Object} req.params - Parámetros de ruta
  * @param {number} req.params.id - ID del cuadrante
  * @param {Object} req.body - Datos a actualizar
- * @param {Object} req.usuario - Usuario autenticado
+ * @param {Object} req.user - Usuario autenticado
  * @param {Object} res - Response de Express
  *
  * @returns {Object} JSON con cuadrante actualizado
@@ -470,7 +470,7 @@ export const updateCuadrante = async (req, res) => {
       color_mapa,
     } = req.body;
 
-    const updated_by = req.usuario.id;
+    const updated_by = req.user.id;
 
     // Buscar cuadrante
     const cuadrante = await Cuadrante.findByPk(id);
@@ -530,7 +530,7 @@ export const updateCuadrante = async (req, res) => {
  * @param {Object} req - Request de Express
  * @param {Object} req.params - Parámetros de ruta
  * @param {number} req.params.id - ID del cuadrante
- * @param {Object} req.usuario - Usuario autenticado
+ * @param {Object} req.user - Usuario autenticado
  * @param {Object} res - Response de Express
  *
  * @returns {Object} JSON con confirmación
@@ -538,7 +538,7 @@ export const updateCuadrante = async (req, res) => {
 export const deleteCuadrante = async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted_by = req.usuario.id;
+    const deleted_by = req.user.id;
 
     // Buscar cuadrante
     const cuadrante = await Cuadrante.findByPk(id);
@@ -576,7 +576,7 @@ export const deleteCuadrante = async (req, res) => {
  * @param {number} req.params.id - ID del cuadrante
  * @param {Object} req.body - Datos
  * @param {boolean} req.body.estado - true para activar, false para desactivar
- * @param {Object} req.usuario - Usuario autenticado
+ * @param {Object} req.user - Usuario autenticado
  * @param {Object} res - Response de Express
  *
  * @returns {Object} JSON con cuadrante actualizado
@@ -585,7 +585,7 @@ export const cambiarEstado = async (req, res) => {
   try {
     const { id } = req.params;
     const { estado } = req.body;
-    const updated_by = req.usuario.id;
+    const updated_by = req.user.id;
 
     // Validar parámetro estado
     if (typeof estado !== "boolean") {

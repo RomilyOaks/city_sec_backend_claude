@@ -445,13 +445,13 @@ Cuadrante.belongsTo(Sector, {
 Ubigeo.hasMany(Sector, {
   foreignKey: "ubigeo",
   sourceKey: "ubigeo_code",
-  as: "ubigeo_rel",
+  as: "sectores",
 });
 
 Sector.belongsTo(Ubigeo, {
   foreignKey: "ubigeo",
   targetKey: "ubigeo_code",
-  as: "sector",
+  as: "ubigeo_rel",
 });
 
 /**
