@@ -63,8 +63,8 @@ export const validarNombre = (opcional = false) => {
     .trim()
     .isLength({ min: 3, max: 50 })
     .withMessage("El nombre debe tener entre 3 y 50 caracteres")
-    .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
-    .withMessage("El nombre solo puede contener letras y espacios");
+    .matches(/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/)
+    .withMessage("El nombre solo puede contener letras, números y espacios");
 
   return opcional
     ? validator.optional()
