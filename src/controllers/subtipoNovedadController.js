@@ -137,6 +137,10 @@ const create = async (req, res) => {
       requiere_pnp,
     } = req.body;
 
+    const subtipoCodeNormalizado = subtipo_code
+      ? String(subtipo_code).toUpperCase().trim()
+      : null;
+
     // Validar que el tipo de novedad existe
     const tipoNovedad = await TipoNovedad.findOne({
       where: { id: tipo_novedad_id, estado: true, deleted_at: null },
@@ -150,9 +154,9 @@ const create = async (req, res) => {
     }
 
     // Verificar código duplicado
-    if (subtipo_code) {
+    if (subtipoCodeNormalizado) {
       const existente = await SubtipoNovedad.findOne({
-        where: { subtipo_code, deleted_at: null },
+        where: { subtipo_code: subtipoCodeNormalizado, deleted_at: null },
       });
 
       if (existente) {
@@ -168,7 +172,7 @@ const create = async (req, res) => {
       nombre,
       tipo_novedad_id,
       descripcion,
-      subtipo_code,
+      subtipo_code: subtipoCodeNormalizado,
       color_hex,
       icono,
       orden,
@@ -198,6 +202,17 @@ const create = async (req, res) => {
     });
   } catch (error) {
     console.error("Error en create subtipo:", error);
+
+    if (
+      error?.name === "SequelizeUniqueConstraintError" ||
+      error?.original?.code === "ER_DUP_ENTRY"
+    ) {
+      return res.status(409).json({
+        success: false,
+        message: "Código de Subtipo ya existe",
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Error al crear subtipo de novedad",
@@ -214,6 +229,12 @@ const update = async (req, res) => {
   try {
     const { id } = req.params;
     const datosActualizacion = req.body;
+
+    if (datosActualizacion?.subtipo_code) {
+      datosActualizacion.subtipo_code = String(datosActualizacion.subtipo_code)
+        .toUpperCase()
+        .trim();
+    }
 
     const item = await SubtipoNovedad.findOne({
       where: { id, deleted_at: null },
@@ -289,6 +310,17 @@ const update = async (req, res) => {
     });
   } catch (error) {
     console.error("Error en update subtipo:", error);
+
+    if (
+      error?.name === "SequelizeUniqueConstraintError" ||
+      error?.original?.code === "ER_DUP_ENTRY"
+    ) {
+      return res.status(409).json({
+        success: false,
+        message: "Código de Subtipo ya existe",
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Error al actualizar subtipo de novedad",
