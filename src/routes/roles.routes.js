@@ -156,7 +156,7 @@ router.delete("/:id", requireAnyPermission("usuarios.roles.delete"), deleteRol);
  */
 router.post(
   "/:id/permisos",
-  requireAnyPermission("usuarios.roles.assign"),
+  requireAnyPermission("usuarios.roles_permisos.assign"),
   asignarPermisos
 );
 
@@ -169,7 +169,7 @@ router.post(
  */
 router.delete(
   "/:id/permisos/:permisoId",
-  requireAnyPermission("usuarios.roles.assign"),
+  requireAnyPermission("usuarios.roles_permisos.assign"),
   quitarPermiso
 );
 

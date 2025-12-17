@@ -162,6 +162,13 @@ async function seedRBAC() {
       },
       {
         modulo: "usuarios",
+        recurso: "roles_permisos",
+        accion: "assign",
+        descripcion: "Asignar permisos a roles",
+        es_sistema: true,
+      },
+      {
+        modulo: "usuarios",
         recurso: "permisos",
         accion: "assign",
         descripcion: "Asignar permisos directos a usuarios",

@@ -230,7 +230,7 @@ export const createRol = async (req, res) => {
       permisos = [],
     } = req.body;
 
-    const created_by = req.usuario.userId;
+    const created_by = req.user?.id || null;
 
     // Validar campos requeridos
     if (!nombre || !slug) {
@@ -305,7 +305,7 @@ export const updateRol = async (req, res) => {
     const { id } = req.params;
     const { nombre, descripcion, nivel_jerarquia, color } = req.body;
 
-    const updated_by = req.usuario.userId;
+    const updated_by = req.user?.id || null;
 
     const rol = await Rol.findByPk(id);
 
@@ -356,7 +356,7 @@ export const updateRol = async (req, res) => {
 export const deleteRol = async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted_by = req.usuario.userId;
+    const deleted_by = req.user?.id || null;
 
     const rol = await Rol.findByPk(id);
 
