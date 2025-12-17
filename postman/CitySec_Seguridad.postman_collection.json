@@ -1,0 +1,270 @@
+{
+  "info": {
+    "_postman_id": "7f6d6f6b-8f7a-4b1f-9b3c-2f8a3e8b6f21",
+    "name": "CitySec - Seguridad",
+    "description": "Colección para certificar el MVP del módulo Seguridad (RBAC): Roles + Permisos (solo lectura).\n\nVariables de colección:\n- baseUrl: URL base del backend (ej: http://localhost:3000)\n- apiVersion: versión del API (ej: v1)\n- token: JWT (se llena automáticamente con Login)\n- rolId: id del rol para GET/PUT/DELETE y gestión de permisos\n- permisoSlug: slug de permiso a buscar (ej: usuarios.usuarios.read)\n- permisoId: id del permiso obtenido por slug (se llena automáticamente)\n\nPermisos RBAC involucrados:\n- usuarios.roles.{create,read,update,delete}\n- usuarios.roles_permisos.assign\n- usuarios.permisos.read\n\nNotas:\n- Todas las rutas requieren autenticación (verificarToken).\n- Los endpoints de permisos están en modo solo lectura en este MVP.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (guarda token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const token = json?.token || json?.data?.token || json?.accessToken || json?.data?.accessToken;",
+                  "if (token) pm.collectionVariables.set('token', token);",
+                  "pm.test('Login responde 200/201', function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Permisos (solo lectura)",
+      "item": [
+        {
+          "name": "Listar permisos (GET /permisos)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/permisos?limit=50&activos=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "permisos"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "activos", "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Permisos por módulo (GET /permisos/modulo/:modulo)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/permisos/modulo/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "permisos", "modulo", "usuarios"]
+            }
+          }
+        },
+        {
+          "name": "Buscar permiso por slug (GET /permisos/slug/:slug) (guarda permisoId)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/permisos/slug/{{permisoSlug}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "permisos", "slug", "{{permisoSlug}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json?.data?.id || json?.id;",
+                  "if (id) pm.collectionVariables.set('permisoId', String(id));",
+                  "pm.test('Responde 200', function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener permiso por ID (GET /permisos/:id)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/permisos/{{permisoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "permisos", "{{permisoId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "Listar roles (GET /roles)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles?limit=50&activos=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "activos", "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear rol (POST /roles) (guarda rolId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Rol QA Seguridad\",\n  \"slug\": \"rol_qa_seguridad\",\n  \"descripcion\": \"Rol creado desde Postman para certificar endpoints\",\n  \"nivel_jerarquia\": 10,\n  \"color\": \"#2563EB\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json?.data?.id || json?.id;",
+                  "if (id) pm.collectionVariables.set('rolId', String(id));",
+                  "pm.test('Responde 201', function () {",
+                  "  pm.expect(pm.response.code).to.eql(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener rol por ID (GET /roles/:id)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/{{rolId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", "{{rolId}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar rol (PUT /roles/:id)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descripcion\": \"(actualizado) Rol QA Seguridad\",\n  \"color\": \"#16A34A\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/{{rolId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", "{{rolId}}"]
+            }
+          }
+        },
+        {
+          "name": "Listar permisos del rol (GET /roles/:id/permisos)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/{{rolId}}/permisos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", "{{rolId}}", "permisos"]
+            }
+          }
+        },
+        {
+          "name": "Asignar permisos al rol (POST /roles/:id/permisos) (usa permisoId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permisos\": [{{permisoId}}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/{{rolId}}/permisos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", "{{rolId}}", "permisos"]
+            }
+          }
+        },
+        {
+          "name": "Quitar permiso del rol (DELETE /roles/:id/permisos/:permisoId)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/{{rolId}}/permisos/{{permisoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", "{{rolId}}", "permisos", "{{permisoId}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar rol (DELETE /roles/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/{{rolId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", "{{rolId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "apiVersion", "value": "v1" },
+    { "key": "token", "value": "" },
+    { "key": "rolId", "value": "1" },
+    { "key": "permisoSlug", "value": "usuarios.usuarios.read" },
+    { "key": "permisoId", "value": "1" }
+  ]
+}
