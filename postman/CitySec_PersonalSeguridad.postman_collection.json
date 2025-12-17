@@ -1,0 +1,388 @@
+{
+  "info": {
+    "_postman_id": "5b10e3a6-7f52-4d13-a2bb-5b6a91d3b8c1",
+    "name": "CitySec - Personal Seguridad",
+    "description": "Colección para probar el módulo de Personal Seguridad (ruta /api/{{apiVersion}}/personal).\n\nVariables de colección:\n- baseUrl: URL base del backend (ej: http://localhost:3000)\n- apiVersion: versión del API (ej: v1)\n- token: JWT (se llena automáticamente con el request Login)\n- personalId: id del personal para GET/PUT/PATCH/DELETE\n- cargoId: id de cargo (para /cargo/:cargoId)\n- vehiculoId: id de vehículo (para asignar/desasignar)\n\nNotas:\n- Todas las rutas requieren autenticación (verificarToken).\n- Varias rutas requieren permisos/roles (RBAC).\n- Para crear personal: doc_tipo, doc_numero, apellido_paterno, apellido_materno, nombres son requeridos.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (guarda token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const token = json?.token || json?.data?.token || json?.accessToken || json?.data?.accessToken;",
+                  "if (token) pm.collectionVariables.set('token', token);",
+                  "pm.test('Login responde 200/201', function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Token guardado', function () {",
+                  "  pm.expect(pm.collectionVariables.get('token')).to.be.ok;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Personal Seguridad",
+      "item": [
+        {
+          "name": "Estadísticas (GET /personal/stats)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Listar personal (GET /personal)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  const firstId = json?.data?.[0]?.id;",
+                  "  if (firstId && !pm.collectionVariables.get('personalId')) {",
+                  "    pm.collectionVariables.set('personalId', String(firstId));",
+                  "  }",
+                  "} catch (e) {}",
+                  "pm.test('Responde 200', function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Conductores (GET /personal/conductores)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/conductores?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "conductores"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Personal disponible (GET /personal/disponibles)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/disponibles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "disponibles"]
+            }
+          }
+        },
+        {
+          "name": "Por cargo (GET /personal/cargo/:cargoId)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/cargo/{{cargoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "cargo", "{{cargoId}}"]
+            }
+          }
+        },
+        {
+          "name": "Por documento (GET /personal/documento/:doc)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/documento/DNI-12345678",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "documento", "DNI-12345678"]
+            }
+          }
+        },
+        {
+          "name": "Por status (GET /personal/status/:status)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/status/Activo?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "status", "Activo"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear personal (POST /personal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doc_tipo\": \"DNI\",\n  \"doc_numero\": \"12345678\",\n  \"apellido_paterno\": \"PEREZ\",\n  \"apellido_materno\": \"GOMEZ\",\n  \"nombres\": \"JUAN\",\n  \"status\": \"Activo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json?.data?.id || json?.id;",
+                  "if (id) pm.collectionVariables.set('personalId', String(id));",
+                  "pm.test('Responde 201', function () {",
+                  "  pm.expect(pm.response.code).to.eql(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener por ID (GET /personal/:id)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/{{personalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "{{personalId}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar (PUT /personal/:id)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"JUAN CARLOS\",\n  \"apellido_paterno\": \"PEREZ\",\n  \"apellido_materno\": \"GOMEZ\",\n  \"status\": \"Activo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/{{personalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "{{personalId}}"]
+            }
+          }
+        },
+        {
+          "name": "Cambiar status (PATCH /personal/:id/status)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Suspendido\",\n  \"observaciones\": \"Cambio de status desde Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/{{personalId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "{{personalId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar licencia (PATCH /personal/:id/licencia)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"licencia\": \"Q12345678\",\n  \"categoria\": \"B-I\",\n  \"vigencia\": \"2030-12-31\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/{{personalId}}/licencia",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "{{personalId}}", "licencia"]
+            }
+          }
+        },
+        {
+          "name": "Asignar vehículo (PATCH /personal/:id/asignar-vehiculo)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehiculo_id\": {{vehiculoId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/{{personalId}}/asignar-vehiculo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "{{personalId}}", "asignar-vehiculo"]
+            }
+          }
+        },
+        {
+          "name": "Desasignar vehículo (DELETE /personal/:id/desasignar-vehiculo)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/{{personalId}}/desasignar-vehiculo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "{{personalId}}", "desasignar-vehiculo"]
+            }
+          }
+        },
+        {
+          "name": "Generar código acceso (POST /personal/:id/generar-codigo)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/{{personalId}}/generar-codigo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "{{personalId}}", "generar-codigo"]
+            }
+          }
+        },
+        {
+          "name": "Verificar licencia vigente (GET /personal/:id/verificar-licencia)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/{{personalId}}/verificar-licencia",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "{{personalId}}", "verificar-licencia"]
+            }
+          }
+        },
+        {
+          "name": "Historial de novedades (GET /personal/:id/historial-novedades)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/{{personalId}}/historial-novedades?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "{{personalId}}", "historial-novedades"],
+              "query": [{ "key": "limit", "value": "50" }]
+            }
+          }
+        },
+        {
+          "name": "Licencias por vencer (GET /personal/licencias-por-vencer)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/licencias-por-vencer?dias=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "licencias-por-vencer"],
+              "query": [{ "key": "dias", "value": "30" }]
+            }
+          }
+        },
+        {
+          "name": "Eliminar (DELETE /personal/:id - soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/{{personalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "{{personalId}}"]
+            }
+          }
+        },
+        {
+          "name": "Restore (POST /personal/:id/restore)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/personal/{{personalId}}/restore",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "personal", "{{personalId}}", "restore"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "apiVersion", "value": "v1" },
+    { "key": "token", "value": "" },
+    { "key": "personalId", "value": "" },
+    { "key": "cargoId", "value": "1" },
+    { "key": "vehiculoId", "value": "1" }
+  ]
+}
