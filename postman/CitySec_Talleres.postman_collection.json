@@ -1,0 +1,149 @@
+{
+  "info": {
+    "_postman_id": "c22a1f52-6f1c-4d7a-a7f1-8b7d2b2d4c10",
+    "name": "CitySec - Talleres",
+    "description": "Colección para probar el CRUD de Talleres (ruta /api/{{apiVersion}}/talleres).\n\nVariables de colección:\n- baseUrl: URL base del backend (ej: http://localhost:3000)\n- apiVersion: versión del API (ej: v1)\n- token: JWT (se llena automáticamente con el request Login)\n- tallerId: id del taller para GET/PUT/DELETE\n\nNotas:\n- Todas las rutas requieren autenticación (verificarToken).\n- Permisos RBAC: vehiculos.talleres.{create,read,update,delete}.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (guarda token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const token = json?.token || json?.data?.token || json?.accessToken || json?.data?.accessToken;",
+                  "if (token) pm.collectionVariables.set('token', token);",
+                  "pm.test('Login responde 200/201', function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Talleres",
+      "item": [
+        {
+          "name": "Listar talleres (GET /talleres)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/talleres?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "talleres"],
+              "query": [{ "key": "limit", "value": "50" }]
+            }
+          }
+        },
+        {
+          "name": "Crear taller (POST /talleres) (guarda tallerId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"TALLER MUNICIPAL CENTRAL\",\n  \"ruc\": \"20123456789\",\n  \"direccion\": \"Av. Principal 123 - Cercado\",\n  \"telefono\": \"999888777\",\n  \"email\": \"taller@municipalidad.gob.pe\",\n  \"contacto_nombre\": \"Juan Perez\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/talleres",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "talleres"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json?.data?.id || json?.id;",
+                  "if (id) pm.collectionVariables.set('tallerId', String(id));",
+                  "pm.test('Responde 201', function () {",
+                  "  pm.expect(pm.response.code).to.eql(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener taller por ID (GET /talleres/:id)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/talleres/{{tallerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "talleres", "{{tallerId}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar taller (PUT /talleres/:id)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direccion\": \"Av. Principal 999 - Cercado\",\n  \"telefono\": \"999111222\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/talleres/{{tallerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "talleres", "{{tallerId}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar taller (DELETE /talleres/:id - soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/talleres/{{tallerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "talleres", "{{tallerId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "apiVersion", "value": "v1" },
+    { "key": "token", "value": "" },
+    { "key": "tallerId", "value": "1" }
+  ]
+}
