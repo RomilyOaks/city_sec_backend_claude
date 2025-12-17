@@ -1,0 +1,126 @@
+{
+  "info": {
+    "_postman_id": "4c7cf8b8-2ea4-4c15-8cbf-d8fb6b61f10f",
+    "name": "CitySec - Reportes",
+    "description": "Colección para probar Reportes operativos (Vehículos + Mantenimientos).\n\nVariables de colección:\n- baseUrl: URL base del backend (ej: http://localhost:3000)\n- apiVersion: versión del API (ej: v1)\n- token: JWT (se llena automáticamente con Login)\n\nPermisos RBAC sugeridos:\n- reportes.vehiculos.read\n- reportes.mantenimientos.read\n\nEndpoints:\n- GET /api/{{apiVersion}}/reportes/vehiculos-en-mantenimiento\n- GET /api/{{apiVersion}}/reportes/costos-mantenimiento\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (guarda token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const token = json?.token || json?.data?.token || json?.accessToken || json?.data?.accessToken;",
+                  "if (token) pm.collectionVariables.set('token', token);",
+                  "pm.test('Login responde 200/201', function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reportes",
+      "item": [
+        {
+          "name": "Vehículos en mantenimiento (GET /reportes/vehiculos-en-mantenimiento)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/reportes/vehiculos-en-mantenimiento?limit=50&page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "reportes", "vehiculos-en-mantenimiento"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "page", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Vehículos en mantenimiento (filtrado) (GET /reportes/vehiculos-en-mantenimiento)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/reportes/vehiculos-en-mantenimiento?estado_mantenimiento=EN_PROCESO&taller_id=1&unidad_oficina_id=1&limit=50&page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "reportes", "vehiculos-en-mantenimiento"],
+              "query": [
+                { "key": "estado_mantenimiento", "value": "EN_PROCESO" },
+                { "key": "taller_id", "value": "1" },
+                { "key": "unidad_oficina_id", "value": "1" },
+                { "key": "limit", "value": "50" },
+                { "key": "page", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Costos mantenimiento (por mes) (GET /reportes/costos-mantenimiento)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/reportes/costos-mantenimiento?group_by=mes&fecha_inicio=2025-01-01&fecha_fin=2025-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "reportes", "costos-mantenimiento"],
+              "query": [
+                { "key": "group_by", "value": "mes" },
+                { "key": "fecha_inicio", "value": "2025-01-01" },
+                { "key": "fecha_fin", "value": "2025-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Costos mantenimiento (por taller) (GET /reportes/costos-mantenimiento)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/reportes/costos-mantenimiento?group_by=taller&fecha_inicio=2025-01-01&fecha_fin=2025-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "reportes", "costos-mantenimiento"],
+              "query": [
+                { "key": "group_by", "value": "taller" },
+                { "key": "fecha_inicio", "value": "2025-01-01" },
+                { "key": "fecha_fin", "value": "2025-12-31" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "apiVersion", "value": "v1" },
+    { "key": "token", "value": "" }
+  ]
+}
