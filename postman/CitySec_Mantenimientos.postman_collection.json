@@ -173,12 +173,31 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"estado_mantenimiento\": \"FINALIZADO\",\n  \"observaciones\": \"Trabajo concluido\"\n}"
+              "raw": "{\n  \"estado_mantenimiento\": \"FINALIZADO\",\n  \"km_actual_al_finalizar\": 12400,\n  \"costo_mano_obra\": 150.00,\n  \"costo_repuestos\": 200.00,\n  \"observaciones\": \"Trabajo concluido\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/{{apiVersion}}/mantenimientos/{{mantenimientoId}}/estado",
               "host": ["{{baseUrl}}"],
               "path": ["api", "{{apiVersion}}", "mantenimientos", "{{mantenimientoId}}", "estado"]
+            }
+          }
+        },
+        {
+          "name": "Historial mantenimientos por vehículo (GET /vehiculos/:id/mantenimientos)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/{{vehiculoId}}/mantenimientos?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "vehiculos",
+                "{{vehiculoId}}",
+                "mantenimientos"
+              ],
+              "query": [{ "key": "limit", "value": "50" }]
             }
           }
         },

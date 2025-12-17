@@ -261,6 +261,22 @@ export const validateCambiarEstadoMantenimiento = [
     .withMessage(
       `estado_mantenimiento debe ser: ${ESTADO_MANTENIMIENTO_ARRAY.join(", ")}`
     ),
+  body("km_actual_al_finalizar")
+    .optional()
+    .isDecimal({ decimal_digits: "0,2" })
+    .withMessage("km_actual_al_finalizar debe ser numérico"),
+  body("costo_mano_obra")
+    .optional()
+    .isDecimal({ decimal_digits: "0,2" })
+    .withMessage("costo_mano_obra debe ser numérico"),
+  body("costo_repuestos")
+    .optional()
+    .isDecimal({ decimal_digits: "0,2" })
+    .withMessage("costo_repuestos debe ser numérico"),
+  body("costo_total")
+    .optional()
+    .isDecimal({ decimal_digits: "0,2" })
+    .withMessage("costo_total debe ser numérico"),
   body("observaciones")
     .optional()
     .trim()

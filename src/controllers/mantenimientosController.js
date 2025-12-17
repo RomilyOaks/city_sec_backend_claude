@@ -10,6 +10,23 @@ import { Op } from "sequelize";
 const ESTADOS_INMOVILIZA = ["EN_TALLER", "EN_PROCESO"];
 const ESTADOS_LIBERA = ["FINALIZADO", "CANCELADO"];
 
+const toNumberOrNull = (v) => {
+  if (v === undefined || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+const computeCostoTotal = ({ costo_total, costo_mano_obra, costo_repuestos }) => {
+  const total = toNumberOrNull(costo_total);
+  if (total !== null) return total;
+
+  const mano = toNumberOrNull(costo_mano_obra);
+  const rep = toNumberOrNull(costo_repuestos);
+
+  if (mano === null && rep === null) return null;
+  return (mano || 0) + (rep || 0);
+};
+
 export const getMantenimientos = async (req, res) => {
   try {
     const {
@@ -103,6 +120,8 @@ export const createMantenimiento = async (req, res) => {
 
   try {
     const payload = { ...req.body };
+    const costoTotal = computeCostoTotal(payload);
+    if (costoTotal !== null) payload.costo_total = costoTotal;
 
     const vehiculo = await Vehiculo.findOne({
       where: { id: payload.vehiculo_id, estado: 1, deleted_at: null },
@@ -210,6 +229,8 @@ export const updateMantenimiento = async (req, res) => {
   try {
     const { id } = req.params;
     const payload = { ...req.body };
+    const costoTotal = computeCostoTotal(payload);
+    if (costoTotal !== null) payload.costo_total = costoTotal;
 
     const item = await MantenimientoVehiculo.findOne({
       where: { id, deleted_at: null },
@@ -359,7 +380,14 @@ export const cambiarEstadoMantenimiento = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { estado_mantenimiento, observaciones } = req.body;
+    const {
+      estado_mantenimiento,
+      observaciones,
+      km_actual_al_finalizar,
+      costo_mano_obra,
+      costo_repuestos,
+      costo_total,
+    } = req.body;
 
     const item = await MantenimientoVehiculo.findOne({
       where: { id, deleted_at: null },
@@ -393,6 +421,16 @@ export const cambiarEstadoMantenimiento = async (req, res) => {
       {
         estado_mantenimiento,
         observaciones: observaciones ?? item.observaciones,
+        km_actual_al_finalizar:
+          km_actual_al_finalizar ?? item.km_actual_al_finalizar,
+        costo_mano_obra: costo_mano_obra ?? item.costo_mano_obra,
+        costo_repuestos: costo_repuestos ?? item.costo_repuestos,
+        costo_total:
+          computeCostoTotal({
+            costo_total,
+            costo_mano_obra,
+            costo_repuestos,
+          }) ?? item.costo_total,
         updated_by: req.user?.id || null,
         fecha_inicio:
           estado_mantenimiento === "EN_TALLER" && !item.fecha_inicio
@@ -405,6 +443,29 @@ export const cambiarEstadoMantenimiento = async (req, res) => {
       },
       { transaction }
     );
+
+    if (estado_mantenimiento === "FINALIZADO") {
+      const kmFinal = toNumberOrNull(km_actual_al_finalizar);
+      if (kmFinal !== null) {
+        const kmVeh = toNumberOrNull(vehiculo.kilometraje_actual) || 0;
+        if (kmFinal < kmVeh) {
+          await transaction.rollback();
+          return res.status(400).json({
+            success: false,
+            message:
+              "km_actual_al_finalizar no puede ser menor al kilometraje_actual del vehículo",
+          });
+        }
+
+        await vehiculo.update(
+          {
+            kilometraje_actual: kmFinal,
+            updated_by: req.user?.id || null,
+          },
+          { transaction }
+        );
+      }
+    }
 
     if (ESTADOS_INMOVILIZA.includes(estado_mantenimiento)) {
       if (vehiculo.estado_operativo !== "MANTENIMIENTO") {
