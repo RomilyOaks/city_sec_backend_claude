@@ -335,6 +335,35 @@ async function seedRBAC() {
         es_sistema: true,
       },
 
+      {
+        modulo: "vehiculos",
+        recurso: "talleres",
+        accion: "create",
+        descripcion: "Registrar talleres",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "talleres",
+        accion: "read",
+        descripcion: "Ver talleres",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "talleres",
+        accion: "update",
+        descripcion: "Actualizar talleres",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "talleres",
+        accion: "delete",
+        descripcion: "Eliminar talleres",
+        es_sistema: true,
+      },
+
       // ============================================
       // MÓDULO: PERSONAL
       // ============================================
