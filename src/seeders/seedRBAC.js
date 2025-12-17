@@ -500,6 +500,13 @@ async function seedRBAC() {
       },
       {
         modulo: "reportes",
+        recurso: "mantenimientos",
+        accion: "read",
+        descripcion: "Ver reportes de mantenimientos",
+        es_sistema: true,
+      },
+      {
+        modulo: "reportes",
         recurso: "exportar",
         accion: "execute",
         descripcion: "Exportar reportes",
