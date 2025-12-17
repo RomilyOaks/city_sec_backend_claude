@@ -234,6 +234,14 @@ import Permiso from "./Permiso.js";
  */
 import UsuarioRol from "./UsuarioRoles.js";
 
+import EmailVerification from "./EmailVerification.js";
+import PasswordReset from "./PasswordReset.js";
+import PasswordHistorial from "./PasswordHistorial.js";
+import Sesion from "./Sesion.js";
+import TokenAcceso from "./TokenAcceso.js";
+import UsuarioPermiso from "./UsuarioPermiso.js";
+import RolPermiso from "./RolPermiso.js";
+
 //=============================================
 // IMPORTAR MODELOS - AUDITORÍA
 //=============================================
@@ -707,6 +715,46 @@ UsuarioRol.belongsTo(Usuario, {
   as: "asignador",
 });
 
+Usuario.hasMany(Sesion, {
+  foreignKey: "usuario_id",
+  as: "sesiones",
+});
+
+Sesion.belongsTo(Usuario, {
+  foreignKey: "usuario_id",
+  as: "usuario",
+});
+
+Usuario.hasMany(TokenAcceso, {
+  foreignKey: "usuario_id",
+  as: "tokensAcceso",
+});
+
+TokenAcceso.belongsTo(Usuario, {
+  foreignKey: "usuario_id",
+  as: "usuario",
+});
+
+Usuario.hasMany(EmailVerification, {
+  foreignKey: "usuario_id",
+  as: "verificacionesEmail",
+});
+
+EmailVerification.belongsTo(Usuario, {
+  foreignKey: "usuario_id",
+  as: "usuario",
+});
+
+Usuario.hasMany(PasswordHistorial, {
+  foreignKey: "usuario_id",
+  as: "passwordHistorial",
+});
+
+PasswordHistorial.belongsTo(Usuario, {
+  foreignKey: "usuario_id",
+  as: "usuario",
+});
+
 //=============================================
 // ASOCIACIONES MANY-TO-MANY: Rol <-> Permiso
 //=============================================
@@ -1038,6 +1086,14 @@ const models = {
   Permiso,
   UsuarioRol,
 
+  EmailVerification,
+  PasswordReset,
+  PasswordHistorial,
+  Sesion,
+  TokenAcceso,
+  UsuarioPermiso,
+  RolPermiso,
+
   // Auditoría
   HistorialUsuario,
   LoginIntento,
@@ -1093,6 +1149,14 @@ export {
   Rol,
   Permiso,
   UsuarioRol,
+
+  EmailVerification,
+  PasswordReset,
+  PasswordHistorial,
+  Sesion,
+  TokenAcceso,
+  UsuarioPermiso,
+  RolPermiso,
   // Auditoría
   HistorialUsuario,
   LoginIntento,
