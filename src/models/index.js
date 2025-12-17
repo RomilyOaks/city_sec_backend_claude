@@ -142,6 +142,13 @@ import PersonalSeguridad from "./PersonalSeguridad.js";
  */
 import UnidadOficina from "./UnidadOficina.js";
 
+/**
+ * Modelo AbastecimientoCombustible
+ * Registro de abastecimiento de combustible de vehículos
+ * @type {Model}
+ */
+import AbastecimientoCombustible from "./AbastecimientoCombustible.js";
+
 //=============================================
 // IMPORTAR MODELOS - NOVEDADES/INCIDENTES
 //=============================================
@@ -260,6 +267,34 @@ TipoVehiculo.hasMany(Vehiculo, {
 Vehiculo.belongsTo(TipoVehiculo, {
   foreignKey: "tipo_id",
   as: "tipoVehiculo",
+});
+
+/**
+ * Relación: Vehiculo -> AbastecimientoCombustible (One-to-Many)
+ * Un vehículo puede tener múltiples abastecimientos.
+ */
+Vehiculo.hasMany(AbastecimientoCombustible, {
+  foreignKey: "vehiculo_id",
+  as: "abastecimientos",
+});
+
+AbastecimientoCombustible.belongsTo(Vehiculo, {
+  foreignKey: "vehiculo_id",
+  as: "vehiculo",
+});
+
+/**
+ * Relación: PersonalSeguridad -> AbastecimientoCombustible (One-to-Many)
+ * Un personal puede registrar múltiples abastecimientos.
+ */
+PersonalSeguridad.hasMany(AbastecimientoCombustible, {
+  foreignKey: "personal_id",
+  as: "abastecimientos",
+});
+
+AbastecimientoCombustible.belongsTo(PersonalSeguridad, {
+  foreignKey: "personal_id",
+  as: "personal",
 });
 
 //=============================================
@@ -906,6 +941,7 @@ const models = {
 
   // Operativos
   Vehiculo,
+  AbastecimientoCombustible,
   Sector,
   Cuadrante,
   UnidadOficina,
@@ -961,6 +997,7 @@ export {
   Ubigeo,
   // Operativos
   Vehiculo,
+  AbastecimientoCombustible,
   Sector,
   Cuadrante,
   UnidadOficina,

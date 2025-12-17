@@ -5,15 +5,11 @@
  *
  * Ruta: src/controllers/estadoNovedadController.js
  *
- * VERSIÓN: 1.0.1
- * FECHA: 2025-12-14
- *
- * Descripción:
- * Controlador para gestión de estados del workflow de novedades.
- * Maneja CRUD completo con validaciones especiales para estado inicial.
+ * VERSIÓN: 1.0.3 (Validación previa de duplicados y estado inicial)
+ * FECHA: 2025-12-15
  *
  * @module controllers/estadoNovedadController
- * @version 1.0.0
+ * @version 1.0.2
  */
 
 import { EstadoNovedad } from "../models/index.js";
@@ -108,7 +104,6 @@ const create = async (req, res) => {
     const {
       nombre,
       descripcion,
-      estado_code,
       color_hex,
       icono,
       orden,
@@ -117,6 +112,21 @@ const create = async (req, res) => {
       permite_edicion,
       requiere_unidad,
     } = req.body;
+
+    // Validar nombre duplicado
+    const nombreExistente = await EstadoNovedad.findOne({
+      where: {
+        nombre: nombre,
+        deleted_at: null,
+      },
+    });
+
+    if (nombreExistente) {
+      return res.status(400).json({
+        success: false,
+        message: `Ya existe un estado con el nombre "${nombre}"`,
+      });
+    }
 
     // Validar que solo haya un estado inicial
     if (es_estado_inicial) {
@@ -141,7 +151,6 @@ const create = async (req, res) => {
     const nuevo = await EstadoNovedad.create({
       nombre,
       descripcion,
-      estado_code,
       color_hex,
       icono,
       orden,
@@ -165,6 +174,16 @@ const create = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: error.message,
+      });
+    }
+
+    // Manejar error de unique constraint de Sequelize (por si acaso)
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const field = error.errors[0]?.path || "campo";
+      const value = error.errors[0]?.value || "";
+      return res.status(400).json({
+        success: false,
+        message: `Ya existe un estado con este ${field}: "${value}"`,
       });
     }
 
@@ -196,6 +215,27 @@ const update = async (req, res) => {
       });
     }
 
+    // Validar nombre duplicado si cambió
+    if (
+      datosActualizacion.nombre &&
+      datosActualizacion.nombre !== item.nombre
+    ) {
+      const nombreExistente = await EstadoNovedad.findOne({
+        where: {
+          nombre: datosActualizacion.nombre,
+          id: { [Op.ne]: id },
+          deleted_at: null,
+        },
+      });
+
+      if (nombreExistente) {
+        return res.status(400).json({
+          success: false,
+          message: `Ya existe otro estado con el nombre "${datosActualizacion.nombre}"`,
+        });
+      }
+    }
+
     // Validar estado inicial único si se está cambiando
     if (datosActualizacion.es_estado_inicial && !item.es_inicial) {
       const estadoInicialExistente = await EstadoNovedad.findOne({
@@ -217,9 +257,7 @@ const update = async (req, res) => {
     }
 
     // Mapear campos del body a campos del modelo
-    const camposActualizados = {
-      ...datosActualizacion,
-    };
+    const camposActualizados = { ...datosActualizacion };
 
     // Mapear es_estado_inicial a es_inicial
     if (datosActualizacion.es_estado_inicial !== undefined) {
@@ -252,6 +290,16 @@ const update = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: error.message,
+      });
+    }
+
+    // Manejar error de unique constraint de Sequelize
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const field = error.errors[0]?.path || "campo";
+      const value = error.errors[0]?.value || "";
+      return res.status(400).json({
+        success: false,
+        message: `Ya existe un estado con este ${field}: "${value}"`,
       });
     }
 
