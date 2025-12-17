@@ -63,6 +63,8 @@ import {
   TipoVehiculo,
   EstadoNovedad,
   TipoNovedad,
+  SubtipoNovedad,
+  Usuario,
   AbastecimientoCombustible,
 } from "../models/index.js";
 import { Op } from "sequelize";
@@ -602,7 +604,7 @@ export const deleteVehiculo = async (req, res) => {
       include: [
         {
           model: EstadoNovedad,
-          as: "estadoNovedad",
+          as: "novedadEstado",
           where: {
             nombre: {
               [Op.notIn]: ["CERRADO", "CANCELADO", "FINALIZADO"],
@@ -949,43 +951,28 @@ export const getHistorialVehiculo = async (req, res) => {
       include: [
         {
           model: EstadoNovedad,
-          as: "estadoNovedad", // 🔥 Verifica este alias en tu modelo
+          as: "novedadEstado", // Alias correcto según models/index.js
           attributes: ["nombre", "color_hex"],
         },
         {
-          model: PersonalSeguridad,
-          as: "novedades_personal", // 🔥 Verifica este alias en tu modelo
-          attributes: ["nombres", "apellido_paterno", "apellido_materno"],
-        },
-        {
-          model: PersonalSeguridad,
-          as: "novedades_personal2", // 🔥 Verifica este alias en tu modelo
-          attributes: ["nombres", "apellido_paterno", "apellido_materno"],
-        },
-        {
-          model: PersonalSeguridad,
-          as: "novedades_personal3", // 🔥 Verifica este alias en tu modelo
-          attributes: ["nombres", "apellido_paterno", "apellido_materno"],
-        },
-        {
-          model: PersonalSeguridad,
-          as: "novedades_personal4", // 🔥 Verifica este alias en tu modelo
-          attributes: ["nombres", "apellido_paterno", "apellido_materno"],
-        },
-        {
-          model: PersonalSeguridad,
-          as: "novedades_personal4", // 🔥 Verifica este alias en tu modelo
-          attributes: ["nombres", "apellido_paterno", "apellido_materno"],
-        },
-        {
-          model: PersonalSeguridad,
-          as: "novedades_usuario_registro", // 🔥 Verifica este alias en tu modelo
-          attributes: ["nombres", "apellido_paterno", "apellido_materno"],
-        },
-        {
           model: TipoNovedad,
-          as: "tipo", // 🔥 Verifica este alias en tu modelo
+          as: "novedadTipoNovedad", // Alias correcto según models/index.js
           attributes: ["nombre", "icono"],
+        },
+        {
+          model: SubtipoNovedad,
+          as: "novedadSubtipoNovedad", // Alias correcto según models/index.js
+          attributes: ["nombre", "descripcion"],
+        },
+        {
+          model: UnidadOficina,
+          as: "novedadUnidadOficina", // Alias correcto según models/index.js
+          attributes: ["id", "nombre", "codigo"],
+        },
+        {
+          model: Usuario,
+          as: "novedadUsuarioRegistro", // Alias correcto según models/index.js
+          attributes: ["id", "username", "email"],
         },
       ],
       order: [["fecha_hora_ocurrencia", "DESC"]], // 🔥 Campo correcto según schema
