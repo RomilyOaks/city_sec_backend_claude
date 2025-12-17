@@ -1253,15 +1253,14 @@ export const asignarVehiculo = async (req, res) => {
       });
     }
 
-    await PersonalSeguridad.update(
+    // Usar update sobre la instancia para que validaciones/hook tengan acceso
+    // a los valores existentes (licencia/categoria/vigencia), evitando ValidationError
+    await personal.update(
       {
         vehiculo_id: vehiculo_id,
         updated_by: req.user?.id || null,
       },
-      {
-        where: { id },
-        transaction,
-      }
+      { transaction }
     );
 
     await Vehiculo.update(
@@ -1305,6 +1304,14 @@ export const asignarVehiculo = async (req, res) => {
     }
 
     console.error("❌ Error en asignarVehiculo:", error);
+
+    if (error?.name === "SequelizeValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: "Error de validación",
+        error: error.message,
+      });
+    }
 
     return res.status(500).json({
       success: false,
@@ -1686,21 +1693,21 @@ export const getHistorialNovedades = async (req, res) => {
       include: [
         {
           model: TipoNovedad,
-          as: "tipoNovedad",
-          attributes: ["id", "nombre", "codigo"],
+          as: "novedadTipoNovedad",
+          attributes: ["id", "nombre", ["tipo_code", "codigo"]],
         },
         {
           model: EstadoNovedad,
-          as: "estadoNovedad",
+          as: "novedadEstado",
           attributes: ["id", "nombre"],
         },
         {
           model: Vehiculo,
-          as: "vehiculoNovedad",
+          as: "novedadVehiculo",
           attributes: ["id", "codigo_vehiculo", "placa"],
         },
       ],
-      order: [["fecha_hora", "DESC"]],
+      order: [["fecha_hora_ocurrencia", "DESC"]],
       limit: parseInt(limit),
     });
 
