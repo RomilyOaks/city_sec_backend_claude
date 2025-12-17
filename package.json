@@ -7,8 +7,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "jest --coverage",
-    "test:watch": "jest --watch",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --coverage",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "tree-gen": "find src -path 'src/node_modules' -prune -o -name '.git' -prune -o -print | sed 's|^[^/]*/||g' | sed 's/[^/]*\\//|--/g;s/|--/|  /g' | sed 's/|/|/g'",
     "lint": "eslint src/**/*.js",
     "lint:fix": "eslint src/**/*.js --fix",
