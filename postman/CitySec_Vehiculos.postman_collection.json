@@ -1,0 +1,264 @@
+{
+  "info": {
+    "_postman_id": "2e85a7d1-4a41-4b6a-8d6c-2a28f7c7e3d4",
+    "name": "CitySec - Vehículos",
+    "description": "Colección para probar el módulo de Vehículos (ruta /api/{{apiVersion}}/vehiculos).\n\nVariables de colección:\n- baseUrl: URL base del backend (ej: http://localhost:3000)\n- apiVersion: versión del API (ej: v1)\n- token: JWT (se llena automáticamente con el request Login)\n- vehiculoId: id del vehículo para GET/PUT/PATCH/DELETE e historial\n- tipoVehiculoId: id de tipo_vehiculo (para crear vehículo)\n- unidadOficinaId: id de unidad_oficina (para crear vehículo)\n\nNotas:\n- Todas las rutas requieren autenticación (verificarToken).\n- Algunas rutas requieren roles/permisos (RBAC).\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (guarda token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const token = json?.token || json?.data?.token || json?.accessToken || json?.data?.accessToken;",
+                  "if (token) pm.collectionVariables.set('token', token);",
+                  "pm.test('Login responde 200/201', function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Token guardado', function () {",
+                  "  pm.expect(pm.collectionVariables.get('token')).to.be.ok;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Vehículos",
+      "item": [
+        {
+          "name": "Estadísticas (GET /vehiculos/stats)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "vehiculos", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Vehículos disponibles (GET /vehiculos/disponibles)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/disponibles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "vehiculos", "disponibles"]
+            }
+          }
+        },
+        {
+          "name": "Listar vehículos (GET /vehiculos)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos?page=1&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "vehiculos"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener vehículo por ID (GET /vehiculos/:id)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/{{vehiculoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "vehiculos", "{{vehiculoId}}"]
+            }
+          }
+        },
+        {
+          "name": "Crear vehículo (POST /vehiculos)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo_id\": {{tipoVehiculoId}},\n  \"placa\": \"ABC-123\",\n  \"unidad_oficina_id\": {{unidadOficinaId}},\n  \"marca\": \"TOYOTA\",\n  \"modelo_vehiculo\": \"HILUX\",\n  \"anio_vehiculo\": 2020,\n  \"color_vehiculo\": \"BLANCO\",\n  \"kilometraje_inicial\": 1000,\n  \"estado_operativo\": \"DISPONIBLE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "vehiculos"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json?.data?.id || json?.id;",
+                  "if (id) pm.collectionVariables.set('vehiculoId', String(id));",
+                  "pm.test('Responde 201', function () {",
+                  "  pm.expect(pm.response.code).to.eql(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar vehículo (PUT /vehiculos/:id)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"marca\": \"TOYOTA\",\n  \"modelo_vehiculo\": \"HILUX\",\n  \"color_vehiculo\": \"NEGRO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/{{vehiculoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "vehiculos", "{{vehiculoId}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar kilometraje (PATCH /vehiculos/:id/kilometraje)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kilometraje_nuevo\": 1500,\n  \"observaciones\": \"Actualización de KM desde Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/{{vehiculoId}}/kilometraje",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "vehiculos", "{{vehiculoId}}", "kilometraje"]
+            }
+          }
+        },
+        {
+          "name": "Cambiar estado operativo (PATCH /vehiculos/:id/estado)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado_operativo\": \"MANTENIMIENTO\",\n  \"observaciones\": \"Cambio a mantenimiento desde Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/{{vehiculoId}}/estado",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "vehiculos", "{{vehiculoId}}", "estado"]
+            }
+          }
+        },
+        {
+          "name": "Historial de novedades del vehículo (GET /vehiculos/:id/historial)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/{{vehiculoId}}/historial?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "vehiculos", "{{vehiculoId}}", "historial"],
+              "query": [{ "key": "limit", "value": "50" }]
+            }
+          }
+        },
+        {
+          "name": "Historial de abastecimientos del vehículo (GET /vehiculos/:id/abastecimientos)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/{{vehiculoId}}/abastecimientos?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "vehiculos", "{{vehiculoId}}", "abastecimientos"],
+              "query": [{ "key": "limit", "value": "50" }]
+            }
+          }
+        },
+        {
+          "name": "Registrar abastecimiento (POST /vehiculos/:id/abastecimiento)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha_hora\": \"2025-12-16T23:05:00.000Z\",\n  \"tipo_combustible\": \"GASOLINA_90\",\n  \"cantidad_galones\": 5,\n  \"precio_galon\": 18.5,\n  \"importe_total\": 92.5,\n  \"km_actual\": 12345,\n  \"grifo\": \"GRIFO PRUEBA\",\n  \"observaciones\": \"Carga de prueba\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/{{vehiculoId}}/abastecimiento",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "vehiculos", "{{vehiculoId}}", "abastecimiento"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar vehículo (DELETE /vehiculos/:id - soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/{{vehiculoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "vehiculos", "{{vehiculoId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "apiVersion", "value": "v1" },
+    { "key": "token", "value": "" },
+    { "key": "vehiculoId", "value": "1" },
+    { "key": "tipoVehiculoId", "value": "1" },
+    { "key": "unidadOficinaId", "value": "1" }
+  ]
+}
