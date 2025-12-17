@@ -51,12 +51,14 @@ import cuadrantesRoutes from "./routes/cuadrantes.routes.js";
 import permisosRoutes from "./routes/permisos.routes.js";
 import rolesRoutes from "./routes/roles.routes.js";
 import auditoriaAccionRoutes from "./routes/auditoriaAcciones.routes.js";
+import abastecimientosRoutes from "./routes/abastecimientos.routes.js";
 
-// ✅ AGREGADO: Rutas de cargos
+// Rutas de catalogos
 import cargosRoutes from "./routes/cargos.routes.js";
 import tipoNovedadRoutes from "./routes/tipo-novedad.routes.js";
 import subtipoNovedadRoutes from "./routes/subtipo-novedad.routes.js";
 import estadoNovedadRoutes from "./routes/estado-novedad.routes.js";
+import unidadOficinaRoutes from "./routes/unidad-oficina.routes.js";
 
 // ============================================
 // CONFIGURACIÓN INICIAL
@@ -244,6 +246,7 @@ app.get(`/api/${API_VERSION}`, (req, res) => {
       tipos_novedad: `/api/${API_VERSION}/tipos-novedad`, // ✅ NUEVO
       subtipos_novedad: `/api/${API_VERSION}/subtipos-novedad`, // ✅ NUEVO
       estados_novedad: `/api/${API_VERSION}/estados-novedad`, // ✅ NUEVO
+      abastecimientos: `/api/${API_VERSION}/abastecimientos`, // ✅ NUEVO
     },
     contact: {
       support: "soporte@citysec.com",
@@ -267,14 +270,16 @@ app.use(`/api/${API_VERSION}/cuadrantes`, cuadrantesRoutes);
 app.use(`/api/${API_VERSION}/permisos`, permisosRoutes);
 app.use(`/api/${API_VERSION}/roles`, rolesRoutes);
 app.use(`/api/${API_VERSION}/auditoria`, auditoriaAccionRoutes);
+app.use(`/api/${API_VERSION}/abastecimientos`, abastecimientosRoutes);
 
-// ✅ AGREGADO: Rutas de cargos
+// Rutas de cargos
 app.use(`/api/${API_VERSION}/cargos`, cargosRoutes);
 
-// ✅ AGREGADO: Rutas de Tipos, Subtipos y Estados de Novedad
+// Rutas de Tipos, Subtipos, Estados de Novedad y Unidades de Oficinas
 app.use(`/api/${API_VERSION}/tipos-novedad`, tipoNovedadRoutes);
 app.use(`/api/${API_VERSION}/subtipos-novedad`, subtipoNovedadRoutes);
 app.use(`/api/${API_VERSION}/estados-novedad`, estadoNovedadRoutes);
+app.use(`/api/${API_VERSION}/unidades-oficina`, unidadOficinaRoutes);
 
 // ============================================
 // ✅ HEALTH CHECK DENTRO DE VERSIONAMIENTO

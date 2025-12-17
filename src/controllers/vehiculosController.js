@@ -63,6 +63,7 @@ import {
   TipoVehiculo,
   EstadoNovedad,
   TipoNovedad,
+  AbastecimientoCombustible,
 } from "../models/index.js";
 import { Op } from "sequelize";
 import sequelize from "../config/database.js";
@@ -1066,29 +1067,77 @@ export const registrarAbastecimiento = async (req, res) => {
       );
     }
 
+    // ===================================================
+    // RESOLVER personal_id (BD lo requiere NOT NULL)
+    // ===================================================
+    // Nota:
+    // - authMiddleware ahora incluye personal_seguridad_id en req.user.
+    // - Esto evita una consulta extra a la tabla usuarios en cada request.
+    const personalId = req.user?.personal_seguridad_id;
+
+    if (!personalId) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message:
+          "No se pudo determinar el personal_id para el abastecimiento. Asigne personal_seguridad_id al usuario autenticado.",
+      });
+    }
+
+    // Validar que el personal exista y esté activo
+    const personal = await PersonalSeguridad.findOne({
+      where: { id: personalId, estado: 1, deleted_at: null },
+      transaction,
+    });
+
+    if (!personal) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Personal no encontrado o inactivo",
+      });
+    }
+
+    // ===================================================
+    // NORMALIZAR A COLUMNAS REALES DE LA TABLA
+    // ===================================================
+    // Compatibilidad:
+    // - cantidad_galones -> cantidad (unidad=GALONES)
+    // - precio_galon -> precio_unitario
+    // - grifo -> grifo_nombre
+    const cantidad = cantidad_galones;
+    const unidad = "GALONES";
+    const precio_unitario = precio_galon || 0;
+
+    const importe_total_final =
+      importe_total || parseFloat(cantidad) * parseFloat(precio_unitario);
+
+    const abastecimiento = await AbastecimientoCombustible.create(
+      {
+        vehiculo_id: id,
+        personal_id: personalId,
+        fecha_hora,
+        tipo_combustible,
+        km_actual: km_actual || vehiculo.kilometraje_actual,
+        cantidad,
+        unidad,
+        importe_total: importe_total_final,
+        precio_unitario,
+        grifo_nombre: grifo,
+        observaciones: observaciones || null,
+        estado: 1,
+        created_by: req.user.id,
+        updated_by: req.user.id,
+      },
+      { transaction }
+    );
+
     await transaction.commit();
 
-    // TODO: Crear registro en tabla abastecimientos cuando exista el modelo
-    const abastecimiento = {
-      id: Date.now(),
-      vehiculo_id: id,
-      fecha_hora,
-      tipo_combustible,
-      cantidad_galones,
-      precio_galon: precio_galon || 0,
-      importe_total: importe_total || cantidad_galones * (precio_galon || 0),
-      km_actual: km_actual || vehiculo.kilometraje_actual,
-      grifo,
-      observaciones,
-      registrado_por: req.user.id,
-      created_at: new Date(),
-    };
-
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Abastecimiento registrado exitosamente",
       data: abastecimiento,
-      nota: "Esta funcionalidad requiere crear el modelo Abastecimiento en la base de datos",
     });
   } catch (error) {
     if (!transaction.finished) {
@@ -1132,17 +1181,40 @@ export const getHistorialAbastecimientos = async (req, res) => {
       });
     }
 
-    // TODO: Consultar tabla abastecimientos cuando exista el modelo
-    const abastecimientos = [];
+    // ===================================================
+    // CONSULTAR TABLA REAL: abastecimiento_combustible
+    // ===================================================
+    const where = {
+      vehiculo_id: id,
+      deleted_at: null,
+    };
 
-    res.status(200).json({
+    if (fecha_inicio || fecha_fin) {
+      where.fecha_hora = {};
+      if (fecha_inicio) where.fecha_hora[Op.gte] = new Date(fecha_inicio);
+      if (fecha_fin) where.fecha_hora[Op.lte] = new Date(fecha_fin);
+    }
+
+    const abastecimientos = await AbastecimientoCombustible.findAll({
+      where,
+      limit: parseInt(limit),
+      order: [["fecha_hora", "DESC"]],
+      include: [
+        {
+          model: PersonalSeguridad,
+          as: "personal",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        },
+      ],
+    });
+
+    return res.status(200).json({
       success: true,
       data: {
         vehiculo,
         total_abastecimientos: abastecimientos.length,
         abastecimientos,
       },
-      nota: "Esta funcionalidad requiere crear el modelo Abastecimiento en la base de datos",
     });
   } catch (error) {
     console.error("Error al obtener historial de abastecimientos:", error);

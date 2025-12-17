@@ -1,0 +1,159 @@
+{
+  "info": {
+    "_postman_id": "c9b3a2c1-1a6f-44bb-9fb3-2d87e13f6c10",
+    "name": "CitySec - Unidades/Oficina",
+    "description": "Colección para probar el módulo de Unidades/Oficina (ruta /api/{{apiVersion}}/unidades-oficina).\n\nVariables de colección:\n- baseUrl: URL base del backend (ej: http://localhost:3000)\n- apiVersion: versión del API (ej: v1)\n- token: JWT (se llena automáticamente con el request Login)\n- unidadOficinaId: id de la unidad/oficina para GET/PUT/DELETE\n\nNotas:\n- Todas las rutas requieren autenticación (verificarToken).\n- POST/PUT requieren rol: super_admin/admin/supervisor.\n- DELETE requiere rol: super_admin/admin.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (guarda token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const token = json?.token || json?.data?.token || json?.accessToken || json?.data?.accessToken;",
+                  "if (token) pm.collectionVariables.set('token', token);",
+                  "pm.test('Login responde 200/201', function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Token guardado', function () {",
+                  "  pm.expect(pm.collectionVariables.get('token')).to.be.ok;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Unidades/Oficina",
+      "item": [
+        {
+          "name": "Listar unidades/oficina (GET)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/unidades-oficina",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "unidades-oficina"]
+            }
+          }
+        },
+        {
+          "name": "Obtener unidad/oficina por ID (GET)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/unidades-oficina/{{unidadOficinaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "unidades-oficina", "{{unidadOficinaId}}"]
+            }
+          }
+        },
+        {
+          "name": "Crear unidad/oficina (POST)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Unidad Serenazgo Centro\",\n  \"tipo_unidad\": \"SERENAZGO\",\n  \"codigo\": \"USC-01\",\n  \"ubigeo\": \"150101\",\n  \"direccion\": \"Av. Principal 123\",\n  \"telefono\": \"+51 999 999 999\",\n  \"email\": \"serenazgo.centro@demo.com\",\n  \"latitud\": -12.0464,\n  \"longitud\": -77.0428,\n  \"radio_cobertura_km\": 3.5,\n  \"activo_24h\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/unidades-oficina",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "unidades-oficina"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json?.data?.id || json?.id;",
+                  "if (id) pm.collectionVariables.set('unidadOficinaId', String(id));",
+                  "pm.test('Responde 201', function () {",
+                  "  pm.expect(pm.response.code).to.eql(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar unidad/oficina (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direccion\": \"Av. Principal 456\",\n  \"telefono\": \"+51 988 888 888\",\n  \"radio_cobertura_km\": 4.0,\n  \"activo_24h\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/unidades-oficina/{{unidadOficinaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "unidades-oficina", "{{unidadOficinaId}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar unidad/oficina (DELETE - soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/unidades-oficina/{{unidadOficinaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "unidades-oficina", "{{unidadOficinaId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "apiVersion", "value": "v1" },
+    { "key": "token", "value": "" },
+    { "key": "unidadOficinaId", "value": "" }
+  ]
+}

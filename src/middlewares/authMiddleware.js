@@ -111,6 +111,7 @@ export const verificarToken = async (req, res, next) => {
       id: usuario.id,
       username: usuario.username,
       email: usuario.email,
+      personal_seguridad_id: usuario.personal_seguridad_id || null,
       rol: rolPrincipal,
       roles: roles, // Nombres legibles
       rolSlugs: rolSlugs, // 🔥 NUEVO: Slugs para comparación
@@ -374,6 +375,7 @@ export const autenticacionOpcional = async (req, res, next) => {
         id: usuario.id,
         username: usuario.username,
         email: usuario.email,
+        personal_seguridad_id: usuario.personal_seguridad_id || null,
         rol: rolPrincipal,
         roles: usuario.roles?.map((r) => r.nombre) || [],
         rolSlugs: rolSlugs, // 🔥 NUEVO

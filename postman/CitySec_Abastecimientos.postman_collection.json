@@ -1,0 +1,334 @@
+{
+  "info": {
+    "_postman_id": "7c4d9b8f-6f9b-4f4f-9d0d-9f6d9c2f1d1a",
+    "name": "CitySec - Abastecimientos",
+    "description": "Colección para probar el módulo de abastecimientos de combustible (tabla abastecimiento_combustible) y endpoints legacy de vehículos.\n\nVariables de colección:\n- baseUrl: URL base del backend (ej: http://localhost:3000)\n- apiVersion: versión del API (ej: v1)\n- token: JWT (se llena automáticamente con el request Login)\n- vehiculoId: id del vehículo a usar en endpoints legacy\n- abastecimientoId: id del abastecimiento para GET/PUT/DELETE\n\nRequisito: el usuario autenticado debe tener usuarios.personal_seguridad_id asignado para registrar abastecimientos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (guarda token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Intenta guardar el token de varias formas para ser tolerante a cambios del backend",
+                  "const json = pm.response.json();",
+                  "const token = json?.token || json?.data?.token || json?.accessToken || json?.data?.accessToken;",
+                  "if (token) {",
+                  "  pm.collectionVariables.set('token', token);",
+                  "}",
+                  "pm.test('Login responde 200/201', function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Token presente en respuesta o guardado', function () {",
+                  "  pm.expect(pm.collectionVariables.get('token')).to.be.ok;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Vehículos (legacy) - Abastecimiento",
+      "item": [
+        {
+          "name": "Registrar abastecimiento (legacy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha_hora\": \"2025-12-16T23:05:00.000Z\",\n  \"tipo_combustible\": \"GASOLINA_90\",\n  \"cantidad_galones\": 5,\n  \"precio_galon\": 18.5,\n  \"importe_total\": 92.5,\n  \"km_actual\": 12345,\n  \"grifo\": \"GRIFO PRUEBA\",\n  \"observaciones\": \"Carga de prueba\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/{{vehiculoId}}/abastecimiento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "vehiculos",
+                "{{vehiculoId}}",
+                "abastecimiento"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "// Intentar guardar el ID creado si viene en data.id",
+                  "const id = json?.data?.id || json?.id;",
+                  "if (id) pm.collectionVariables.set('abastecimientoId', String(id));",
+                  "pm.test('Responde 201', function () {",
+                  "  pm.expect(pm.response.code).to.eql(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historial de abastecimientos del vehículo (legacy)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/vehiculos/{{vehiculoId}}/abastecimientos?limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "vehiculos",
+                "{{vehiculoId}}",
+                "abastecimientos"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Abastecimientos (módulo)",
+      "item": [
+        {
+          "name": "Listar abastecimientos (filtros opcionales)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/abastecimientos?limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "abastecimientos"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear abastecimiento (módulo)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehiculo_id\": {{vehiculoId}},\n  \"fecha_hora\": \"2025-12-16T23:05:00.000Z\",\n  \"tipo_combustible\": \"DIESEL_B5\",\n  \"km_actual\": 20000,\n  \"cantidad\": 20,\n  \"unidad\": \"LITROS\",\n  \"precio_unitario\": 5.8,\n  \"grifo_nombre\": \"GRIFO CENTRAL\",\n  \"observaciones\": \"Registro por módulo abastecimientos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/abastecimientos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "abastecimientos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json?.data?.id || json?.id;",
+                  "if (id) pm.collectionVariables.set('abastecimientoId', String(id));",
+                  "pm.test('Responde 201', function () {",
+                  "  pm.expect(pm.response.code).to.eql(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener abastecimiento por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/abastecimientos/{{abastecimientoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "abastecimientos",
+                "{{abastecimientoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar abastecimiento (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"observaciones\": \"Actualizado desde Postman\",\n  \"factura_boleta\": \"F001-000123\",\n  \"grifo_ruc\": \"20123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/abastecimientos/{{abastecimientoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "abastecimientos",
+                "{{abastecimientoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar abastecimiento (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/abastecimientos/{{abastecimientoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "{{apiVersion}}",
+                "abastecimientos",
+                "{{abastecimientoId}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "apiVersion",
+      "value": "v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "vehiculoId",
+      "value": "1"
+    },
+    {
+      "key": "abastecimientoId",
+      "value": ""
+    }
+  ]
+}

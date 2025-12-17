@@ -46,3 +46,6 @@ authMiddleware-copy.js
 PersonalSeguridad-copy.js
 
 previous-versions/
+
+# Entire DB Model
+CITIZEN_SECURITY_DB_v2b.sql

@@ -160,7 +160,8 @@ export const TIPO_COMBUSTIBLE = {
   GASOLINA_90: "GASOLINA_90",
   GASOLINA_95: "GASOLINA_95",
   GASOLINA_97: "GASOLINA_97",
-  DIESEL: "DIESEL",
+  DIESEL_B5: "DIESEL_B5",
+  DIESEL_B20: "DIESEL_B20",
   GLP: "GLP",
   GNV: "GNV",
 };
@@ -172,10 +173,18 @@ export const TIPO_COMBUSTIBLE_DESCRIPCION = {
   GASOLINA_90: "Gasolina 90 octanos",
   GASOLINA_95: "Gasolina 95 octanos",
   GASOLINA_97: "Gasolina 97 octanos (Premium)",
-  DIESEL: "Petróleo Diesel",
+  DIESEL_B5: "Petróleo Diesel B5",
+  DIESEL_B20: "Petróleo Diesel B20",
   GLP: "Gas Licuado de Petróleo",
   GNV: "Gas Natural Vehicular",
 };
+
+export const UNIDAD_COMBUSTIBLE = {
+  LITROS: "LITROS",
+  GALONES: "GALONES",
+};
+
+export const UNIDAD_COMBUSTIBLE_ARRAY = Object.values(UNIDAD_COMBUSTIBLE);
 
 // ==========================================
 // UNIDADES/OFICINAS

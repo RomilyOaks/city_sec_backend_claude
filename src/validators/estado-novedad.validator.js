@@ -5,16 +5,15 @@
  *
  * Ruta: src/validators/estado-novedad.validator.js
  *
- * VERSIÓN: 1.0.1 (CORREGIDO)
+ * VERSIÓN: 1.0.2 (FINAL - SIN estado_code)
  * FECHA: 2025-12-14
  *
  * CAMBIOS:
- * - estado_code (en vez de codigo)
- * - color_hex (en vez de color)
- * - Nombres consistentes con la BD
+ * - ❌ Eliminado estado_code (no existe en la BD)
+ * - ✅ Solo nombre, descripcion, color_hex, icono
  *
  * @module validators/estado-novedad.validator
- * @version 1.0.1
+ * @version 1.0.2
  */
 
 import { body, param, query, validationResult } from "express-validator";
@@ -76,26 +75,8 @@ export const validarDescripcion = () =>
   body("descripcion")
     .optional()
     .trim()
-    .isLength({ max: LIMITES_TEXTO.DESCRIPCION_MAX })
-    .withMessage(
-      `La descripción no puede exceder ${LIMITES_TEXTO.DESCRIPCION_MAX} caracteres`
-    );
-
-export const validarEstadoCode = (opcional = true) => {
-  const validator = body("estado_code")
-    .trim()
-    .toUpperCase()
-    .isLength({ min: 2, max: 10 })
-    .withMessage("El código debe tener entre 2 y 10 caracteres")
-    .matches(/^[A-Z0-9_-]+$/)
-    .withMessage(
-      "El código solo puede contener letras mayúsculas, números, guiones y guiones bajos"
-    );
-
-  return opcional
-    ? validator.optional()
-    : validator.notEmpty().withMessage("El código es requerido");
-};
+    .isLength({ max: 255 })
+    .withMessage("La descripción no puede exceder 255 caracteres");
 
 export const validarColorHex = () =>
   body("color_hex")
@@ -128,6 +109,12 @@ export const validarPermiteEdicion = () =>
     .optional()
     .isBoolean()
     .withMessage("permite_edicion debe ser true o false");
+
+export const validarRequiereUnidad = () =>
+  body("requiere_unidad")
+    .optional()
+    .isBoolean()
+    .withMessage("requiere_unidad debe ser true o false");
 
 export const validarEstado = () =>
   body("estado")
@@ -174,12 +161,12 @@ export const validarSearch = () =>
 export const validateCreate = [
   validarNombre(false),
   validarDescripcion(),
-  validarEstadoCode(true),
   validarColorHex(),
   validarIcono(),
   validarEstadoFinal(),
   validarEstadoInicial(),
   validarPermiteEdicion(),
+  validarRequiereUnidad(),
   validarOrden(),
   handleValidationErrors,
 ];
@@ -191,12 +178,12 @@ export const validateUpdate = [
   validarEstadoNovedadId(),
   validarNombre(true),
   validarDescripcion(),
-  validarEstadoCode(true),
   validarColorHex(),
   validarIcono(),
   validarEstadoFinal(),
   validarEstadoInicial(),
   validarPermiteEdicion(),
+  validarRequiereUnidad(),
   validarOrden(),
   validarEstado(),
   handleValidationErrors,
