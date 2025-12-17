@@ -1,0 +1,209 @@
+{
+  "info": {
+    "_postman_id": "d0c5d3f3-5bb2-4d5b-9b35-5c2e7c4a8e6b",
+    "name": "CitySec - Mantenimientos",
+    "description": "Colección para probar el módulo de Mantenimientos (ruta /api/{{apiVersion}}/mantenimientos).\n\nVariables de colección:\n- baseUrl: URL base del backend (ej: http://localhost:3000)\n- apiVersion: versión del API (ej: v1)\n- token: JWT (se llena automáticamente con el request Login)\n- mantenimientoId: id del mantenimiento para GET/PUT/PATCH/DELETE\n\nVariables de ayuda (IDs referenciales):\n- vehiculoId\n- tallerId\n- unidadOficinaId\n\nNotas:\n- Todas las rutas requieren autenticación (verificarToken).\n- Para roles no-admin, ejecutar seed RBAC para crear permisos: vehiculos.mantenimientos.{create,read,update,delete}.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (guarda token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const token = json?.token || json?.data?.token || json?.accessToken || json?.data?.accessToken;",
+                  "if (token) pm.collectionVariables.set('token', token);",
+                  "pm.test('Login responde 200/201', function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Token guardado', function () {",
+                  "  pm.expect(pm.collectionVariables.get('token')).to.be.ok;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Mantenimientos",
+      "item": [
+        {
+          "name": "Listar mantenimientos (GET /mantenimientos)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/mantenimientos?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "mantenimientos"],
+              "query": [{ "key": "limit", "value": "50" }]
+            }
+          }
+        },
+        {
+          "name": "Listar por vehículo (GET /mantenimientos?vehiculo_id=)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/mantenimientos?vehiculo_id={{vehiculoId}}&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "mantenimientos"],
+              "query": [
+                { "key": "vehiculo_id", "value": "{{vehiculoId}}" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear mantenimiento (POST /mantenimientos) (guarda mantenimientoId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehiculo_id\": {{vehiculoId}},\n  \"unidad_oficina_id\": {{unidadOficinaId}},\n  \"taller_id\": {{tallerId}},\n  \"tipo_mantenimiento\": \"PREVENTIVO\",\n  \"prioridad\": \"MEDIA\",\n  \"tipo_documento\": \"ORDEN_TRABAJO\",\n  \"numero_documento\": \"000123-A\",\n  \"estado_mantenimiento\": \"PROGRAMADO\",\n  \"fecha_programada\": \"2025-12-18T10:00:00.000Z\",\n  \"km_registro\": 12345,\n  \"descripcion_falla\": \"Mantenimiento preventivo\",\n  \"observaciones\": \"Creado desde Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/mantenimientos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "mantenimientos"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json?.data?.id || json?.id;",
+                  "if (id) pm.collectionVariables.set('mantenimientoId', String(id));",
+                  "pm.test('Responde 201', function () {",
+                  "  pm.expect(pm.response.code).to.eql(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener por ID (GET /mantenimientos/:id)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/mantenimientos/{{mantenimientoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "mantenimientos", "{{mantenimientoId}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar (PUT /mantenimientos/:id)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prioridad\": \"ALTA\",\n  \"observaciones\": \"Actualizado desde Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/mantenimientos/{{mantenimientoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "mantenimientos", "{{mantenimientoId}}"]
+            }
+          }
+        },
+        {
+          "name": "Cambiar estado a EN_TALLER (PATCH /mantenimientos/:id/estado) (inmoviliza vehículo)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado_mantenimiento\": \"EN_TALLER\",\n  \"observaciones\": \"Ingreso a taller\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/mantenimientos/{{mantenimientoId}}/estado",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "mantenimientos", "{{mantenimientoId}}", "estado"]
+            }
+          }
+        },
+        {
+          "name": "Cambiar estado a FINALIZADO (PATCH /mantenimientos/:id/estado) (libera vehículo)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado_mantenimiento\": \"FINALIZADO\",\n  \"observaciones\": \"Trabajo concluido\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/mantenimientos/{{mantenimientoId}}/estado",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "mantenimientos", "{{mantenimientoId}}", "estado"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar (DELETE /mantenimientos/:id - soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/mantenimientos/{{mantenimientoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "mantenimientos", "{{mantenimientoId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "apiVersion", "value": "v1" },
+    { "key": "token", "value": "" },
+    { "key": "mantenimientoId", "value": "1" },
+    { "key": "vehiculoId", "value": "1" },
+    { "key": "tallerId", "value": "1" },
+    { "key": "unidadOficinaId", "value": "1" }
+  ]
+}

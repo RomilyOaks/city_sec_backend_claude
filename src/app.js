@@ -52,6 +52,7 @@ import permisosRoutes from "./routes/permisos.routes.js";
 import rolesRoutes from "./routes/roles.routes.js";
 import auditoriaAccionRoutes from "./routes/auditoriaAcciones.routes.js";
 import abastecimientosRoutes from "./routes/abastecimientos.routes.js";
+import mantenimientosRoutes from "./routes/mantenimientos.routes.js";
 
 // Rutas de catalogos
 import cargosRoutes from "./routes/cargos.routes.js";
@@ -241,6 +242,7 @@ app.get(`/api/${API_VERSION}`, (req, res) => {
       personal: `/api/${API_VERSION}/personal`,
       sectores: `/api/${API_VERSION}/sectores`,
       vehiculos: `/api/${API_VERSION}/vehiculos`,
+      mantenimientos: `/api/${API_VERSION}/mantenimientos`,
       cuadrantes: `/api/${API_VERSION}/cuadrantes`,
       cargos: `/api/${API_VERSION}/cargos`, // ✅ AGREGADO
       tipos_novedad: `/api/${API_VERSION}/tipos-novedad`, // ✅ NUEVO
@@ -271,6 +273,7 @@ app.use(`/api/${API_VERSION}/permisos`, permisosRoutes);
 app.use(`/api/${API_VERSION}/roles`, rolesRoutes);
 app.use(`/api/${API_VERSION}/auditoria`, auditoriaAccionRoutes);
 app.use(`/api/${API_VERSION}/abastecimientos`, abastecimientosRoutes);
+app.use(`/api/${API_VERSION}/mantenimientos`, mantenimientosRoutes);
 
 // Rutas de cargos
 app.use(`/api/${API_VERSION}/cargos`, cargosRoutes);

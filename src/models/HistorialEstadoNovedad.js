@@ -64,6 +64,7 @@ const HistorialEstadoNovedad = sequelize.define(
   },
   {
     tableName: "historial_estado_novedades",
+    freezeTableName: true,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
