@@ -104,7 +104,7 @@ router.get(
   "/entidad/:entidad/:id",
   verificarToken,
   verificarRoles(["supervisor", "admin"]),
-  requireAnyPermission(["auditoria.view"]),
+  requireAnyPermission(["auditoria.registros.read"]),
   [
     param("entidad").notEmpty().withMessage("Entidad es requerida"),
     param("id").isInt({ min: 1 }).withMessage("ID inválido"),
@@ -122,7 +122,7 @@ router.get(
   "/:id",
   verificarToken,
   verificarRoles(["supervisor", "admin"]),
-  requireAnyPermission(["auditoria.view"]),
+  requireAnyPermission(["auditoria.registros.read"]),
   [
     param("id").isInt({ min: 1 }).withMessage("ID inválido"),
     handleValidationErrors,
@@ -139,7 +139,7 @@ router.get(
   "/",
   verificarToken,
   verificarRoles(["supervisor", "admin"]),
-  requireAnyPermission(["auditoria.view"]),
+  requireAnyPermission(["auditoria.registros.read"]),
   [
     query("fecha_inicio")
       .optional()

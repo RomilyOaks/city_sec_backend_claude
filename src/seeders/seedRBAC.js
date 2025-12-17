@@ -169,6 +169,13 @@ async function seedRBAC() {
       },
       {
         modulo: "usuarios",
+        recurso: "permisos",
+        accion: "read",
+        descripcion: "Ver permisos del sistema",
+        es_sistema: true,
+      },
+      {
+        modulo: "usuarios",
         recurso: "reset_password",
         accion: "execute",
         descripcion: "Resetear contraseña de usuarios",
@@ -176,9 +183,23 @@ async function seedRBAC() {
       },
       {
         modulo: "usuarios",
+        recurso: "usuarios",
+        accion: "reset_password",
+        descripcion: "Resetear contraseña de un usuario",
+        es_sistema: true,
+      },
+      {
+        modulo: "usuarios",
         recurso: "update_estado",
         accion: "execute",
         descripcion: "Cambiar estado de usuario",
+        es_sistema: true,
+      },
+      {
+        modulo: "usuarios",
+        recurso: "usuarios",
+        accion: "update_estado",
+        descripcion: "Actualizar estado de un usuario",
         es_sistema: true,
       },
 
@@ -213,6 +234,13 @@ async function seedRBAC() {
         descripcion: "Eliminar roles",
         es_sistema: true,
       },
+      {
+        modulo: "usuarios",
+        recurso: "roles",
+        accion: "remove",
+        descripcion: "Remover roles de usuarios",
+        es_sistema: true,
+      },
 
       // ============================================
       // MÓDULO: NOVEDADES
@@ -222,6 +250,13 @@ async function seedRBAC() {
         recurso: "incidentes",
         accion: "create",
         descripcion: "Registrar nuevos incidentes",
+        es_sistema: true,
+      },
+      {
+        modulo: "novedades",
+        recurso: "novedades",
+        accion: "create",
+        descripcion: "Registrar nuevas novedades",
         es_sistema: true,
       },
       {
@@ -303,6 +338,50 @@ async function seedRBAC() {
         recurso: "combustible",
         accion: "create",
         descripcion: "Registrar abastecimiento",
+        es_sistema: true,
+      },
+
+      {
+        modulo: "vehiculos",
+        recurso: "abastecimiento",
+        accion: "create",
+        descripcion: "Registrar abastecimiento de combustible",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "abastecimiento",
+        accion: "read",
+        descripcion: "Ver abastecimientos de combustible",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "abastecimiento",
+        accion: "update",
+        descripcion: "Actualizar abastecimientos de combustible",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "abastecimiento",
+        accion: "delete",
+        descripcion: "Eliminar abastecimientos de combustible",
+        es_sistema: true,
+      },
+
+      {
+        modulo: "vehiculos",
+        recurso: "kilometraje",
+        accion: "update",
+        descripcion: "Actualizar kilometraje del vehículo",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "estado",
+        accion: "update",
+        descripcion: "Cambiar estado operativo del vehículo",
         es_sistema: true,
       },
 
@@ -395,6 +474,27 @@ async function seedRBAC() {
         descripcion: "Eliminar personal",
         es_sistema: true,
       },
+      {
+        modulo: "personal",
+        recurso: "personal",
+        accion: "restore",
+        descripcion: "Restaurar personal eliminado",
+        es_sistema: true,
+      },
+      {
+        modulo: "personal",
+        recurso: "status",
+        accion: "update",
+        descripcion: "Cambiar status laboral del personal",
+        es_sistema: true,
+      },
+      {
+        modulo: "personal",
+        recurso: "vehiculo",
+        accion: "assign",
+        descripcion: "Asignar o desasignar vehículo a personal",
+        es_sistema: true,
+      },
 
       // ============================================
       // MÓDULO: SECTORES
@@ -468,6 +568,27 @@ async function seedRBAC() {
       },
       {
         modulo: "catalogos",
+        recurso: "cargos",
+        accion: "create",
+        descripcion: "Crear cargos del personal",
+        es_sistema: true,
+      },
+      {
+        modulo: "catalogos",
+        recurso: "cargos",
+        accion: "update",
+        descripcion: "Actualizar cargos del personal",
+        es_sistema: true,
+      },
+      {
+        modulo: "catalogos",
+        recurso: "cargos",
+        accion: "delete",
+        descripcion: "Eliminar cargos del personal",
+        es_sistema: true,
+      },
+      {
+        modulo: "catalogos",
         recurso: "unidades",
         accion: "read",
         descripcion: "Ver unidades/oficinas",
@@ -528,6 +649,27 @@ async function seedRBAC() {
         recurso: "historial",
         accion: "read",
         descripcion: "Ver historial de cambios",
+        es_sistema: true,
+      },
+      {
+        modulo: "auditoria",
+        recurso: "registros",
+        accion: "read",
+        descripcion: "Ver registros de auditoría",
+        es_sistema: true,
+      },
+      {
+        modulo: "auditoria",
+        recurso: "registros",
+        accion: "export",
+        descripcion: "Exportar registros de auditoría",
+        es_sistema: true,
+      },
+      {
+        modulo: "auditoria",
+        recurso: "estadisticas",
+        accion: "read",
+        descripcion: "Ver estadísticas de auditoría",
         es_sistema: true,
       },
     ];
