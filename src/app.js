@@ -562,7 +562,9 @@ process.on("unhandledRejection", (reason, promise) => {
 // INICIAR SERVIDOR
 // ============================================
 
-startServer();
+if (NODE_ENV !== "test") {
+  startServer();
+}
 
 // ============================================
 // EXPORTAR APP (para testing)
