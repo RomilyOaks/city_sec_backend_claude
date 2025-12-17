@@ -66,6 +66,8 @@ import {
   SubtipoNovedad,
   Usuario,
   AbastecimientoCombustible,
+  MantenimientoVehiculo,
+  Taller,
 } from "../models/index.js";
 import { Op } from "sequelize";
 import sequelize from "../config/database.js";
@@ -155,6 +157,71 @@ export const getAllVehiculos = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error al obtener los vehículos",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Obtener historial de mantenimientos de un vehículo
+ * @route GET /api/vehiculos/:id/mantenimientos
+ */
+export const getHistorialMantenimientos = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado_mantenimiento, taller_id, limit = 50 } = req.query;
+
+    const vehiculo = await Vehiculo.findOne({
+      where: { id, estado: 1, deleted_at: null },
+      attributes: ["id", "codigo_vehiculo", "placa", "marca", "modelo_vehiculo"],
+    });
+
+    if (!vehiculo) {
+      return res.status(404).json({
+        success: false,
+        message: "Vehículo no encontrado",
+      });
+    }
+
+    const where = {
+      vehiculo_id: id,
+      deleted_at: null,
+    };
+
+    if (estado_mantenimiento) where.estado_mantenimiento = estado_mantenimiento;
+    if (taller_id) where.taller_id = taller_id;
+
+    const mantenimientos = await MantenimientoVehiculo.findAll({
+      where,
+      limit: parseInt(limit),
+      order: [["updated_at", "DESC"]],
+      include: [
+        {
+          model: Taller,
+          as: "taller",
+          attributes: ["id", "nombre", "ruc", "direccion"],
+        },
+        {
+          model: UnidadOficina,
+          as: "unidadOficina",
+          attributes: ["id", "nombre", "codigo"],
+        },
+      ],
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        vehiculo,
+        total_mantenimientos: mantenimientos.length,
+        mantenimientos,
+      },
+    });
+  } catch (error) {
+    console.error("Error al obtener historial de mantenimientos:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error al obtener el historial de mantenimientos",
       error: error.message,
     });
   }

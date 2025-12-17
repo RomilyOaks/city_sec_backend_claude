@@ -161,6 +161,20 @@ router.get(
 );
 
 /**
+ * @route   GET /api/v1/vehiculos/:id/mantenimientos
+ * @desc    Obtener historial de mantenimientos de un vehículo
+ * @access  Todos los usuarios autenticados
+ * @query   estado_mantenimiento, taller_id, limit (opcionales)
+ * IMPORTANTE: Esta ruta debe ir ANTES de /:id
+ */
+router.get(
+  "/:id/mantenimientos",
+  verificarToken,
+  validateVehiculoId,
+  vehiculosController.getHistorialMantenimientos
+);
+
+/**
  * @route   GET /api/v1/vehiculos/:id
  * @desc    Obtener un vehículo específico por ID
  * @access  Todos los usuarios autenticados
