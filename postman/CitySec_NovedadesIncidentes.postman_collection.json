@@ -1,0 +1,206 @@
+{
+  "info": {
+    "_postman_id": "0c4b7e13-3d5c-4d2c-9d0c-7d6fd9b0e2a1",
+    "name": "CitySec - Novedades/Incidentes",
+    "description": "Colección para probar el módulo de Novedades/Incidentes (ruta /api/{{apiVersion}}/novedades).\n\nVariables de colección:\n- baseUrl: URL base del backend (ej: http://localhost:3000)\n- apiVersion: versión del API (ej: v1)\n- token: JWT (se llena automáticamente con el request Login)\n- novedadId: id de la novedad para GET/PUT/DELETE, historial y asignación\n\nVariables de ayuda (IDs referenciales):\n- tipoNovedadId\n- subtipoNovedadId\n- estadoNovedadId\n- sectorId\n- cuadranteId\n- unidadOficinaId\n- vehiculoId\n- personalCargoId\n\nNotas:\n- Todas las rutas requieren autenticación (verificarToken).\n- Algunas rutas requieren roles/permisos (RBAC), por defecto se prueba con admin.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (guarda token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const token = json?.token || json?.data?.token || json?.accessToken || json?.data?.accessToken;",
+                  "if (token) pm.collectionVariables.set('token', token);",
+                  "pm.test('Login responde 200/201', function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Token guardado', function () {",
+                  "  pm.expect(pm.collectionVariables.get('token')).to.be.ok;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Novedades/Incidentes",
+      "item": [
+        {
+          "name": "Dashboard stats (GET /novedades/dashboard/stats)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/novedades/dashboard/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "novedades", "dashboard", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Listar novedades (GET /novedades)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/novedades?page=1&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "novedades"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear novedad (POST /novedades) (guarda novedadId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo_novedad_id\": {{tipoNovedadId}},\n  \"subtipo_novedad_id\": {{subtipoNovedadId}},\n  \"fecha_hora_ocurrencia\": \"2025-12-17T10:00:00.000Z\",\n  \"localizacion\": \"AV. PRUEBA 123\",\n  \"referencia_ubicacion\": \"Cerca del parque\",\n  \"latitud\": -12.0464,\n  \"longitud\": -77.0428,\n  \"ubigeo_code\": \"150101\",\n  \"origen_llamada\": \"TELEFONO_107\",\n  \"reportante_nombre\": \"Juan Perez\",\n  \"reportante_telefono\": \"999888777\",\n  \"reportante_doc_identidad\": \"12345678\",\n  \"es_anonimo\": 0,\n  \"descripcion\": \"Incidente de prueba desde Postman\",\n  \"observaciones\": \"Observaciones iniciales\",\n  \"sector_id\": {{sectorId}},\n  \"cuadrante_id\": {{cuadranteId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/novedades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "novedades"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json?.data?.id || json?.id;",
+                  "if (id) pm.collectionVariables.set('novedadId', String(id));",
+                  "pm.test('Responde 201', function () {",
+                  "  pm.expect(pm.response.code).to.eql(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener novedad por ID (GET /novedades/:id)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/novedades/{{novedadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "novedades", "{{novedadId}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar novedad (PUT /novedades/:id)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado_novedad_id\": {{estadoNovedadId}},\n  \"observaciones_cambio_estado\": \"Cambio de estado desde Postman\",\n  \"observaciones\": \"Actualización de observaciones\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/novedades/{{novedadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "novedades", "{{novedadId}}"]
+            }
+          }
+        },
+        {
+          "name": "Asignar recursos (POST /novedades/:id/asignar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidad_oficina_id\": {{unidadOficinaId}},\n  \"vehiculo_id\": {{vehiculoId}},\n  \"personal_cargo_id\": {{personalCargoId}},\n  \"km_inicial\": 12345\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/novedades/{{novedadId}}/asignar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "novedades", "{{novedadId}}", "asignar"]
+            }
+          }
+        },
+        {
+          "name": "Historial de estados (GET /novedades/:id/historial)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/novedades/{{novedadId}}/historial",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "novedades", "{{novedadId}}", "historial"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar novedad (DELETE /novedades/:id - soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/novedades/{{novedadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "novedades", "{{novedadId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "apiVersion", "value": "v1" },
+    { "key": "token", "value": "" },
+    { "key": "novedadId", "value": "1" },
+    { "key": "tipoNovedadId", "value": "1" },
+    { "key": "subtipoNovedadId", "value": "1" },
+    { "key": "estadoNovedadId", "value": "1" },
+    { "key": "sectorId", "value": "1" },
+    { "key": "cuadranteId", "value": "1" },
+    { "key": "unidadOficinaId", "value": "1" },
+    { "key": "vehiculoId", "value": "1" },
+    { "key": "personalCargoId", "value": "1" }
+  ]
+}

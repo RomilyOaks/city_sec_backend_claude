@@ -77,6 +77,7 @@ import permisosRoutes from "./permisos.routes.js";
 // 📋 Módulos Operativos
 import novedadesRoutes from "./novedades.routes.js";
 import vehiculosRoutes from "./vehiculos.routes.js";
+import mantenimientosRoutes from "./mantenimientos.routes.js";
 import personalRoutes from "./personal.routes.js";
 import sectoresRoutes from "./sectores.routes.js";
 import cuadrantesRoutes from "./cuadrantes.routes.js";
@@ -192,6 +193,13 @@ router.use("/novedades", novedadesRoutes);
  *   - Historial de asignaciones
  */
 router.use("/vehiculos", vehiculosRoutes);
+
+/**
+ * @route   /mantenimientos
+ * @desc    Gestión de mantenimientos vehiculares
+ * @access  Operador, Supervisor, Admin
+ */
+router.use("/mantenimientos", mantenimientosRoutes);
 
 /**
  * @route   /personal

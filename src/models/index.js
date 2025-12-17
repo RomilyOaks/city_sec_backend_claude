@@ -149,6 +149,20 @@ import UnidadOficina from "./UnidadOficina.js";
  */
 import AbastecimientoCombustible from "./AbastecimientoCombustible.js";
 
+/**
+ * Modelo Taller
+ * Catálogo de talleres para mantenimiento vehicular
+ * @type {Model}
+ */
+import Taller from "./Taller.js";
+
+/**
+ * Modelo MantenimientoVehiculo
+ * Registro de mantenimientos por vehículo
+ * @type {Model}
+ */
+import MantenimientoVehiculo from "./MantenimientoVehiculo.js";
+
 //=============================================
 // IMPORTAR MODELOS - NOVEDADES/INCIDENTES
 //=============================================
@@ -295,6 +309,46 @@ PersonalSeguridad.hasMany(AbastecimientoCombustible, {
 AbastecimientoCombustible.belongsTo(PersonalSeguridad, {
   foreignKey: "personal_id",
   as: "personal",
+});
+
+/**
+ * Relación: Vehiculo -> MantenimientoVehiculo (One-to-Many)
+ * Un vehículo puede tener múltiples mantenimientos.
+ */
+Vehiculo.hasMany(MantenimientoVehiculo, {
+  foreignKey: "vehiculo_id",
+  as: "mantenimientos",
+});
+
+MantenimientoVehiculo.belongsTo(Vehiculo, {
+  foreignKey: "vehiculo_id",
+  as: "vehiculo",
+});
+
+/**
+ * Relación: Taller -> MantenimientoVehiculo (One-to-Many)
+ */
+Taller.hasMany(MantenimientoVehiculo, {
+  foreignKey: "taller_id",
+  as: "mantenimientos",
+});
+
+MantenimientoVehiculo.belongsTo(Taller, {
+  foreignKey: "taller_id",
+  as: "taller",
+});
+
+/**
+ * Relación: UnidadOficina -> MantenimientoVehiculo (One-to-Many)
+ */
+UnidadOficina.hasMany(MantenimientoVehiculo, {
+  foreignKey: "unidad_oficina_id",
+  as: "mantenimientos",
+});
+
+MantenimientoVehiculo.belongsTo(UnidadOficina, {
+  foreignKey: "unidad_oficina_id",
+  as: "unidadOficina",
 });
 
 //=============================================
@@ -917,6 +971,31 @@ UnidadOficina.belongsTo(Usuario, {
   as: "eliminadorUnidadOficina",
 });
 
+// Taller
+Taller.belongsTo(Usuario, { foreignKey: "created_by", as: "creadorTaller" });
+Taller.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorTaller",
+});
+Taller.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorTaller",
+});
+
+// MantenimientoVehiculo
+MantenimientoVehiculo.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorMantenimientoVehiculo",
+});
+MantenimientoVehiculo.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorMantenimientoVehiculo",
+});
+MantenimientoVehiculo.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorMantenimientoVehiculo",
+});
+
 console.log("✅ Asociaciones configuradas exitosamente");
 
 //=============================================
@@ -942,6 +1021,8 @@ const models = {
   // Operativos
   Vehiculo,
   AbastecimientoCombustible,
+  Taller,
+  MantenimientoVehiculo,
   Sector,
   Cuadrante,
   UnidadOficina,
@@ -998,6 +1079,8 @@ export {
   // Operativos
   Vehiculo,
   AbastecimientoCombustible,
+  Taller,
+  MantenimientoVehiculo,
   Sector,
   Cuadrante,
   UnidadOficina,

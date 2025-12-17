@@ -306,6 +306,35 @@ async function seedRBAC() {
         es_sistema: true,
       },
 
+      {
+        modulo: "vehiculos",
+        recurso: "mantenimientos",
+        accion: "create",
+        descripcion: "Registrar mantenimientos de vehículos",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "mantenimientos",
+        accion: "read",
+        descripcion: "Ver mantenimientos de vehículos",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "mantenimientos",
+        accion: "update",
+        descripcion: "Actualizar mantenimientos de vehículos",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "mantenimientos",
+        accion: "delete",
+        descripcion: "Eliminar mantenimientos de vehículos",
+        es_sistema: true,
+      },
+
       // ============================================
       // MÓDULO: PERSONAL
       // ============================================
