@@ -25,7 +25,19 @@ const router = express.Router();
  * @access  Public
  * @body    {username, email, password, nombres, apellidos, telefono?}
  */
-router.post("/register", register);
+// #swagger.tags = ['Auth']
+// #swagger.summary = 'Registrar usuario'
+// #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/RegisterRequest" } } } }
+// #swagger.responses[201] = { description: 'Creado' }
+// #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+router.post("/register", (req, res, next) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.summary = 'Registrar usuario'
+  // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/RegisterRequest" } } } }
+  // #swagger.responses[201] = { description: 'Creado' }
+  // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  return register(req, res, next);
+});
 
 /**
  * @route   POST /api/auth/login
@@ -34,7 +46,19 @@ router.post("/register", register);
  * @body    {username_or_email, password}
  * @returns {accessToken, refreshToken, usuario}
  */
-router.post("/login", login);
+// #swagger.tags = ['Auth']
+// #swagger.summary = 'Login (JWT)'
+// #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/LoginRequest" } } } }
+// #swagger.responses[200] = { description: 'OK', schema: { $ref: "#/components/schemas/AuthTokensResponse" } }
+// #swagger.responses[401] = { description: 'Credenciales incorrectas', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+router.post("/login", (req, res, next) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.summary = 'Login (JWT)'
+  // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/LoginRequest" } } } }
+  // #swagger.responses[200] = { description: 'OK', schema: { $ref: "#/components/schemas/AuthTokensResponse" } }
+  // #swagger.responses[401] = { description: 'Credenciales incorrectas', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  return login(req, res, next);
+});
 
 /**
  * @route   POST /api/auth/refresh
@@ -43,7 +67,19 @@ router.post("/login", login);
  * @body    {refreshToken}
  * @returns {accessToken}
  */
-router.post("/refresh", refreshToken);
+// #swagger.tags = ['Auth']
+// #swagger.summary = 'Renovar access token'
+// #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/TokenRefreshRequest" } } } }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[401] = { description: 'Refresh token inválido', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+router.post("/refresh", (req, res, next) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.summary = 'Renovar access token'
+  // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/TokenRefreshRequest" } } } }
+  // #swagger.responses[200] = { description: 'OK' }
+  // #swagger.responses[401] = { description: 'Refresh token inválido', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  return refreshToken(req, res, next);
+});
 
 /**
  * @route   POST /api/auth/logout
@@ -51,7 +87,19 @@ router.post("/refresh", refreshToken);
  * @access  Private (requiere autenticación)
  * @headers {Authorization: Bearer <token>}
  */
-router.post("/logout", authenticate, logout);
+// #swagger.tags = ['Auth']
+// #swagger.summary = 'Logout'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+router.post("/logout", authenticate, (req, res, next) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.summary = 'Logout'
+  // #swagger.security = [{ bearerAuth: [] }]
+  // #swagger.responses[200] = { description: 'OK' }
+  // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  return logout(req, res, next);
+});
 
 /**
  * @route   POST /api/auth/change-password
@@ -60,7 +108,21 @@ router.post("/logout", authenticate, logout);
  * @body    {currentPassword, newPassword}
  * @headers {Authorization: Bearer <token>}
  */
-router.post("/change-password", authenticate, changePassword);
+// #swagger.tags = ['Auth']
+// #swagger.summary = 'Cambiar password'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.requestBody = { required: true, content: { "application/json": { schema: { type: "object", required: ["currentPassword", "newPassword"], properties: { currentPassword: { type: "string" }, newPassword: { type: "string" } } } } } }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+router.post("/change-password", authenticate, (req, res, next) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.summary = 'Cambiar password'
+  // #swagger.security = [{ bearerAuth: [] }]
+  // #swagger.requestBody = { required: true, content: { "application/json": { schema: { type: "object", required: ["currentPassword", "newPassword"], properties: { currentPassword: { type: "string" }, newPassword: { type: "string" } } } } } }
+  // #swagger.responses[200] = { description: 'OK' }
+  // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  return changePassword(req, res, next);
+});
 
 /**
  * @route   GET /api/auth/me
@@ -69,7 +131,19 @@ router.post("/change-password", authenticate, changePassword);
  * @headers {Authorization: Bearer <token>}
  * @returns {usuario con roles y permisos}
  */
-router.get("/me", authenticate, getMe);
+// #swagger.tags = ['Auth']
+// #swagger.summary = 'Perfil actual (me)'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+router.get("/me", authenticate, (req, res, next) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.summary = 'Perfil actual (me)'
+  // #swagger.security = [{ bearerAuth: [] }]
+  // #swagger.responses[200] = { description: 'OK' }
+  // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  return getMe(req, res, next);
+});
 
 /**
  * @route   POST /api/auth/forgot-password
@@ -77,7 +151,17 @@ router.get("/me", authenticate, getMe);
  * @access  Public
  * @body    {email}
  */
-router.post("/forgot-password", forgotPassword);
+// #swagger.tags = ['Auth']
+// #swagger.summary = 'Solicitar recuperación de contraseña'
+// #swagger.requestBody = { required: true, content: { "application/json": { schema: { type: "object", required: ["email"], properties: { email: { type: "string", example: "user@example.com" } } } } } }
+// #swagger.responses[200] = { description: 'OK' }
+router.post("/forgot-password", (req, res, next) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.summary = 'Solicitar recuperación de contraseña'
+  // #swagger.requestBody = { required: true, content: { "application/json": { schema: { type: "object", required: ["email"], properties: { email: { type: "string", example: "user@example.com" } } } } } }
+  // #swagger.responses[200] = { description: 'OK' }
+  return forgotPassword(req, res, next);
+});
 
 /**
  * ============================================
@@ -90,7 +174,15 @@ router.post("/forgot-password", forgotPassword);
 
 import { debugToken } from "../controllers/authController.js";
 
-router.get("/debug/token", debugToken);
+// #swagger.tags = ['Auth']
+// #swagger.summary = 'Debug token (dev)'
+// #swagger.responses[200] = { description: 'OK' }
+router.get("/debug/token", (req, res, next) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.summary = 'Debug token (dev)'
+  // #swagger.responses[200] = { description: 'OK' }
+  return debugToken(req, res, next);
+});
 
 /**
  * TODO: Implementar rutas adicionales:

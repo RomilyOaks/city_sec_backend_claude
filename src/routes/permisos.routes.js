@@ -58,7 +58,37 @@ router.use(requireRole(["super_admin", "admin"]));
  * @query   {boolean} activos - Solo activos (default: true)
  * @query   {string} search - Búsqueda en slug o descripción
  */
-router.get("/", requireAnyPermission("usuarios.permisos.read"), getPermisos);
+// #swagger.tags = ['Permisos']
+// #swagger.summary = 'Listar permisos (read-only)'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.parameters['page'] = { in: 'query', required: false, type: 'integer', example: 1 }
+// #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 50 }
+// #swagger.parameters['modulo'] = { in: 'query', required: false, type: 'string', example: 'usuarios' }
+// #swagger.parameters['recurso'] = { in: 'query', required: false, type: 'string', example: 'roles' }
+// #swagger.parameters['activos'] = { in: 'query', required: false, type: 'boolean', example: true }
+// #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'usuarios.roles' }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+// #swagger.responses[403] = { description: 'No autorizado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+router.get(
+  "/",
+  requireAnyPermission("usuarios.permisos.read"),
+  (req, res, next) => {
+    // #swagger.tags = ['Permisos']
+    // #swagger.summary = 'Listar permisos (read-only)'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['page'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 50 }
+    // #swagger.parameters['modulo'] = { in: 'query', required: false, type: 'string', example: 'usuarios' }
+    // #swagger.parameters['recurso'] = { in: 'query', required: false, type: 'string', example: 'roles' }
+    // #swagger.parameters['activos'] = { in: 'query', required: false, type: 'boolean', example: true }
+    // #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'usuarios.roles' }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    // #swagger.responses[403] = { description: 'No autorizado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return getPermisos(req, res, next);
+  }
+);
 
 /**
  * @route   GET /api/v1/permisos/modulo/:modulo
@@ -66,10 +96,24 @@ router.get("/", requireAnyPermission("usuarios.permisos.read"), getPermisos);
  * @access  Private (super_admin, admin)
  * @params  {string} modulo - Nombre del módulo
  */
+// #swagger.tags = ['Permisos']
+// #swagger.summary = 'Listar permisos por módulo'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.parameters['modulo'] = { in: 'path', required: true, type: 'string', example: 'usuarios' }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.get(
   "/modulo/:modulo",
   requireAnyPermission("usuarios.permisos.read"),
-  getPermisosByModulo
+  (req, res, next) => {
+    // #swagger.tags = ['Permisos']
+    // #swagger.summary = 'Listar permisos por módulo'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['modulo'] = { in: 'path', required: true, type: 'string', example: 'usuarios' }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return getPermisosByModulo(req, res, next);
+  }
 );
 
 /**
@@ -78,10 +122,24 @@ router.get(
  * @access  Private (super_admin, admin)
  * @params  {string} slug - Slug del permiso (ej: usuarios.usuarios.create)
  */
+// #swagger.tags = ['Permisos']
+// #swagger.summary = 'Obtener permiso por slug'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.parameters['slug'] = { in: 'path', required: true, type: 'string', example: 'usuarios.roles.read' }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.get(
   "/slug/:slug",
   requireAnyPermission("usuarios.permisos.read"),
-  getPermisoBySlug
+  (req, res, next) => {
+    // #swagger.tags = ['Permisos']
+    // #swagger.summary = 'Obtener permiso por slug'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['slug'] = { in: 'path', required: true, type: 'string', example: 'usuarios.roles.read' }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return getPermisoBySlug(req, res, next);
+  }
 );
 
 /**
@@ -90,10 +148,24 @@ router.get(
  * @access  Private (super_admin, admin)
  * @params  {number} id - ID del permiso
  */
+// #swagger.tags = ['Permisos']
+// #swagger.summary = 'Obtener permiso por ID'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.get(
   "/:id",
   requireAnyPermission("usuarios.permisos.read"),
-  getPermisoById
+  (req, res, next) => {
+    // #swagger.tags = ['Permisos']
+    // #swagger.summary = 'Obtener permiso por ID'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return getPermisoById(req, res, next);
+  }
 );
 
 export default router;
