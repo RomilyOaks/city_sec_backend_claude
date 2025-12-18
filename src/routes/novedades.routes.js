@@ -69,7 +69,14 @@ import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js"
 router.get(
   "/dashboard/stats",
   verificarToken,
-  novedadesController.getDashboardStats
+  (req, res, next) => {
+    // #swagger.tags = ['Novedades']
+    // #swagger.summary = 'Estadísticas para dashboard'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return novedadesController.getDashboardStats(req, res, next);
+  }
 );
 
 /**
@@ -83,7 +90,15 @@ router.get(
   verificarToken,
   verificarRoles(["operador", "supervisor", "super_admin"]),
   validateNovedadId,
-  novedadesController.getHistorialEstados
+  (req, res, next) => {
+    // #swagger.tags = ['Novedades']
+    // #swagger.summary = 'Historial de estados de una novedad'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return novedadesController.getHistorialEstados(req, res, next);
+  }
 );
 
 // ==========================================
@@ -101,7 +116,22 @@ router.get(
   verificarToken,
   verificarRoles(["operador", "supervisor", "super_admin"]),
   validateQueryNovedades,
-  novedadesController.getAllNovedades
+  (req, res, next) => {
+    // #swagger.tags = ['Novedades']
+    // #swagger.summary = 'Listar novedades/incidentes'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['fecha_inicio'] = { in: 'query', required: false, type: 'string', example: '2025-01-01' }
+    // #swagger.parameters['fecha_fin'] = { in: 'query', required: false, type: 'string', example: '2025-01-31' }
+    // #swagger.parameters['estado_novedad_id'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['prioridad_actual'] = { in: 'query', required: false, type: 'string', example: 'ALTA' }
+    // #swagger.parameters['sector_id'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['tipo_novedad_id'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'robo' }
+    // #swagger.parameters['page'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 50 }
+    // #swagger.responses[200] = { description: 'OK' }
+    return novedadesController.getAllNovedades(req, res, next);
+  }
 );
 
 /**
@@ -114,7 +144,15 @@ router.get(
   verificarToken,
   verificarRoles(["operador", "supervisor", "super_admin"]),
   validateNovedadId,
-  novedadesController.getNovedadById
+  (req, res, next) => {
+    // #swagger.tags = ['Novedades']
+    // #swagger.summary = 'Obtener novedad por ID'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return novedadesController.getNovedadById(req, res, next);
+  }
 );
 
 /**
@@ -137,7 +175,15 @@ router.post(
     severidad: "MEDIA",
     modulo: "Novedades",
   }),
-  novedadesController.createNovedad
+  (req, res, next) => {
+    // #swagger.tags = ['Novedades']
+    // #swagger.summary = 'Crear novedad/incidente'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/NovedadCreateRequest" } } } }
+    // #swagger.responses[201] = { description: 'Creado' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return novedadesController.createNovedad(req, res, next);
+  }
 );
 
 /**
@@ -156,7 +202,17 @@ router.put(
     severidad: "MEDIA",
     modulo: "Novedades",
   }),
-  novedadesController.updateNovedad
+  (req, res, next) => {
+    // #swagger.tags = ['Novedades']
+    // #swagger.summary = 'Actualizar novedad'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/NovedadUpdateRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return novedadesController.updateNovedad(req, res, next);
+  }
 );
 
 // ==========================================
@@ -179,7 +235,16 @@ router.post(
     severidad: "MEDIA",
     modulo: "Novedades",
   }),
-  novedadesController.asignarRecursos
+  (req, res, next) => {
+    // #swagger.tags = ['Novedades']
+    // #swagger.summary = 'Asignar recursos a novedad'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/NovedadAsignarRecursosRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return novedadesController.asignarRecursos(req, res, next);
+  }
 );
 
 /**
@@ -198,7 +263,15 @@ router.delete(
     severidad: "ALTA",
     modulo: "Novedades",
   }),
-  novedadesController.deleteNovedad
+  (req, res, next) => {
+    // #swagger.tags = ['Novedades']
+    // #swagger.summary = 'Eliminar novedad (soft delete)'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return novedadesController.deleteNovedad(req, res, next);
+  }
 );
 
 export default router;
