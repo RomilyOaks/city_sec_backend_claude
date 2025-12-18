@@ -71,7 +71,19 @@ router.get(
       .withMessage("search no puede exceder 200 caracteres"),
     handleValidationErrors,
   ],
-  getUsuarios
+  (req, res, next) => {
+    // #swagger.tags = ['Usuarios']
+    // #swagger.summary = 'Listar usuarios'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['page'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 10 }
+    // #swagger.parameters['estado'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'admin' }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    // #swagger.responses[403] = { description: 'No autorizado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return getUsuarios(req, res, next);
+  }
 );
 
 /**
@@ -88,7 +100,15 @@ router.get(
     param("id").isInt({ min: 1 }).withMessage("ID de usuario inválido"),
     handleValidationErrors,
   ],
-  getUsuarioById
+  (req, res, next) => {
+    // #swagger.tags = ['Usuarios']
+    // #swagger.summary = 'Obtener usuario por ID'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return getUsuarioById(req, res, next);
+  }
 );
 
 /**
@@ -163,7 +183,15 @@ router.post(
     severidad: "ALTA",
     modulo: "Usuarios",
   }),
-  createUsuario
+  (req, res, next) => {
+    // #swagger.tags = ['Usuarios']
+    // #swagger.summary = 'Crear usuario (admin)'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/UsuarioAdminCreateRequest" } } } }
+    // #swagger.responses[201] = { description: 'Creado' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return createUsuario(req, res, next);
+  }
 );
 
 /**
@@ -222,7 +250,17 @@ router.put(
     severidad: "MEDIA",
     modulo: "Usuarios",
   }),
-  updateUsuario
+  (req, res, next) => {
+    // #swagger.tags = ['Usuarios']
+    // #swagger.summary = 'Actualizar usuario'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/UsuarioAdminUpdateRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return updateUsuario(req, res, next);
+  }
 );
 
 /**
@@ -244,7 +282,15 @@ router.delete(
     severidad: "CRITICA",
     modulo: "Usuarios",
   }),
-  deleteUsuario
+  (req, res, next) => {
+    // #swagger.tags = ['Usuarios']
+    // #swagger.summary = 'Eliminar usuario (soft delete)'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return deleteUsuario(req, res, next);
+  }
 );
 
 /**
@@ -280,7 +326,17 @@ router.post(
     severidad: "ALTA",
     modulo: "Usuarios",
   }),
-  resetPassword
+  (req, res, next) => {
+    // #swagger.tags = ['Usuarios']
+    // #swagger.summary = 'Reset password de usuario'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/UsuarioResetPasswordRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return resetPassword(req, res, next);
+  }
 );
 
 /**
@@ -319,7 +375,17 @@ router.patch(
     severidad: "ALTA",
     modulo: "Usuarios",
   }),
-  cambiarEstado
+  (req, res, next) => {
+    // #swagger.tags = ['Usuarios']
+    // #swagger.summary = 'Cambiar estado de usuario'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/UsuarioCambiarEstadoRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return cambiarEstado(req, res, next);
+  }
 );
 
 /**
@@ -337,6 +403,12 @@ router.get(
     handleValidationErrors,
   ],
   async (req, res) => {
+    // #swagger.tags = ['Usuarios']
+    // #swagger.summary = 'Listar roles de un usuario'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     try {
       const { Usuario, Rol, UsuarioRol } = await import("../models/index.js");
 
@@ -412,6 +484,14 @@ router.post(
     modulo: "Usuarios",
   }),
   async (req, res) => {
+    // #swagger.tags = ['Usuarios']
+    // #swagger.summary = 'Asignar roles a usuario'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/UsuarioAssignRolesRequest" } } } }
+    // #swagger.responses[201] = { description: 'Creado' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     try {
       const { Usuario, Rol, UsuarioRol } = await import("../models/index.js");
       const { roles, es_principal } = req.body;
@@ -476,6 +556,13 @@ router.delete(
     modulo: "Usuarios",
   }),
   async (req, res) => {
+    // #swagger.tags = ['Usuarios']
+    // #swagger.summary = 'Remover rol de usuario'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.parameters['rolId'] = { in: 'path', required: true, type: 'integer', example: 2 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     try {
       const { UsuarioRol } = await import("../models/index.js");
       const { id, rolId } = req.params;
@@ -524,6 +611,12 @@ router.get(
     handleValidationErrors,
   ],
   async (req, res) => {
+    // #swagger.tags = ['Usuarios']
+    // #swagger.summary = 'Permisos consolidados de usuario'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK', schema: { $ref: "#/components/schemas/UsuarioPermisosConsolidadosResponse" } }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     try {
       const { Usuario, Rol, Permiso, UsuarioRol } = await import(
         "../models/index.js"

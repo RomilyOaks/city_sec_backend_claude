@@ -177,6 +177,70 @@ const doc = {
           estado: { type: "boolean", example: true },
         },
       },
+
+      UsuarioAdminCreateRequest: {
+        type: "object",
+        required: ["username", "email", "password", "nombres", "apellidos"],
+        properties: {
+          username: { type: "string", example: "jdoe" },
+          email: { type: "string", example: "jdoe@example.com" },
+          password: { type: "string", example: "SecurePass123" },
+          nombres: { type: "string", example: "John" },
+          apellidos: { type: "string", example: "Doe" },
+          telefono: { type: "string", nullable: true, example: "0999999999" },
+          roles: { type: "array", items: { type: "integer" }, nullable: true, example: [1, 2] },
+        },
+      },
+      UsuarioAdminUpdateRequest: {
+        type: "object",
+        properties: {
+          username: { type: "string", nullable: true },
+          email: { type: "string", nullable: true },
+          nombres: { type: "string", nullable: true },
+          apellidos: { type: "string", nullable: true },
+          telefono: { type: "string", nullable: true },
+          roles: { type: "array", items: { type: "integer" }, nullable: true },
+          estado: { type: "integer", nullable: true, example: 1 },
+        },
+      },
+      UsuarioResetPasswordRequest: {
+        type: "object",
+        required: ["newPassword"],
+        properties: {
+          newPassword: { type: "string", example: "NewPass123" },
+        },
+      },
+      UsuarioCambiarEstadoRequest: {
+        type: "object",
+        required: ["estado"],
+        properties: {
+          estado: { type: "integer", enum: [0, 1], example: 1 },
+          motivo: { type: "string", nullable: true, example: "Reactivación" },
+        },
+      },
+      UsuarioAssignRolesRequest: {
+        type: "object",
+        required: ["roles"],
+        properties: {
+          roles: { type: "array", items: { type: "integer" }, example: [2, 3] },
+          es_principal: { type: "integer", nullable: true, example: 2 },
+        },
+      },
+      UsuarioPermisosConsolidadosResponse: {
+        type: "object",
+        properties: {
+          success: { type: "boolean", example: true },
+          data: {
+            type: "object",
+            properties: {
+              usuario_id: { type: "integer", example: 1 },
+              username: { type: "string", example: "admin" },
+              total_permisos: { type: "integer", example: 73 },
+              permisos: { type: "array", items: { $ref: "#/components/schemas/Permiso" } },
+            },
+          },
+        },
+      },
     },
   },
   security: [{ bearerAuth: [] }],
