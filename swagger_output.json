@@ -549,12 +549,23 @@
     },
     "/api/${API_VERSION}/usuarios/": {
       "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Listar usuarios",
         "description": "",
         "parameters": [
           {
             "name": "API_VERSION",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rol",
+            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -569,34 +580,35 @@
           {
             "name": "page",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 10,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "estado",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "rol",
-            "in": "query",
-            "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "search",
             "in": "query",
+            "required": false,
+            "example": "admin",
             "schema": {
               "type": "string"
             }
@@ -610,17 +622,50 @@
             "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "No autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "No autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "post": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Crear usuario (admin)",
         "description": "",
         "parameters": [
           {
@@ -632,14 +677,14 @@
             }
           },
           {
-            "name": "authorization",
+            "name": "user-agent",
             "in": "header",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "user-agent",
+            "name": "authorization",
             "in": "header",
             "schema": {
               "type": "string"
@@ -648,10 +693,22 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Creado"
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -663,40 +720,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "username": {
-                    "example": "any"
-                  },
-                  "email": {
-                    "example": "any"
-                  },
-                  "password": {
-                    "example": "any"
-                  },
-                  "nombres": {
-                    "example": "any"
-                  },
-                  "apellidos": {
-                    "example": "any"
-                  },
-                  "telefono": {
-                    "example": "any"
-                  },
-                  "roles": {
-                    "example": "any"
-                  },
-                  "personal_seguridad_id": {
-                    "example": "any"
-                  },
-                  "estado": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/UsuarioAdminCreateRequest"
               }
             }
           }
@@ -705,6 +739,10 @@
     },
     "/api/${API_VERSION}/usuarios/{id}": {
       "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Obtener usuario por ID",
         "description": "",
         "parameters": [
           {
@@ -721,7 +759,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -745,14 +784,35 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "put": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Actualizar usuario",
         "description": "",
         "parameters": [
           {
@@ -769,14 +829,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "user-agent",
@@ -784,6 +838,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -791,7 +852,19 @@
             "description": "OK"
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -800,46 +873,45 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "nombres": {
-                    "example": "any"
-                  },
-                  "apellidos": {
-                    "example": "any"
-                  },
-                  "telefono": {
-                    "example": "any"
-                  },
-                  "email": {
-                    "example": "any"
-                  },
-                  "estado": {
-                    "example": "any"
-                  },
-                  "roles": {
-                    "example": "any"
-                  },
-                  "personal_seguridad_id": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/UsuarioAdminUpdateRequest"
               }
             }
           }
         }
       },
       "delete": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Eliminar usuario (soft delete)",
         "description": "",
         "parameters": [
           {
@@ -856,17 +928,18 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
-            "name": "authorization",
+            "name": "user-agent",
             "in": "header",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "user-agent",
+            "name": "authorization",
             "in": "header",
             "schema": {
               "type": "string"
@@ -887,79 +960,126 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/${API_VERSION}/usuarios/{id}/reset-password": {
-      "post": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "API_VERSION",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
             }
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "user-agent",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           },
           "500": {
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/${API_VERSION}/usuarios/{id}/reset-password": {
+      "post": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Reset password de usuario",
+        "description": "",
+        "parameters": [
+          {
+            "name": "API_VERSION",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": 1
+          },
+          {
+            "name": "user-agent",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "newPassword": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/UsuarioResetPasswordRequest"
               }
             }
           }
@@ -968,6 +1088,10 @@
     },
     "/api/${API_VERSION}/usuarios/{id}/estado": {
       "patch": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Cambiar estado de usuario",
         "description": "",
         "parameters": [
           {
@@ -984,17 +1108,18 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
-            "name": "authorization",
+            "name": "user-agent",
             "in": "header",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "user-agent",
+            "name": "authorization",
             "in": "header",
             "schema": {
               "type": "string"
@@ -1006,7 +1131,19 @@
             "description": "OK"
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -1015,22 +1152,35 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "estado": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/UsuarioCambiarEstadoRequest"
               }
             }
           }
@@ -1039,6 +1189,10 @@
     },
     "/api/${API_VERSION}/usuarios/{id}/roles": {
       "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Listar roles de un usuario",
         "description": "",
         "parameters": [
           {
@@ -1055,7 +1209,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -1079,14 +1234,35 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "post": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Asignar roles a usuario",
         "description": "",
         "parameters": [
           {
@@ -1103,7 +1279,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -1115,7 +1292,22 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Creado"
+          },
+          "400": {
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -1124,25 +1316,35 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "roles": {
-                    "example": "any"
-                  },
-                  "es_principal": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/UsuarioAssignRolesRequest"
               }
             }
           }
@@ -1151,6 +1353,10 @@
     },
     "/api/${API_VERSION}/usuarios/{id}/roles/{rolId}": {
       "delete": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Remover rol de usuario",
         "description": "",
         "parameters": [
           {
@@ -1167,7 +1373,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "rolId",
@@ -1175,7 +1382,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 2
           },
           {
             "name": "authorization",
@@ -1196,16 +1404,37 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/usuarios/{id}/permisos": {
       "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Permisos consolidados de usuario",
         "description": "",
         "parameters": [
           {
@@ -1222,7 +1451,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -1234,7 +1464,19 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioPermisosConsolidadosResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioPermisosConsolidadosResponse"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad Request"
@@ -1246,12 +1488,29 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/catalogos/tipos-novedad": {
@@ -10024,38 +10283,13 @@
           }
         },
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
+                "$ref": "#/components/schemas/RolCreateRequest",
                 "type": "object",
                 "properties": {
-                  "username": {
-                    "example": "any"
-                  },
-                  "email": {
-                    "example": "any"
-                  },
-                  "password": {
-                    "example": "any"
-                  },
-                  "nombres": {
-                    "example": "any"
-                  },
-                  "apellidos": {
-                    "example": "any"
-                  },
-                  "telefono": {
-                    "example": "any"
-                  },
-                  "roles": {
-                    "example": "any"
-                  },
-                  "personal_seguridad_id": {
-                    "example": "any"
-                  },
-                  "estado": {
-                    "example": "any"
-                  },
                   "tipo_novedad_id": {
                     "example": "any"
                   },
@@ -10314,6 +10548,12 @@
                   "direccion": {
                     "example": "any"
                   },
+                  "telefono": {
+                    "example": "any"
+                  },
+                  "email": {
+                    "example": "any"
+                  },
                   "radio_cobertura_km": {
                     "example": "any"
                   },
@@ -10326,12 +10566,10 @@
                   "horario_fin": {
                     "example": "any"
                   }
-                },
-                "$ref": "#/components/schemas/RolCreateRequest"
+                }
               }
             }
-          },
-          "required": true
+          }
         }
       }
     },
@@ -10455,32 +10693,13 @@
           }
         },
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
+                "$ref": "#/components/schemas/RolUpdateRequest",
                 "type": "object",
                 "properties": {
-                  "nombres": {
-                    "example": "any"
-                  },
-                  "apellidos": {
-                    "example": "any"
-                  },
-                  "telefono": {
-                    "example": "any"
-                  },
-                  "email": {
-                    "example": "any"
-                  },
-                  "estado": {
-                    "example": "any"
-                  },
-                  "roles": {
-                    "example": "any"
-                  },
-                  "personal_seguridad_id": {
-                    "example": "any"
-                  },
                   "estado_novedad_id": {
                     "example": "any"
                   },
@@ -10574,6 +10793,9 @@
                   "color": {
                     "example": "any"
                   },
+                  "estado": {
+                    "example": "any"
+                  },
                   "tipo_code": {
                     "example": "any"
                   },
@@ -10601,12 +10823,10 @@
                   "horario_fin": {
                     "example": "any"
                   }
-                },
-                "$ref": "#/components/schemas/RolUpdateRequest"
+                }
               }
             }
-          },
-          "required": true
+          }
         }
       },
       "delete": {
@@ -10676,6 +10896,10 @@
     },
     "/{id}/reset-password": {
       "post": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Reset password de usuario",
         "description": "",
         "parameters": [
           {
@@ -10684,17 +10908,18 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
-            "name": "authorization",
+            "name": "user-agent",
             "in": "header",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "user-agent",
+            "name": "authorization",
             "in": "header",
             "schema": {
               "type": "string"
@@ -10706,7 +10931,19 @@
             "description": "OK"
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -10715,22 +10952,35 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "newPassword": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/UsuarioResetPasswordRequest"
               }
             }
           }
@@ -10762,7 +11012,19 @@
             "description": "OK"
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -10771,25 +11033,39 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
         },
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
+                "$ref": "#/components/schemas/UsuarioCambiarEstadoRequest",
                 "type": "object",
                 "properties": {
-                  "estado": {
-                    "example": "any"
-                  },
                   "estado_operativo": {
                     "example": "any"
                   },
                   "observaciones": {
+                    "example": "any"
+                  },
+                  "estado": {
                     "example": "any"
                   },
                   "estado_mantenimiento": {
@@ -10816,6 +11092,10 @@
     },
     "/{id}/roles": {
       "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Listar roles de un usuario",
         "description": "",
         "parameters": [
           {
@@ -10824,7 +11104,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -10848,14 +11129,35 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "post": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Asignar roles a usuario",
         "description": "",
         "parameters": [
           {
@@ -10864,7 +11166,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -10876,7 +11179,22 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Creado"
+          },
+          "400": {
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -10885,25 +11203,35 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "roles": {
-                    "example": "any"
-                  },
-                  "es_principal": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/UsuarioAssignRolesRequest"
               }
             }
           }
@@ -10912,6 +11240,10 @@
     },
     "/{id}/roles/{rolId}": {
       "delete": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Remover rol de usuario",
         "description": "",
         "parameters": [
           {
@@ -10920,7 +11252,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "rolId",
@@ -10928,7 +11261,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 2
           },
           {
             "name": "authorization",
@@ -10949,12 +11283,29 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/{id}/permisos": {
@@ -10984,7 +11335,19 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioPermisosConsolidadosResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioPermisosConsolidadosResponse"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad Request"
@@ -14465,6 +14828,545 @@
         },
         "xml": {
           "name": "Permiso"
+        }
+      },
+      "UsuarioAdminCreateRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "username",
+              "email",
+              "password",
+              "nombres",
+              "apellidos"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "jdoe"
+                  }
+                }
+              },
+              "email": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "jdoe@example.com"
+                  }
+                }
+              },
+              "password": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "SecurePass123"
+                  }
+                }
+              },
+              "nombres": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "John"
+                  }
+                }
+              },
+              "apellidos": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Doe"
+                  }
+                }
+              },
+              "telefono": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "0999999999"
+                  }
+                }
+              },
+              "roles": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "array"
+                  },
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "example": "integer"
+                      }
+                    }
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "array",
+                    "example": [
+                      1,
+                      2
+                    ],
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "UsuarioAdminCreateRequest"
+        }
+      },
+      "UsuarioAdminUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "email": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "nombres": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "apellidos": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "telefono": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "roles": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "array"
+                  },
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "example": "integer"
+                      }
+                    }
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "estado": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "UsuarioAdminUpdateRequest"
+        }
+      },
+      "UsuarioResetPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "newPassword"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "newPassword": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "NewPass123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "UsuarioResetPasswordRequest"
+        }
+      },
+      "UsuarioCambiarEstadoRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "estado"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "estado": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "enum": {
+                    "type": "array",
+                    "example": [
+                      0,
+                      1
+                    ],
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "motivo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Reactivación"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "UsuarioCambiarEstadoRequest"
+        }
+      },
+      "UsuarioAssignRolesRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "roles"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "roles": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "array"
+                  },
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "example": "integer"
+                      }
+                    }
+                  },
+                  "example": {
+                    "type": "array",
+                    "example": [
+                      2,
+                      3
+                    ],
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              "es_principal": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 2
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "UsuarioAssignRolesRequest"
+        }
+      },
+      "UsuarioPermisosConsolidadosResponse": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "object"
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "usuario_id": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "integer"
+                          },
+                          "example": {
+                            "type": "number",
+                            "example": 1
+                          }
+                        }
+                      },
+                      "username": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "string"
+                          },
+                          "example": {
+                            "type": "string",
+                            "example": "admin"
+                          }
+                        }
+                      },
+                      "total_permisos": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "integer"
+                          },
+                          "example": {
+                            "type": "number",
+                            "example": 73
+                          }
+                        }
+                      },
+                      "permisos": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "array"
+                          },
+                          "items": {
+                            "xml": {
+                              "name": "permiso"
+                            },
+                            "$ref": "#/components/schemas/Permiso"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "UsuarioPermisosConsolidadosResponse"
         }
       }
     }
