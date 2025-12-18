@@ -2266,6 +2266,10 @@
     },
     "/api/${API_VERSION}/novedades/dashboard/stats": {
       "get": {
+        "tags": [
+          "Novedades"
+        ],
+        "summary": "Estadísticas para dashboard",
         "description": "",
         "parameters": [
           {
@@ -2289,7 +2293,19 @@
             "description": "OK"
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "No autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden"
@@ -2297,11 +2313,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/novedades/{id}/historial": {
       "get": {
+        "tags": [
+          "Novedades"
+        ],
+        "summary": "Historial de estados de una novedad",
         "description": "",
         "parameters": [
           {
@@ -2318,7 +2343,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -2338,14 +2364,38 @@
           "403": {
             "description": "Forbidden"
           },
+          "404": {
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/novedades/": {
       "get": {
+        "tags": [
+          "Novedades"
+        ],
+        "summary": "Listar novedades/incidentes",
         "description": "",
         "parameters": [
           {
@@ -2366,6 +2416,8 @@
           {
             "name": "fecha_inicio",
             "in": "query",
+            "required": false,
+            "example": "2025-01-01",
             "schema": {
               "type": "string"
             }
@@ -2373,6 +2425,8 @@
           {
             "name": "fecha_fin",
             "in": "query",
+            "required": false,
+            "example": "2025-01-31",
             "schema": {
               "type": "string"
             }
@@ -2380,13 +2434,17 @@
           {
             "name": "estado_novedad_id",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "prioridad_actual",
             "in": "query",
+            "required": false,
+            "example": "ALTA",
             "schema": {
               "type": "string"
             }
@@ -2394,20 +2452,26 @@
           {
             "name": "sector_id",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "tipo_novedad_id",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "search",
             "in": "query",
+            "required": false,
+            "example": "robo",
             "schema": {
               "type": "string"
             }
@@ -2415,15 +2479,19 @@
           {
             "name": "page",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -2440,9 +2508,18 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "post": {
+        "tags": [
+          "Novedades"
+        ],
+        "summary": "Crear novedad/incidente",
         "description": "",
         "parameters": [
           {
@@ -2463,7 +2540,22 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Creado"
+          },
+          "400": {
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -2478,64 +2570,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "tipo_novedad_id": {
-                    "example": "any"
-                  },
-                  "subtipo_novedad_id": {
-                    "example": "any"
-                  },
-                  "fecha_hora_ocurrencia": {
-                    "example": "any"
-                  },
-                  "localizacion": {
-                    "example": "any"
-                  },
-                  "referencia_ubicacion": {
-                    "example": "any"
-                  },
-                  "latitud": {
-                    "example": "any"
-                  },
-                  "longitud": {
-                    "example": "any"
-                  },
-                  "ubigeo_code": {
-                    "example": "any"
-                  },
-                  "origen_llamada": {
-                    "example": "any"
-                  },
-                  "reportante_nombre": {
-                    "example": "any"
-                  },
-                  "reportante_telefono": {
-                    "example": "any"
-                  },
-                  "reportante_doc_identidad": {
-                    "example": "any"
-                  },
-                  "es_anonimo": {
-                    "example": "any"
-                  },
-                  "descripcion": {
-                    "example": "any"
-                  },
-                  "observaciones": {
-                    "example": "any"
-                  },
-                  "sector_id": {
-                    "example": "any"
-                  },
-                  "cuadrante_id": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/NovedadCreateRequest"
               }
             }
           }
@@ -2544,6 +2589,10 @@
     },
     "/api/${API_VERSION}/novedades/{id}": {
       "get": {
+        "tags": [
+          "Novedades"
+        ],
+        "summary": "Obtener novedad por ID",
         "description": "",
         "parameters": [
           {
@@ -2560,7 +2609,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -2581,82 +2631,127 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      },
-      "put": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "API_VERSION",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
             }
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           },
           "500": {
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Novedades"
+        ],
+        "summary": "Actualizar novedad",
+        "description": "",
+        "parameters": [
+          {
+            "name": "API_VERSION",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": 1
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "estado_novedad_id": {
-                    "example": "any"
-                  },
-                  "observaciones_cambio_estado": {
-                    "example": "any"
-                  },
-                  "fecha_llegada": {
-                    "example": "any"
-                  },
-                  "tiempo_respuesta_min": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/NovedadUpdateRequest"
               }
             }
           }
         }
       },
       "delete": {
+        "tags": [
+          "Novedades"
+        ],
+        "summary": "Eliminar novedad (soft delete)",
         "description": "",
         "parameters": [
           {
@@ -2673,7 +2768,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -2694,16 +2790,37 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/novedades/{id}/asignar": {
       "post": {
+        "tags": [
+          "Novedades"
+        ],
+        "summary": "Asignar recursos a novedad",
         "description": "",
         "parameters": [
           {
@@ -2720,7 +2837,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -2733,6 +2851,21 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -2747,25 +2880,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "unidad_oficina_id": {
-                    "example": "any"
-                  },
-                  "vehiculo_id": {
-                    "example": "any"
-                  },
-                  "personal_cargo_id": {
-                    "example": "any"
-                  },
-                  "km_inicial": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/NovedadAsignarRecursosRequest"
               }
             }
           }
@@ -10735,61 +10860,13 @@
                 "$ref": "#/components/schemas/VehiculoCreateRequest",
                 "type": "object",
                 "properties": {
-                  "tipo_novedad_id": {
-                    "example": "any"
-                  },
-                  "subtipo_novedad_id": {
-                    "example": "any"
-                  },
-                  "fecha_hora_ocurrencia": {
-                    "example": "any"
-                  },
-                  "localizacion": {
-                    "example": "any"
-                  },
-                  "referencia_ubicacion": {
-                    "example": "any"
-                  },
-                  "latitud": {
-                    "example": "any"
-                  },
-                  "longitud": {
-                    "example": "any"
-                  },
-                  "ubigeo_code": {
-                    "example": "any"
-                  },
-                  "origen_llamada": {
-                    "example": "any"
-                  },
-                  "reportante_nombre": {
-                    "example": "any"
-                  },
-                  "reportante_telefono": {
-                    "example": "any"
-                  },
-                  "reportante_doc_identidad": {
-                    "example": "any"
-                  },
-                  "es_anonimo": {
-                    "example": "any"
-                  },
-                  "descripcion": {
-                    "example": "any"
-                  },
-                  "observaciones": {
-                    "example": "any"
-                  },
-                  "sector_id": {
-                    "example": "any"
-                  },
-                  "cuadrante_id": {
-                    "example": "any"
-                  },
                   "sector_code": {
                     "example": "any"
                   },
                   "nombre": {
+                    "example": "any"
+                  },
+                  "descripcion": {
                     "example": "any"
                   },
                   "ubigeo": {
@@ -10805,6 +10882,15 @@
                     "example": "any"
                   },
                   "cuadrante_code": {
+                    "example": "any"
+                  },
+                  "sector_id": {
+                    "example": "any"
+                  },
+                  "latitud": {
+                    "example": "any"
+                  },
+                  "longitud": {
                     "example": "any"
                   },
                   "radio_metros": {
@@ -10858,6 +10944,9 @@
                   "moneda": {
                     "example": "any"
                   },
+                  "observaciones": {
+                    "example": "any"
+                  },
                   "comprobante_adjunto": {
                     "example": "any"
                   },
@@ -10886,6 +10975,9 @@
                     "example": "any"
                   },
                   "orden": {
+                    "example": "any"
+                  },
+                  "tipo_novedad_id": {
                     "example": "any"
                   },
                   "subtipo_code": {
@@ -11079,18 +11171,6 @@
                 "$ref": "#/components/schemas/VehiculoUpdateRequest",
                 "type": "object",
                 "properties": {
-                  "estado_novedad_id": {
-                    "example": "any"
-                  },
-                  "observaciones_cambio_estado": {
-                    "example": "any"
-                  },
-                  "fecha_llegada": {
-                    "example": "any"
-                  },
-                  "tiempo_respuesta_min": {
-                    "example": "any"
-                  },
                   "sector_code": {
                     "example": "any"
                   },
@@ -12641,6 +12721,10 @@
     },
     "/dashboard/stats": {
       "get": {
+        "tags": [
+          "Novedades"
+        ],
+        "summary": "Estadísticas para dashboard",
         "description": "",
         "parameters": [
           {
@@ -12656,7 +12740,19 @@
             "description": "OK"
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "No autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden"
@@ -12664,7 +12760,12 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/{id}/historial": {
@@ -12739,6 +12840,10 @@
     },
     "/{id}/asignar": {
       "post": {
+        "tags": [
+          "Novedades"
+        ],
+        "summary": "Asignar recursos a novedad",
         "description": "",
         "parameters": [
           {
@@ -12747,7 +12852,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -12760,6 +12866,21 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -12774,25 +12895,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "unidad_oficina_id": {
-                    "example": "any"
-                  },
-                  "vehiculo_id": {
-                    "example": "any"
-                  },
-                  "personal_cargo_id": {
-                    "example": "any"
-                  },
-                  "km_inicial": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/NovedadAsignarRecursosRequest"
               }
             }
           }
@@ -17381,6 +17494,537 @@
         },
         "xml": {
           "name": "PersonalActualizarLicenciaRequest"
+        }
+      },
+      "NovedadCreateRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "tipo_novedad_id",
+              "subtipo_novedad_id",
+              "fecha_hora_ocurrencia",
+              "descripcion"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "tipo_novedad_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "subtipo_novedad_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "fecha_hora_ocurrencia": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "2025-12-18T12:00:00.000Z"
+                  }
+                }
+              },
+              "descripcion": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Incidente reportado"
+                  }
+                }
+              },
+              "localizacion": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "referencia_ubicacion": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "latitud": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": -12.0464
+                  }
+                }
+              },
+              "longitud": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": -77.0428
+                  }
+                }
+              },
+              "ubigeo_code": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "150101"
+                  }
+                }
+              },
+              "origen_llamada": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Telefono"
+                  }
+                }
+              },
+              "reportante_nombre": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "reportante_telefono": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "reportante_doc_identidad": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "es_anonimo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": false
+                  }
+                }
+              },
+              "observaciones": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "sector_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "cuadrante_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "prioridad_actual": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "ALTA"
+                  }
+                }
+              },
+              "gravedad": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "MEDIA"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "NovedadCreateRequest"
+        }
+      },
+      "NovedadUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "tipo_novedad_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "subtipo_novedad_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "estado_novedad_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "fecha_hora_ocurrencia": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "fecha_llegada": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "fecha_cierre": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "descripcion": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "observaciones": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "observaciones_cambio_estado": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "NovedadUpdateRequest"
+        }
+      },
+      "NovedadAsignarRecursosRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "unidad_oficina_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "vehiculo_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "personal_cargo_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "km_inicial": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "NovedadAsignarRecursosRequest"
         }
       }
     }
