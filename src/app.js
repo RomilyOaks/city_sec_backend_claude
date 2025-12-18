@@ -78,16 +78,38 @@ const app = express();
 
 import swaggerUI from "swagger-ui-express";
 import fs from "fs";
+import YAML from "yamljs";
 
 const swaggerDocument = JSON.parse(
   fs.readFileSync(new URL("../swagger_output.json", import.meta.url))
 );
+
+if (process.env.SWAGGER_SERVER_URL) {
+  swaggerDocument.servers = [
+    {
+      url: process.env.SWAGGER_SERVER_URL,
+      description: NODE_ENV,
+    },
+  ];
+} else {
+  delete swaggerDocument.servers;
+}
 
 app.use(
   `/api/${API_VERSION}/docs`,
   swaggerUI.serve,
   swaggerUI.setup(swaggerDocument)
 );
+
+app.get(`/api/${API_VERSION}/docs.json`, (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.status(200).send(swaggerDocument);
+});
+
+app.get(`/api/${API_VERSION}/docs.yaml`, (req, res) => {
+  res.setHeader("Content-Type", "application/yaml");
+  res.status(200).send(YAML.stringify(swaggerDocument, 12));
+});
 
 // ============================================
 // MIDDLEWARE 1: SEGURIDAD - HELMET
