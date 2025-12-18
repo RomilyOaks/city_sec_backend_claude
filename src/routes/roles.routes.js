@@ -62,7 +62,31 @@ router.use(verificarRoles(["super_admin", "admin"]));
  * @query   {boolean} incluir_permisos - Incluir permisos (default: false)
  * @query   {string} search - Búsqueda en nombre o slug
  */
-router.get("/", requireAnyPermission("usuarios.roles.read"), getRoles);
+// #swagger.tags = ['Roles']
+// #swagger.summary = 'Listar roles'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.parameters['page'] = { in: 'query', required: false, type: 'integer', example: 1 }
+// #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 10 }
+// #swagger.parameters['activos'] = { in: 'query', required: false, type: 'boolean', example: true }
+// #swagger.parameters['incluir_permisos'] = { in: 'query', required: false, type: 'boolean', example: false }
+// #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'admin' }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+// #swagger.responses[403] = { description: 'No autorizado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+router.get("/", requireAnyPermission("usuarios.roles.read"), (req, res, next) => {
+  // #swagger.tags = ['Roles']
+  // #swagger.summary = 'Listar roles'
+  // #swagger.security = [{ bearerAuth: [] }]
+  // #swagger.parameters['page'] = { in: 'query', required: false, type: 'integer', example: 1 }
+  // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 10 }
+  // #swagger.parameters['activos'] = { in: 'query', required: false, type: 'boolean', example: true }
+  // #swagger.parameters['incluir_permisos'] = { in: 'query', required: false, type: 'boolean', example: false }
+  // #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'admin' }
+  // #swagger.responses[200] = { description: 'OK' }
+  // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  // #swagger.responses[403] = { description: 'No autorizado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  return getRoles(req, res, next);
+});
 
 /**
  * @route   GET /api/v1/roles/slug/:slug
@@ -70,10 +94,24 @@ router.get("/", requireAnyPermission("usuarios.roles.read"), getRoles);
  * @access  Private (super_admin, admin)
  * @params  {string} slug - Slug del rol (ej: super_admin, operador)
  */
+// #swagger.tags = ['Roles']
+// #swagger.summary = 'Obtener rol por slug'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.parameters['slug'] = { in: 'path', required: true, type: 'string', example: 'super_admin' }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.get(
   "/slug/:slug",
   requireAnyPermission("usuarios.roles.read"),
-  getRolBySlug
+  (req, res, next) => {
+    // #swagger.tags = ['Roles']
+    // #swagger.summary = 'Obtener rol por slug'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['slug'] = { in: 'path', required: true, type: 'string', example: 'super_admin' }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return getRolBySlug(req, res, next);
+  }
 );
 
 /**
@@ -82,7 +120,21 @@ router.get(
  * @access  Private (super_admin, admin)
  * @params  {number} id - ID del rol
  */
-router.get("/:id", requireAnyPermission("usuarios.roles.read"), getRolById);
+// #swagger.tags = ['Roles']
+// #swagger.summary = 'Obtener rol por ID'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+router.get("/:id", requireAnyPermission("usuarios.roles.read"), (req, res, next) => {
+  // #swagger.tags = ['Roles']
+  // #swagger.summary = 'Obtener rol por ID'
+  // #swagger.security = [{ bearerAuth: [] }]
+  // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+  // #swagger.responses[200] = { description: 'OK' }
+  // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  return getRolById(req, res, next);
+});
 
 /**
  * @route   GET /api/v1/roles/:id/permisos
@@ -90,10 +142,24 @@ router.get("/:id", requireAnyPermission("usuarios.roles.read"), getRolById);
  * @access  Private (super_admin, admin)
  * @params  {number} id - ID del rol
  */
+// #swagger.tags = ['Roles']
+// #swagger.summary = 'Listar permisos de un rol'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.get(
   "/:id/permisos",
   requireAnyPermission("usuarios.roles.read"),
-  getPermisosDeRol
+  (req, res, next) => {
+    // #swagger.tags = ['Roles']
+    // #swagger.summary = 'Listar permisos de un rol'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return getPermisosDeRol(req, res, next);
+  }
 );
 
 // ============================================
@@ -112,7 +178,21 @@ router.get(
  * @body    {string} [rol.color] - Color hex (default: #6B7280)
  * @body    {Array<number>} [rol.permisos] - Array de IDs de permisos
  */
-router.post("/", requireAnyPermission("usuarios.roles.create"), createRol);
+// #swagger.tags = ['Roles']
+// #swagger.summary = 'Crear rol'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/RolCreateRequest" } } } }
+// #swagger.responses[201] = { description: 'Creado' }
+// #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+router.post("/", requireAnyPermission("usuarios.roles.create"), (req, res, next) => {
+  // #swagger.tags = ['Roles']
+  // #swagger.summary = 'Crear rol'
+  // #swagger.security = [{ bearerAuth: [] }]
+  // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/RolCreateRequest" } } } }
+  // #swagger.responses[201] = { description: 'Creado' }
+  // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  return createRol(req, res, next);
+});
 
 /**
  * @route   PUT /api/v1/roles/:id
@@ -127,7 +207,25 @@ router.post("/", requireAnyPermission("usuarios.roles.create"), createRol);
  *
  * NOTA: No se pueden editar roles del sistema (es_sistema=true)
  */
-router.put("/:id", requireAnyPermission("usuarios.roles.update"), updateRol);
+// #swagger.tags = ['Roles']
+// #swagger.summary = 'Actualizar rol'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+// #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/RolUpdateRequest" } } } }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+// #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+router.put("/:id", requireAnyPermission("usuarios.roles.update"), (req, res, next) => {
+  // #swagger.tags = ['Roles']
+  // #swagger.summary = 'Actualizar rol'
+  // #swagger.security = [{ bearerAuth: [] }]
+  // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+  // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/RolUpdateRequest" } } } }
+  // #swagger.responses[200] = { description: 'OK' }
+  // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  return updateRol(req, res, next);
+});
 
 /**
  * @route   DELETE /api/v1/roles/:id
@@ -139,7 +237,23 @@ router.put("/:id", requireAnyPermission("usuarios.roles.update"), updateRol);
  * - No se pueden eliminar roles del sistema
  * - No se pueden eliminar roles con usuarios asignados
  */
-router.delete("/:id", requireAnyPermission("usuarios.roles.delete"), deleteRol);
+// #swagger.tags = ['Roles']
+// #swagger.summary = 'Eliminar rol (soft delete)'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+// #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+router.delete("/:id", requireAnyPermission("usuarios.roles.delete"), (req, res, next) => {
+  // #swagger.tags = ['Roles']
+  // #swagger.summary = 'Eliminar rol (soft delete)'
+  // #swagger.security = [{ bearerAuth: [] }]
+  // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+  // #swagger.responses[200] = { description: 'OK' }
+  // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+  return deleteRol(req, res, next);
+});
 
 // ============================================
 // RUTAS DE GESTIÓN DE PERMISOS DEL ROL
@@ -154,10 +268,26 @@ router.delete("/:id", requireAnyPermission("usuarios.roles.delete"), deleteRol);
  *
  * NOTA: Esta operación REEMPLAZA todos los permisos actuales del rol
  */
+// #swagger.tags = ['Roles']
+// #swagger.summary = 'Asignar permisos a rol (reemplaza actuales)'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+// #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/RoleAssignPermisosRequest" } } } }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.post(
   "/:id/permisos",
   requireAnyPermission("usuarios.roles_permisos.assign"),
-  asignarPermisos
+  (req, res, next) => {
+    // #swagger.tags = ['Roles']
+    // #swagger.summary = 'Asignar permisos a rol (reemplaza actuales)'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/RoleAssignPermisosRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return asignarPermisos(req, res, next);
+  }
 );
 
 /**
@@ -167,10 +297,26 @@ router.post(
  * @params  {number} id - ID del rol
  * @params  {number} permisoId - ID del permiso a quitar
  */
+// #swagger.tags = ['Roles']
+// #swagger.summary = 'Quitar permiso de un rol'
+// #swagger.security = [{ bearerAuth: [] }]
+// #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+// #swagger.parameters['permisoId'] = { in: 'path', required: true, type: 'integer', example: 10 }
+// #swagger.responses[200] = { description: 'OK' }
+// #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.delete(
   "/:id/permisos/:permisoId",
   requireAnyPermission("usuarios.roles_permisos.assign"),
-  quitarPermiso
+  (req, res, next) => {
+    // #swagger.tags = ['Roles']
+    // #swagger.summary = 'Quitar permiso de un rol'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.parameters['permisoId'] = { in: 'path', required: true, type: 'integer', example: 10 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return quitarPermiso(req, res, next);
+  }
 );
 
 export default router;
