@@ -99,7 +99,14 @@ import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js"
 router.get(
   "/stats",
   verificarToken,
-  vehiculosController.getEstadisticasVehiculos
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Estadísticas de vehículos'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return vehiculosController.getEstadisticasVehiculos(req, res, next);
+  }
 );
 
 /**
@@ -112,7 +119,16 @@ router.get(
   "/disponibles",
   verificarToken,
   verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
-  vehiculosController.getVehiculosDisponibles
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Listar vehículos disponibles'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['tipo_id'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    // #swagger.responses[403] = { description: 'No autorizado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return vehiculosController.getVehiculosDisponibles(req, res, next);
+  }
 );
 
 // ==========================================
@@ -129,7 +145,19 @@ router.get(
   "/",
   verificarToken,
   validateQueryParams,
-  vehiculosController.getAllVehiculos
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Listar vehículos'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['tipo_id'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['estado_operativo'] = { in: 'query', required: false, type: 'string', example: 'OPERATIVO' }
+    // #swagger.parameters['unidad_id'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'toyota' }
+    // #swagger.parameters['page'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 10 }
+    // #swagger.responses[200] = { description: 'OK' }
+    return vehiculosController.getAllVehiculos(req, res, next);
+  }
 );
 
 /**
@@ -143,7 +171,16 @@ router.get(
   "/:id/historial",
   verificarToken,
   validateVehiculoId,
-  vehiculosController.getHistorialVehiculo
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Historial de uso del vehículo (novedades)'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 50 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return vehiculosController.getHistorialVehiculo(req, res, next);
+  }
 );
 
 /**
@@ -157,7 +194,17 @@ router.get(
   "/:id/abastecimientos",
   verificarToken,
   validateVehiculoId,
-  vehiculosController.getHistorialAbastecimientos
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Historial de abastecimientos de un vehículo'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.parameters['fecha_inicio'] = { in: 'query', required: false, type: 'string', example: '2025-01-01' }
+    // #swagger.parameters['fecha_fin'] = { in: 'query', required: false, type: 'string', example: '2025-01-31' }
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 50 }
+    // #swagger.responses[200] = { description: 'OK' }
+    return vehiculosController.getHistorialAbastecimientos(req, res, next);
+  }
 );
 
 /**
@@ -171,7 +218,17 @@ router.get(
   "/:id/mantenimientos",
   verificarToken,
   validateVehiculoId,
-  vehiculosController.getHistorialMantenimientos
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Historial de mantenimientos de un vehículo'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.parameters['estado_mantenimiento'] = { in: 'query', required: false, type: 'string', example: 'PENDIENTE' }
+    // #swagger.parameters['taller_id'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 50 }
+    // #swagger.responses[200] = { description: 'OK' }
+    return vehiculosController.getHistorialMantenimientos(req, res, next);
+  }
 );
 
 /**
@@ -183,7 +240,15 @@ router.get(
   "/:id",
   verificarToken,
   validateVehiculoId,
-  vehiculosController.getVehiculoById
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Obtener vehículo por ID'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return vehiculosController.getVehiculoById(req, res, next);
+  }
 );
 
 /**
@@ -204,7 +269,15 @@ router.post(
     severidad: "MEDIA",
     modulo: "Vehiculos",
   }),
-  vehiculosController.createVehiculo
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Crear vehículo'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/VehiculoCreateRequest" } } } }
+    // #swagger.responses[201] = { description: 'Creado' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return vehiculosController.createVehiculo(req, res, next);
+  }
 );
 
 /**
@@ -223,7 +296,16 @@ router.put(
     severidad: "MEDIA",
     modulo: "Vehiculos",
   }),
-  vehiculosController.updateVehiculo
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Actualizar vehículo'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/VehiculoUpdateRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return vehiculosController.updateVehiculo(req, res, next);
+  }
 );
 
 // ==========================================
@@ -250,7 +332,15 @@ router.patch(
     severidad: "BAJA",
     modulo: "Vehiculos",
   }),
-  vehiculosController.actualizarKilometraje
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Actualizar kilometraje'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/VehiculoKilometrajeRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    return vehiculosController.actualizarKilometraje(req, res, next);
+  }
 );
 
 /**
@@ -273,7 +363,15 @@ router.patch(
     severidad: "MEDIA",
     modulo: "Vehiculos",
   }),
-  vehiculosController.cambiarEstadoOperativo
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Cambiar estado operativo'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/VehiculoEstadoRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    return vehiculosController.cambiarEstadoOperativo(req, res, next);
+  }
 );
 
 /**
@@ -297,7 +395,15 @@ router.post(
     severidad: "BAJA",
     modulo: "Vehiculos",
   }),
-  vehiculosController.registrarAbastecimiento
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Registrar abastecimiento'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/VehiculoAbastecimientoRequest" } } } }
+    // #swagger.responses[201] = { description: 'Creado' }
+    return vehiculosController.registrarAbastecimiento(req, res, next);
+  }
 );
 
 /**
@@ -316,7 +422,15 @@ router.delete(
     severidad: "ALTA",
     modulo: "Vehiculos",
   }),
-  vehiculosController.deleteVehiculo
+  (req, res, next) => {
+    // #swagger.tags = ['Vehiculos']
+    // #swagger.summary = 'Eliminar vehículo (soft delete)'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return vehiculosController.deleteVehiculo(req, res, next);
+  }
 );
 
 export default router;
