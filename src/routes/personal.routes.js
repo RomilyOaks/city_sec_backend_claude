@@ -517,7 +517,14 @@ const validateActualizarLicencia = [
 router.get(
   "/stats",
   verificarToken,
-  personalController.getEstadisticasPersonal
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Estadísticas de personal'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return personalController.getEstadisticasPersonal(req, res, next);
+  }
 );
 
 router.get(
@@ -536,7 +543,17 @@ router.get(
       .withMessage("limit debe estar entre 1 y 100"),
     handleValidationErrors,
   ],
-  personalController.getConductores
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Listar conductores'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['page'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 50 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    // #swagger.responses[403] = { description: 'No autorizado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return personalController.getConductores(req, res, next);
+  }
 );
 
 router.get(
@@ -544,7 +561,15 @@ router.get(
   verificarToken,
   verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
   requireAnyPermission(["personal.personal.read"]),
-  personalController.getPersonalDisponible
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Listar personal disponible'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    // #swagger.responses[403] = { description: 'No autorizado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return personalController.getPersonalDisponible(req, res, next);
+  }
 );
 
 router.get(
@@ -552,7 +577,14 @@ router.get(
   verificarToken,
   requireAnyPermission(["personal.personal.read"]),
   validateCargoId,
-  personalController.getPersonalPorCargo
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Listar personal por cargo'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['cargoId'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    return personalController.getPersonalPorCargo(req, res, next);
+  }
 );
 
 router.get(
@@ -565,7 +597,15 @@ router.get(
       .withMessage("Formato inválido. Use: TIPO-NUMERO (ej: DNI-12345678)"),
     handleValidationErrors,
   ],
-  personalController.getPersonalByDocumento
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Buscar personal por documento'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['doc'] = { in: 'path', required: true, type: 'string', example: 'DNI-12345678' }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return personalController.getPersonalByDocumento(req, res, next);
+  }
 );
 
 router.get(
@@ -584,7 +624,16 @@ router.get(
       .withMessage("limit debe estar entre 1 y 100"),
     handleValidationErrors,
   ],
-  personalController.getPersonalPorStatus
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Listar personal por status'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['status'] = { in: 'path', required: true, type: 'string', example: 'Activo' }
+    // #swagger.parameters['page'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 50 }
+    // #swagger.responses[200] = { description: 'OK' }
+    return personalController.getPersonalPorStatus(req, res, next);
+  }
 );
 
 router.get(
@@ -622,7 +671,20 @@ router.get(
       .withMessage("tiene_vehiculo debe ser true o false"),
     handleValidationErrors,
   ],
-  personalController.getAllPersonal
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Listar personal'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['page'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 50 }
+    // #swagger.parameters['cargo_id'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['status'] = { in: 'query', required: false, type: 'string', example: 'Activo' }
+    // #swagger.parameters['doc_tipo'] = { in: 'query', required: false, type: 'string', example: 'DNI' }
+    // #swagger.parameters['tiene_licencia'] = { in: 'query', required: false, type: 'boolean', example: true }
+    // #swagger.parameters['tiene_vehiculo'] = { in: 'query', required: false, type: 'boolean', example: false }
+    // #swagger.responses[200] = { description: 'OK' }
+    return personalController.getAllPersonal(req, res, next);
+  }
 );
 
 router.post(
@@ -636,7 +698,15 @@ router.post(
     severidad: "MEDIA",
     modulo: "Personal",
   }),
-  personalController.createPersonal
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Crear personal'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/PersonalCreateRequest" } } } }
+    // #swagger.responses[201] = { description: 'Creado' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return personalController.createPersonal(req, res, next);
+  }
 );
 
 router.post(
@@ -650,7 +720,15 @@ router.post(
     severidad: "MEDIA",
     modulo: "Personal",
   }),
-  personalController.restorePersonal
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Restaurar personal (soft delete restore)'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return personalController.restorePersonal(req, res, next);
+  }
 );
 
 router.patch(
@@ -664,7 +742,16 @@ router.patch(
     severidad: "ALTA",
     modulo: "Personal",
   }),
-  personalController.cambiarStatus
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Cambiar status de personal'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/PersonalCambiarStatusRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return personalController.cambiarStatus(req, res, next);
+  }
 );
 
 router.patch(
@@ -681,7 +768,15 @@ router.patch(
     severidad: "MEDIA",
     modulo: "Personal",
   }),
-  personalController.asignarVehiculo
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Asignar vehículo a personal'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/PersonalAsignarVehiculoRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    return personalController.asignarVehiculo(req, res, next);
+  }
 );
 
 router.delete(
@@ -698,7 +793,14 @@ router.delete(
     severidad: "MEDIA",
     modulo: "Personal",
   }),
-  personalController.desasignarVehiculo
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Desasignar vehículo de personal'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    return personalController.desasignarVehiculo(req, res, next);
+  }
 );
 
 router.patch(
@@ -712,7 +814,15 @@ router.patch(
     severidad: "BAJA",
     modulo: "Personal",
   }),
-  personalController.actualizarLicencia
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Actualizar licencia'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/PersonalActualizarLicenciaRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    return personalController.actualizarLicencia(req, res, next);
+  }
 );
 
 router.post(
@@ -721,7 +831,14 @@ router.post(
   verificarRoles(["super_admin", "admin", "supervisor"]),
   requireAnyPermission(["personal.personal.update"]),
   validateId,
-  personalController.generarCodigoAcceso
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Generar código de acceso'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    return personalController.generarCodigoAcceso(req, res, next);
+  }
 );
 
 router.get(
@@ -729,7 +846,14 @@ router.get(
   verificarToken,
   requireAnyPermission(["personal.personal.read"]),
   validateId,
-  personalController.verificarLicenciaVigente
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Verificar licencia vigente'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    return personalController.verificarLicenciaVigente(req, res, next);
+  }
 );
 
 router.get(
@@ -744,7 +868,15 @@ router.get(
       .withMessage("limit debe estar entre 1 y 100"),
     handleValidationErrors,
   ],
-  personalController.getHistorialNovedades
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Historial de novedades de personal'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 50 }
+    // #swagger.responses[200] = { description: 'OK' }
+    return personalController.getHistorialNovedades(req, res, next);
+  }
 );
 
 router.get(
@@ -758,7 +890,14 @@ router.get(
       .withMessage("dias debe ser un número entre 1 y 365"),
     handleValidationErrors,
   ],
-  personalController.getLicenciasPorVencer
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Licencias por vencer'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['dias'] = { in: 'query', required: false, type: 'integer', example: 30 }
+    // #swagger.responses[200] = { description: 'OK' }
+    return personalController.getLicenciasPorVencer(req, res, next);
+  }
 );
 
 router.get(
@@ -766,7 +905,15 @@ router.get(
   verificarToken,
   requireAnyPermission(["personal.personal.read"]),
   validateId,
-  personalController.getPersonalById
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Obtener personal por ID'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return personalController.getPersonalById(req, res, next);
+  }
 );
 
 router.put(
@@ -781,7 +928,16 @@ router.put(
     severidad: "MEDIA",
     modulo: "Personal",
   }),
-  personalController.updatePersonal
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Actualizar personal'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/PersonalUpdateRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return personalController.updatePersonal(req, res, next);
+  }
 );
 
 router.delete(
@@ -795,7 +951,15 @@ router.delete(
     severidad: "ALTA",
     modulo: "Personal",
   }),
-  personalController.deletePersonal
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Eliminar personal (soft delete)'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return personalController.deletePersonal(req, res, next);
+  }
 );
 
 export default router;

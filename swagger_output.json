@@ -2774,6 +2774,10 @@
     },
     "/api/${API_VERSION}/personal/stats": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Estadísticas de personal",
         "description": "",
         "parameters": [
           {
@@ -2797,7 +2801,19 @@
             "description": "OK"
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "No autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden"
@@ -2805,11 +2821,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/personal/conductores": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Listar conductores",
         "description": "",
         "parameters": [
           {
@@ -2830,15 +2855,19 @@
           {
             "name": "page",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -2850,19 +2879,52 @@
             "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "No autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "No autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/personal/disponibles": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Listar personal disponible",
         "description": "",
         "parameters": [
           {
@@ -2886,19 +2948,52 @@
             "description": "OK"
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "No autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "No autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/personal/cargo/{cargoId}": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Listar personal por cargo",
         "description": "",
         "parameters": [
           {
@@ -2915,7 +3010,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -2941,11 +3037,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/personal/documento/{doc}": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Buscar personal por documento",
         "description": "",
         "parameters": [
           {
@@ -2962,7 +3067,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": "DNI-12345678"
           },
           {
             "name": "authorization",
@@ -2986,16 +3092,37 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/personal/status/{status}": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Listar personal por status",
         "description": "",
         "parameters": [
           {
@@ -3012,7 +3139,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": "Activo"
           },
           {
             "name": "authorization",
@@ -3024,15 +3152,19 @@
           {
             "name": "page",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -3052,38 +3184,26 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/personal/": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Listar personal",
         "description": "",
         "parameters": [
           {
             "name": "API_VERSION",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -3096,42 +3216,7 @@
             }
           },
           {
-            "name": "cargo_id",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "doc_tipo",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "regimen",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "tiene_licencia",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "tiene_vehiculo",
             "in": "query",
             "schema": {
               "type": "string"
@@ -3157,6 +3242,76 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "example": 50,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "cargo_id",
+            "in": "query",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "example": "Activo",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "doc_tipo",
+            "in": "query",
+            "required": false,
+            "example": "DNI",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tiene_licencia",
+            "in": "query",
+            "required": false,
+            "example": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "tiene_vehiculo",
+            "in": "query",
+            "required": false,
+            "example": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -3175,9 +3330,18 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "post": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Crear personal",
         "description": "",
         "parameters": [
           {
@@ -3198,10 +3362,22 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Creado"
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -3213,34 +3389,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "doc_tipo": {
-                    "example": "any"
-                  },
-                  "doc_numero": {
-                    "example": "any"
-                  },
-                  "cargo_id": {
-                    "example": "any"
-                  },
-                  "ubigeo_code": {
-                    "example": "any"
-                  },
-                  "vehiculo_id": {
-                    "example": "any"
-                  },
-                  "licencia": {
-                    "example": "any"
-                  },
-                  "vigencia": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/PersonalCreateRequest"
               }
             }
           }
@@ -3249,6 +3408,10 @@
     },
     "/api/${API_VERSION}/personal/{id}/restore": {
       "post": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Restaurar personal (soft delete restore)",
         "description": "",
         "parameters": [
           {
@@ -3265,7 +3428,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -3286,16 +3450,37 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/personal/{id}/status": {
       "patch": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Cambiar status de personal",
         "description": "",
         "parameters": [
           {
@@ -3312,7 +3497,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -3327,7 +3513,19 @@
             "description": "OK"
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -3342,19 +3540,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "example": "any"
-                  },
-                  "observaciones": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/PersonalCambiarStatusRequest"
               }
             }
           }
@@ -3363,6 +3559,10 @@
     },
     "/api/${API_VERSION}/personal/{id}/asignar-vehiculo": {
       "patch": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Asignar vehículo a personal",
         "description": "",
         "parameters": [
           {
@@ -3379,7 +3579,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -3409,16 +3610,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "vehiculo_id": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/PersonalAsignarVehiculoRequest"
               }
             }
           }
@@ -3427,56 +3629,10 @@
     },
     "/api/${API_VERSION}/personal/{id}/desasignar-vehiculo": {
       "delete": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "API_VERSION",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
+        "tags": [
+          "Personal"
         ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/${API_VERSION}/personal/{id}/licencia": {
-      "patch": {
+        "summary": "Desasignar vehículo de personal",
         "description": "",
         "parameters": [
           {
@@ -3493,7 +3649,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -3523,30 +3680,19 @@
             "description": "Internal Server Error"
           }
         },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "licencia": {
-                    "example": "any"
-                  },
-                  "categoria": {
-                    "example": "any"
-                  },
-                  "vigencia": {
-                    "example": "any"
-                  }
-                }
-              }
-            }
+        "security": [
+          {
+            "bearerAuth": []
           }
-        }
+        ]
       }
     },
-    "/api/${API_VERSION}/personal/{id}/generar-codigo": {
-      "post": {
+    "/api/${API_VERSION}/personal/{id}/licencia": {
+      "patch": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Actualizar licencia",
         "description": "",
         "parameters": [
           {
@@ -3563,7 +3709,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -3592,11 +3739,30 @@
           "500": {
             "description": "Internal Server Error"
           }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonalActualizarLicenciaRequest"
+              }
+            }
+          }
         }
       }
     },
-    "/api/${API_VERSION}/personal/{id}/verificar-licencia": {
-      "get": {
+    "/api/${API_VERSION}/personal/{id}/generar-codigo": {
+      "post": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Generar código de acceso",
         "description": "",
         "parameters": [
           {
@@ -3613,7 +3779,68 @@
             "required": true,
             "schema": {
               "type": "string"
+            },
+            "example": 1
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/${API_VERSION}/personal/{id}/verificar-licencia": {
+      "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Verificar licencia vigente",
+        "description": "",
+        "parameters": [
+          {
+            "name": "API_VERSION",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -3639,11 +3866,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/personal/{id}/historial-novedades": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Historial de novedades de personal",
         "description": "",
         "parameters": [
           {
@@ -3660,7 +3896,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -3672,8 +3909,10 @@
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -3696,11 +3935,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/personal/licencias-por-vencer": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Licencias por vencer",
         "description": "",
         "parameters": [
           {
@@ -3721,8 +3969,10 @@
           {
             "name": "dias",
             "in": "query",
+            "required": false,
+            "example": 30,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -3742,11 +3992,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/personal/{id}": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Obtener personal por ID",
         "description": "",
         "parameters": [
           {
@@ -3763,7 +4022,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -3784,14 +4044,35 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "put": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Actualizar personal",
         "description": "",
         "parameters": [
           {
@@ -3808,7 +4089,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -3823,7 +4105,19 @@
             "description": "OK"
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -3838,40 +4132,27 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "doc_tipo": {
-                    "example": "any"
-                  },
-                  "doc_numero": {
-                    "example": "any"
-                  },
-                  "cargo_id": {
-                    "example": "any"
-                  },
-                  "ubigeo_code": {
-                    "example": "any"
-                  },
-                  "vehiculo_id": {
-                    "example": "any"
-                  },
-                  "licencia": {
-                    "example": "any"
-                  },
-                  "vigencia": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/PersonalUpdateRequest"
               }
             }
           }
         }
       },
       "delete": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Eliminar personal (soft delete)",
         "description": "",
         "parameters": [
           {
@@ -3888,7 +4169,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -3912,12 +4194,29 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/sectores/": {
@@ -4198,6 +4497,10 @@
     },
     "/api/${API_VERSION}/vehiculos/stats": {
       "get": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Estadísticas de vehículos",
         "description": "",
         "parameters": [
           {
@@ -4221,7 +4524,19 @@
             "description": "OK"
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "No autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden"
@@ -4229,11 +4544,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/vehiculos/disponibles": {
       "get": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Listar vehículos disponibles",
         "description": "",
         "parameters": [
           {
@@ -4254,8 +4578,10 @@
           {
             "name": "tipo_id",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -4264,32 +4590,58 @@
             "description": "OK"
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "No autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "No autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/vehiculos/": {
       "get": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Listar vehículos",
         "description": "",
         "parameters": [
           {
             "name": "API_VERSION",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
             "schema": {
               "type": "string"
             }
@@ -4302,15 +4654,26 @@
             }
           },
           {
-            "name": "tipo_id",
-            "in": "query",
+            "name": "authorization",
+            "in": "header",
             "schema": {
               "type": "string"
             }
           },
           {
+            "name": "tipo_id",
+            "in": "query",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
             "name": "estado_operativo",
             "in": "query",
+            "required": false,
+            "example": "OPERATIVO",
             "schema": {
               "type": "string"
             }
@@ -4318,13 +4681,17 @@
           {
             "name": "unidad_id",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "search",
             "in": "query",
+            "required": false,
+            "example": "toyota",
             "schema": {
               "type": "string"
             }
@@ -4332,15 +4699,19 @@
           {
             "name": "page",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 10,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -4357,9 +4728,18 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "post": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Crear vehículo",
         "description": "",
         "parameters": [
           {
@@ -4380,10 +4760,22 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Creado"
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -4395,70 +4787,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "tipo_id": {
-                    "example": "any"
-                  },
-                  "codigo_vehiculo": {
-                    "example": "any"
-                  },
-                  "nombre": {
-                    "example": "any"
-                  },
-                  "placa": {
-                    "example": "any"
-                  },
-                  "marca": {
-                    "example": "any"
-                  },
-                  "modelo_vehiculo": {
-                    "example": "any"
-                  },
-                  "anio_vehiculo": {
-                    "example": "any"
-                  },
-                  "color_vehiculo": {
-                    "example": "any"
-                  },
-                  "numero_motor": {
-                    "example": "any"
-                  },
-                  "numero_chasis": {
-                    "example": "any"
-                  },
-                  "kilometraje_inicial": {
-                    "example": "any"
-                  },
-                  "capacidad_combustible": {
-                    "example": "any"
-                  },
-                  "unidad_oficina_id": {
-                    "example": "any"
-                  },
-                  "conductor_asignado_id": {
-                    "example": "any"
-                  },
-                  "estado_operativo": {
-                    "example": "any"
-                  },
-                  "soat": {
-                    "example": "any"
-                  },
-                  "fec_soat": {
-                    "example": "any"
-                  },
-                  "fec_manten": {
-                    "example": "any"
-                  },
-                  "observaciones": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/VehiculoCreateRequest"
               }
             }
           }
@@ -4467,6 +4806,10 @@
     },
     "/api/${API_VERSION}/vehiculos/{id}/historial": {
       "get": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Historial de uso del vehículo (novedades)",
         "description": "",
         "parameters": [
           {
@@ -4483,7 +4826,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -4495,8 +4839,10 @@
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -4511,16 +4857,37 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/vehiculos/{id}/abastecimientos": {
       "get": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Historial de abastecimientos de un vehículo",
         "description": "",
         "parameters": [
           {
@@ -4537,7 +4904,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -4549,6 +4917,8 @@
           {
             "name": "fecha_inicio",
             "in": "query",
+            "required": false,
+            "example": "2025-01-01",
             "schema": {
               "type": "string"
             }
@@ -4556,6 +4926,8 @@
           {
             "name": "fecha_fin",
             "in": "query",
+            "required": false,
+            "example": "2025-01-31",
             "schema": {
               "type": "string"
             }
@@ -4563,8 +4935,10 @@
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -4584,11 +4958,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/vehiculos/{id}/mantenimientos": {
       "get": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Historial de mantenimientos de un vehículo",
         "description": "",
         "parameters": [
           {
@@ -4605,7 +4988,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -4617,6 +5001,8 @@
           {
             "name": "estado_mantenimiento",
             "in": "query",
+            "required": false,
+            "example": "PENDIENTE",
             "schema": {
               "type": "string"
             }
@@ -4624,15 +5010,19 @@
           {
             "name": "taller_id",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -4652,11 +5042,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/vehiculos/{id}": {
       "get": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Obtener vehículo por ID",
         "description": "",
         "parameters": [
           {
@@ -4673,7 +5072,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -4694,14 +5094,35 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "put": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Actualizar vehículo",
         "description": "",
         "parameters": [
           {
@@ -4718,7 +5139,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -4742,31 +5164,45 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "codigo_vehiculo": {
-                    "example": "any"
-                  },
-                  "placa": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/VehiculoUpdateRequest"
               }
             }
           }
         }
       },
       "delete": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Eliminar vehículo (soft delete)",
         "description": "",
         "parameters": [
           {
@@ -4783,7 +5219,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -4807,16 +5244,37 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/${API_VERSION}/vehiculos/{id}/kilometraje": {
       "patch": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Actualizar kilometraje",
         "description": "",
         "parameters": [
           {
@@ -4833,7 +5291,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -4863,19 +5322,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "kilometraje_nuevo": {
-                    "example": "any"
-                  },
-                  "observaciones": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/VehiculoKilometrajeRequest"
               }
             }
           }
@@ -4884,6 +5341,10 @@
     },
     "/api/${API_VERSION}/vehiculos/{id}/estado": {
       "patch": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Cambiar estado operativo",
         "description": "",
         "parameters": [
           {
@@ -4900,7 +5361,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -4930,19 +5392,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "estado_operativo": {
-                    "example": "any"
-                  },
-                  "observaciones": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/VehiculoEstadoRequest"
               }
             }
           }
@@ -4951,6 +5411,10 @@
     },
     "/api/${API_VERSION}/vehiculos/{id}/abastecimiento": {
       "post": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Registrar abastecimiento",
         "description": "",
         "parameters": [
           {
@@ -4967,7 +5431,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -4979,7 +5444,7 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Creado"
           },
           "400": {
             "description": "Bad Request"
@@ -4997,37 +5462,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "fecha_hora": {
-                    "example": "any"
-                  },
-                  "tipo_combustible": {
-                    "example": "any"
-                  },
-                  "cantidad_galones": {
-                    "example": "any"
-                  },
-                  "precio_galon": {
-                    "example": "any"
-                  },
-                  "importe_total": {
-                    "example": "any"
-                  },
-                  "km_actual": {
-                    "example": "any"
-                  },
-                  "grifo": {
-                    "example": "any"
-                  },
-                  "observaciones": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/VehiculoAbastecimientoRequest"
               }
             }
           }
@@ -10287,7 +10732,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RolCreateRequest",
+                "$ref": "#/components/schemas/VehiculoCreateRequest",
                 "type": "object",
                 "properties": {
                   "tipo_novedad_id": {
@@ -10341,24 +10786,6 @@
                   "cuadrante_id": {
                     "example": "any"
                   },
-                  "doc_tipo": {
-                    "example": "any"
-                  },
-                  "doc_numero": {
-                    "example": "any"
-                  },
-                  "cargo_id": {
-                    "example": "any"
-                  },
-                  "vehiculo_id": {
-                    "example": "any"
-                  },
-                  "licencia": {
-                    "example": "any"
-                  },
-                  "vigencia": {
-                    "example": "any"
-                  },
                   "sector_code": {
                     "example": "any"
                   },
@@ -10377,61 +10804,13 @@
                   "color_mapa": {
                     "example": "any"
                   },
-                  "tipo_id": {
-                    "example": "any"
-                  },
-                  "codigo_vehiculo": {
-                    "example": "any"
-                  },
-                  "placa": {
-                    "example": "any"
-                  },
-                  "marca": {
-                    "example": "any"
-                  },
-                  "modelo_vehiculo": {
-                    "example": "any"
-                  },
-                  "anio_vehiculo": {
-                    "example": "any"
-                  },
-                  "color_vehiculo": {
-                    "example": "any"
-                  },
-                  "numero_motor": {
-                    "example": "any"
-                  },
-                  "numero_chasis": {
-                    "example": "any"
-                  },
-                  "kilometraje_inicial": {
-                    "example": "any"
-                  },
-                  "capacidad_combustible": {
-                    "example": "any"
-                  },
-                  "unidad_oficina_id": {
-                    "example": "any"
-                  },
-                  "conductor_asignado_id": {
-                    "example": "any"
-                  },
-                  "estado_operativo": {
-                    "example": "any"
-                  },
-                  "soat": {
-                    "example": "any"
-                  },
-                  "fec_soat": {
-                    "example": "any"
-                  },
-                  "fec_manten": {
-                    "example": "any"
-                  },
                   "cuadrante_code": {
                     "example": "any"
                   },
                   "radio_metros": {
+                    "example": "any"
+                  },
+                  "vehiculo_id": {
                     "example": "any"
                   },
                   "personal_id": {
@@ -10697,7 +11076,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RolUpdateRequest",
+                "$ref": "#/components/schemas/VehiculoUpdateRequest",
                 "type": "object",
                 "properties": {
                   "estado_novedad_id": {
@@ -10712,34 +11091,7 @@
                   "tiempo_respuesta_min": {
                     "example": "any"
                   },
-                  "doc_tipo": {
-                    "example": "any"
-                  },
-                  "doc_numero": {
-                    "example": "any"
-                  },
-                  "cargo_id": {
-                    "example": "any"
-                  },
-                  "ubigeo_code": {
-                    "example": "any"
-                  },
-                  "vehiculo_id": {
-                    "example": "any"
-                  },
-                  "licencia": {
-                    "example": "any"
-                  },
-                  "vigencia": {
-                    "example": "any"
-                  },
                   "sector_code": {
-                    "example": "any"
-                  },
-                  "codigo_vehiculo": {
-                    "example": "any"
-                  },
-                  "placa": {
                     "example": "any"
                   },
                   "nombre": {
@@ -11056,19 +11408,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UsuarioCambiarEstadoRequest",
+                "$ref": "#/components/schemas/VehiculoEstadoRequest",
                 "type": "object",
                 "properties": {
-                  "estado_operativo": {
-                    "example": "any"
-                  },
-                  "observaciones": {
-                    "example": "any"
-                  },
                   "estado": {
                     "example": "any"
                   },
                   "estado_mantenimiento": {
+                    "example": "any"
+                  },
+                  "observaciones": {
                     "example": "any"
                   },
                   "km_actual_al_finalizar": {
@@ -12320,6 +12669,10 @@
     },
     "/{id}/historial": {
       "get": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Historial de uso del vehículo (novedades)",
         "description": "",
         "parameters": [
           {
@@ -12328,7 +12681,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -12340,8 +12694,10 @@
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -12356,12 +12712,29 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/{id}/asignar": {
@@ -12446,7 +12819,19 @@
             "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden"
@@ -12459,6 +12844,10 @@
     },
     "/conductores": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Listar conductores",
         "description": "",
         "parameters": [
           {
@@ -12471,15 +12860,19 @@
           {
             "name": "page",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -12491,19 +12884,52 @@
             "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "No autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "No autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/disponibles": {
       "get": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Listar vehículos disponibles",
         "description": "",
         "parameters": [
           {
@@ -12516,8 +12942,10 @@
           {
             "name": "tipo_id",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -12526,19 +12954,52 @@
             "description": "OK"
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "No autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "No autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/cargo/{cargoId}": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Listar personal por cargo",
         "description": "",
         "parameters": [
           {
@@ -12547,7 +13008,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -12573,11 +13035,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/documento/{doc}": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Buscar personal por documento",
         "description": "",
         "parameters": [
           {
@@ -12586,7 +13057,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": "DNI-12345678"
           },
           {
             "name": "authorization",
@@ -12610,16 +13082,37 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/status/{status}": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Listar personal por status",
         "description": "",
         "parameters": [
           {
@@ -12628,7 +13121,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": "Activo"
           },
           {
             "name": "authorization",
@@ -12640,15 +13134,19 @@
           {
             "name": "page",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -12668,7 +13166,12 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/{id}/restore": {
@@ -12702,7 +13205,19 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found"
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
@@ -12712,6 +13227,10 @@
     },
     "/{id}/status": {
       "patch": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Cambiar status de personal",
         "description": "",
         "parameters": [
           {
@@ -12720,7 +13239,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -12735,7 +13255,19 @@
             "description": "OK"
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -12750,19 +13282,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "example": "any"
-                  },
-                  "observaciones": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/PersonalCambiarStatusRequest"
               }
             }
           }
@@ -12771,6 +13301,10 @@
     },
     "/{id}/asignar-vehiculo": {
       "patch": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Asignar vehículo a personal",
         "description": "",
         "parameters": [
           {
@@ -12779,7 +13313,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -12809,16 +13344,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "vehiculo_id": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/PersonalAsignarVehiculoRequest"
               }
             }
           }
@@ -12827,48 +13363,10 @@
     },
     "/{id}/desasignar-vehiculo": {
       "delete": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
+        "tags": [
+          "Personal"
         ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/{id}/licencia": {
-      "patch": {
+        "summary": "Desasignar vehículo de personal",
         "description": "",
         "parameters": [
           {
@@ -12877,7 +13375,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -12907,30 +13406,19 @@
             "description": "Internal Server Error"
           }
         },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "licencia": {
-                    "example": "any"
-                  },
-                  "categoria": {
-                    "example": "any"
-                  },
-                  "vigencia": {
-                    "example": "any"
-                  }
-                }
-              }
-            }
+        "security": [
+          {
+            "bearerAuth": []
           }
-        }
+        ]
       }
     },
-    "/{id}/generar-codigo": {
-      "post": {
+    "/{id}/licencia": {
+      "patch": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Actualizar licencia",
         "description": "",
         "parameters": [
           {
@@ -12939,7 +13427,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -12968,11 +13457,30 @@
           "500": {
             "description": "Internal Server Error"
           }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonalActualizarLicenciaRequest"
+              }
+            }
+          }
         }
       }
     },
-    "/{id}/verificar-licencia": {
-      "get": {
+    "/{id}/generar-codigo": {
+      "post": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Generar código de acceso",
         "description": "",
         "parameters": [
           {
@@ -12981,7 +13489,60 @@
             "required": true,
             "schema": {
               "type": "string"
+            },
+            "example": 1
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/{id}/verificar-licencia": {
+      "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Verificar licencia vigente",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -13007,11 +13568,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/{id}/historial-novedades": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Historial de novedades de personal",
         "description": "",
         "parameters": [
           {
@@ -13020,7 +13590,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -13032,8 +13603,10 @@
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -13056,11 +13629,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/licencias-por-vencer": {
       "get": {
+        "tags": [
+          "Personal"
+        ],
+        "summary": "Licencias por vencer",
         "description": "",
         "parameters": [
           {
@@ -13073,8 +13655,10 @@
           {
             "name": "dias",
             "in": "query",
+            "required": false,
+            "example": 30,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -13094,11 +13678,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/{id}/abastecimientos": {
       "get": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Historial de abastecimientos de un vehículo",
         "description": "",
         "parameters": [
           {
@@ -13107,7 +13700,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -13119,6 +13713,8 @@
           {
             "name": "fecha_inicio",
             "in": "query",
+            "required": false,
+            "example": "2025-01-01",
             "schema": {
               "type": "string"
             }
@@ -13126,6 +13722,8 @@
           {
             "name": "fecha_fin",
             "in": "query",
+            "required": false,
+            "example": "2025-01-31",
             "schema": {
               "type": "string"
             }
@@ -13133,8 +13731,10 @@
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -13154,11 +13754,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/{id}/mantenimientos": {
       "get": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Historial de mantenimientos de un vehículo",
         "description": "",
         "parameters": [
           {
@@ -13167,7 +13776,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -13179,6 +13789,8 @@
           {
             "name": "estado_mantenimiento",
             "in": "query",
+            "required": false,
+            "example": "PENDIENTE",
             "schema": {
               "type": "string"
             }
@@ -13186,15 +13798,19 @@
           {
             "name": "taller_id",
             "in": "query",
+            "required": false,
+            "example": 1,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           },
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "example": 50,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -13214,11 +13830,20 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/{id}/kilometraje": {
       "patch": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Actualizar kilometraje",
         "description": "",
         "parameters": [
           {
@@ -13227,7 +13852,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -13257,19 +13883,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "kilometraje_nuevo": {
-                    "example": "any"
-                  },
-                  "observaciones": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/VehiculoKilometrajeRequest"
               }
             }
           }
@@ -13278,6 +13902,10 @@
     },
     "/{id}/abastecimiento": {
       "post": {
+        "tags": [
+          "Vehiculos"
+        ],
+        "summary": "Registrar abastecimiento",
         "description": "",
         "parameters": [
           {
@@ -13286,7 +13914,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "example": 1
           },
           {
             "name": "authorization",
@@ -13298,7 +13927,7 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Creado"
           },
           "400": {
             "description": "Bad Request"
@@ -13316,37 +13945,17 @@
             "description": "Internal Server Error"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "fecha_hora": {
-                    "example": "any"
-                  },
-                  "tipo_combustible": {
-                    "example": "any"
-                  },
-                  "cantidad_galones": {
-                    "example": "any"
-                  },
-                  "precio_galon": {
-                    "example": "any"
-                  },
-                  "importe_total": {
-                    "example": "any"
-                  },
-                  "km_actual": {
-                    "example": "any"
-                  },
-                  "grifo": {
-                    "example": "any"
-                  },
-                  "observaciones": {
-                    "example": "any"
-                  }
-                }
+                "$ref": "#/components/schemas/VehiculoAbastecimientoRequest"
               }
             }
           }
@@ -15367,6 +15976,1411 @@
         },
         "xml": {
           "name": "UsuarioPermisosConsolidadosResponse"
+        }
+      },
+      "VehiculoCreateRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "tipo_id",
+              "unidad_oficina_id",
+              "placa"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "tipo_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "unidad_oficina_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "placa": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "ABC-123"
+                  }
+                }
+              },
+              "codigo_vehiculo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "VH-001"
+                  }
+                }
+              },
+              "nombre_vehiculo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Patrullero 01"
+                  }
+                }
+              },
+              "marca_vehiculo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Toyota"
+                  }
+                }
+              },
+              "modelo_vehiculo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Hilux"
+                  }
+                }
+              },
+              "anio_vehiculo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 2022
+                  }
+                }
+              },
+              "color_vehiculo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Blanco"
+                  }
+                }
+              },
+              "numero_motor": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "numero_chasis": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "kilometraje_inicial": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              },
+              "capacidad_combustible": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 15
+                  }
+                }
+              },
+              "conductor_asignado": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 10
+                  }
+                }
+              },
+              "estado_operativo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "OPERATIVO"
+                  }
+                }
+              },
+              "soat": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "fecha_soat": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "2025-12-31"
+                  }
+                }
+              },
+              "fecha_mantenimiento": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "2025-01-10"
+                  }
+                }
+              },
+              "observaciones": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "VehiculoCreateRequest"
+        }
+      },
+      "VehiculoUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "tipo_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "unidad_oficina_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "placa": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "codigo_vehiculo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "nombre_vehiculo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "marca_vehiculo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "modelo_vehiculo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "anio_vehiculo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "color_vehiculo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "numero_motor": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "numero_chasis": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "conductor_asignado": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "estado_operativo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "soat": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "fecha_soat": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "fecha_mantenimiento": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "observaciones": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "VehiculoUpdateRequest"
+        }
+      },
+      "VehiculoKilometrajeRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "kilometraje_nuevo"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "kilometraje_nuevo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 12345
+                  }
+                }
+              },
+              "observaciones": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Actualización por mantenimiento"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "VehiculoKilometrajeRequest"
+        }
+      },
+      "VehiculoEstadoRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "estado_operativo"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "estado_operativo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "OPERATIVO"
+                  }
+                }
+              },
+              "observaciones": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "VehiculoEstadoRequest"
+        }
+      },
+      "VehiculoAbastecimientoRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "fecha_hora",
+              "tipo_combustible",
+              "cantidad_galones"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "fecha_hora": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "2025-12-18T12:00:00.000Z"
+                  }
+                }
+              },
+              "tipo_combustible": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "GASOLINA"
+                  }
+                }
+              },
+              "cantidad_galones": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 5
+                  }
+                }
+              },
+              "precio_galon": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 4.5
+                  }
+                }
+              },
+              "km_actual": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 12345
+                  }
+                }
+              },
+              "grifo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Primax"
+                  }
+                }
+              },
+              "observaciones": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "VehiculoAbastecimientoRequest"
+        }
+      },
+      "PersonalCreateRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "doc_tipo",
+              "doc_numero",
+              "apellido_paterno",
+              "apellido_materno",
+              "nombres"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "doc_tipo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "DNI"
+                  }
+                }
+              },
+              "doc_numero": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "12345678"
+                  }
+                }
+              },
+              "apellido_paterno": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Perez"
+                  }
+                }
+              },
+              "apellido_materno": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Gomez"
+                  }
+                }
+              },
+              "nombres": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Juan"
+                  }
+                }
+              },
+              "sexo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Masculino"
+                  }
+                }
+              },
+              "fecha_nacimiento": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "1990-01-01"
+                  }
+                }
+              },
+              "nacionalidad": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Peruana"
+                  }
+                }
+              },
+              "direccion": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "ubigeo_code": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "150101"
+                  }
+                }
+              },
+              "cargo_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "fecha_ingreso": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "2025-01-01"
+                  }
+                }
+              },
+              "status": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Activo"
+                  }
+                }
+              },
+              "regimen": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "276"
+                  }
+                }
+              },
+              "licencia": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Q12345678"
+                  }
+                }
+              },
+              "categoria": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "B-IIB"
+                  }
+                }
+              },
+              "vigencia": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "2026-01-01"
+                  }
+                }
+              },
+              "vehiculo_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "codigo_acceso": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "foto": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "PersonalCreateRequest"
+        }
+      },
+      "PersonalUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "apellido_paterno": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "apellido_materno": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "nombres": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "sexo": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "fecha_nacimiento": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "cargo_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "status": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "PersonalUpdateRequest"
+        }
+      },
+      "PersonalCambiarStatusRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "status"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Activo"
+                  }
+                }
+              },
+              "observaciones": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "PersonalCambiarStatusRequest"
+        }
+      },
+      "PersonalAsignarVehiculoRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "vehiculo_id"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "vehiculo_id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "PersonalAsignarVehiculoRequest"
+        }
+      },
+      "PersonalActualizarLicenciaRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "licencia": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "Q12345678"
+                  }
+                }
+              },
+              "categoria": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "B-IIB"
+                  }
+                }
+              },
+              "vigencia": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "2026-01-01"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "PersonalActualizarLicenciaRequest"
         }
       }
     }
