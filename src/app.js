@@ -84,6 +84,15 @@ const swaggerDocument = JSON.parse(
   fs.readFileSync(new URL("../swagger_output.json", import.meta.url))
 );
 
+if (swaggerDocument?.paths && typeof swaggerDocument.paths === "object") {
+  const resolvedPaths = {};
+  for (const [pathKey, pathValue] of Object.entries(swaggerDocument.paths)) {
+    const newKey = pathKey.replaceAll("${API_VERSION}", API_VERSION);
+    resolvedPaths[newKey] = pathValue;
+  }
+  swaggerDocument.paths = resolvedPaths;
+}
+
 if (process.env.SWAGGER_SERVER_URL) {
   swaggerDocument.servers = [
     {
