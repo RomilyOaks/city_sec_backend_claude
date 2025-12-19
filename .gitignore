@@ -49,3 +49,6 @@ previous-versions/
 
 # Entire DB Model
 CITIZEN_SECURITY_DB_v2b.sql
+
+# configuración del IDE/herramientas
+.windsurf/
