@@ -1,4 +1,0 @@
-
-> citizen-security-backend@1.0.0 tree-gen
-> find src -path 'src/node_modules' -prune -o -name '.git' -prune -o -print | sed 's|^[^/]*/||g' | sed 's/[^/]*\//|--/g;s/|--/|  /g' | sed 's/|/|/g'
-
