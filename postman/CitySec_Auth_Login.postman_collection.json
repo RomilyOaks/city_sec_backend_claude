@@ -1,0 +1,70 @@
+{
+  "info": {
+    "_postman_id": "1c7fbe52-6b3d-4d5d-bb2a-0c3d3776d5f0",
+    "name": "CitySec - Auth (Login)",
+    "description": "Colección mínima para probar Login y guardar el JWT automáticamente.\n\nVariables de colección:\n- baseUrl: URL base del backend (ej: https://TU-DOMINIO)\n- apiVersion: versión del API (ej: v1)\n- token: JWT (se llena automáticamente con Login)\n\nUso rápido:\n1) Ajusta baseUrl al dominio de Railway\n2) Ejecuta el request 'Login (guarda token)'\n3) Usa {{token}} como Bearer en otras colecciones\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (guarda token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login responde 200/201', function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "let json = {};",
+                  "try { json = pm.response.json(); } catch (e) {}",
+                  "const token = json?.token || json?.data?.token || json?.accessToken || json?.data?.accessToken;",
+                  "if (token) {",
+                  "  pm.collectionVariables.set('token', token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://citysecbackendclaude-production.up.railway.app"
+    },
+    {
+      "key": "apiVersion",
+      "value": "v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}
