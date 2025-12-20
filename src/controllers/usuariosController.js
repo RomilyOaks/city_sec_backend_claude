@@ -23,19 +23,36 @@ import { Op } from "sequelize";
  */
 export const getUsuarios = async (req, res) => {
   try {
-    const { page = 1, limit = 10, estado, rol, search } = req.query;
+    const { page = 1, limit = 10, estado, rol, search, includeDeleted, onlyDeleted } = req.query;
 
     // Calcular offset para paginación
     const offset = (page - 1) * limit;
 
     // Construir filtros WHERE
-    const whereConditions = {
-      deleted_at: null, // Solo usuarios no eliminados
-    };
+    const whereConditions = {};
+
+    const includeDeletedBool =
+      includeDeleted === true ||
+      includeDeleted === "true" ||
+      includeDeleted === 1 ||
+      includeDeleted === "1";
+    const onlyDeletedBool =
+      onlyDeleted === true ||
+      onlyDeleted === "true" ||
+      onlyDeleted === 1 ||
+      onlyDeleted === "1";
+
+    if (onlyDeletedBool) {
+      whereConditions.deleted_at = { [Op.ne]: null };
+    } else if (!includeDeletedBool) {
+      whereConditions.deleted_at = null;
+    }
 
     // Filtro por estado
     if (estado) {
-      whereConditions.estado = estado;
+      if (estado === 1 || estado === "1") whereConditions.estado = "ACTIVO";
+      else if (estado === 0 || estado === "0") whereConditions.estado = "INACTIVO";
+      else whereConditions.estado = estado;
     }
 
     // Filtro por búsqueda (username, email, nombres, apellidos)
@@ -522,7 +539,7 @@ export const updateUsuario = async (req, res) => {
  */
 export const deleteUsuario = async (req, res) => {
   // OBTENER DATOS DE CONTEXTO DE AUDITORÍA
-  const deleted_by = req.usuario.userId;
+  const deleted_by = req?.user?.id || req?.usuario?.userId || req?.usuario?.id || null;
   const auditOptions = {
     currentUser: deleted_by,
     ipAddress: req.ip,
@@ -536,7 +553,7 @@ export const deleteUsuario = async (req, res) => {
     const { id } = req.params;
 
     // No permitir auto-eliminación
-    if (parseInt(id) === deleted_by) {
+    if (deleted_by && parseInt(id) === deleted_by) {
       await t.rollback();
       return res.status(400).json({
         success: false,
@@ -677,7 +694,14 @@ export const cambiarEstado = async (req, res) => {
     const { id } = req.params;
     const { estado } = req.body;
 
-    if (!["ACTIVO", "INACTIVO", "BLOQUEADO"].includes(estado)) {
+    const estadoNormalizado =
+      estado === 1 || estado === "1"
+        ? "ACTIVO"
+        : estado === 0 || estado === "0"
+          ? "INACTIVO"
+          : estado;
+
+    if (!["ACTIVO", "INACTIVO", "BLOQUEADO"].includes(estadoNormalizado)) {
       await t.rollback();
       return res.status(400).json({
         success: false,
@@ -698,7 +722,7 @@ export const cambiarEstado = async (req, res) => {
     // Actualizar estado (el hook afterUpdate registra el 'cambio_estado')
     await usuario.update(
       {
-        estado,
+        estado: estadoNormalizado,
         updated_by,
       },
       { transaction: t, auditOptions }
@@ -726,6 +750,75 @@ export const cambiarEstado = async (req, res) => {
   }
 };
 
+/**
+ * PATCH /api/usuarios/:id/restore
+ * Reactiva un usuario eliminado (soft delete)
+ */
+export const restoreUsuario = async (req, res) => {
+  const restored_by = req?.user?.id || req?.usuario?.userId || req?.usuario?.id || null;
+  const auditOptions = {
+    currentUser: restored_by,
+    ipAddress: req.ip,
+    userAgent: req.headers["user-agent"],
+    individualHooks: true,
+  };
+
+  const t = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+
+    const usuario = await Usuario.findByPk(id, { transaction: t });
+
+    if (!usuario) {
+      await t.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado",
+      });
+    }
+
+    if (usuario.deleted_at === null) {
+      await t.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "El usuario no está eliminado",
+      });
+    }
+
+    await usuario.update(
+      {
+        deleted_at: null,
+        deleted_by: null,
+        estado: "ACTIVO",
+        updated_by: restored_by,
+      },
+      { transaction: t, auditOptions }
+    );
+
+    await t.commit();
+
+    return res.json({
+      success: true,
+      message: "Usuario reactivado exitosamente",
+      data: {
+        id: usuario.id,
+        username: usuario.username,
+        estado: usuario.estado,
+        deleted_at: usuario.deleted_at,
+      },
+    });
+  } catch (error) {
+    await t.rollback();
+    console.error("Error en restoreUsuario:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error al reactivar usuario",
+      error: error.message,
+    });
+  }
+};
+
 export default {
   getUsuarios,
   getUsuarioById,
@@ -734,4 +827,5 @@ export default {
   deleteUsuario,
   resetPassword,
   cambiarEstado,
+  restoreUsuario,
 };

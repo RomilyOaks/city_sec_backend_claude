@@ -17,6 +17,7 @@ import {
   deleteUsuario,
   resetPassword,
   cambiarEstado,
+  restoreUsuario,
 } from "../controllers/usuariosController.js";
 import {
   verificarToken,
@@ -61,8 +62,16 @@ router.get(
       .withMessage("limit debe estar entre 1 y 100"),
     query("estado")
       .optional()
-      .isIn([0, 1, "0", "1"])
-      .withMessage("estado debe ser 0 o 1"),
+      .isIn([0, 1, "0", "1", "ACTIVO", "INACTIVO", "BLOQUEADO"])
+      .withMessage("estado debe ser 0/1 o ACTIVO/INACTIVO/BLOQUEADO"),
+    query("includeDeleted")
+      .optional()
+      .isIn([0, 1, "0", "1", true, false, "true", "false"])
+      .withMessage("includeDeleted debe ser 0/1"),
+    query("onlyDeleted")
+      .optional()
+      .isIn([0, 1, "0", "1", true, false, "true", "false"])
+      .withMessage("onlyDeleted debe ser 0/1"),
     query("search")
       .optional()
       .isString()
@@ -358,8 +367,8 @@ router.patch(
     body("estado")
       .notEmpty()
       .withMessage("El estado es requerido")
-      .isIn([0, 1])
-      .withMessage("estado debe ser 0 (inactivo) o 1 (activo)"),
+      .isIn([0, 1, "0", "1", "ACTIVO", "INACTIVO", "BLOQUEADO"])
+      .withMessage("estado debe ser 0/1 o ACTIVO/INACTIVO/BLOQUEADO"),
 
     body("motivo")
       .optional()
@@ -385,6 +394,30 @@ router.patch(
     // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     return cambiarEstado(req, res, next);
+  }
+);
+
+/**
+ * @route   PATCH /api/usuarios/:id/restore
+ * @desc    Reactivar usuario eliminado (soft delete)
+ * @access  Super Admin
+ */
+router.patch(
+  "/:id/restore",
+  verificarToken,
+  verificarRoles(["super_admin"]),
+  requireAnyPermission(["usuarios.usuarios.update", "usuarios.usuarios.restore"]),
+  [
+    param("id").isInt({ min: 1 }).withMessage("ID de usuario inválido"),
+    handleValidationErrors,
+  ],
+  registrarAuditoria({
+    entidad: "Usuario",
+    severidad: "ALTA",
+    modulo: "Usuarios",
+  }),
+  (req, res, next) => {
+    return restoreUsuario(req, res, next);
   }
 );
 
