@@ -167,6 +167,11 @@ const corsOptions = {
       return callback(null, true);
     }
 
+    // Allow any localhost or 127.0.0.1 origin (dev proxies, etc.)
+    if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      return callback(null, true);
+    }
+
     if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
