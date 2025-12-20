@@ -251,9 +251,76 @@ export const createUsuario = async (req, res) => {
     });
 
     if (usuarioExistente) {
-      return res.status(400).json({
-        success: false,
-        message: "El username o email ya están registrados",
+      const canReactivate =
+        usuarioExistente.deleted_at !== null ||
+        usuarioExistente.estado === "INACTIVO";
+
+      if (!canReactivate) {
+        return res.status(400).json({
+          success: false,
+          message: "El username o email ya están registrados",
+        });
+      }
+
+      // Hashear contraseña
+      const salt = await bcrypt.genSalt(10);
+      const password_hash = await bcrypt.hash(password, salt);
+
+      // Reactivar/recuperar usuario
+      await usuarioExistente.update(
+        {
+          username: username.toLowerCase(),
+          email: email.toLowerCase(),
+          password_hash,
+          nombres: nombres ?? usuarioExistente.nombres,
+          apellidos: apellidos ?? usuarioExistente.apellidos,
+          telefono: telefono ?? usuarioExistente.telefono,
+          personal_seguridad_id:
+            personal_seguridad_id ?? usuarioExistente.personal_seguridad_id,
+          estado: "ACTIVO",
+          deleted_at: null,
+          updated_by: created_by,
+          email_verified_at: usuarioExistente.email_verified_at || new Date(),
+        },
+        { transaction: t, auditOptions }
+      );
+
+      // Reasignar roles si se especificaron
+      if (roles && roles.length > 0) {
+        const rolesEncontrados = await Rol.findAll({
+          where: {
+            id: { [Op.in]: roles },
+          },
+          transaction: t,
+        });
+
+        await usuarioExistente.setRoles(rolesEncontrados, { transaction: t });
+      }
+
+      await t.commit();
+
+      const usuarioReactivado = await Usuario.findByPk(usuarioExistente.id, {
+        attributes: {
+          exclude: [
+            "password_hash",
+            "two_factor_secret",
+            "oauth_token",
+            "oauth_refresh_token",
+          ],
+        },
+        include: [
+          {
+            model: Rol,
+            as: "roles",
+            attributes: ["id", "nombre", "slug"],
+          },
+        ],
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Usuario reactivado exitosamente",
+        data: usuarioReactivado,
       });
     }
 
@@ -335,7 +402,7 @@ export const createUsuario = async (req, res) => {
  */
 export const updateUsuario = async (req, res) => {
   // OBTENER DATOS DE CONTEXTO DE AUDITORÍA
-  const updated_by = req.usuario.userId;
+  const updated_by = req?.user?.id || req?.usuario?.userId || req?.usuario?.id || null;
   const auditOptions = {
     currentUser: updated_by,
     ipAddress: req.ip,
@@ -525,7 +592,7 @@ export const deleteUsuario = async (req, res) => {
  */
 export const resetPassword = async (req, res) => {
   // OBTENER DATOS DE CONTEXTO DE AUDITORÍA
-  const updated_by = req.usuario.userId;
+  const updated_by = req?.user?.id || req?.usuario?.userId || req?.usuario?.id || null;
   const auditOptions = {
     currentUser: updated_by,
     ipAddress: req.ip,
@@ -597,7 +664,7 @@ export const resetPassword = async (req, res) => {
  */
 export const cambiarEstado = async (req, res) => {
   // OBTENER DATOS DE CONTEXTO DE AUDITORÍA
-  const updated_by = req.usuario.userId;
+  const updated_by = req?.user?.id || req?.usuario?.userId || req?.usuario?.id || null;
   const auditOptions = {
     currentUser: updated_by,
     ipAddress: req.ip,
