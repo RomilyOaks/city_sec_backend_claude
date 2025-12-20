@@ -328,6 +328,7 @@ const Usuario = sequelize.define(
               accion: "creacion",
               descripcion: `Usuario creado: ${usuario.username} (${usuario.email})`,
               ...auditData,
+              realizado_por: auditData.realizado_por ?? usuario.id,
             },
             { transaction: options.transaction }
           );
