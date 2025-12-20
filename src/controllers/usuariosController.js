@@ -478,7 +478,16 @@ export const updateUsuario = async (req, res) => {
     if (apellidos !== undefined) datosActualizar.apellidos = apellidos;
     if (telefono !== undefined) datosActualizar.telefono = telefono;
     if (email !== undefined) datosActualizar.email = email.toLowerCase();
-    if (estado !== undefined) datosActualizar.estado = estado;
+    if (estado !== undefined) {
+      // Normalizar estado: convertir 0/1 a strings ENUM
+      const estadoNormalizado =
+        estado === 1 || estado === "1"
+          ? "ACTIVO"
+          : estado === 0 || estado === "0"
+            ? "INACTIVO"
+            : estado;
+      datosActualizar.estado = estadoNormalizado;
+    }
     if (personal_seguridad_id !== undefined)
       datosActualizar.personal_seguridad_id = personal_seguridad_id;
 

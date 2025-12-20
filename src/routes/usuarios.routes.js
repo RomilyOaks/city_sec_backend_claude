@@ -250,7 +250,10 @@ router.put(
 
     body("roles").optional().isArray().withMessage("roles debe ser un array"),
 
-    body("estado").optional().isIn([0, 1]).withMessage("estado debe ser 0 o 1"),
+    body("estado")
+      .optional()
+      .isIn([0, 1, "0", "1", "ACTIVO", "INACTIVO", "BLOQUEADO", "PENDIENTE"])
+      .withMessage("estado debe ser 0/1 o ACTIVO/INACTIVO/BLOQUEADO/PENDIENTE"),
 
     handleValidationErrors,
   ],
