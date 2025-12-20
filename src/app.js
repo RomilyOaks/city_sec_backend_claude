@@ -150,18 +150,27 @@ const corsOptions = {
   origin: function (origin, callback) {
     const whitelist = [
       process.env.FRONTEND_URL,
-      process.env.CORS_ORIGIN || "http://localhost:5173",
+      process.env.CORS_ORIGIN,
+      "http://localhost:5173",
       "http://localhost:3000",
       "http://localhost:4200",
+      "http://127.0.0.1:5173",
     ].filter(Boolean);
 
-    if (NODE_ENV === "development" && !origin) {
+    // Allow requests with no origin (mobile apps, curl, Postman, etc.)
+    if (!origin) {
       return callback(null, true);
     }
 
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
+    // Allow any *.railway.app origin in production
+    if (origin && origin.includes('.railway.app')) {
+      return callback(null, true);
+    }
+
+    if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.warn(`CORS blocked origin: ${origin}`);
       callback(new Error("No permitido por CORS"));
     }
   },
