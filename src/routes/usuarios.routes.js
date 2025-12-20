@@ -62,8 +62,8 @@ router.get(
       .withMessage("limit debe estar entre 1 y 100"),
     query("estado")
       .optional()
-      .isIn([0, 1, "0", "1", "ACTIVO", "INACTIVO", "BLOQUEADO"])
-      .withMessage("estado debe ser 0/1 o ACTIVO/INACTIVO/BLOQUEADO"),
+      .isIn([0, 1, "0", "1", "ACTIVO", "INACTIVO", "BLOQUEADO", "PENDIENTE"])
+      .withMessage("estado debe ser 0/1 o ACTIVO/INACTIVO/BLOQUEADO/PENDIENTE"),
     query("includeDeleted")
       .optional()
       .isIn([0, 1, "0", "1", true, false, "true", "false"])
@@ -367,8 +367,8 @@ router.patch(
     body("estado")
       .notEmpty()
       .withMessage("El estado es requerido")
-      .isIn([0, 1, "0", "1", "ACTIVO", "INACTIVO", "BLOQUEADO"])
-      .withMessage("estado debe ser 0/1 o ACTIVO/INACTIVO/BLOQUEADO"),
+      .isIn([0, 1, "0", "1", "ACTIVO", "INACTIVO", "BLOQUEADO", "PENDIENTE"])
+      .withMessage("estado debe ser 0/1 o ACTIVO/INACTIVO/BLOQUEADO/PENDIENTE"),
 
     body("motivo")
       .optional()

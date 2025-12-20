@@ -701,7 +701,7 @@ export const cambiarEstado = async (req, res) => {
           ? "INACTIVO"
           : estado;
 
-    if (!["ACTIVO", "INACTIVO", "BLOQUEADO"].includes(estadoNormalizado)) {
+    if (!["ACTIVO", "INACTIVO", "BLOQUEADO", "PENDIENTE"].includes(estadoNormalizado)) {
       await t.rollback();
       return res.status(400).json({
         success: false,
