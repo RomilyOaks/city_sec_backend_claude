@@ -207,7 +207,7 @@ export const getUsuarioById = async (req, res) => {
  */
 export const createUsuario = async (req, res) => {
   // OBTENER DATOS DE CONTEXTO DE AUDITORÍA
-  const created_by = req.usuario.userId;
+  const created_by = req?.user?.id || req?.usuario?.userId || req?.usuario?.id || null;
   const auditOptions = {
     currentUser: created_by,
     ipAddress: req.ip,
@@ -228,7 +228,7 @@ export const createUsuario = async (req, res) => {
       estado = "ACTIVO",
     } = req.body;
 
-    const created_by = req.usuario.userId;
+    const created_by = req?.user?.id || req?.usuario?.userId || req?.usuario?.id || null;
 
     // Validar campos requeridos
     if (!username || !email || !password) {
