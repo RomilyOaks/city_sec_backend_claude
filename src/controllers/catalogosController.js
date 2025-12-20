@@ -497,13 +497,6 @@ const getUnidades = async (req, res) => {
 
     const unidades = await UnidadOficina.findAll({
       where: whereClause,
-      include: [
-        {
-          model: Ubigeo,
-          as: "ubigeo_rel",
-          attributes: ["ubigeo_code", "distrito", "provincia"],
-        },
-      ],
       order: [["nombre", "ASC"]],
     });
 
