@@ -194,10 +194,10 @@ export const getNovedadById = async (req, res) => {
         { model: Cuadrante, as: "novedadCuadrante" },
         { model: UnidadOficina, as: "novedadUnidadOficina" },
         { model: Vehiculo, as: "novedadVehiculo" },
-        { model: PersonalSeguridad, as: "novedadPersonalCargo", attributes: ["id", "codigo", "doc_identidad", "nombres", "apellido_paterno", "apellido_materno"] },
-        { model: PersonalSeguridad, as: "novedadPersonal2", attributes: ["id", "codigo", "doc_identidad", "nombres", "apellido_paterno", "apellido_materno"] },
-        { model: PersonalSeguridad, as: "novedadPersonal3", attributes: ["id", "codigo", "doc_identidad", "nombres", "apellido_paterno", "apellido_materno"] },
-        { model: PersonalSeguridad, as: "novedadPersonal4", attributes: ["id", "codigo", "doc_identidad", "nombres", "apellido_paterno", "apellido_materno"] },
+        { model: PersonalSeguridad, as: "novedadPersonalCargo", required: false, attributes: ["id", "codigo", "doc_identidad", "nombres", "apellido_paterno", "apellido_materno"] },
+        { model: PersonalSeguridad, as: "novedadPersonal2", required: false, attributes: ["id", "codigo", "doc_identidad", "nombres", "apellido_paterno", "apellido_materno"] },
+        { model: PersonalSeguridad, as: "novedadPersonal3", required: false, attributes: ["id", "codigo", "doc_identidad", "nombres", "apellido_paterno", "apellido_materno"] },
+        { model: PersonalSeguridad, as: "novedadPersonal4", required: false, attributes: ["id", "codigo", "doc_identidad", "nombres", "apellido_paterno", "apellido_materno"] },
       ],
     });
 
