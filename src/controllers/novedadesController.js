@@ -97,6 +97,7 @@ export const getAllNovedades = async (req, res) => {
         { descripcion: { [Op.like]: `%${search}%` } },
         { localizacion: { [Op.like]: `%${search}%` } },
         { reportante_nombre: { [Op.like]: `%${search}%` } },
+        { reportante_doc_identidad: { [Op.like]: `%${search}%` } },
       ];
     }
 
