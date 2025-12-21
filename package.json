@@ -15,6 +15,7 @@
     "lint:fix": "eslint src/**/*.js --fix",
     "db:seed": "node src/seeders/index.js",
     "seed:rbac": "node src/seeders/seedRBAC.js",
+    "seed:estados": "node src/seeders/runSeedEstados.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:undo": "sequelize-cli db:migrate:undo"
   },
