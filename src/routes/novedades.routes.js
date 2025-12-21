@@ -27,9 +27,10 @@ import express from "express";
 const router = express.Router();
 
 // ==========================================
-// IMPORTAR CONTROLADOR
+// IMPORTAR CONTROLADORES
 // ==========================================
 import novedadesController from "../controllers/novedadesController.js";
+import * as historialController from "../controllers/historialEstadoNovedadController.js";
 
 // ==========================================
 // IMPORTAR MIDDLEWARES DE AUTENTICACIÓN
@@ -271,6 +272,55 @@ router.delete(
     // #swagger.responses[200] = { description: 'OK' }
     // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     return novedadesController.deleteNovedad(req, res, next);
+  }
+);
+
+// ==========================================
+// RUTAS DE HISTORIAL DE ESTADOS
+// ==========================================
+
+/**
+ * @route   GET /api/v1/novedades/:novedadId/historial
+ * @desc    Obtener historial de estados de una novedad
+ * @access  Todos los usuarios autenticados
+ */
+router.get(
+  "/:novedadId/historial",
+  verificarToken,
+  (req, res, next) => {
+    // #swagger.tags = ['Novedades']
+    // #swagger.summary = 'Obtener historial de estados de una novedad'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['novedadId'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'Novedad no encontrada' }
+    return historialController.getHistorialByNovedad(req, res, next);
+  }
+);
+
+/**
+ * @route   POST /api/v1/novedades/:novedadId/historial
+ * @desc    Registrar cambio de estado manual
+ * @access  Operador, Supervisor, Administrador
+ */
+router.post(
+  "/:novedadId/historial",
+  verificarToken,
+  verificarRoles(["operador", "supervisor", "super_admin"]),
+  requireAnyPermission(["novedades.incidentes.update"]),
+  registrarAuditoria({
+    entidad: "HistorialEstadoNovedad",
+    severidad: "MEDIA",
+    modulo: "Novedades",
+  }),
+  (req, res, next) => {
+    // #swagger.tags = ['Novedades']
+    // #swagger.summary = 'Registrar cambio de estado manual'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['novedadId'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[201] = { description: 'Creado' }
+    // #swagger.responses[404] = { description: 'Novedad no encontrada' }
+    return historialController.createHistorialEstado(req, res, next);
   }
 );
 
