@@ -88,6 +88,7 @@ import cargosRoutes from "./cargos.routes.js";
 import tipoNovedadRoutes from "./tipo-novedad.routes.js"; // ✅ NEW
 import subtipoNovedadRoutes from "./subtipo-novedad.routes.js"; // ✅ NEW
 import estadoNovedadRoutes from "./estado-novedad.routes.js"; // ✅ NEW
+import ubigeoRoutes from "./ubigeoRoutes.js"; // ✅ NEW
 
 // 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
@@ -296,6 +297,7 @@ router.use("/cargos", cargosRoutes);
 router.use("/tipos-novedad", tipoNovedadRoutes);
 router.use("/subtipos-novedad", subtipoNovedadRoutes);
 router.use("/estados-novedad", estadoNovedadRoutes);
+router.use("/ubigeo", ubigeoRoutes);
 
 /**
  * @route   /auditoria
