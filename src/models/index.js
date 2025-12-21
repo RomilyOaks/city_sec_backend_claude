@@ -482,6 +482,38 @@ Vehiculo.hasMany(Novedad, {
 });
 
 /**
+ * Relación: Novedad -> PersonalSeguridad (Personal a Cargo)
+ */
+Novedad.belongsTo(PersonalSeguridad, {
+  foreignKey: "personal_cargo_id",
+  as: "novedadPersonalCargo",
+});
+
+/**
+ * Relación: Novedad -> PersonalSeguridad (Personal #2)
+ */
+Novedad.belongsTo(PersonalSeguridad, {
+  foreignKey: "personal_seguridad2_id",
+  as: "novedadPersonal2",
+});
+
+/**
+ * Relación: Novedad -> PersonalSeguridad (Personal #3)
+ */
+Novedad.belongsTo(PersonalSeguridad, {
+  foreignKey: "personal_seguridad3_id",
+  as: "novedadPersonal3",
+});
+
+/**
+ * Relación: Novedad -> PersonalSeguridad (Personal #4)
+ */
+Novedad.belongsTo(PersonalSeguridad, {
+  foreignKey: "personal_seguridad4_id",
+  as: "novedadPersonal4",
+});
+
+/**
  * Relación: Novedad -> HistorialEstadoNovedad (One-to-Many)
  */
 Novedad.hasMany(HistorialEstadoNovedad, {
