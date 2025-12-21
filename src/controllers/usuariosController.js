@@ -243,8 +243,11 @@ export const createUsuario = async (req, res) => {
       telefono,
       roles = [],
       personal_seguridad_id,
-      estado = "ACTIVO",
+      estado: estadoRecibido,
     } = req.body;
+    
+    // Estado por defecto: PENDIENTE si no tiene personal_seguridad_id, ACTIVO si lo tiene
+    const estado = estadoRecibido || (personal_seguridad_id ? "ACTIVO" : "PENDIENTE");
 
     const created_by = req?.user?.id || req?.usuario?.userId || req?.usuario?.id || null;
 
