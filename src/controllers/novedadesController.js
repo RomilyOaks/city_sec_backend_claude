@@ -97,6 +97,7 @@ export const getAllNovedades = async (req, res) => {
         { descripcion: { [Op.like]: `%${search}%` } },
         { localizacion: { [Op.like]: `%${search}%` } },
         { reportante_nombre: { [Op.like]: `%${search}%` } },
+        { reportante_telefono: { [Op.like]: `%${search}%` } },
         { reportante_doc_identidad: { [Op.like]: `%${search}%` } },
       ];
     }
@@ -244,6 +245,7 @@ export const createNovedad = async (req, res) => {
       observaciones,
       sector_id,
       cuadrante_id,
+      num_personas_afectadas,
     } = req.body;
 
     const estadoInicial = await EstadoNovedad.findOne({
@@ -314,6 +316,7 @@ export const createNovedad = async (req, res) => {
         observaciones,
         prioridad_actual: subtipo.prioridad || "MEDIA",
         turno,
+        num_personas_afectadas: num_personas_afectadas || 0,
         usuario_registro: req.user.id,
         created_by: req.user.id,
       },
@@ -473,10 +476,17 @@ export const asignarRecursos = async (req, res) => {
       personal_seguridad3_id,
       personal_seguridad4_id,
       km_inicial,
+      km_final,
       fecha_despacho,
+      fecha_llegada,
+      fecha_cierre,
       turno,
       tiempo_respuesta_minutos,
-      observaciones
+      observaciones,
+      estado_novedad_id,
+      requiere_seguimiento,
+      fecha_proxima_revision,
+      perdidas_materiales_estimadas
     } = req.body;
 
     const novedad = await Novedad.findOne({
@@ -515,15 +525,23 @@ export const asignarRecursos = async (req, res) => {
     if (personal_seguridad3_id) datosActualizacion.personal_seguridad3_id = personal_seguridad3_id;
     if (personal_seguridad4_id) datosActualizacion.personal_seguridad4_id = personal_seguridad4_id;
     if (km_inicial) datosActualizacion.km_inicial = km_inicial;
+    if (km_final) datosActualizacion.km_final = km_final;
     if (turno) datosActualizacion.turno = turno;
     if (tiempo_respuesta_minutos) datosActualizacion.tiempo_respuesta_minutos = tiempo_respuesta_minutos;
     if (observaciones) datosActualizacion.observaciones = observaciones;
+    if (fecha_llegada) datosActualizacion.fecha_llegada = new Date(fecha_llegada);
+    if (fecha_cierre) datosActualizacion.fecha_cierre = new Date(fecha_cierre);
+    if (requiere_seguimiento !== undefined) datosActualizacion.requiere_seguimiento = requiere_seguimiento;
+    if (fecha_proxima_revision) datosActualizacion.fecha_proxima_revision = new Date(fecha_proxima_revision);
+    if (perdidas_materiales_estimadas) datosActualizacion.perdidas_materiales_estimadas = perdidas_materiales_estimadas;
     
     // Fecha de despacho: usar la proporcionada o la actual
     datosActualizacion.fecha_despacho = fecha_despacho ? new Date(fecha_despacho) : new Date();
     
-    // Actualizar estado si existe uno de despacho
-    if (estadoDespacho) {
+    // Actualizar estado: usar el proporcionado explícitamente o el de despacho automático
+    if (estado_novedad_id) {
+      datosActualizacion.estado_novedad_id = estado_novedad_id;
+    } else if (estadoDespacho) {
       datosActualizacion.estado_novedad_id = estadoDespacho.id;
     }
 
