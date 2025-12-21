@@ -465,8 +465,19 @@ export const asignarRecursos = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { unidad_oficina_id, vehiculo_id, personal_cargo_id, km_inicial } =
-      req.body;
+    const { 
+      unidad_oficina_id, 
+      vehiculo_id, 
+      personal_cargo_id,
+      personal_seguridad2_id,
+      personal_seguridad3_id,
+      personal_seguridad4_id,
+      km_inicial,
+      fecha_despacho,
+      turno,
+      tiempo_respuesta_minutos,
+      observaciones
+    } = req.body;
 
     const novedad = await Novedad.findOne({
       where: { id, estado: 1, deleted_at: null },
@@ -484,7 +495,7 @@ export const asignarRecursos = async (req, res) => {
 
     const estadoDespacho = await EstadoNovedad.findOne({
       where: {
-        nombre: { [Op.in]: ["EN RUTA", "DESPACHADO"] },
+        nombre: { [Op.in]: ["EN RUTA", "DESPACHADO", "Asignado"] },
         estado: 1,
       },
       transaction,
@@ -492,20 +503,31 @@ export const asignarRecursos = async (req, res) => {
 
     const estadoAnteriorId = novedad.estado_novedad_id;
 
-    await novedad.update(
-      {
-        unidad_oficina_id,
-        vehiculo_id,
-        personal_cargo_id,
-        km_inicial,
-        fecha_despacho: new Date(),
-        estado_novedad_id: estadoDespacho
-          ? estadoDespacho.id
-          : novedad.estado_novedad_id,
-        updated_by: req.user.id,
-      },
-      { transaction }
-    );
+    // Construir objeto de actualización
+    const datosActualizacion = {
+      updated_by: req.user.id,
+    };
+
+    if (unidad_oficina_id) datosActualizacion.unidad_oficina_id = unidad_oficina_id;
+    if (vehiculo_id) datosActualizacion.vehiculo_id = vehiculo_id;
+    if (personal_cargo_id) datosActualizacion.personal_cargo_id = personal_cargo_id;
+    if (personal_seguridad2_id) datosActualizacion.personal_seguridad2_id = personal_seguridad2_id;
+    if (personal_seguridad3_id) datosActualizacion.personal_seguridad3_id = personal_seguridad3_id;
+    if (personal_seguridad4_id) datosActualizacion.personal_seguridad4_id = personal_seguridad4_id;
+    if (km_inicial) datosActualizacion.km_inicial = km_inicial;
+    if (turno) datosActualizacion.turno = turno;
+    if (tiempo_respuesta_minutos) datosActualizacion.tiempo_respuesta_minutos = tiempo_respuesta_minutos;
+    if (observaciones) datosActualizacion.observaciones = observaciones;
+    
+    // Fecha de despacho: usar la proporcionada o la actual
+    datosActualizacion.fecha_despacho = fecha_despacho ? new Date(fecha_despacho) : new Date();
+    
+    // Actualizar estado si existe uno de despacho
+    if (estadoDespacho) {
+      datosActualizacion.estado_novedad_id = estadoDespacho.id;
+    }
+
+    await novedad.update(datosActualizacion, { transaction });
 
     if (estadoDespacho && estadoDespacho.id !== estadoAnteriorId) {
       const tiempoEstado = Math.floor(
