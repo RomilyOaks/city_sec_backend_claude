@@ -491,8 +491,29 @@ export const updateUsuario = async (req, res) => {
             : estado;
       datosActualizar.estado = estadoNormalizado;
     }
-    if (personal_seguridad_id !== undefined)
+    if (personal_seguridad_id !== undefined) {
+      // Si se está asignando un personal, verificar que no esté asignado a otro usuario ACTIVO
+      if (personal_seguridad_id) {
+        const usuarioConEstePersonal = await Usuario.findOne({
+          where: {
+            personal_seguridad_id,
+            id: { [Op.ne]: id }, // Excluir el usuario actual
+            deleted_at: null, // Solo usuarios no eliminados
+            estado: { [Op.ne]: 'INACTIVO' }, // Excluir usuarios INACTIVOS
+          },
+          transaction: t,
+        });
+
+        if (usuarioConEstePersonal) {
+          await t.rollback();
+          return res.status(400).json({
+            success: false,
+            message: `Este personal ya está asignado al usuario "${usuarioConEstePersonal.username}"`,
+          });
+        }
+      }
       datosActualizar.personal_seguridad_id = personal_seguridad_id;
+    }
 
     await usuario.update(datosActualizar, { transaction: t, auditOptions });
 
