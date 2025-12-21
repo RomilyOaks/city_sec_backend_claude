@@ -297,7 +297,7 @@ export const createUsuario = async (req, res) => {
           telefono: telefono ?? usuarioExistente.telefono,
           personal_seguridad_id:
             personal_seguridad_id ?? usuarioExistente.personal_seguridad_id,
-          estado: "ACTIVO",
+          estado, // Usar el estado calculado (PENDIENTE si no tiene personal, ACTIVO si tiene)
           deleted_at: null,
           updated_by: created_by,
           email_verified_at: usuarioExistente.email_verified_at || new Date(),
