@@ -688,7 +688,12 @@ export const getHistorialEstados = async (req, res) => {
  */
 export const getDashboardStats = async (req, res) => {
   try {
-    const hoy = new Date();
+    // Usar zona horaria de Perú (UTC-5)
+    const ahora = new Date();
+    const offsetPeru = -5 * 60; // UTC-5 en minutos
+    const ahoraPeru = new Date(ahora.getTime() + (offsetPeru - ahora.getTimezoneOffset()) * 60000);
+    
+    const hoy = new Date(ahoraPeru);
     hoy.setHours(0, 0, 0, 0);
 
     const mañana = new Date(hoy);
