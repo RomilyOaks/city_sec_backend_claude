@@ -832,7 +832,8 @@ export const logout = async (req, res) => {
  */
 export const changePassword = async (req, res) => {
   try {
-    const userId = req.usuario.userId;
+    // Compatibilidad: req.user (middleware actual) o req.usuario (legacy)
+    const userId = req.user?.id || req.usuario?.userId || req.usuario?.id;
     const { currentPassword, newPassword } = req.body;
 
     // ==========================================
