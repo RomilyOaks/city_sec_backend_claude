@@ -536,12 +536,12 @@ export const getUsuariosDeRol = async (req, res) => {
       });
     }
 
-    // Buscar usuarios con este rol
+    // Buscar usuarios con este rol usando la asociación definida en el modelo
     const usuarios = await Usuario.findAll({
       include: [
         {
           model: Rol,
-          as: "Roles",
+          as: "roles",
           where: { id: rol.id },
           through: { attributes: [] },
           attributes: [],
