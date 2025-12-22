@@ -547,8 +547,8 @@ export const getUsuariosDeRol = async (req, res) => {
           attributes: [],
         },
       ],
-      attributes: ["id", "username", "email", "nombre", "estado", "ultimo_acceso", "created_at"],
-      order: [["nombre", "ASC"]],
+      attributes: ["id", "username", "email", "nombres", "apellidos", "estado", "ultimo_acceso", "created_at"],
+      order: [["username", "ASC"]],
     });
 
     res.json({
