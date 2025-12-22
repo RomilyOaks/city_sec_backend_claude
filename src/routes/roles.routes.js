@@ -25,6 +25,7 @@ import {
   getRoles,
   getRolById,
   getPermisosDeRol,
+  getUsuariosDeRol,
   getRolBySlug,
   createRol,
   updateRol,
@@ -159,6 +160,26 @@ router.get(
     // #swagger.responses[200] = { description: 'OK' }
     // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     return getPermisosDeRol(req, res, next);
+  }
+);
+
+/**
+ * @route   GET /api/v1/roles/:id/usuarios
+ * @desc    Obtener usuarios asignados a un rol
+ * @access  Private (super_admin, admin)
+ * @params  {number} id - ID del rol
+ */
+router.get(
+  "/:id/usuarios",
+  requireAnyPermission("usuarios.roles.read"),
+  (req, res, next) => {
+    // #swagger.tags = ['Roles']
+    // #swagger.summary = 'Listar usuarios de un rol'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return getUsuariosDeRol(req, res, next);
   }
 );
 
