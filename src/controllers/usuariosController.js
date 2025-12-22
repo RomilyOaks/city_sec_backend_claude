@@ -160,7 +160,7 @@ export const getUsuarioById = async (req, res) => {
         },
         {
           model: PersonalSeguridad,
-          as: "personalSeguridad",
+          as: "usuarioPersonalSeguridad",
           attributes: [
             "id",
             "nombres",
