@@ -517,6 +517,63 @@ export const quitarPermiso = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/v1/roles/:id/usuarios
+ * Obtener usuarios que tienen asignado un rol específico
+ */
+export const getUsuariosDeRol = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const rol = await Rol.findOne({
+      where: { id, deleted_at: null },
+    });
+
+    if (!rol) {
+      return res.status(404).json({
+        success: false,
+        message: "Rol no encontrado",
+      });
+    }
+
+    // Buscar usuarios con este rol
+    const usuarios = await Usuario.findAll({
+      include: [
+        {
+          model: Rol,
+          as: "Roles",
+          where: { id: rol.id },
+          through: { attributes: [] },
+          attributes: [],
+        },
+      ],
+      attributes: ["id", "username", "email", "nombre", "estado", "ultimo_acceso", "created_at"],
+      order: [["nombre", "ASC"]],
+    });
+
+    res.json({
+      success: true,
+      data: {
+        rol: {
+          id: rol.id,
+          nombre: rol.nombre,
+          slug: rol.slug,
+          color: rol.color,
+        },
+        usuarios,
+        total: usuarios.length,
+      },
+    });
+  } catch (error) {
+    console.error("Error en getUsuariosDeRol:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener usuarios del rol",
+      error: error.message,
+    });
+  }
+};
+
 export default {
   getRoles,
   getRolById,
@@ -527,4 +584,5 @@ export default {
   deleteRol,
   asignarPermisos,
   quitarPermiso,
+  getUsuariosDeRol,
 };
