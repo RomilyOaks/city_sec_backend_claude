@@ -5,8 +5,13 @@
  * Archivo principal de la aplicación Express para el Sistema de Seguridad Ciudadana.
  * Configura todos los middlewares de seguridad, parsers, rutas y manejo de errores.
  *
- * VERSIÓN: 2.2.0
- * ÚLTIMA ACTUALIZACIÓN: 2025-12-13
+ * VERSIÓN: 2.4.0
+ * ÚLTIMA ACTUALIZACIÓN: 2025-12-23
+ *
+ * CAMBIOS v2.4.0:
+ * - ✅ Migrado a usar index.routes.js centralizado
+ * - ✅ Agregadas rutas del módulo Calles y Direcciones
+ * - ✅ Simplificado registro de rutas
  *
  * CAMBIOS v2.2.0:
  * - ✅ Agregadas rutas de /cargos
@@ -15,8 +20,8 @@
  * - ✅ Todo configurado desde .env
  *
  * @module app
- * @version 2.2.0
- * @date 2025-12-13
+ * @version 2.4.0
+ * @date 2025-12-23
  */
 
 // ============================================
@@ -34,34 +39,10 @@ import compression from "compression";
 import sequelize from "./config/database.js";
 
 // ============================================
-// IMPORTACIÓN DE RUTAS
+// IMPORTACIÓN DE RUTAS CENTRALIZADO ✨ NUEVO
 // ============================================
 
-// Rutas de autenticación y usuarios
-import authRoutes from "./routes/auth.routes.js";
-import usuariosRoutes from "./routes/usuarios.routes.js";
-
-// Rutas de módulos operativos
-import catalogosRoutes from "./routes/catalogos.routes.js";
-import novedadesRoutes from "./routes/novedades.routes.js";
-import personalRoutes from "./routes/personal.routes.js";
-import sectoresRoutes from "./routes/sectores.routes.js";
-import vehiculosRoutes from "./routes/vehiculos.routes.js";
-import cuadrantesRoutes from "./routes/cuadrantes.routes.js";
-import permisosRoutes from "./routes/permisos.routes.js";
-import rolesRoutes from "./routes/roles.routes.js";
-import auditoriaAccionRoutes from "./routes/auditoriaAcciones.routes.js";
-import abastecimientosRoutes from "./routes/abastecimientos.routes.js";
-import mantenimientosRoutes from "./routes/mantenimientos.routes.js";
-import talleresRoutes from "./routes/talleres.routes.js";
-import reportesRoutes from "./routes/reportes.routes.js";
-
-// Rutas de catalogos
-import cargosRoutes from "./routes/cargos.routes.js";
-import tipoNovedadRoutes from "./routes/tipo-novedad.routes.js";
-import subtipoNovedadRoutes from "./routes/subtipo-novedad.routes.js";
-import estadoNovedadRoutes from "./routes/estado-novedad.routes.js";
-import unidadOficinaRoutes from "./routes/unidad-oficina.routes.js";
+import indexRoutes from "./routes/index.routes.js";
 
 // ============================================
 // CONFIGURACIÓN INICIAL
@@ -163,12 +144,15 @@ const corsOptions = {
     }
 
     // Allow any *.railway.app origin in production
-    if (origin && origin.includes('.railway.app')) {
+    if (origin && origin.includes(".railway.app")) {
       return callback(null, true);
     }
 
     // Allow any localhost or 127.0.0.1 origin (dev proxies, etc.)
-    if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+    if (
+      origin &&
+      (origin.includes("localhost") || origin.includes("127.0.0.1"))
+    ) {
       return callback(null, true);
     }
 
@@ -256,127 +240,37 @@ app.use((req, res, next) => {
   next();
 });
 
-// ============================================
-// HEALTH CHECK ENDPOINT (FUERA DE VERSIONAMIENTO)
-// Mantener para load balancers
-// ============================================
+// ============================================================================
+// REGISTRO DE RUTAS CENTRALIZADO ✨ NUEVO v2.4.0
+// ============================================================================
 
-app.get("/health", (req, res) => {
-  res.json({
-    success: true,
-    message: "API de Seguridad Ciudadana funcionando correctamente",
-    timestamp: new Date().toISOString(),
-    environment: NODE_ENV,
-    version: API_VERSION,
-  });
-});
+/**
+ * Todas las rutas están centralizadas en routes/index.routes.js
+ *
+ * Módulos disponibles:
+ * - /auth
+ * - /usuarios, /roles, /permisos
+ * - /novedades, /vehiculos, /personal
+ * - /sectores, /cuadrantes
+ * - /catalogos, /cargos
+ * - /tipos-via, /calles, /calles-cuadrantes, /direcciones ← NUEVO
+ * - /auditoria
+ *
+ * El router index.routes.js maneja:
+ * - Logging de requests
+ * - Health check en /api/v1/health
+ * - Ruta raíz con info de API en /api/v1
+ * - Manejo de 404
+ */
+console.log(`\n📦 Registrando rutas en /api/${API_VERSION}...`);
 
-// ============================================
-// RUTA RAÍZ DE LA API
-// ============================================
+app.use(`/api/${API_VERSION}`, indexRoutes);
 
-app.get(`/api/${API_VERSION}`, (req, res) => {
-  res.json({
-    success: true,
-    message: `API de Seguridad Ciudadana ${API_VERSION}`,
-    version: API_VERSION,
-    documentation: `/api/${API_VERSION}/docs`,
-    endpoints: {
-      auth: `/api/${API_VERSION}/auth`,
-      usuarios: `/api/${API_VERSION}/usuarios`,
-      catalogos: `/api/${API_VERSION}/catalogos`,
-      novedades: `/api/${API_VERSION}/novedades`,
-      personal: `/api/${API_VERSION}/personal`,
-      sectores: `/api/${API_VERSION}/sectores`,
-      vehiculos: `/api/${API_VERSION}/vehiculos`,
-      mantenimientos: `/api/${API_VERSION}/mantenimientos`,
-      talleres: `/api/${API_VERSION}/talleres`,
-      reportes: `/api/${API_VERSION}/reportes`,
-      cuadrantes: `/api/${API_VERSION}/cuadrantes`,
-      cargos: `/api/${API_VERSION}/cargos`, // ✅ AGREGADO
-      tipos_novedad: `/api/${API_VERSION}/tipos-novedad`, // ✅ NUEVO
-      subtipos_novedad: `/api/${API_VERSION}/subtipos-novedad`, // ✅ NUEVO
-      estados_novedad: `/api/${API_VERSION}/estados-novedad`, // ✅ NUEVO
-      abastecimientos: `/api/${API_VERSION}/abastecimientos`, // ✅ NUEVO
-    },
-    contact: {
-      support: "soporte@citysec.com",
-      documentation: "https://docs.citysec.com",
-    },
-  });
-});
-
-// ============================================
-// REGISTRO DE RUTAS CON VERSIONAMIENTO
-// ============================================
-
-app.use(`/api/${API_VERSION}/auth`, authRoutes);
-app.use(`/api/${API_VERSION}/usuarios`, usuariosRoutes);
-app.use(`/api/${API_VERSION}/catalogos`, catalogosRoutes);
-app.use(`/api/${API_VERSION}/novedades`, novedadesRoutes);
-app.use(`/api/${API_VERSION}/personal`, personalRoutes);
-app.use(`/api/${API_VERSION}/sectores`, sectoresRoutes);
-app.use(`/api/${API_VERSION}/vehiculos`, vehiculosRoutes);
-app.use(`/api/${API_VERSION}/cuadrantes`, cuadrantesRoutes);
-app.use(`/api/${API_VERSION}/permisos`, permisosRoutes);
-app.use(`/api/${API_VERSION}/roles`, rolesRoutes);
-app.use(`/api/${API_VERSION}/auditoria`, auditoriaAccionRoutes);
-app.use(`/api/${API_VERSION}/abastecimientos`, abastecimientosRoutes);
-app.use(`/api/${API_VERSION}/mantenimientos`, mantenimientosRoutes);
-app.use(`/api/${API_VERSION}/talleres`, talleresRoutes);
-app.use(`/api/${API_VERSION}/reportes`, reportesRoutes);
-
-// Rutas de cargos
-app.use(`/api/${API_VERSION}/cargos`, cargosRoutes);
-
-// Rutas de Tipos, Subtipos, Estados de Novedad y Unidades de Oficinas
-app.use(`/api/${API_VERSION}/tipos-novedad`, tipoNovedadRoutes);
-app.use(`/api/${API_VERSION}/subtipos-novedad`, subtipoNovedadRoutes);
-app.use(`/api/${API_VERSION}/estados-novedad`, estadoNovedadRoutes);
-app.use(`/api/${API_VERSION}/unidades-oficina`, unidadOficinaRoutes);
-
-// ============================================
-// ✅ HEALTH CHECK DENTRO DE VERSIONAMIENTO
-// ============================================
-
-app.get(`/api/${API_VERSION}/health`, async (req, res) => {
-  try {
-    await sequelize.authenticate();
-
-    const dbStatus = {
-      connected: true,
-      type: sequelize.config.dialect,
-      host: sequelize.config.host,
-      database: sequelize.config.database,
-    };
-
-    res.status(200).json({
-      success: true,
-      message: "API funcionando correctamente",
-      timestamp: new Date().toISOString(),
-      version: API_VERSION,
-      environment: NODE_ENV,
-      uptime: Math.floor(process.uptime()),
-      database: dbStatus,
-      memory: {
-        usage:
-          Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) /
-          100,
-        unit: "MB",
-      },
-    });
-  } catch (error) {
-    res.status(503).json({
-      success: false,
-      message: "Servicio no disponible",
-      error: error.message,
-      timestamp: new Date().toISOString(),
-    });
-  }
-});
+console.log(`✅ Rutas registradas correctamente\n`);
 
 // ============================================
 // MANEJO DE RUTAS NO ENCONTRADAS (404)
+// Este 404 captura rutas fuera de /api/v1
 // ============================================
 
 app.use((req, res) => {
@@ -385,7 +279,7 @@ app.use((req, res) => {
     message: "Ruta no encontrada",
     path: req.path,
     method: req.method,
-    suggestion: "Verifique la documentación de la API",
+    suggestion: `Verifique la documentación en /api/${API_VERSION}`,
   });
 });
 
@@ -530,11 +424,16 @@ const startServer = async () => {
       console.log("💡 Endpoints principales:");
       console.log(`  • POST   /api/${API_VERSION}/auth/login`);
       console.log(`  • GET    /api/${API_VERSION}/personal`);
-      console.log(`  • GET    /api/${API_VERSION}/cargos         ✅ NEW`);
-      console.log(`  • GET    /api/${API_VERSION}/tipos-novedad  ✅ NEW`);
-      console.log(`  • GET    /api/${API_VERSION}/subtipos-novedad  ✅ NEW`);
+      console.log(`  • GET    /api/${API_VERSION}/cargos`);
+      console.log(`  • GET    /api/${API_VERSION}/tipos-novedad`);
+      console.log(`  • GET    /api/${API_VERSION}/subtipos-novedad`);
       console.log(`  • GET    /api/${API_VERSION}/vehiculos`);
       console.log(`  • GET    /api/${API_VERSION}/novedades`);
+      console.log("");
+      console.log("✨ NUEVO - Módulo Calles y Direcciones:");
+      console.log(`  • GET    /api/${API_VERSION}/tipos-via/activos`);
+      console.log(`  • GET    /api/${API_VERSION}/calles`);
+      console.log(`  • GET    /api/${API_VERSION}/direcciones`);
       console.log("");
       console.log(`📝 Documentación completa en /api/${API_VERSION}\n`);
 

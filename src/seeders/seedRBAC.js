@@ -9,6 +9,7 @@
  * 3. Asignación de permisos a roles
  * 4. Usuario administrador inicial
  *
+ * VERSIÓN: 2.2.1 (Incluye módulo Calles y Direcciones)
  * EJECUTAR CON: npm run seed:rbac
  */
 
@@ -46,7 +47,6 @@ async function seedRBAC() {
         nivel_jerarquia: 0,
         es_sistema: true,
         color: "#DC2626",
-        // CORREGIDO: Usar boolean (true) en lugar de la cadena "activo"
         estado: true,
       },
       {
@@ -56,7 +56,6 @@ async function seedRBAC() {
         nivel_jerarquia: 1,
         es_sistema: true,
         color: "#F59E0B",
-        // CORREGIDO
         estado: true,
       },
       {
@@ -66,7 +65,6 @@ async function seedRBAC() {
         nivel_jerarquia: 2,
         es_sistema: true,
         color: "#3B82F6",
-        // CORREGIDO
         estado: true,
       },
       {
@@ -76,7 +74,6 @@ async function seedRBAC() {
         nivel_jerarquia: 3,
         es_sistema: true,
         color: "#8B5CF6",
-        // CORREGIDO
         estado: true,
       },
       {
@@ -86,7 +83,6 @@ async function seedRBAC() {
         nivel_jerarquia: 4,
         es_sistema: true,
         color: "#6B7280",
-        // CORREGIDO
         estado: true,
       },
       {
@@ -96,7 +92,6 @@ async function seedRBAC() {
         nivel_jerarquia: 5,
         es_sistema: true,
         color: "#9CA3AF",
-        // CORREGIDO
         estado: true,
       },
     ];
@@ -113,7 +108,7 @@ async function seedRBAC() {
     }
 
     console.log(
-      `   ✓ ${rolesCreados} roles nuevos creados (${rolesData.length} total verificados)`
+      `   ✓ ${rolesCreados} roles nuevos creados (${rolesData.length} total verificados)`
     );
 
     // ========================================
@@ -270,7 +265,14 @@ async function seedRBAC() {
         modulo: "novedades",
         recurso: "incidentes",
         accion: "read",
-        descripcion: "Ver incidentes",
+        descripcion: "Ver incidentes registrados",
+        es_sistema: true,
+      },
+      {
+        modulo: "novedades",
+        recurso: "novedades",
+        accion: "read",
+        descripcion: "Ver novedades registradas",
         es_sistema: true,
       },
       {
@@ -282,6 +284,13 @@ async function seedRBAC() {
       },
       {
         modulo: "novedades",
+        recurso: "novedades",
+        accion: "update",
+        descripcion: "Actualizar novedades",
+        es_sistema: true,
+      },
+      {
+        modulo: "novedades",
         recurso: "incidentes",
         accion: "delete",
         descripcion: "Eliminar incidentes",
@@ -289,164 +298,37 @@ async function seedRBAC() {
       },
       {
         modulo: "novedades",
-        recurso: "estados",
-        accion: "update",
-        descripcion: "Cambiar estado de incidente",
+        recurso: "novedades",
+        accion: "delete",
+        descripcion: "Eliminar novedades",
         es_sistema: true,
       },
       {
         modulo: "novedades",
         recurso: "asignacion",
         accion: "execute",
-        descripcion: "Asignar personal a incidente",
-        es_sistema: true,
-      },
-
-      // ============================================
-      // MÓDULO: VEHÍCULOS
-      // ============================================
-      {
-        modulo: "vehiculos",
-        recurso: "vehiculos",
-        accion: "create",
-        descripcion: "Registrar nuevos vehículos",
+        descripcion: "Asignar recursos a novedades",
         es_sistema: true,
       },
       {
-        modulo: "vehiculos",
-        recurso: "vehiculos",
-        accion: "read",
-        descripcion: "Ver información de vehículos",
+        modulo: "novedades",
+        recurso: "incidentes",
+        accion: "cierre",
+        descripcion: "Cerrar incidentes",
         es_sistema: true,
       },
       {
-        modulo: "vehiculos",
-        recurso: "vehiculos",
-        accion: "update",
-        descripcion: "Actualizar datos de vehículos",
+        modulo: "novedades",
+        recurso: "novedades",
+        accion: "cierre",
+        descripcion: "Cerrar novedades",
         es_sistema: true,
       },
       {
-        modulo: "vehiculos",
-        recurso: "vehiculos",
-        accion: "delete",
-        descripcion: "Eliminar vehículos",
-        es_sistema: true,
-      },
-      {
-        modulo: "vehiculos",
-        recurso: "combustible",
-        accion: "read",
-        descripcion: "Ver registros de abastecimiento",
-        es_sistema: true,
-      },
-      {
-        modulo: "vehiculos",
-        recurso: "combustible",
-        accion: "create",
-        descripcion: "Registrar abastecimiento",
-        es_sistema: true,
-      },
-
-      {
-        modulo: "vehiculos",
-        recurso: "abastecimiento",
-        accion: "create",
-        descripcion: "Registrar abastecimiento de combustible",
-        es_sistema: true,
-      },
-      {
-        modulo: "vehiculos",
-        recurso: "abastecimiento",
-        accion: "read",
-        descripcion: "Ver abastecimientos de combustible",
-        es_sistema: true,
-      },
-      {
-        modulo: "vehiculos",
-        recurso: "abastecimiento",
-        accion: "update",
-        descripcion: "Actualizar abastecimientos de combustible",
-        es_sistema: true,
-      },
-      {
-        modulo: "vehiculos",
-        recurso: "abastecimiento",
-        accion: "delete",
-        descripcion: "Eliminar abastecimientos de combustible",
-        es_sistema: true,
-      },
-
-      {
-        modulo: "vehiculos",
-        recurso: "kilometraje",
-        accion: "update",
-        descripcion: "Actualizar kilometraje del vehículo",
-        es_sistema: true,
-      },
-      {
-        modulo: "vehiculos",
-        recurso: "estado",
-        accion: "update",
-        descripcion: "Cambiar estado operativo del vehículo",
-        es_sistema: true,
-      },
-
-      {
-        modulo: "vehiculos",
-        recurso: "mantenimientos",
-        accion: "create",
-        descripcion: "Registrar mantenimientos de vehículos",
-        es_sistema: true,
-      },
-      {
-        modulo: "vehiculos",
-        recurso: "mantenimientos",
-        accion: "read",
-        descripcion: "Ver mantenimientos de vehículos",
-        es_sistema: true,
-      },
-      {
-        modulo: "vehiculos",
-        recurso: "mantenimientos",
-        accion: "update",
-        descripcion: "Actualizar mantenimientos de vehículos",
-        es_sistema: true,
-      },
-      {
-        modulo: "vehiculos",
-        recurso: "mantenimientos",
-        accion: "delete",
-        descripcion: "Eliminar mantenimientos de vehículos",
-        es_sistema: true,
-      },
-
-      {
-        modulo: "vehiculos",
-        recurso: "talleres",
-        accion: "create",
-        descripcion: "Registrar talleres",
-        es_sistema: true,
-      },
-      {
-        modulo: "vehiculos",
-        recurso: "talleres",
-        accion: "read",
-        descripcion: "Ver talleres",
-        es_sistema: true,
-      },
-      {
-        modulo: "vehiculos",
-        recurso: "talleres",
-        accion: "update",
-        descripcion: "Actualizar talleres",
-        es_sistema: true,
-      },
-      {
-        modulo: "vehiculos",
-        recurso: "talleres",
-        accion: "delete",
-        descripcion: "Eliminar talleres",
+        modulo: "novedades",
+        recurso: "incidentes",
+        accion: "reapertura",
+        descripcion: "Reabrir incidentes cerrados",
         es_sistema: true,
       },
 
@@ -484,68 +366,149 @@ async function seedRBAC() {
       {
         modulo: "personal",
         recurso: "personal",
-        accion: "restore",
-        descripcion: "Restaurar personal eliminado",
+        accion: "asignar_vehiculo",
+        descripcion: "Asignar vehículos al personal",
         es_sistema: true,
       },
       {
         modulo: "personal",
-        recurso: "status",
+        recurso: "licencias",
+        accion: "read",
+        descripcion: "Ver licencias del personal",
+        es_sistema: true,
+      },
+      {
+        modulo: "personal",
+        recurso: "licencias",
+        accion: "create",
+        descripcion: "Registrar licencias del personal",
+        es_sistema: true,
+      },
+      {
+        modulo: "personal",
+        recurso: "licencias",
         accion: "update",
-        descripcion: "Cambiar status laboral del personal",
-        es_sistema: true,
-      },
-      {
-        modulo: "personal",
-        recurso: "vehiculo",
-        accion: "assign",
-        descripcion: "Asignar o desasignar vehículo a personal",
+        descripcion: "Actualizar licencias del personal",
         es_sistema: true,
       },
 
       // ============================================
-      // MÓDULO: SECTORES
+      // MÓDULO: VEHÍCULOS
       // ============================================
       {
-        modulo: "sectores",
-        recurso: "sectores",
+        modulo: "vehiculos",
+        recurso: "vehiculos",
         accion: "create",
-        descripcion: "Crear nuevos sectores",
+        descripcion: "Registrar nuevos vehículos",
         es_sistema: true,
       },
       {
-        modulo: "sectores",
+        modulo: "vehiculos",
+        recurso: "vehiculos",
+        accion: "read",
+        descripcion: "Ver información de vehículos",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "vehiculos",
+        accion: "update",
+        descripcion: "Actualizar datos de vehículos",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "vehiculos",
+        accion: "delete",
+        descripcion: "Eliminar vehículos",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "asignaciones",
+        accion: "read",
+        descripcion: "Ver asignaciones de vehículos",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "asignaciones",
+        accion: "create",
+        descripcion: "Crear asignaciones de vehículos",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "asignaciones",
+        accion: "update",
+        descripcion: "Actualizar asignaciones",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "mantenimientos",
+        accion: "read",
+        descripcion: "Ver mantenimientos de vehículos",
+        es_sistema: true,
+      },
+      {
+        modulo: "vehiculos",
+        recurso: "mantenimientos",
+        accion: "create",
+        descripcion: "Registrar mantenimientos",
+        es_sistema: true,
+      },
+
+      // ============================================
+      // MÓDULO: UBICACIÓN
+      // ============================================
+      {
+        modulo: "ubicacion",
         recurso: "sectores",
         accion: "read",
-        descripcion: "Ver sectores",
+        descripcion: "Ver sectores del distrito",
         es_sistema: true,
       },
       {
-        modulo: "sectores",
+        modulo: "ubicacion",
+        recurso: "sectores",
+        accion: "create",
+        descripcion: "Crear sectores",
+        es_sistema: true,
+      },
+      {
+        modulo: "ubicacion",
         recurso: "sectores",
         accion: "update",
         descripcion: "Actualizar sectores",
         es_sistema: true,
       },
       {
-        modulo: "sectores",
-        recurso: "sectores",
-        accion: "delete",
-        descripcion: "Eliminar sectores",
+        modulo: "ubicacion",
+        recurso: "cuadrantes",
+        accion: "read",
+        descripcion: "Ver cuadrantes de sectores",
         es_sistema: true,
       },
       {
-        modulo: "sectores",
+        modulo: "ubicacion",
         recurso: "cuadrantes",
         accion: "create",
         descripcion: "Crear cuadrantes",
         es_sistema: true,
       },
       {
-        modulo: "sectores",
+        modulo: "ubicacion",
         recurso: "cuadrantes",
+        accion: "update",
+        descripcion: "Actualizar cuadrantes",
+        es_sistema: true,
+      },
+      {
+        modulo: "ubicacion",
+        recurso: "ubigeo",
         accion: "read",
-        descripcion: "Ver cuadrantes",
+        descripcion: "Ver información de UBIGEO",
         es_sistema: true,
       },
 
@@ -554,16 +517,30 @@ async function seedRBAC() {
       // ============================================
       {
         modulo: "catalogos",
-        recurso: "tipos_novedad",
+        recurso: "tipos_documento",
         accion: "read",
-        descripcion: "Ver tipos de novedad",
+        descripcion: "Ver tipos de documento",
         es_sistema: true,
       },
       {
         modulo: "catalogos",
-        recurso: "tipos_novedad",
-        accion: "create",
-        descripcion: "Crear tipos de novedad",
+        recurso: "estados_civiles",
+        accion: "read",
+        descripcion: "Ver estados civiles",
+        es_sistema: true,
+      },
+      {
+        modulo: "catalogos",
+        recurso: "tipos_sangre",
+        accion: "read",
+        descripcion: "Ver tipos de sangre",
+        es_sistema: true,
+      },
+      {
+        modulo: "catalogos",
+        recurso: "tipos_contrato",
+        accion: "read",
+        descripcion: "Ver tipos de contrato",
         es_sistema: true,
       },
       {
@@ -679,6 +656,137 @@ async function seedRBAC() {
         descripcion: "Ver estadísticas de auditoría",
         es_sistema: true,
       },
+
+      // ============================================
+      // MÓDULO: CALLES Y DIRECCIONES (NUEVO v2.2.1)
+      // ============================================
+
+      // --- TIPOS DE VÍA ---
+      {
+        modulo: "calles",
+        recurso: "tipos_via",
+        accion: "read",
+        descripcion: "Ver catálogo de tipos de vía",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "tipos_via",
+        accion: "create",
+        descripcion: "Crear tipos de vía",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "tipos_via",
+        accion: "update",
+        descripcion: "Actualizar tipos de vía",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "tipos_via",
+        accion: "delete",
+        descripcion: "Eliminar tipos de vía",
+        es_sistema: true,
+      },
+
+      // --- CALLES ---
+      {
+        modulo: "calles",
+        recurso: "calles",
+        accion: "read",
+        descripcion: "Ver maestro de calles",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "calles",
+        accion: "create",
+        descripcion: "Registrar nuevas calles",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "calles",
+        accion: "update",
+        descripcion: "Actualizar información de calles",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "calles",
+        accion: "delete",
+        descripcion: "Eliminar calles del sistema",
+        es_sistema: true,
+      },
+
+      // --- CALLES-CUADRANTES ---
+      {
+        modulo: "calles",
+        recurso: "calles_cuadrantes",
+        accion: "read",
+        descripcion: "Ver relaciones calle-cuadrante",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "calles_cuadrantes",
+        accion: "create",
+        descripcion: "Asignar calles a cuadrantes",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "calles_cuadrantes",
+        accion: "update",
+        descripcion: "Actualizar rangos de numeración",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "calles_cuadrantes",
+        accion: "delete",
+        descripcion: "Eliminar relaciones calle-cuadrante",
+        es_sistema: true,
+      },
+
+      // --- DIRECCIONES ---
+      {
+        modulo: "calles",
+        recurso: "direcciones",
+        accion: "read",
+        descripcion: "Ver direcciones normalizadas",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "direcciones",
+        accion: "create",
+        descripcion: "Registrar nuevas direcciones",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "direcciones",
+        accion: "update",
+        descripcion: "Actualizar direcciones existentes",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "direcciones",
+        accion: "delete",
+        descripcion: "Eliminar direcciones del sistema",
+        es_sistema: true,
+      },
+      {
+        modulo: "calles",
+        recurso: "direcciones",
+        accion: "geocodificar",
+        descripcion: "Actualizar coordenadas GPS de direcciones",
+        es_sistema: true,
+      },
     ];
 
     // Crear permisos uno por uno
@@ -693,7 +801,6 @@ async function seedRBAC() {
           recurso: permisoData.recurso,
           accion: permisoData.accion,
         },
-        // Aquí se mantiene 'estado: true' asumiendo que el modelo Permiso usa BOOLEAN.
         defaults: { ...permisoData, slug, estado: true },
         transaction,
       });
@@ -702,7 +809,7 @@ async function seedRBAC() {
     }
 
     console.log(
-      `   ✓ ${permisosCreados} permisos nuevos creados (${permisosData.length} total verificados)`
+      `   ✓ ${permisosCreados} permisos nuevos creados (${permisosData.length} total verificados)`
     );
 
     // ========================================
@@ -727,7 +834,7 @@ async function seedRBAC() {
       await superAdminRole.setPermisos(todosLosPermisos, { transaction });
 
       console.log(
-        `   ✓ ${todosLosPermisos.length} permisos asignados al rol Super Admin`
+        `   ✓ ${todosLosPermisos.length} permisos asignados al rol Super Admin`
       );
     }
 
@@ -749,7 +856,6 @@ async function seedRBAC() {
         password_hash: passwordHash,
         nombres: "Administrador",
         apellidos: "del Sistema",
-        // CORREGIDO: Usar boolean (true) en lugar de la cadena "activo"
         estado: true,
       },
       transaction,
@@ -763,15 +869,15 @@ async function seedRBAC() {
 
       if (!tieneRol) {
         await adminUser.addRoles([superAdminRole], { transaction });
-        console.log("   ✓ Rol super_admin asignado al usuario admin");
+        console.log("   ✓ Rol super_admin asignado al usuario admin");
       } else {
-        console.log("   ℹ️  Usuario admin ya tiene el rol super_admin");
+        console.log("   ℹ️  Usuario admin ya tiene el rol super_admin");
       }
 
       if (createdUser) {
-        console.log("   ✓ Usuario administrador creado");
+        console.log("   ✓ Usuario administrador creado");
       } else {
-        console.log("   ℹ️  Usuario administrador ya existía");
+        console.log("   ℹ️  Usuario administrador ya existía");
       }
     }
 
@@ -792,43 +898,48 @@ async function seedRBAC() {
     const totalUsuarioRoles = await sequelize.models.UsuarioRol.count();
 
     console.log("\n📊 RESUMEN:");
-    console.log(`   Roles en sistema: ${totalRoles}`);
-    console.log(`   Permisos en sistema: ${totalPermisos}`);
-    console.log(`   Permisos asignados a roles: ${totalRolPermisos}`);
-    console.log(`   Usuarios con roles: ${totalUsuarioRoles}`);
+    console.log(`   Roles en sistema: ${totalRoles}`);
+    console.log(`   Permisos en sistema: ${totalPermisos}`);
+    console.log(`   Permisos asignados a roles: ${totalRolPermisos}`);
+    console.log(`   Usuarios con roles: ${totalUsuarioRoles}`);
 
     console.log("\n📝 CREDENCIALES DEL ADMINISTRADOR:");
-    console.log("   Username: admin");
-    console.log("   Email: admin@citysec.com");
-    console.log("   Password: Admin123!");
+    console.log("   Username: admin");
+    console.log("   Email: admin@citysec.com");
+    console.log("   Password: Admin123!");
 
-    console.log("\n⚠️  IMPORTANTE:");
-    console.log("   - Cambiar esta contraseña después del primer login");
+    console.log("\n✨ NUEVO EN v2.2.1:");
+    console.log("   ✓ 17 permisos del módulo Calles y Direcciones");
+    console.log("   ✓ Permisos organizados por recurso:");
+    console.log("     - tipos_via (4 permisos)");
+    console.log("     - calles (4 permisos)");
+    console.log("     - calles_cuadrantes (4 permisos)");
+    console.log("     - direcciones (5 permisos)");
+
+    console.log("\n⚠️  IMPORTANTE:");
+    console.log("   - Cambiar esta contraseña después del primer login");
     console.log(
-      "   - Configurar permisos para los demás roles según necesidad"
+      "   - Configurar permisos para los demás roles según necesidad"
     );
     console.log("\n" + "=".repeat(60) + "\n");
   } catch (error) {
-    // ⬇️ CORRECCIÓN CLAVE ⬇️
-    // Solo hacemos rollback si la transacción NO ha finalizado todavía (falló antes del commit)
+    // Solo hacemos rollback si la transacción NO ha finalizado todavía
     if (
       transaction &&
       transaction.finished !== "commit" &&
       transaction.finished !== "rollback"
     ) {
-      // Rollback en caso de error
       await transaction.rollback();
     }
-    // ⬆️ FIN DE LA CORRECCIÓN ⬆️
 
     console.error("\n❌ ERROR DURANTE EL SEED:", error);
     console.error("\n📋 Detalles del error:");
-    console.error(`   Mensaje: ${error.message}`);
-    console.error(`   Stack: ${error.stack}`);
+    console.error(`   Mensaje: ${error.message}`);
+    console.error(`   Stack: ${error.stack}`);
 
     if (error.parent) {
-      console.error(`   Error SQL: ${error.parent.message}`);
-      console.error(`   SQL: ${error.parent.sql}`);
+      console.error(`   Error SQL: ${error.parent.message}`);
+      console.error(`   SQL: ${error.parent.sql}`);
     }
 
     process.exit(1);

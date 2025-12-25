@@ -14,12 +14,34 @@
  *
  * HISTORIAL DE CAMBIOS:
  * =====================
+ * v2.2.1 (2025-12-23):
+ * 1. RELACIONES CLAVE DEL MÓDULO CALLES:
+ *    - TipoVia (1) -> (N) Calle
+ *    - Calle (M) <-> (N) Cuadrante (a través de CallesCuadrantes)
+ *    - Calle (1) -> (N) Direccion
+ *    - Cuadrante (1) -> (N) Direccion
+ *    - Sector (1) -> (N) Direccion
+ *    - Direccion (1) -> (N) Novedad
+ *
+ * 2. AUTO-ASIGNACIÓN:
+ *    - CallesCuadrantes se usa para auto-asignar cuadrante_id en Direccion
+ *    - El cuadrante_id define automáticamente el sector_id
+ *
+ * 3. INTEGRIDAD REFERENCIAL:
+ *    - Todas las FK tienen onDelete: 'RESTRICT' por defecto
+ *    - Soft deletes habilitados en Calle, CallesCuadrantes, Direccion
+ *
+ * 4. CONSULTAS COMUNES:
+ *    - Incluir 'tipoVia' al consultar Calle
+ *    - Incluir 'cuadrante' y 'sector' al consultar Direccion
+ *    - Usar 'relacionesCuadrantes' para detalles de rangos
+ * -----------------------------------------------------------------------
  * v2.1.0 (2025-12-12):
  *   - ✅ Agregado modelo Cargo con relaciones completas
  *   - ✅ Mejorada documentación de todas las asociaciones
  *   - ✅ Agregado sistema de versionado
  *   - ✅ Documentación JSDoc completa
- *
+ * -----------------------------------------------------------------------
  * v2.0.0 (2025-12-10):
  *   - ✅ Agregado modelo PersonalSeguridad
  *   - ✅ Refactorización de asociaciones de auditoría
@@ -30,7 +52,7 @@
  * MODELOS INCLUIDOS:
  * ==================
  * 📚 Catálogos Base:
- *    - Cargo ✅ NEW
+ *    - Cargo
  *    - TipoVehiculo
  *    - Ubigeo
  *    - TipoNovedad
@@ -266,6 +288,15 @@ import LoginIntento from "./LoginIntento.js";
  * @type {Model}
  */
 import AuditoriaAccion from "./AuditoriaAccion.js";
+
+// ============================================================================
+// IMPORTAR MODELOS DEL MÓDULO CALLES Y DIRECCIONES (v2.2.1)
+// ============================================================================
+
+import TipoVia from "./TipoVia.js";
+import Calle from "./Calle.js";
+import CallesCuadrantes from "./CallesCuadrantes.js";
+import Direccion from "./Direccion.js";
 
 //=============================================================================
 // DEFINICIÓN DE ASOCIACIONES (RELACIONES ENTRE MODELOS)
@@ -614,11 +645,11 @@ Novedad.belongsTo(Ubigeo, {
 });
 
 //=============================================
-// ASOCIACIONES: PERSONAL ✅ ACTUALIZADO
+// ASOCIACIONES: PERSONAL
 //=============================================
 
 /**
- * Relación: Cargo -> PersonalSeguridad (One-to-Many) ✅ NEW
+ * Relación: Cargo -> PersonalSeguridad (One-to-Many)
  * Un cargo puede ser asignado a varios miembros del personal
  * Ejemplo: El cargo "Sereno" puede tener 50 personas
  */
@@ -896,7 +927,7 @@ AuditoriaAccion.belongsTo(Usuario, {
  * que rastrean qué usuario creó, actualizó o eliminó el registro
  */
 
-// Cargo ✅ NEW
+// Cargo
 Cargo.belongsTo(Usuario, { foreignKey: "created_by", as: "creadorCargo" });
 Cargo.belongsTo(Usuario, { foreignKey: "updated_by", as: "actualizadorCargo" });
 Cargo.belongsTo(Usuario, { foreignKey: "deleted_by", as: "eliminadorCargo" });
@@ -1076,6 +1107,132 @@ MantenimientoVehiculo.belongsTo(Usuario, {
   as: "eliminadorMantenimientoVehiculo",
 });
 
+// ============================================================================
+// DEFINIR RELACIONES DEL MÓDULO CALLES Y DIRECCIONES (✅ 2.2.1)
+// ============================================================================
+
+// --- RELACIONES DE CALLES ---
+
+// TipoVia -> Calle (1:N)
+TipoVia.hasMany(Calle, {
+  foreignKey: "tipo_via_id",
+  as: "calles",
+});
+
+Calle.belongsTo(TipoVia, {
+  foreignKey: "tipo_via_id",
+  as: "tipoVia",
+});
+
+// Ubigeo -> Calle (1:N)
+Ubigeo.hasMany(Calle, {
+  foreignKey: "ubigeo_code",
+  as: "calles",
+});
+
+Calle.belongsTo(Ubigeo, {
+  foreignKey: "ubigeo_code",
+  as: "ubigeo",
+});
+
+// --- RELACIONES DE CALLES-CUADRANTES (M:N) ---
+
+// Calle <-> Cuadrante (M:N a través de CallesCuadrantes)
+Calle.belongsToMany(Cuadrante, {
+  through: CallesCuadrantes,
+  foreignKey: "calle_id",
+  otherKey: "cuadrante_id",
+  as: "cuadrantes",
+});
+
+Cuadrante.belongsToMany(Calle, {
+  through: CallesCuadrantes,
+  foreignKey: "cuadrante_id",
+  otherKey: "calle_id",
+  as: "calles",
+});
+
+// Relaciones directas con CallesCuadrantes para acceso detallado
+Calle.hasMany(CallesCuadrantes, {
+  foreignKey: "calle_id",
+  as: "relacionesCuadrantes",
+});
+
+CallesCuadrantes.belongsTo(Calle, {
+  foreignKey: "calle_id",
+  as: "calle",
+});
+
+Cuadrante.hasMany(CallesCuadrantes, {
+  foreignKey: "cuadrante_id",
+  as: "relacionesCalles",
+});
+
+CallesCuadrantes.belongsTo(Cuadrante, {
+  foreignKey: "cuadrante_id",
+  as: "cuadrante",
+});
+
+// --- RELACIONES DE DIRECCIONES ---
+
+// Calle -> Direccion (1:N)
+Calle.hasMany(Direccion, {
+  foreignKey: "calle_id",
+  as: "direcciones",
+});
+
+Direccion.belongsTo(Calle, {
+  foreignKey: "calle_id",
+  as: "calle",
+});
+
+// Cuadrante -> Direccion (1:N)
+Cuadrante.hasMany(Direccion, {
+  foreignKey: "cuadrante_id",
+  as: "direcciones",
+});
+
+Direccion.belongsTo(Cuadrante, {
+  foreignKey: "cuadrante_id",
+  as: "cuadrante",
+});
+
+// Sector -> Direccion (1:N)
+Sector.hasMany(Direccion, {
+  foreignKey: "sector_id",
+  as: "direcciones",
+});
+
+Direccion.belongsTo(Sector, {
+  foreignKey: "sector_id",
+  as: "sector",
+});
+
+// Ubigeo -> Direccion (1:N)
+Ubigeo.hasMany(Direccion, {
+  foreignKey: "ubigeo_code",
+  as: "direcciones",
+});
+
+Direccion.belongsTo(Ubigeo, {
+  foreignKey: "ubigeo_code",
+  as: "ubigeo",
+});
+
+// --- INTEGRACIÓN CON NOVEDADES ---
+
+// Direccion -> Novedad (1:N)
+// Esta relación permite vincular novedades a direcciones específicas
+Direccion.hasMany(Novedad, {
+  foreignKey: "direccion_id",
+  as: "novedades",
+});
+
+Novedad.belongsTo(Direccion, {
+  foreignKey: "direccion_id",
+  as: "direccion",
+});
+
 console.log("✅ Asociaciones configuradas exitosamente");
 
 //=============================================
@@ -1095,7 +1252,7 @@ const models = {
   TipoNovedad,
   SubtipoNovedad,
   EstadoNovedad,
-  Cargo, // ✅ NEW
+  Cargo,
   Ubigeo,
 
   // Operativos
@@ -1130,6 +1287,12 @@ const models = {
   HistorialUsuario,
   LoginIntento,
   AuditoriaAccion,
+
+  // Calles y Direcciones (✅ NEW)
+  TipoVia,
+  Calle,
+  CallesCuadrantes,
+  Direccion,
 };
 
 /**
@@ -1162,7 +1325,7 @@ export {
   TipoNovedad,
   SubtipoNovedad,
   EstadoNovedad,
-  Cargo, // ✅ NEW
+  Cargo,
   Ubigeo,
   // Operativos
   Vehiculo,
@@ -1181,7 +1344,6 @@ export {
   Rol,
   Permiso,
   UsuarioRol,
-
   EmailVerification,
   PasswordReset,
   PasswordHistorial,
@@ -1193,4 +1355,9 @@ export {
   HistorialUsuario,
   LoginIntento,
   AuditoriaAccion,
+  // Calles y Direcciones (✅ v2.2.1)
+  TipoVia,
+  Calle,
+  CallesCuadrantes,
+  Direccion,
 };
