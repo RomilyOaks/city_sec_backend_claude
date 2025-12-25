@@ -97,7 +97,7 @@ import cargosRoutes from "./cargos.routes.js";
 import tipoNovedadRoutes from "./tipo-novedad.routes.js";
 import subtipoNovedadRoutes from "./subtipo-novedad.routes.js";
 import estadoNovedadRoutes from "./estado-novedad.routes.js";
-// import ubigeoRoutes from "./ubigeoRoutes.js"; // ⚠️ TEMPORAL - Comentado para debug
+import ubigeoRoutes from "./ubigeo.routes.js"; // ⚠️ TEMPORAL - Comentado para debug
 
 // 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
@@ -391,7 +391,7 @@ router.use("/estados-novedad", estadoNovedadRoutes);
  * @desc    Consulta de UBIGEO (Perú: departamentos, provincias, distritos)
  * @access  Autenticado
  */
-// router.use("/ubigeo", ubigeoRoutes); // ⚠️ TEMPORAL - Comentado para debug
+router.use("/ubigeo", ubigeoRoutes);
 
 /**
  * @route   /auditoria
