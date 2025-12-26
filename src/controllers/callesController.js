@@ -43,7 +43,6 @@ import Cuadrante from "../models/Cuadrante.js";
 import Sector from "../models/Sector.js";
 import Direccion from "../models/Direccion.js";
 import { Op } from "sequelize";
-import { Console } from "winston/lib/winston/transports/index.js";
 
 /**
  * ============================================================================
