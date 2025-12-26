@@ -461,6 +461,7 @@ export const updateCuadrante = async (req, res) => {
   try {
     const { id } = req.params;
     const {
+      cuadrante_code,
       nombre,
       zona_code,
       latitud,
@@ -482,9 +483,30 @@ export const updateCuadrante = async (req, res) => {
       });
     }
 
+    // Si se está actualizando el código, validar que sea único
+    if (cuadrante_code !== undefined && cuadrante_code !== cuadrante.cuadrante_code) {
+      const codigoNormalizado = cuadrante_code.toUpperCase().trim();
+
+      // Verificar si ya existe otro cuadrante con ese código
+      const existente = await Cuadrante.findOne({
+        where: {
+          cuadrante_code: codigoNormalizado,
+          id: { [Op.ne]: id }, // Excluir el cuadrante actual
+        },
+      });
+
+      if (existente) {
+        return res.status(400).json({
+          success: false,
+          message: `El código de cuadrante '${cuadrante_code}' ya existe. Use otro código único.`,
+        });
+      }
+    }
+
     // Preparar datos a actualizar
     const datosActualizar = { updated_by };
 
+    if (cuadrante_code !== undefined) datosActualizar.cuadrante_code = cuadrante_code.toUpperCase().trim();
     if (nombre !== undefined) datosActualizar.nombre = nombre;
     if (zona_code !== undefined) datosActualizar.zona_code = zona_code;
     if (latitud !== undefined) datosActualizar.latitud = latitud;
