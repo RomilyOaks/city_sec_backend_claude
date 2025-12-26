@@ -61,8 +61,9 @@ const generarCodigoCalle = async () => {
       calle_code: {
         [Op.regexp]: "^C[0-9]+$",
       },
-      ////estado: 1, // ← Solo calles activas
+      // NO filtrar por estado - debe considerar TODOS los registros
     },
+    paranoid: false, // ← Incluir registros soft-deleted
     raw: true,
   });
 
