@@ -545,7 +545,7 @@ Cuadrante.prototype.softDelete = async function (userId) {
   this.deleted_at = new Date();
   this.estado = false;
   if (userId) {
-    this.updated_by = userId;
+    this.deleted_by = userId; // ← Corregido: usar deleted_by en lugar de updated_by
   }
   await this.save();
 };
