@@ -55,23 +55,31 @@ import { Op } from "sequelize";
  * @returns {Promise<string>} Código en formato C0001, C0002, etc.
  */
 const generarCodigoCalle = async () => {
-  // Buscar el último código registrado
-  const ultimaCalle = await Calle.findOne({
-    order: [["id", "DESC"]],
+  const calles = await Calle.findAll({
     attributes: ["calle_code"],
+    where: {
+      calle_code: {
+        [Op.regexp]: "^C[0-9]+$",
+      },
+    },
+    raw: true,
   });
 
   let numero = 1;
 
-  if (ultimaCalle && ultimaCalle.calle_code) {
-    // Extraer número del código (ej: C0005 -> 5)
-    const match = ultimaCalle.calle_code.match(/C(\d+)/);
-    if (match) {
-      numero = parseInt(match[1]) + 1;
+  if (calles && calles.length > 0) {
+    const numeros = calles
+      .map((c) => {
+        const match = c.calle_code.match(/C(\d+)/);
+        return match ? parseInt(match[1]) : 0;
+      })
+      .filter((n) => n > 0);
+
+    if (numeros.length > 0) {
+      numero = Math.max(...numeros) + 1;
     }
   }
 
-  // Formatear con ceros a la izquierda (C0001, C0002, etc.)
   return `C${numero.toString().padStart(4, "0")}`;
 };
 
