@@ -43,6 +43,7 @@ import Cuadrante from "../models/Cuadrante.js";
 import Sector from "../models/Sector.js";
 import Direccion from "../models/Direccion.js";
 import { Op } from "sequelize";
+import { Console } from "winston/lib/winston/transports/index.js";
 
 /**
  * ============================================================================
@@ -61,7 +62,7 @@ const generarCodigoCalle = async () => {
       calle_code: {
         [Op.regexp]: "^C[0-9]+$",
       },
-      estado: 1, // ← Solo calles activas
+      ////estado: 1, // ← Solo calles activas
     },
     raw: true,
   });
@@ -80,8 +81,9 @@ const generarCodigoCalle = async () => {
       numero = Math.max(...numeros) + 1;
     }
   }
-
-  return `C${numero.toString().padStart(4, "0")}`;
+  const codigoGenerado = `C${numero.toString().padStart(4, "0")}`;
+  Console.log("Número generado para código de calle:", codigoGenerado);
+  return codigoGenerado;
 };
 
 /**
