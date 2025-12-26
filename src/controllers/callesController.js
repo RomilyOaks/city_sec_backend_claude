@@ -61,6 +61,7 @@ const generarCodigoCalle = async () => {
       calle_code: {
         [Op.regexp]: "^C[0-9]+$",
       },
+      estado: 1, // ← Solo calles activas
     },
     raw: true,
   });
@@ -721,8 +722,11 @@ const callesController = {
       }
 
       // Soft delete
+      await calle.update({
+        estado: 0, // ← Marcar como inactivo
+        deleted_by: userId, // ← Registrar quién eliminó
+      });
       await calle.destroy(); // Marca deleted_at
-      await calle.update({ deleted_by: userId });
 
       return res
         .status(200)
