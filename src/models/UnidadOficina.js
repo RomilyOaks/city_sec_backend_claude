@@ -211,12 +211,20 @@ const UnidadOficina = sequelize.define(
       allowNull: true,
       comment: "ID del usuario que actualizó el registro",
     },
+
+    deleted_by: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "ID del usuario que eliminó el registro",
+    },
   },
   {
     tableName: "unidades_oficina",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
+    paranoid: true,
+    deletedAt: "deleted_at",
 
     // Índices
     indexes: [

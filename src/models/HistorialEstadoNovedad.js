@@ -59,6 +59,21 @@ const HistorialEstadoNovedad = sequelize.define(
       comment:
         "Datos adicionales del cambio (ubicación, datos complementarios)",
     },
+
+    // ============================================
+    // AUDITORÍA
+    // ============================================
+    created_by: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "ID del usuario que creó el registro",
+    },
+
+    updated_by: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "ID del usuario que actualizó el registro",
+    },
     // NOTA: Se eliminan las 'references' aquí porque las asociaciones se manejan en index.js
     // Esto es estándar en configuraciones centralizadas de Sequelize.
   },
