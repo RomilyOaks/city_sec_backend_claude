@@ -1,10 +1,16 @@
 /**
  * ============================================================================
  * ARCHIVO: src/controllers/tiposViaController.js
- * VERSIÓN: 2.2.3 (DEBUG VERSION - Con console.log)
+ * VERSIÓN: 2.3.0
  * DESCRIPCIÓN: Controlador para gestión de tipos de vía
  *              Maneja operaciones CRUD y consultas especiales
  * ============================================================================
+ *
+ * CAMBIOS v2.3.0:
+ * - ✅ Implementado soft-delete completo con deleted_by
+ * - ✅ Método eliminar ahora usa destroy() para paranoid
+ * - ✅ Agregada captura de userId para auditoría
+ * - ✅ TipoVia ahora sigue el mismo estándar que otras tablas
  *
  * CAMBIOS v2.2.3:
  * - ✅ Agregados console.log para debugging
@@ -12,7 +18,7 @@
  * - ✅ Manejo de errores mejorado con stacktrace
  *
  * @author Claude AI
- * @date 2025-12-23
+ * @date 2025-12-27
  * ============================================================================
  */
 
@@ -299,6 +305,7 @@ const tiposViaController = {
   eliminar: async (req, res) => {
     try {
       const { id } = req.params;
+      const userId = req.user?.id;
 
       const tipoVia = await TipoVia.findByPk(id);
 
@@ -323,8 +330,14 @@ const tiposViaController = {
           );
       }
 
-      // Soft delete
-      await tipoVia.update({ estado: 0 });
+      // Soft delete: cambiar estado a 0, deleted_by y deleted_at
+      await tipoVia.update({
+        estado: 0,
+        deleted_by: userId,
+      });
+
+      // Llamar destroy() para establecer deleted_at
+      await tipoVia.destroy();
 
       return res
         .status(200)
