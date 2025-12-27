@@ -1291,6 +1291,66 @@ Direccion.belongsTo(Usuario, {
   as: "eliminadorDireccion",
 });
 
+// --- RELACIONES DE AUDITORÍA DE OTROS MÓDULOS ---
+
+// Permiso (ahora con updated_by)
+Permiso.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorPermiso",
+});
+
+// HistorialEstadoNovedad (ahora con created_by y updated_by)
+HistorialEstadoNovedad.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorHistorialEstado",
+});
+HistorialEstadoNovedad.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorHistorialEstado",
+});
+
+// SubtipoNovedad (ahora con deleted_by y paranoid)
+SubtipoNovedad.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorSubtipoNovedad",
+});
+SubtipoNovedad.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorSubtipoNovedad",
+});
+SubtipoNovedad.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorSubtipoNovedad",
+});
+
+// TipoVehiculo (ahora con deleted_by y paranoid)
+TipoVehiculo.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorTipoVehiculo",
+});
+TipoVehiculo.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorTipoVehiculo",
+});
+TipoVehiculo.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorTipoVehiculo",
+});
+
+// UnidadOficina (ahora con deleted_by y paranoid)
+UnidadOficina.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorUnidadOficina",
+});
+UnidadOficina.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorUnidadOficina",
+});
+UnidadOficina.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorUnidadOficina",
+});
+
 console.log("✅ Asociaciones configuradas exitosamente");
 
 //=============================================

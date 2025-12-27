@@ -136,6 +136,19 @@ const Permiso = sequelize.define(
       defaultValue: true,
       comment: "1=Activo | 0=Inactivo",
     },
+
+    // ============================================
+    // AUDITORÍA
+    // ============================================
+
+    /**
+     * ID del usuario que actualizó el permiso
+     */
+    updated_by: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "ID del usuario que actualizó el registro",
+    },
   },
   {
     // ============================================
@@ -145,7 +158,7 @@ const Permiso = sequelize.define(
     tableName: "permisos",
     timestamps: true,
     createdAt: "created_at",
-    updatedAt: false, // Los permisos normalmente no se actualizan
+    updatedAt: "updated_at", // Ahora sí se actualiza para auditoría
 
     /**
      * Índices para optimizar consultas
