@@ -389,11 +389,12 @@ const callesCuadrantesController = {
           .json(formatErrorResponse("Cuadrante no encontrado"));
       }
 
-      // Validar que no exista la combinación calle+cuadrante
+      // Validar que no exista la combinación calle+cuadrante+lado
       const existente = await CallesCuadrantes.findOne({
         where: {
           calle_id,
           cuadrante_id,
+          lado: lado || "AMBOS",
           deleted_at: null,
         },
       });
@@ -403,7 +404,7 @@ const callesCuadrantesController = {
           .status(400)
           .json(
             formatErrorResponse(
-              `La calle ya está asignada al cuadrante ${cuadrante.cuadrante_code}`
+              `La calle ya está asignada al cuadrante ${cuadrante.cuadrante_code} con lado '${lado || "AMBOS"}'`
             )
           );
       }
