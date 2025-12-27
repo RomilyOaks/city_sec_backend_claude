@@ -323,6 +323,7 @@ export const createNovedad = async (req, res) => {
         num_personas_afectadas: num_personas_afectadas || 0,
         usuario_registro: req.user.id,
         created_by: req.user.id,
+        updated_by: req.user.id,
       },
       { transaction }
     );

@@ -213,6 +213,7 @@ const createSector = async (req, res) => {
       poligono_json,
       color_mapa: color_mapa || "#3B82F6",
       created_by: req.user.id,
+      updated_by: req.user.id,
     });
 
     // Obtener sector completo
@@ -511,6 +512,7 @@ const createCuadrante = async (req, res) => {
       radio_metros,
       color_mapa: color_mapa || "#10B981",
       created_by: req.user.id,
+      updated_by: req.user.id,
     });
 
     // Obtener cuadrante completo

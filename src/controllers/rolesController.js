@@ -248,6 +248,7 @@ export const createRol = async (req, res) => {
       nivel_jerarquia,
       color,
       created_by,
+      updated_by: created_by,
     });
 
     // Asignar permisos si se especificaron

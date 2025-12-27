@@ -249,6 +249,7 @@ export const createCargo = async (req, res) => {
       codigo,
       color: color || "#6B7280",
       created_by: req.user?.id,
+      updated_by: req.user?.id,
     });
 
     console.log(`✅ Cargo creado: ${nuevoCargo.nombre} (ID: ${nuevoCargo.id})`);
