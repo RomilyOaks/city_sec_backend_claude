@@ -321,10 +321,11 @@ const CallesCuadrantes = sequelize.define(
     // ============================================================================
     indexes: [
       {
-        // Índice único compuesto: previene duplicados de la misma calle en el mismo cuadrante
-        name: "uq_calle_cuadrante",
+        // Índice único compuesto: previene duplicados de calle+cuadrante+numero_inicio+lado
+        // Permite múltiples rangos con diferentes lados para la misma calle-cuadrante
+        name: "uq_calle_cuadrante_numero_lado",
         unique: true,
-        fields: ["calle_id", "cuadrante_id"],
+        fields: ["calle_id", "cuadrante_id", "numero_inicio", "lado"],
       },
       {
         // Índice para búsquedas por cuadrante (todas las calles de un cuadrante)
@@ -343,9 +344,14 @@ const CallesCuadrantes = sequelize.define(
         fields: ["numero_inicio", "numero_fin"],
       },
       {
-        // Índice compuesto para consultas frecuentes
-        name: "idx_cc_calle_estado",
-        fields: ["calle_id", "estado"],
+        // Índice por calle_id (usado en foreign key)
+        name: "idx_calle_id",
+        fields: ["calle_id"],
+      },
+      {
+        // Índice por cuadrante_id (usado en foreign key)
+        name: "idx_cuadrante_id",
+        fields: ["cuadrante_id"],
       },
     ],
 
