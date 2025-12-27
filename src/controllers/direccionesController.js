@@ -528,7 +528,7 @@ const direccionesController = {
         observaciones,
       } = req.body;
 
-      const userId = req.usuario?.id;
+      const userId = req.user?.id;
 
       // Validar que la calle existe
       const calle = await Calle.findByPk(calle_id);
@@ -731,7 +731,7 @@ const direccionesController = {
   actualizar: async (req, res) => {
     try {
       const { id } = req.params;
-      const userId = req.usuario?.id;
+      const userId = req.user?.id;
 
       const direccion = await Direccion.findByPk(id);
 
@@ -824,7 +824,7 @@ const direccionesController = {
   eliminar: async (req, res) => {
     try {
       const { id } = req.params;
-      const userId = req.usuario?.id;
+      const userId = req.user?.id;
 
       const direccion = await Direccion.findByPk(id);
 
@@ -866,7 +866,7 @@ const direccionesController = {
     try {
       const { id } = req.params;
       const { latitud, longitud, fuente } = req.body;
-      const userId = req.usuario?.id;
+      const userId = req.user?.id;
 
       if (!latitud || !longitud) {
         return res

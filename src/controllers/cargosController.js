@@ -248,7 +248,7 @@ export const createCargo = async (req, res) => {
       salario_base,
       codigo,
       color: color || "#6B7280",
-      created_by: req.usuario?.userId,
+      created_by: req.user?.id,
     });
 
     console.log(`✅ Cargo creado: ${nuevoCargo.nombre} (ID: ${nuevoCargo.id})`);
@@ -378,7 +378,7 @@ export const updateCargo = async (req, res) => {
       codigo: codigo !== undefined ? codigo : cargo.codigo,
       color: color || cargo.color,
       estado: estado !== undefined ? estado : cargo.estado,
-      updated_by: req.usuario?.userId,
+      updated_by: req.user?.id,
     });
 
     console.log(`✏️  Cargo actualizado: ${cargo.nombre} (ID: ${cargo.id})`);
@@ -454,7 +454,7 @@ export const deleteCargo = async (req, res) => {
     }
 
     // Soft delete
-    await cargo.softDelete(req.usuario?.userId);
+    await cargo.softDelete(req.user?.id);
 
     console.log(`🗑️  Cargo eliminado: ${cargo.nombre} (ID: ${cargo.id})`);
 
@@ -505,7 +505,7 @@ export const restoreCargo = async (req, res) => {
       });
     }
 
-    await cargo.restore(req.usuario?.userId);
+    await cargo.restore(req.user?.id);
 
     console.log(`♻️  Cargo restaurado: ${cargo.nombre} (ID: ${cargo.id})`);
 

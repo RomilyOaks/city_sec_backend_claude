@@ -510,7 +510,7 @@ const callesController = {
         categoria_via,
       } = req.body;
 
-      const userId = req.usuario?.id;
+      const userId = req.user?.id;
 
       // Validar tipo de vía existe
       const tipoVia = await TipoVia.findByPk(tipo_via_id);
@@ -631,7 +631,7 @@ const callesController = {
   actualizar: async (req, res) => {
     try {
       const { id } = req.params;
-      const userId = req.usuario?.id;
+      const userId = req.user?.id;
 
       const calle = await Calle.findByPk(id);
 
@@ -700,7 +700,7 @@ const callesController = {
   eliminar: async (req, res) => {
     try {
       const { id } = req.params;
-      const userId = req.usuario?.id;
+      const userId = req.user?.id;
 
       const calle = await Calle.findByPk(id);
 
