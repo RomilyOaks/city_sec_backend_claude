@@ -259,7 +259,7 @@ const direccionesController = {
           {
             model: Usuario,
             as: "eliminadorDireccion",
-            attributes: ["id", "nombre", "email"],
+            attributes: ["id", "username", "email"],
             required: false, // LEFT JOIN - solo si hay deleted_by
           },
         ],
