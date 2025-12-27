@@ -214,6 +214,7 @@ const tiposViaController = {
   crear: async (req, res) => {
     try {
       const { codigo, nombre, abreviatura, descripcion, orden } = req.body;
+      const userId = req.user?.id;
 
       // Normalizar código a mayúsculas
       const codigoUpper = codigo.toUpperCase();
@@ -237,6 +238,8 @@ const tiposViaController = {
         descripcion,
         orden: orden || 999,
         estado: 1,
+        created_by: userId,
+        updated_by: userId,
       });
 
       return res
@@ -257,6 +260,7 @@ const tiposViaController = {
   actualizar: async (req, res) => {
     try {
       const { id } = req.params;
+      const userId = req.user?.id;
 
       const tipoVia = await TipoVia.findByPk(id);
 
@@ -284,6 +288,9 @@ const tiposViaController = {
 
         req.body.codigo = codigoUpper;
       }
+
+      // Agregar updated_by
+      req.body.updated_by = userId;
 
       await tipoVia.update(req.body);
 
