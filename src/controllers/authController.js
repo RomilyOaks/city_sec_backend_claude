@@ -279,7 +279,9 @@ export const register = async (req, res) => {
 
     // Asignar rol por defecto al usuario
     if (rolBasico) {
-      await nuevoUsuario.addRoles([rolBasico]);
+      await nuevoUsuario.addRoles([rolBasico], {
+        through: { created_by: nuevoUsuario.id, updated_by: nuevoUsuario.id },
+      });
     }
 
     // TODO: Enviar email de verificación aquí
