@@ -869,6 +869,85 @@ const direccionesController = {
   },
 
   /**
+   * @swagger
+   * /api/direcciones/{id}/reactivar:
+   *   patch:
+   *     summary: Reactivar dirección eliminada (restaurar soft-delete)
+   *     tags: [Direcciones]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *     responses:
+   *       200:
+   *         description: Dirección reactivada
+   */
+  reactivar: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+
+      // Buscar dirección incluyendo soft-deleted
+      const direccion = await Direccion.findByPk(id, {
+        paranoid: false, // Incluir registros eliminados
+      });
+
+      if (!direccion) {
+        return res
+          .status(404)
+          .json(formatErrorResponse("Dirección no encontrada"));
+      }
+
+      // Verificar que esté eliminada
+      if (!direccion.deleted_at) {
+        return res
+          .status(400)
+          .json(formatErrorResponse("La dirección no está eliminada"));
+      }
+
+      // Reactivar: cambiar estado a 1 y limpiar deleted_at/deleted_by
+      await direccion.update({
+        estado: 1,
+        deleted_at: null,
+        deleted_by: null,
+        updated_by: userId,
+      });
+
+      // Usar restore() de Sequelize para limpiar el paranoid delete
+      await direccion.restore();
+
+      // Recargar con relaciones
+      const direccionReactivada = await Direccion.findByPk(id, {
+        include: [
+          {
+            model: Calle,
+            as: "calle",
+            include: [{ model: TipoVia, as: "tipoVia" }],
+          },
+          { model: Cuadrante, as: "cuadrante", required: false },
+          { model: Sector, as: "sector", required: false },
+        ],
+      });
+
+      return res
+        .status(200)
+        .json(
+          formatSuccessResponse(
+            direccionReactivada,
+            "Dirección reactivada exitosamente"
+          )
+        );
+    } catch (error) {
+      console.error("Error al reactivar dirección:", error);
+      return res
+        .status(500)
+        .json(formatErrorResponse("Error al reactivar dirección", error));
+    }
+  },
+
+  /**
    * Actualizar coordenadas GPS
    */
   geocodificar: async (req, res) => {

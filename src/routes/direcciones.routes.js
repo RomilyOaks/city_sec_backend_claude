@@ -333,6 +333,33 @@ router.delete(
   }
 );
 
+/**
+ * @route   PATCH /api/direcciones/:id/reactivar
+ * @desc    Reactivar dirección eliminada (restaurar soft delete)
+ * @access  Administrador
+ */
+router.patch(
+  "/:id/reactivar",
+  verificarRoles(["super_admin"]),
+  requireAnyPermission(["calles.direcciones.delete", "calles.direcciones.update"]),
+  validateDireccionId,
+  registrarAuditoria({
+    entidad: "Direccion",
+    severidad: "ALTA",
+    modulo: "Direcciones",
+  }),
+  (req, res, next) => {
+    // #swagger.tags = ['Direcciones']
+    // #swagger.summary = 'Reactivar dirección eliminada'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'Dirección reactivada exitosamente' }
+    // #swagger.responses[400] = { description: 'La dirección no está eliminada' }
+    // #swagger.responses[404] = { description: 'Dirección no encontrada' }
+    return direccionesController.reactivar(req, res, next);
+  }
+);
+
 // ============================================================================
 // EXPORTACIÓN
 // ============================================================================
