@@ -38,7 +38,7 @@
 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { Usuario, Rol, Permiso } from "../models/index.js";
+import { Usuario, Rol, Permiso, UsuarioRol } from "../models/index.js";
 import { Op } from "sequelize";
 
 // ==========================================
@@ -279,8 +279,12 @@ export const register = async (req, res) => {
 
     // Asignar rol por defecto al usuario
     if (rolBasico) {
-      await nuevoUsuario.addRoles([rolBasico], {
-        through: { created_by: nuevoUsuario.id, updated_by: nuevoUsuario.id },
+      await UsuarioRol.create({
+        usuario_id: nuevoUsuario.id,
+        rol_id: rolBasico.id,
+        created_by: nuevoUsuario.id,
+        updated_by: nuevoUsuario.id,
+        fecha_asignacion: new Date(),
       });
     }
 

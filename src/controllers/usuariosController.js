@@ -12,6 +12,7 @@ import {
   Permiso,
   PersonalSeguridad,
   HistorialUsuario,
+  UsuarioRol,
 } from "../models/index.js";
 import { sequelize } from "../models/index.js";
 import { Op } from "sequelize";
@@ -316,10 +317,15 @@ export const createUsuario = async (req, res) => {
       });
 
       if (rolesEncontrados.length > 0) {
-        await nuevoUsuario.addRoles(rolesEncontrados, {
-          through: { created_by: userId, updated_by: userId },
-          transaction: t,
-        });
+        // Crear relaciones manualmente con auditoría
+        const usuarioRolesData = rolesEncontrados.map((rol) => ({
+          usuario_id: nuevoUsuario.id,
+          rol_id: rol.id,
+          created_by: userId,
+          updated_by: userId,
+          fecha_asignacion: new Date(),
+        }));
+        await UsuarioRol.bulkCreate(usuarioRolesData, { transaction: t });
       }
     }
 
@@ -471,10 +477,17 @@ export const updateUsuario = async (req, res) => {
         transaction: t,
       });
 
-      await usuario.setRoles(rolesEncontrados, {
-        through: { created_by: userId, updated_by: userId },
-        transaction: t,
-      });
+      // Eliminar roles existentes y crear nuevos con auditoría
+      await UsuarioRol.destroy({ where: { usuario_id: id }, transaction: t });
+
+      const usuarioRolesData = rolesEncontrados.map((rol) => ({
+        usuario_id: id,
+        rol_id: rol.id,
+        created_by: userId,
+        updated_by: userId,
+        fecha_asignacion: new Date(),
+      }));
+      await UsuarioRol.bulkCreate(usuarioRolesData, { transaction: t });
     }
 
     await t.commit();
