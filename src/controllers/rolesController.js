@@ -17,7 +17,7 @@
  * - DELETE /api/v1/roles/:id/permisos/:permisoId - Quitar permiso
  */
 
-import { Rol, Permiso, Usuario } from "../models/index.js";
+import { Rol, Permiso, Usuario, RolPermiso } from "../models/index.js";
 import { Op } from "sequelize";
 
 /**
@@ -260,9 +260,14 @@ export const createRol = async (req, res) => {
       });
 
       if (permisosEncontrados.length > 0) {
-        await nuevoRol.addPermisos(permisosEncontrados, {
-          through: { created_by, updated_by: created_by },
-        });
+        // Crear relaciones manualmente con auditoría
+        const rolPermisosData = permisosEncontrados.map((permiso) => ({
+          rol_id: nuevoRol.id,
+          permiso_id: permiso.id,
+          created_by,
+          updated_by: created_by,
+        }));
+        await RolPermiso.bulkCreate(rolPermisosData);
       }
     }
 
@@ -451,9 +456,16 @@ export const asignarPermisos = async (req, res) => {
       });
     }
 
-    await rol.setPermisos(permisosEncontrados, {
-      through: { created_by: userId, updated_by: userId },
-    });
+    // Eliminar permisos existentes y crear nuevos con auditoría
+    await RolPermiso.destroy({ where: { rol_id: id } });
+
+    const rolPermisosData = permisosEncontrados.map((permiso) => ({
+      rol_id: id,
+      permiso_id: permiso.id,
+      created_by: userId,
+      updated_by: userId,
+    }));
+    await RolPermiso.bulkCreate(rolPermisosData);
 
     // Recargar rol con permisos
     const rolActualizado = await Rol.findByPk(id, {
