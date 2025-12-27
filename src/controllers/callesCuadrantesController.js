@@ -682,9 +682,14 @@ const callesCuadrantesController = {
           .json(formatErrorResponse("Relación no encontrada"));
       }
 
-      // Soft delete
+      // Soft delete: cambiar estado a 0, deleted_by y deleted_at
+      await relacion.update({
+        estado: 0,
+        deleted_by: userId,
+      });
+
+      // Llamar destroy() para establecer deleted_at
       await relacion.destroy();
-      await relacion.update({ deleted_by: userId });
 
       return res
         .status(200)
