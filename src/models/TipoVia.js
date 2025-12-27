@@ -1,11 +1,16 @@
 /**
  * ============================================================================
  * ARCHIVO: src/models/TipoVia.js
- * VERSIÓN: 2.2.1
+ * VERSIÓN: 2.3.0
  * DESCRIPCIÓN: Modelo Sequelize para la tabla tipos_via
  *              Representa el catálogo de tipos de vías urbanas
  *              (Avenida, Jirón, Calle, Pasaje, etc.)
  * ============================================================================
+ *
+ * CAMBIOS v2.3.0:
+ * - ✅ Agregado soporte para soft-delete (paranoid: true)
+ * - ✅ Agregados campos deleted_at y deleted_by
+ * - ✅ Ahora TipoVia sigue el mismo estándar que las demás tablas del módulo
  *
  * PROPÓSITO:
  * - Definir la estructura de datos para tipos de vías
@@ -26,7 +31,7 @@
  * - CA | Calle | Ca.
  *
  * @author Claude AI
- * @date 2025-12-23
+ * @date 2025-12-27
  * ============================================================================
  */
 
@@ -212,6 +217,23 @@ const TipoVia = sequelize.define(
       field: "updated_by",
       comment: "ID del usuario que realizó la última actualización",
     },
+
+    // ============================================================================
+    // CAMPOS DE SOFT DELETE
+    // ============================================================================
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: "deleted_at",
+      comment: "Fecha y hora de eliminación lógica (soft delete)",
+    },
+
+    deleted_by: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: "deleted_by",
+      comment: "ID del usuario que eliminó el registro",
+    },
   },
   {
     // ============================================================================
@@ -220,8 +242,10 @@ const TipoVia = sequelize.define(
     sequelize, // Instancia de Sequelize
     tableName: "tipos_via", // Nombre exacto de la tabla en la base de datos
     timestamps: true, // Habilita manejo automático de created_at y updated_at
+    paranoid: true, // Habilita soft-delete (no elimina físicamente los registros)
     createdAt: "created_at", // Mapeo del campo createdAt
     updatedAt: "updated_at", // Mapeo del campo updatedAt
+    deletedAt: "deleted_at", // Mapeo del campo deletedAt para soft-delete
     comment: "Catálogo de tipos de vías urbanas (Av, Jr, Ca, Psje, etc.)",
 
     // ============================================================================
