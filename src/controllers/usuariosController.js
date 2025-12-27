@@ -316,7 +316,10 @@ export const createUsuario = async (req, res) => {
       });
 
       if (rolesEncontrados.length > 0) {
-        await nuevoUsuario.addRoles(rolesEncontrados, { transaction: t });
+        await nuevoUsuario.addRoles(rolesEncontrados, {
+          through: { created_by: userId, updated_by: userId },
+          transaction: t,
+        });
       }
     }
 
@@ -468,7 +471,10 @@ export const updateUsuario = async (req, res) => {
         transaction: t,
       });
 
-      await usuario.setRoles(rolesEncontrados, { transaction: t });
+      await usuario.setRoles(rolesEncontrados, {
+        through: { created_by: userId, updated_by: userId },
+        transaction: t,
+      });
     }
 
     await t.commit();

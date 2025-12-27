@@ -260,7 +260,9 @@ export const createRol = async (req, res) => {
       });
 
       if (permisosEncontrados.length > 0) {
-        await nuevoRol.addPermisos(permisosEncontrados);
+        await nuevoRol.addPermisos(permisosEncontrados, {
+          through: { created_by, updated_by: created_by },
+        });
       }
     }
 
@@ -417,6 +419,7 @@ export const asignarPermisos = async (req, res) => {
   try {
     const { id } = req.params;
     const { permisos } = req.body;
+    const userId = req.user?.id;
 
     if (!Array.isArray(permisos) || permisos.length === 0) {
       return res.status(400).json({
@@ -448,7 +451,9 @@ export const asignarPermisos = async (req, res) => {
       });
     }
 
-    await rol.setPermisos(permisosEncontrados);
+    await rol.setPermisos(permisosEncontrados, {
+      through: { created_by: userId, updated_by: userId },
+    });
 
     // Recargar rol con permisos
     const rolActualizado = await Rol.findByPk(id, {
