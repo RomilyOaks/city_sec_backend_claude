@@ -346,6 +346,7 @@ export const createPersonal = async (req, res) => {
       {
         ...datosPersonal,
         created_by: req.user.id,
+        updated_by: req.user.id,
       },
       { transaction }
     );

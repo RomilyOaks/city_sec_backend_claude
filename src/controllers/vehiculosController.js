@@ -477,6 +477,7 @@ export const createVehiculo = async (req, res) => {
         fec_manten,
         observaciones,
         created_by: req.user.id,
+        updated_by: req.user.id,
       },
       { transaction }
     );

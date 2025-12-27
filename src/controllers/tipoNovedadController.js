@@ -102,6 +102,7 @@ const create = async (req, res) => {
       icono,
       orden,
       created_by: req.user.id,
+      updated_by: req.user.id,
     });
 
     res.status(201).json({
