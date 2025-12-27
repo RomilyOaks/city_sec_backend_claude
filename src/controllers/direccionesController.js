@@ -174,6 +174,13 @@ const direccionesController = {
    *         name: geocodificada
    *         schema:
    *           type: integer
+   *       - in: query
+   *         name: paranoid
+   *         schema:
+   *           type: string
+   *           enum: [true, false]
+   *           default: 'true'
+   *         description: Si es 'false', incluye direcciones eliminadas (soft-deleted)
    *     responses:
    *       200:
    *         description: Lista de direcciones
@@ -194,6 +201,11 @@ const direccionesController = {
         req.query.geocodificada !== undefined
           ? parseInt(req.query.geocodificada)
           : null;
+
+      // Nuevo parámetro: incluir soft-deleted (default: 'true' = NO incluir eliminados)
+      const paranoid = req.query.paranoid !== undefined
+        ? req.query.paranoid === 'true'
+        : true;
 
       const offset = (page - 1) * limit;
 
@@ -218,6 +230,7 @@ const direccionesController = {
       // Consulta con relaciones
       const { count, rows } = await Direccion.findAndCountAll({
         where: whereConditions,
+        paranoid, // ← Controla si incluye soft-deleted o no
         include: [
           {
             model: Calle,
