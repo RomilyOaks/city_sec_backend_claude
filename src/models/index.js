@@ -1309,47 +1309,8 @@ HistorialEstadoNovedad.belongsTo(Usuario, {
   as: "actualizadorHistorialEstado",
 });
 
-// SubtipoNovedad (ahora con deleted_by y paranoid)
-SubtipoNovedad.belongsTo(Usuario, {
-  foreignKey: "created_by",
-  as: "creadorSubtipoNovedad",
-});
-SubtipoNovedad.belongsTo(Usuario, {
-  foreignKey: "updated_by",
-  as: "actualizadorSubtipoNovedad",
-});
-SubtipoNovedad.belongsTo(Usuario, {
-  foreignKey: "deleted_by",
-  as: "eliminadorSubtipoNovedad",
-});
-
-// TipoVehiculo (ahora con deleted_by y paranoid)
-TipoVehiculo.belongsTo(Usuario, {
-  foreignKey: "created_by",
-  as: "creadorTipoVehiculo",
-});
-TipoVehiculo.belongsTo(Usuario, {
-  foreignKey: "updated_by",
-  as: "actualizadorTipoVehiculo",
-});
-TipoVehiculo.belongsTo(Usuario, {
-  foreignKey: "deleted_by",
-  as: "eliminadorTipoVehiculo",
-});
-
-// UnidadOficina (ahora con deleted_by y paranoid)
-UnidadOficina.belongsTo(Usuario, {
-  foreignKey: "created_by",
-  as: "creadorUnidadOficina",
-});
-UnidadOficina.belongsTo(Usuario, {
-  foreignKey: "updated_by",
-  as: "actualizadorUnidadOficina",
-});
-UnidadOficina.belongsTo(Usuario, {
-  foreignKey: "deleted_by",
-  as: "eliminadorUnidadOficina",
-});
+// NOTA: SubtipoNovedad, TipoVehiculo y UnidadOficina ya tienen sus relaciones
+// de auditoría definidas anteriormente en este archivo (líneas 1030-1080)
 
 console.log("✅ Asociaciones configuradas exitosamente");
 
