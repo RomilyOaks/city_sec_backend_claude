@@ -607,6 +607,7 @@ const direccionesController = {
         observaciones: observaciones?.trim() || null,
         estado: 1,
         created_by: userId,
+        updated_by: userId,
       });
 
       // Recargar con relaciones

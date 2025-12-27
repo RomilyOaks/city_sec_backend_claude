@@ -416,6 +416,7 @@ export const createCuadrante = async (req, res) => {
       radio_metros,
       color_mapa,
       created_by,
+      updated_by: created_by,
     });
 
     // Recargar con relaciones
