@@ -45,6 +45,7 @@ import Cuadrante from "../models/Cuadrante.js";
 import Sector from "../models/Sector.js";
 import CallesCuadrantes from "../models/CallesCuadrantes.js";
 import Ubigeo from "../models/Ubigeo.js";
+import Usuario from "../models/Usuario.js";
 import { Op } from "sequelize";
 
 /**
@@ -254,6 +255,12 @@ const direccionesController = {
             as: "sector",
             attributes: ["id", "sector_code", "nombre"],
             required: false, // LEFT JOIN - incluir direcciones sin sector
+          },
+          {
+            model: Usuario,
+            as: "eliminadorDireccion",
+            attributes: ["id", "nombre", "email"],
+            required: false, // LEFT JOIN - solo si hay deleted_by
           },
         ],
         order: [
