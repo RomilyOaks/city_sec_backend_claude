@@ -389,11 +389,13 @@ const callesCuadrantesController = {
           .json(formatErrorResponse("Cuadrante no encontrado"));
       }
 
-      // Validar que no exista la combinación calle+cuadrante+lado
+      // Validar que no exista la combinación calle+cuadrante+numero_inicio+lado
+      // Coincide con el índice único: uq_calle_cuadrante_numero_lado
       const existente = await CallesCuadrantes.findOne({
         where: {
           calle_id,
           cuadrante_id,
+          numero_inicio: numero_inicio || null,
           lado: lado || "AMBOS",
           deleted_at: null,
         },
@@ -404,7 +406,8 @@ const callesCuadrantesController = {
           .status(400)
           .json(
             formatErrorResponse(
-              `La calle ya está asignada al cuadrante ${cuadrante.cuadrante_code} con lado '${lado || "AMBOS"}'`
+              `Ya existe una relación para esta calle en el cuadrante ${cuadrante.cuadrante_code} ` +
+              `con inicio ${numero_inicio || 'NULL'} y lado '${lado || "AMBOS"}'`
             )
           );
       }
