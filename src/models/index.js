@@ -1235,7 +1235,7 @@ Novedad.belongsTo(Direccion, {
 
 // --- RELACIONES DE AUDITORÍA DEL MÓDULO CALLES ---
 
-// TipoVia
+// TipoVia - Solo created_by y updated_by (NO tiene soft delete ni deleted_by)
 TipoVia.belongsTo(Usuario, {
   foreignKey: "created_by",
   as: "creadorTipoVia",
@@ -1243,10 +1243,6 @@ TipoVia.belongsTo(Usuario, {
 TipoVia.belongsTo(Usuario, {
   foreignKey: "updated_by",
   as: "actualizadorTipoVia",
-});
-TipoVia.belongsTo(Usuario, {
-  foreignKey: "deleted_by",
-  as: "eliminadorTipoVia",
 });
 
 // Calle
