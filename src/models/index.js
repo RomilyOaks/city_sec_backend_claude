@@ -1233,6 +1233,64 @@ Novedad.belongsTo(Direccion, {
   as: "direccion",
 });
 
+// --- RELACIONES DE AUDITORÍA DEL MÓDULO CALLES ---
+
+// TipoVia
+TipoVia.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorTipoVia",
+});
+TipoVia.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorTipoVia",
+});
+TipoVia.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorTipoVia",
+});
+
+// Calle
+Calle.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorCalle",
+});
+Calle.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorCalle",
+});
+Calle.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorCalle",
+});
+
+// CallesCuadrantes
+CallesCuadrantes.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorCallesCuadrantes",
+});
+CallesCuadrantes.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorCallesCuadrantes",
+});
+CallesCuadrantes.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorCallesCuadrantes",
+});
+
+// Direccion
+Direccion.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorDireccion",
+});
+Direccion.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorDireccion",
+});
+Direccion.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorDireccion",
+});
+
 console.log("✅ Asociaciones configuradas exitosamente");
 
 //=============================================
