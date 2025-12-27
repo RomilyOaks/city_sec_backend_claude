@@ -48,7 +48,7 @@ import { Op } from "sequelize";
  */
 const getAllSectores = async (req, res) => {
   try {
-    const { estado, zona_code } = req.query;
+    const { estado, zona_code, search, page, limit } = req.query;
 
     const whereClause = {
       deleted_at: null,
@@ -62,6 +62,24 @@ const getAllSectores = async (req, res) => {
       whereClause.zona_code = zona_code;
     }
 
+    // Búsqueda por texto en sector_code, nombre o zona_code
+    if (search && search.trim().length > 0) {
+      whereClause[Op.or] = [
+        { sector_code: { [Op.like]: `%${search}%` } },
+        { nombre: { [Op.like]: `%${search}%` } },
+        { zona_code: { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    // Calcular paginación
+    const pageNumber = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 15;
+    const offset = (pageNumber - 1) * pageSize;
+
+    // Contar total de registros
+    const totalItems = await Sector.count({ where: whereClause });
+
+    // Obtener sectores con paginación
     const sectores = await Sector.findAll({
       where: whereClause,
       include: [
@@ -77,12 +95,22 @@ const getAllSectores = async (req, res) => {
           required: false, // LEFT JOIN para incluir sectores sin cuadrantes
         },
       ],
+      limit: pageSize,
+      offset: offset,
       order: [["sector_code", "ASC"]],
     });
 
     res.status(200).json({
       success: true,
-      data: sectores,
+      data: {
+        sectores: sectores,
+        pagination: {
+          current_page: pageNumber,
+          total_items: totalItems,
+          total_pages: Math.ceil(totalItems / pageSize),
+          items_per_page: pageSize,
+        },
+      },
     });
   } catch (error) {
     res.status(500).json({
