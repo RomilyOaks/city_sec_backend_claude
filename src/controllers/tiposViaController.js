@@ -113,6 +113,10 @@ const tiposViaController = {
         },
       });
     } catch (error) {
+      console.error("❌ Error al listar tipos de vía:", error);
+      console.error("Stack trace:", error.stack);
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
       return res
         .status(500)
         .json(formatErrorResponse("Error al listar tipos de vía", error));
@@ -149,6 +153,11 @@ const tiposViaController = {
 
       return res.status(200).json(response);
     } catch (error) {
+      console.error("❌ Error al listar tipos de vía activos:", error);
+      console.error("Stack trace:", error.stack);
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      if (error.sql) console.error("SQL:", error.sql);
       return res
         .status(500)
         .json(
