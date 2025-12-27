@@ -373,7 +373,7 @@ const callesCuadrantesController = {
         observaciones,
       } = req.body;
 
-      const userId = req.usuario?.id;
+      const userId = req.user?.id;
 
       // Validar que la calle existe
       const calle = await Calle.findByPk(calle_id);
@@ -541,7 +541,7 @@ const callesCuadrantesController = {
         observaciones,
       } = req.body;
 
-      const userId = req.usuario?.id;
+      const userId = req.user?.id;
 
       const relacion = await CallesCuadrantes.findByPk(id);
 
@@ -672,7 +672,7 @@ const callesCuadrantesController = {
   eliminar: async (req, res) => {
     try {
       const { id } = req.params;
-      const userId = req.usuario?.id;
+      const userId = req.user?.id;
 
       const relacion = await CallesCuadrantes.findByPk(id);
 
