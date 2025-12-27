@@ -519,7 +519,20 @@ export const quitarPermiso = async (req, res) => {
       });
     }
 
-    await rol.removePermiso(permiso);
+    // Eliminar la relación usando destroy directo
+    const resultado = await RolPermiso.destroy({
+      where: {
+        rol_id: id,
+        permiso_id: permisoId,
+      },
+    });
+
+    if (resultado === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "El rol no tiene asignado ese permiso",
+      });
+    }
 
     res.json({
       success: true,

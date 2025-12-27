@@ -107,8 +107,10 @@ const UsuarioRol = sequelize.define(
   {
     // === Opciones del Modelo ===
     tableName: "usuario_roles", // Nombre real de la tabla en la base de datos
-    timestamps: false, // Desactivamos los timestamps automáticos de Sequelize,
-    // ya que estamos manejando created_at y updated_at manualmente (por las constraints)
+    timestamps: true, // Activamos timestamps para auditoría
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+    underscored: true,
 
     // Agregamos índices y claves únicos
     indexes: [

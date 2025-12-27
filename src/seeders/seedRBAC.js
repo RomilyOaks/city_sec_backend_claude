@@ -830,8 +830,23 @@ async function seedRBAC() {
         transaction,
       });
 
-      // Asignar todos los permisos al Super Admin
-      await superAdminRole.setPermisos(todosLosPermisos, { transaction });
+      // Asignar todos los permisos al Super Admin usando bulkCreate manual
+      const { RolPermiso } = await import("../models/index.js");
+
+      // Eliminar permisos existentes
+      await RolPermiso.destroy({
+        where: { rol_id: superAdminRole.id },
+        transaction,
+      });
+
+      // Crear nuevos permisos con auditoría (created_by = 1 para sistema/seeder)
+      const rolPermisosData = todosLosPermisos.map((permiso) => ({
+        rol_id: superAdminRole.id,
+        permiso_id: permiso.id,
+        created_by: 1, // Usuario administrador del sistema (seeder)
+        updated_by: 1,
+      }));
+      await RolPermiso.bulkCreate(rolPermisosData, { transaction });
 
       console.log(
         `   ✓ ${todosLosPermisos.length} permisos asignados al rol Super Admin`
@@ -868,7 +883,18 @@ async function seedRBAC() {
       });
 
       if (!tieneRol) {
-        await adminUser.addRoles([superAdminRole], { transaction });
+        // Usar UsuarioRol.create manual en lugar de addRoles
+        const { UsuarioRol } = await import("../models/index.js");
+        await UsuarioRol.create(
+          {
+            usuario_id: adminUser.id,
+            rol_id: superAdminRole.id,
+            created_by: 1, // Sistema/seeder
+            updated_by: 1,
+            fecha_asignacion: new Date(),
+          },
+          { transaction }
+        );
         console.log("   ✓ Rol super_admin asignado al usuario admin");
       } else {
         console.log("   ℹ️  Usuario admin ya tiene el rol super_admin");
