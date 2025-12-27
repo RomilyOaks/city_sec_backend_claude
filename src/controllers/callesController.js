@@ -566,6 +566,7 @@ const callesController = {
         categoria_via: categoria_via || "LOCAL",
         estado: 1,
         created_by: userId,
+        updated_by: userId,
       });
 
       // Cargar con relaciones para respuesta
