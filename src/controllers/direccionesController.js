@@ -234,11 +234,13 @@ const direccionesController = {
             model: Cuadrante,
             as: "cuadrante",
             attributes: ["id", "cuadrante_code", "nombre"],
+            required: false, // LEFT JOIN - incluir direcciones sin cuadrante
           },
           {
             model: Sector,
             as: "sector",
             attributes: ["id", "sector_code", "nombre"],
+            required: false, // LEFT JOIN - incluir direcciones sin sector
           },
         ],
         order: [
@@ -453,10 +455,12 @@ const direccionesController = {
             model: Cuadrante,
             as: "cuadrante",
             include: [{ model: Sector, as: "sector" }],
+            required: false, // LEFT JOIN - incluir direcciones sin cuadrante
           },
           {
             model: Sector,
             as: "sector",
+            required: false, // LEFT JOIN - incluir direcciones sin sector
           },
           {
             model: Ubigeo,
@@ -593,8 +597,8 @@ const direccionesController = {
             as: "calle",
             include: [{ model: TipoVia, as: "tipoVia" }],
           },
-          { model: Cuadrante, as: "cuadrante" },
-          { model: Sector, as: "sector" },
+          { model: Cuadrante, as: "cuadrante", required: false },
+          { model: Sector, as: "sector", required: false },
         ],
       });
 
@@ -784,8 +788,8 @@ const direccionesController = {
             as: "calle",
             include: [{ model: TipoVia, as: "tipoVia" }],
           },
-          { model: Cuadrante, as: "cuadrante" },
-          { model: Sector, as: "sector" },
+          { model: Cuadrante, as: "cuadrante", required: false },
+          { model: Sector, as: "sector", required: false },
         ],
       });
 
