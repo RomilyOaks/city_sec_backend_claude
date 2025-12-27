@@ -542,6 +542,7 @@ router.post(
       }
 
       // Asignar roles
+      const userId = req.user.id;
       const asignaciones = await Promise.all(
         roles.map(async (rol_id) => {
           return await UsuarioRol.create({
@@ -550,7 +551,9 @@ router.post(
             es_principal: es_principal === rol_id ? 1 : 0,
             fecha_asignacion: new Date(),
             estado: 1,
-            asignado_por: req.user.id,
+            asignado_por: userId,
+            created_by: userId,
+            updated_by: userId,
           });
         })
       );
