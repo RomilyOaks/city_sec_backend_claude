@@ -848,9 +848,14 @@ const direccionesController = {
       //   );
       // }
 
-      // Soft delete
+      // Soft delete: cambiar estado a 0, deleted_by y deleted_at
+      await direccion.update({
+        estado: 0,
+        deleted_by: userId,
+      });
+
+      // Llamar destroy() para establecer deleted_at
       await direccion.destroy();
-      await direccion.update({ deleted_by: userId });
 
       return res
         .status(200)
