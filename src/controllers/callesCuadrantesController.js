@@ -396,9 +396,28 @@ const callesCuadrantesController = {
         lado,
         desde_interseccion,
         hasta_interseccion,
+        manzana,
         prioridad,
         observaciones,
       } = req.body;
+
+      const manzanaTrim = manzana?.trim().toUpperCase() || null;
+
+      // Evitar duplicados por (calle_id, manzana) si se especifica manzana
+      if (manzanaTrim) {
+        const existeManzana = await CallesCuadrantes.findOne({
+          where: { calle_id, manzana: manzanaTrim, deleted_at: null },
+        });
+        if (existeManzana) {
+          return res
+            .status(400)
+            .json(
+              formatErrorResponse(
+                `Ya existe una relación para esta calle con la manzana '${manzanaTrim}'`
+              )
+            );
+        }
+      }
 
       const userId = req.user?.id;
 
@@ -434,7 +453,9 @@ const callesCuadrantesController = {
           .json(
             formatErrorResponse(
               `Ya existe una relación para esta calle en el cuadrante ${cuadrante.cuadrante_code} ` +
-              `con inicio ${numero_inicio || 'NULL'} y lado '${lado || "AMBOS"}'`
+                `con inicio ${numero_inicio || "NULL"} y lado '${
+                  lado || "AMBOS"
+                }'`
             )
           );
       }
@@ -491,6 +512,7 @@ const callesCuadrantesController = {
         lado: lado || "AMBOS",
         desde_interseccion: desde_interseccion?.trim() || null,
         hasta_interseccion: hasta_interseccion?.trim() || null,
+        manzana: manzanaTrim,
         prioridad: prioridad || 1,
         observaciones: observaciones?.trim() || null,
         estado: 1,
@@ -566,9 +588,36 @@ const callesCuadrantesController = {
         lado,
         desde_interseccion,
         hasta_interseccion,
+        manzana,
         prioridad,
         observaciones,
       } = req.body;
+
+      // Manejar manzana y validar unicidad si se modifica
+      const nuevoManzana =
+        manzana !== undefined ? manzana?.trim() || null : relacion.manzana;
+
+      if (manzana !== undefined && nuevoManzana) {
+        const existeManzana = await CallesCuadrantes.findOne({
+          where: {
+            calle_id: relacion.calle_id,
+            manzana: nuevoManzana,
+            id: { [Op.ne]: id },
+            deleted_at: null,
+          },
+        });
+        if (existeManzana) {
+          return res
+            .status(400)
+            .json(
+              formatErrorResponse(
+                `Ya existe otra relación para esta calle con la manzana '${nuevoManzana}'`
+              )
+            );
+        }
+      }
+
+      // ... later in update payload use nuevoManzana
 
       const userId = req.user?.id;
 
@@ -642,6 +691,7 @@ const callesCuadrantesController = {
           hasta_interseccion !== undefined
             ? hasta_interseccion?.trim()
             : relacion.hasta_interseccion,
+        manzana: nuevoManzana,
         prioridad: prioridad !== undefined ? prioridad : relacion.prioridad,
         observaciones:
           observaciones !== undefined
