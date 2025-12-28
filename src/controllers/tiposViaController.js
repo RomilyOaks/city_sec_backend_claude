@@ -245,9 +245,12 @@ const tiposViaController = {
       // Normalizar código a mayúsculas
       const codigoUpper = codigo.toUpperCase();
 
-      // Verificar si ya existe
+      // Verificar si ya existe código ACTIVO (estado=1)
       const existente = await TipoVia.findOne({
-        where: { codigo: codigoUpper },
+        where: {
+          codigo: codigoUpper,
+          estado: 1  // Solo verificar códigos activos
+        },
       });
 
       if (existente) {
@@ -325,20 +328,21 @@ const tiposViaController = {
           .json(formatErrorResponse("Tipo de vía no encontrado"));
       }
 
-      // Si se actualiza el código, verificar que no exista
+      // Si se actualiza el código, verificar que no exista otro ACTIVO con ese código
       if (req.body.codigo) {
         const codigoUpper = req.body.codigo.toUpperCase();
         const existente = await TipoVia.findOne({
           where: {
             codigo: codigoUpper,
-            id: { [Op.ne]: id },
+            estado: 1,  // Solo verificar códigos activos
+            id: { [Op.ne]: id },  // Excluir el registro actual
           },
         });
 
         if (existente) {
           return res
             .status(400)
-            .json(formatErrorResponse("El código ya está en uso"));
+            .json(formatErrorResponse("El código ya está en uso por otro tipo de vía activo"));
         }
 
         req.body.codigo = codigoUpper;
