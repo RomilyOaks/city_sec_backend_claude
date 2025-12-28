@@ -454,6 +454,11 @@ const getAllCuadrantes = async (req, res) => {
       order: [["cuadrante_code", "ASC"]],
     });
 
+    // Debug: Log para verificar si las relaciones están cargando
+    if (cuadrantes.length > 0) {
+      console.log("DEBUG - Primer cuadrante:", JSON.stringify(cuadrantes[0], null, 2));
+    }
+
     res.status(200).json({
       success: true,
       data: cuadrantes,
