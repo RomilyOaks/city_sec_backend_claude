@@ -42,6 +42,7 @@ import CallesCuadrantes from "../models/CallesCuadrantes.js";
 import Cuadrante from "../models/Cuadrante.js";
 import Sector from "../models/Sector.js";
 import Direccion from "../models/Direccion.js";
+import Usuario from "../models/Usuario.js";
 import { Op } from "sequelize";
 
 /**
@@ -49,6 +50,30 @@ import { Op } from "sequelize";
  * FUNCIONES AUXILIARES
  * ============================================================================
  */
+
+/**
+ * Include estándar para incluir usuarios de auditoría
+ */
+const auditInclude = [
+  {
+    model: Usuario,
+    as: "creadorCalle",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+  {
+    model: Usuario,
+    as: "actualizadorCalle",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+  {
+    model: Usuario,
+    as: "eliminadorCalle",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+];
 
 /**
  * Genera código único de calle
@@ -203,6 +228,7 @@ const callesController = {
               "distrito",
             ],
           },
+          ...auditInclude, // Incluir usuarios de auditoría
         ],
         order: [
           ["es_principal", "DESC"],
@@ -434,6 +460,7 @@ const callesController = {
               "distrito",
             ],
           },
+          ...auditInclude, // Incluir usuarios de auditoría
         ],
       });
 
@@ -576,6 +603,7 @@ const callesController = {
             model: TipoVia,
             as: "tipoVia",
           },
+          ...auditInclude, // Incluir usuarios de auditoría
         ],
       });
 
@@ -663,6 +691,7 @@ const callesController = {
             model: TipoVia,
             as: "tipoVia",
           },
+          ...auditInclude, // Incluir usuarios de auditoría
         ],
       });
 

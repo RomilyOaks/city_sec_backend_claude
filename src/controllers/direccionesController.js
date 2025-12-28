@@ -55,6 +55,30 @@ import { Op } from "sequelize";
  */
 
 /**
+ * Include estándar para incluir usuarios de auditoría
+ */
+const auditInclude = [
+  {
+    model: Usuario,
+    as: "creadorDireccion",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+  {
+    model: Usuario,
+    as: "actualizadorDireccion",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+  {
+    model: Usuario,
+    as: "eliminadorDireccion",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+];
+
+/**
  * Formatea respuesta exitosa
  */
 const formatSuccessResponse = (
@@ -256,12 +280,7 @@ const direccionesController = {
             attributes: ["id", "sector_code", "nombre"],
             required: false, // LEFT JOIN - incluir direcciones sin sector
           },
-          {
-            model: Usuario,
-            as: "eliminadorDireccion",
-            attributes: ["id", "username", "email"],
-            required: false, // LEFT JOIN - solo si hay deleted_by
-          },
+          ...auditInclude, // Incluir usuarios de auditoría
         ],
         order: [
           [{ model: Calle, as: "calle" }, "nombre_via", "ASC"],
@@ -486,6 +505,7 @@ const direccionesController = {
             model: Ubigeo,
             as: "ubigeo",
           },
+          ...auditInclude, // Incluir usuarios de auditoría
         ],
       });
 
@@ -620,6 +640,7 @@ const direccionesController = {
           },
           { model: Cuadrante, as: "cuadrante", required: false },
           { model: Sector, as: "sector", required: false },
+          ...auditInclude, // Incluir usuarios de auditoría
         ],
       });
 
@@ -811,6 +832,7 @@ const direccionesController = {
           },
           { model: Cuadrante, as: "cuadrante", required: false },
           { model: Sector, as: "sector", required: false },
+          ...auditInclude, // Incluir usuarios de auditoría
         ],
       });
 
@@ -949,6 +971,7 @@ const direccionesController = {
           },
           { model: Cuadrante, as: "cuadrante", required: false },
           { model: Sector, as: "sector", required: false },
+          ...auditInclude, // Incluir usuarios de auditoría
         ],
       });
 
