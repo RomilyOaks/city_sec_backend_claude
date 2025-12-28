@@ -24,6 +24,7 @@
 
 import TipoVia from "../models/TipoVia.js";
 import Calle from "../models/Calle.js";
+import Usuario from "../models/Usuario.js";
 import { Op } from "sequelize";
 
 /**
@@ -31,6 +32,27 @@ import { Op } from "sequelize";
  * FUNCIONES AUXILIARES
  * ============================================================================
  */
+
+/**
+ * Include estándar para incluir usuarios de auditoría
+ */
+const auditInclude = [
+  {
+    model: Usuario,
+    as: "creadorTipoVia",
+    attributes: ["id", "username", "email"],
+  },
+  {
+    model: Usuario,
+    as: "actualizadorTipoVia",
+    attributes: ["id", "username", "email"],
+  },
+  {
+    model: Usuario,
+    as: "eliminadorTipoVia",
+    attributes: ["id", "username", "email"],
+  },
+];
 
 /**
  * Formatea la respuesta exitosa estándar
@@ -99,12 +121,14 @@ const tiposViaController = {
       // Consultar BD
       const { count, rows } = await TipoVia.findAndCountAll({
         where,
+        include: auditInclude,
         limit: parseInt(limit),
         offset: parseInt(offset),
         order: [
           ["orden", "ASC"],
           ["nombre", "ASC"],
         ],
+        distinct: true,
       });
 
       return res.status(200).json({
@@ -179,7 +203,9 @@ const tiposViaController = {
     try {
       const { id } = req.params;
 
-      const tipoVia = await TipoVia.findByPk(id);
+      const tipoVia = await TipoVia.findByPk(id, {
+        include: auditInclude,
+      });
 
       if (!tipoVia) {
         return res
@@ -242,10 +268,18 @@ const tiposViaController = {
         updated_by: userId,
       });
 
+      // Recargar con relaciones de auditoría
+      const tipoViaConAuditoria = await TipoVia.findByPk(nuevoTipoVia.id, {
+        include: auditInclude,
+      });
+
       return res
         .status(201)
         .json(
-          formatSuccessResponse(nuevoTipoVia, "Tipo de vía creado exitosamente")
+          formatSuccessResponse(
+            tipoViaConAuditoria,
+            "Tipo de vía creado exitosamente"
+          )
         );
     } catch (error) {
       return res
@@ -294,10 +328,18 @@ const tiposViaController = {
 
       await tipoVia.update(req.body);
 
+      // Recargar con relaciones de auditoría
+      const tipoViaActualizado = await TipoVia.findByPk(id, {
+        include: auditInclude,
+      });
+
       return res
         .status(200)
         .json(
-          formatSuccessResponse(tipoVia, "Tipo de vía actualizado exitosamente")
+          formatSuccessResponse(
+            tipoViaActualizado,
+            "Tipo de vía actualizado exitosamente"
+          )
         );
     } catch (error) {
       return res
@@ -375,10 +417,18 @@ const tiposViaController = {
 
       await tipoVia.update({ estado: 1 });
 
+      // Recargar con relaciones de auditoría
+      const tipoViaActualizado = await TipoVia.findByPk(id, {
+        include: auditInclude,
+      });
+
       return res
         .status(200)
         .json(
-          formatSuccessResponse(tipoVia, "Tipo de vía activado exitosamente")
+          formatSuccessResponse(
+            tipoViaActualizado,
+            "Tipo de vía activado exitosamente"
+          )
         );
     } catch (error) {
       return res
@@ -419,10 +469,18 @@ const tiposViaController = {
 
       await tipoVia.update({ estado: 0 });
 
+      // Recargar con relaciones de auditoría
+      const tipoViaActualizado = await TipoVia.findByPk(id, {
+        include: auditInclude,
+      });
+
       return res
         .status(200)
         .json(
-          formatSuccessResponse(tipoVia, "Tipo de vía desactivado exitosamente")
+          formatSuccessResponse(
+            tipoViaActualizado,
+            "Tipo de vía desactivado exitosamente"
+          )
         );
     } catch (error) {
       return res
