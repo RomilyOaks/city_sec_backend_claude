@@ -107,8 +107,10 @@ const tiposViaController = {
       const where = {};
 
       if (search) {
+        // Normalizar búsqueda para que sea case-insensitive
+        const searchUpper = search.toUpperCase();
         where[Op.or] = [
-          { codigo: { [Op.like]: `%${search}%` } },
+          { codigo: { [Op.like]: `%${searchUpper}%` } },
           { nombre: { [Op.like]: `%${search}%` } },
           { abreviatura: { [Op.like]: `%${search}%` } },
         ];
