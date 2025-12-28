@@ -36,8 +36,58 @@
  * @date 2025-12-14
  */
 
-import { Sector, Cuadrante, Ubigeo } from "../models/index.js";
+import { Sector, Cuadrante, Ubigeo, Usuario } from "../models/index.js";
 import { Op } from "sequelize";
+
+// ==================== CONSTANTES ====================
+
+/**
+ * Include para auditoría de Sectores
+ */
+const sectorAuditInclude = [
+  {
+    model: Usuario,
+    as: "creadorSector",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+  {
+    model: Usuario,
+    as: "actualizadorSector",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+  {
+    model: Usuario,
+    as: "eliminadorSector",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+];
+
+/**
+ * Include para auditoría de Cuadrantes
+ */
+const cuadranteAuditInclude = [
+  {
+    model: Usuario,
+    as: "creadorCuadrante",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+  {
+    model: Usuario,
+    as: "actualizadorCuadrante",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+  {
+    model: Usuario,
+    as: "eliminadorCuadrante",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+];
 
 // ==================== SECTORES ====================
 
@@ -94,6 +144,7 @@ const getAllSectores = async (req, res) => {
           where: { estado: 1, deleted_at: null },
           required: false, // LEFT JOIN para incluir sectores sin cuadrantes
         },
+        ...sectorAuditInclude, // Incluir usuarios de auditoría
       ],
       limit: pageSize,
       offset: offset,
@@ -143,6 +194,7 @@ const getSectorById = async (req, res) => {
           where: { estado: 1, deleted_at: null },
           required: false,
         },
+        ...sectorAuditInclude, // Incluir usuarios de auditoría
       ],
     });
 
@@ -218,7 +270,10 @@ const createSector = async (req, res) => {
 
     // Obtener sector completo
     const sectorCompleto = await Sector.findByPk(nuevoSector.id, {
-      include: [{ model: Ubigeo, as: "ubigeo_rel" }],
+      include: [
+        { model: Ubigeo, as: "ubigeo_rel" },
+        ...sectorAuditInclude, // Incluir usuarios de auditoría
+      ],
     });
 
     res.status(201).json({
@@ -288,6 +343,7 @@ const updateSector = async (req, res) => {
       include: [
         { model: Ubigeo, as: "ubigeo_rel" },
         { model: Cuadrante, as: "cuadrantes" },
+        ...sectorAuditInclude, // Incluir usuarios de auditoría
       ],
     });
 
@@ -393,6 +449,7 @@ const getAllCuadrantes = async (req, res) => {
           as: "sector",
           attributes: ["id", "sector_code", "nombre"],
         },
+        ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
       order: [["cuadrante_code", "ASC"]],
     });
@@ -426,6 +483,7 @@ const getCuadranteById = async (req, res) => {
           model: Sector,
           as: "sector",
         },
+        ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
     });
 
@@ -517,7 +575,10 @@ const createCuadrante = async (req, res) => {
 
     // Obtener cuadrante completo
     const cuadranteCompleto = await Cuadrante.findByPk(nuevoCuadrante.id, {
-      include: [{ model: Sector, as: "sector" }],
+      include: [
+        { model: Sector, as: "sector" },
+        ...cuadranteAuditInclude, // Incluir usuarios de auditoría
+      ],
     });
 
     res.status(201).json({
@@ -584,7 +645,10 @@ const updateCuadrante = async (req, res) => {
 
     // Obtener cuadrante actualizado
     const cuadranteActualizado = await Cuadrante.findByPk(id, {
-      include: [{ model: Sector, as: "sector" }],
+      include: [
+        { model: Sector, as: "sector" },
+        ...cuadranteAuditInclude, // Incluir usuarios de auditoría
+      ],
     });
 
     res.status(200).json({
