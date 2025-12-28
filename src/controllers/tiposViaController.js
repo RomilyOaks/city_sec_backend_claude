@@ -119,6 +119,7 @@ const tiposViaController = {
       }
 
       // Consultar BD
+      // IMPORTANTE: paranoid: false para incluir registros soft-deleted cuando no se filtra por estado
       const { count, rows } = await TipoVia.findAndCountAll({
         where,
         include: auditInclude,
@@ -129,6 +130,7 @@ const tiposViaController = {
           ["nombre", "ASC"],
         ],
         distinct: true,
+        paranoid: false, // Incluir registros soft-deleted (deleted_at no null)
       });
 
       return res.status(200).json({
