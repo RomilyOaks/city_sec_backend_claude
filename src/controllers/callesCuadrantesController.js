@@ -39,6 +39,7 @@ import Calle from "../models/Calle.js";
 import Cuadrante from "../models/Cuadrante.js";
 import Sector from "../models/Sector.js";
 import TipoVia from "../models/TipoVia.js";
+import Usuario from "../models/Usuario.js";
 import { Op } from "sequelize";
 
 /**
@@ -46,6 +47,30 @@ import { Op } from "sequelize";
  * FUNCIONES AUXILIARES
  * ============================================================================
  */
+
+/**
+ * Include para auditoría de CallesCuadrantes
+ */
+const callesCuadrantesAuditInclude = [
+  {
+    model: Usuario,
+    as: "creadorCallesCuadrantes",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+  {
+    model: Usuario,
+    as: "actualizadorCallesCuadrantes",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+  {
+    model: Usuario,
+    as: "eliminadorCallesCuadrantes",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+];
 
 /**
  * Formatea respuesta exitosa
@@ -223,6 +248,7 @@ const callesCuadrantesController = {
               },
             ],
           },
+          ...callesCuadrantesAuditInclude,
         ],
         order: [
           [{ model: Calle, as: "calle" }, "nombre_via", "ASC"],
@@ -302,6 +328,7 @@ const callesCuadrantesController = {
               },
             ],
           },
+          ...callesCuadrantesAuditInclude,
         ],
       });
 
@@ -486,6 +513,7 @@ const callesCuadrantesController = {
               as: "cuadrante",
               include: [{ model: Sector, as: "sector" }],
             },
+            ...callesCuadrantesAuditInclude,
           ],
         }
       );
@@ -635,6 +663,7 @@ const callesCuadrantesController = {
             as: "cuadrante",
             include: [{ model: Sector, as: "sector" }],
           },
+          ...callesCuadrantesAuditInclude,
         ],
       });
 
