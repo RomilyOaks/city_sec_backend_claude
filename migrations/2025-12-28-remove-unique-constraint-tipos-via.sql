@@ -18,20 +18,41 @@
 
 USE railway;
 
--- Paso 1: Eliminar el índice único existente
--- NOTA: El nombre puede variar según cómo se creó (uq_tipos_via_codigo o solo codigo)
-ALTER TABLE tipos_via DROP INDEX IF EXISTS uq_tipos_via_codigo;
-ALTER TABLE tipos_via DROP INDEX IF EXISTS codigo;
+-- ============================================================================
+-- Paso 1: Verificar qué índices existen actualmente
+-- ============================================================================
+SHOW INDEX FROM tipos_via WHERE Key_name LIKE '%codigo%';
 
--- Paso 2: Modificar la columna para remover UNIQUE constraint
+-- ============================================================================
+-- Paso 2: Eliminar el índice único existente
+-- IMPORTANTE: Ejecuta SOLO el comando que corresponda según el resultado del SHOW INDEX
+-- ============================================================================
+
+-- Opción A: Si el índice se llama 'uq_tipos_via_codigo'
+-- ALTER TABLE tipos_via DROP INDEX uq_tipos_via_codigo;
+
+-- Opción B: Si el índice se llama 'codigo' (nombre por defecto)
+-- ALTER TABLE tipos_via DROP INDEX codigo;
+
+-- Opción C: Si el índice tiene otro nombre, usa ese nombre
+-- ALTER TABLE tipos_via DROP INDEX [nombre_del_indice];
+
+-- ============================================================================
+-- Paso 3: Modificar la columna para remover UNIQUE constraint
+-- Este comando se ejecuta independientemente del nombre del índice
+-- ============================================================================
 ALTER TABLE tipos_via MODIFY COLUMN codigo VARCHAR(10) NOT NULL
 COMMENT 'Código (AV, JR, CA, PJ, etc.) - Debe ser único solo entre registros activos';
 
--- Paso 3: Crear índice compuesto para optimizar búsquedas
+-- ============================================================================
+-- Paso 4: Crear índice compuesto para optimizar búsquedas
 -- Este índice permite búsquedas rápidas por codigo+estado
+-- ============================================================================
 CREATE INDEX idx_tipos_via_codigo_estado ON tipos_via(codigo, estado);
 
--- Paso 4: Verificar que el cambio se aplicó correctamente
+-- ============================================================================
+-- Paso 5: Verificar que el cambio se aplicó correctamente
+-- ============================================================================
 SHOW INDEX FROM tipos_via WHERE Key_name LIKE '%codigo%';
 
 -- ============================================================================
