@@ -117,9 +117,10 @@ const TipoVia = sequelize.define(
     codigo: {
       type: DataTypes.STRING(10),
       allowNull: false,
-      unique: true, // Garantiza que no haya códigos duplicados
+      // NOTA: unique removido - permitimos códigos duplicados si tienen diferente estado
+      // La validación de unicidad se hace en el controller solo para registros activos (estado=1)
       comment:
-        "Código único (AV, JR, CA, PJ, etc.) - Usado para identificación rápida",
+        "Código (AV, JR, CA, PJ, etc.) - Debe ser único solo entre registros activos",
       validate: {
         // Validación: solo letras mayúsculas y números
         is: /^[A-Z0-9]+$/i,
@@ -253,10 +254,10 @@ const TipoVia = sequelize.define(
     // ============================================================================
     indexes: [
       {
-        // Índice único para garantizar códigos únicos
-        name: "uq_tipos_via_codigo",
-        unique: true,
-        fields: ["codigo"],
+        // Índice compuesto para garantizar códigos únicos solo entre registros activos
+        // Esto permite reutilizar códigos de registros inactivos (estado=0)
+        name: "idx_tipos_via_codigo_estado",
+        fields: ["codigo", "estado"],
       },
       {
         // Índice para búsquedas por estado (filtrando activos/inactivos)
