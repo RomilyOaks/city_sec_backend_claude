@@ -282,6 +282,27 @@ const tiposViaController = {
           )
         );
     } catch (error) {
+      // Manejar errores de validación de Sequelize
+      if (error.name === "SequelizeValidationError") {
+        const errors = error.errors.map((err) => ({
+          field: err.path,
+          message: err.message,
+        }));
+        return res.status(400).json({
+          success: false,
+          error: "Error de validación",
+          errors,
+        });
+      }
+
+      if (error.name === "SequelizeUniqueConstraintError") {
+        const field = error.errors[0]?.path || "campo";
+        return res.status(400).json({
+          success: false,
+          error: `El ${field} ya existe en la base de datos`,
+        });
+      }
+
       return res
         .status(500)
         .json(formatErrorResponse("Error al crear tipo de vía", error));
@@ -342,6 +363,27 @@ const tiposViaController = {
           )
         );
     } catch (error) {
+      // Manejar errores de validación de Sequelize
+      if (error.name === "SequelizeValidationError") {
+        const errors = error.errors.map((err) => ({
+          field: err.path,
+          message: err.message,
+        }));
+        return res.status(400).json({
+          success: false,
+          error: "Error de validación",
+          errors,
+        });
+      }
+
+      if (error.name === "SequelizeUniqueConstraintError") {
+        const field = error.errors[0]?.path || "campo";
+        return res.status(400).json({
+          success: false,
+          error: `El ${field} ya existe en la base de datos`,
+        });
+      }
+
       return res
         .status(500)
         .json(formatErrorResponse("Error al actualizar tipo de vía", error));
