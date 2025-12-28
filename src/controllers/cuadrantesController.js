@@ -33,8 +33,32 @@
  * @date 2025-12-14
  */
 
-import { Cuadrante, Sector } from "../models/index.js";
+import { Cuadrante, Sector, Usuario } from "../models/index.js";
 import { Op } from "sequelize";
+
+/**
+ * Include para auditoría de Cuadrantes
+ */
+const cuadranteAuditInclude = [
+  {
+    model: Usuario,
+    as: "creadorCuadrante",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+  {
+    model: Usuario,
+    as: "actualizadorCuadrante",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+  {
+    model: Usuario,
+    as: "eliminadorCuadrante",
+    attributes: ["id", "username", "email"],
+    required: false,
+  },
+];
 
 /**
  * GET /api/v1/cuadrantes
@@ -97,6 +121,7 @@ export const getCuadrantes = async (req, res) => {
           as: "sector",
           attributes: ["id", "nombre", "sector_code"],
         },
+        ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
@@ -155,6 +180,7 @@ export const getCuadranteById = async (req, res) => {
           as: "sector",
           attributes: ["id", "nombre", "sector_code", "zona_code"],
         },
+        ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
     });
 
@@ -427,6 +453,7 @@ export const createCuadrante = async (req, res) => {
           as: "sector",
           attributes: ["id", "nombre", "sector_code"],
         },
+        ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
     });
 
@@ -528,6 +555,7 @@ export const updateCuadrante = async (req, res) => {
           as: "sector",
           attributes: ["id", "nombre", "sector_code"],
         },
+        ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
     });
 
