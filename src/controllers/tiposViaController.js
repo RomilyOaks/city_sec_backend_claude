@@ -144,12 +144,14 @@ const tiposViaController = {
       return res.status(200).json({
         success: true,
         message: "Tipos de vía obtenidos exitosamente",
-        data: rows,
-        pagination: {
-          total: count,
-          page: parseInt(page),
-          limit: parseInt(limit),
-          totalPages: Math.ceil(count / limit),
+        data: {
+          items: rows, // Frontend espera data.items
+          pagination: {
+            total: count,
+            page: parseInt(page),
+            limit: parseInt(limit),
+            totalPages: Math.ceil(count / limit),
+          },
         },
       });
     } catch (error) {
