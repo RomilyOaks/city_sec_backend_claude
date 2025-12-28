@@ -200,6 +200,18 @@ export const validateCreateCallesCuadrantes = [
     .customSanitizer((value) => (value ? value.trim() : null)),
 
   // ============================================
+  // VALIDACIÓN: manzana (OPCIONAL)
+  // ============================================
+  body("manzana")
+    .optional({ nullable: true, checkFalsy: true })
+    .isString()
+    .withMessage("La manzana debe ser texto")
+    .trim()
+    .isLength({ max: 10 })
+    .withMessage("La manzana no puede exceder 10 caracteres")
+    .customSanitizer((value) => (value ? value.trim() : null)),
+
+  // ============================================
   // VALIDACIÓN: prioridad (OPCIONAL)
   // ============================================
   body("prioridad")
@@ -219,6 +231,11 @@ export const validateCreateCallesCuadrantes = [
     .isLength({ max: 500 })
     .withMessage("Las observaciones no pueden exceder 500 caracteres")
     .customSanitizer((value) => (value ? value.trim() : null)),
+
+  // Sanitizer final para forzar mayúsculas en manzana
+  body("manzana").customSanitizer((value) =>
+    value ? value.trim().toUpperCase() : null
+  ),
 
   // Middleware que maneja los errores
   handleValidationErrors,
@@ -326,6 +343,18 @@ export const validateUpdateCallesCuadrantes = [
     .customSanitizer((value) => (value ? value.trim() : null)),
 
   // ============================================
+  // VALIDACIÓN: manzana (OPCIONAL)
+  // ============================================
+  body("manzana")
+    .optional({ nullable: true, checkFalsy: true })
+    .isString()
+    .withMessage("La manzana debe ser texto")
+    .trim()
+    .isLength({ max: 10 })
+    .withMessage("La manzana no puede exceder 10 caracteres")
+    .customSanitizer((value) => (value ? value.trim() : null)),
+
+  // ============================================
   // VALIDACIÓN: prioridad (OPCIONAL)
   // ============================================
   body("prioridad")
@@ -353,6 +382,11 @@ export const validateUpdateCallesCuadrantes = [
     .isInt({ min: 0, max: 1 })
     .withMessage("El estado debe ser 0 (inactivo) o 1 (activo)")
     .toInt(),
+
+  // Sanitizer final para forzar mayúsculas en manzana
+  body("manzana").customSanitizer((value) =>
+    value ? value.trim().toUpperCase() : null
+  ),
 
   // Middleware que maneja los errores
   handleValidationErrors,

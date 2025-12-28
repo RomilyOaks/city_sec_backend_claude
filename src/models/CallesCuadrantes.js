@@ -100,6 +100,10 @@ import sequelize from "../config/database.js";
  *           enum: [AMBOS, PAR, IMPAR, TODOS]
  *           description: Lado de la calle que pertenece al cuadrante
  *           example: "AMBOS"
+ *         manzana:
+ *           type: string
+ *           description: Identificador de manzana (Mz) para sistemas de AAHH
+ *           example: "A1"
  *         desde_interseccion:
  *           type: string
  *           description: Calle de inicio del tramo
@@ -240,6 +244,29 @@ const CallesCuadrantes = sequelize.define(
     },
 
     // ============================================================================
+    // MANZANA (AAHH / MZ)
+    // ============================================================================
+    manzana: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
+      field: "manzana",
+      comment: "Manzana (Mz) para sistemas de AAHH - límite 10 caracteres",
+      validate: {
+        len: {
+          args: [1, 10],
+          msg: "La manzana no puede exceder 10 caracteres",
+        },
+      },
+      set(value) {
+        // Forzar mayúsculas al asignar
+        this.setDataValue(
+          "manzana",
+          value ? value.toString().trim().toUpperCase() : null
+        );
+      },
+    },
+
+    // ============================================================================
     // METADATOS
     // ============================================================================
     observaciones: {
@@ -338,15 +365,21 @@ const CallesCuadrantes = sequelize.define(
         fields: ["estado"],
       },
       {
-        // Índice compuesto para búsqueda de cuadrante por número
-        // Se usa en la auto-asignación: dado un número, encontrar el cuadrante
+        // Índice compuesto para búsqueda de cuadrante por número (optimizado)
+        // Se usa en la auto-asignación: dado calle_id + lado + numero_inicio encontrar rápidamente
         name: "idx_cc_numero_rango",
-        fields: ["numero_inicio", "numero_fin"],
+        fields: ["calle_id", "lado", "numero_inicio"],
       },
       {
         // Índice por calle_id (usado en foreign key)
         name: "idx_calle_id",
         fields: ["calle_id"],
+      },
+      {
+        // Índice único por manzana para evitar duplicados por calle + manzana
+        name: "uq_calle_cuadrante_manzana",
+        unique: true,
+        fields: ["calle_id", "manzana"],
       },
       {
         // Índice por cuadrante_id (usado en foreign key)

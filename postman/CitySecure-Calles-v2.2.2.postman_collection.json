@@ -1,1512 +1,1307 @@
 {
-	"info": {
-		"_postman_id": "calles-direcciones-module-v2",
-		"name": "CitySecure - Módulo Calles y Direcciones v2.2.2",
-		"description": "Colección completa para probar todos los endpoints del módulo de Calles y Direcciones.\n\n**Características:**\n- 40+ endpoints organizados por recurso\n- Variables de entorno configurables\n- Tests automáticos en cada request\n- Ejemplos de datos de prueba\n- Sistema dual de direccionamiento\n\n**Autor:** Claude AI\n**Fecha:** 2025-12-23\n**Versión:** 2.2.2",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "Auth",
-			"item": [
-				{
-					"name": "Login",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Guardar token automáticamente",
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    if (jsonData.token) {",
-									"        pm.environment.set('authToken', jsonData.token);",
-									"        console.log('✅ Token guardado:', jsonData.token.substring(0, 20) + '...');",
-									"    }",
-									"}",
-									"",
-									"// Test de respuesta",
-									"pm.test('Login exitoso', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('Token recibido', function() {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData.token).to.exist;",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/auth/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"login"
-							]
-						},
-						"description": "Autenticación para obtener JWT token.\n\n**Credenciales por defecto:**\n- Username: admin\n- Password: Admin123!\n\n**Nota:** El token se guarda automáticamente en la variable de entorno `authToken`"
-					},
-					"response": []
-				}
-			],
-			"description": "Autenticación y gestión de tokens"
-		},
-		{
-			"name": "1. Tipos de Vía",
-			"item": [
-				{
-					"name": "Listar Tipos de Vía Activos (Público)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Status 200', () => pm.response.to.have.status(200));",
-									"pm.test('Respuesta es array', () => {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.be.an('array');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/tipos-via/activos",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"tipos-via",
-								"activos"
-							]
-						},
-						"description": "**Endpoint público** - No requiere autenticación.\nUtilizado para poblar selects en formularios."
-					},
-					"response": []
-				},
-				{
-					"name": "Listar Todos los Tipos de Vía",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Status 200', () => pm.response.to.have.status(200));",
-									"pm.test('Tiene paginación', () => {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData.pagination).to.exist;",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/tipos-via?page=1&limit=10",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"tipos-via"
-							],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "10"
-								},
-								{
-									"key": "search",
-									"value": "avenida",
-									"disabled": true
-								},
-								{
-									"key": "estado",
-									"value": "1",
-									"disabled": true
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Tipo de Vía por ID",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Status 200', () => pm.response.to.have.status(200));",
-									"pm.test('Tiene datos del tipo de vía', () => {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('id');",
-									"    pm.expect(jsonData.data).to.have.property('codigo');",
-									"    pm.expect(jsonData.data).to.have.property('nombre');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/tipos-via/{{tipoViaId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"tipos-via",
-								"{{tipoViaId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Crear Tipo de Vía",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const jsonData = pm.response.json();",
-									"    pm.environment.set('tipoViaId', jsonData.data.id);",
-									"    console.log('✅ Tipo de vía creado con ID:', jsonData.data.id);",
-									"}",
-									"",
-									"pm.test('Status 201', () => pm.response.to.have.status(201));"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"codigo\": \"AV\",\n  \"nombre\": \"Avenida\",\n  \"abreviatura\": \"Av.\",\n  \"descripcion\": \"Vía urbana principal de gran amplitud\",\n  \"orden\": 1\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/tipos-via",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"tipos-via"
-							]
-						},
-						"description": "**Requiere rol:** supervisor o super_admin"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Tipo de Vía",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Status 200', () => pm.response.to.have.status(200));"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"nombre\": \"Avenida Principal\",\n  \"descripcion\": \"Vía urbana principal con alta afluencia vehicular\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/tipos-via/{{tipoViaId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"tipos-via",
-								"{{tipoViaId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Activar Tipo de Vía",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/tipos-via/{{tipoViaId}}/activar",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"tipos-via",
-								"{{tipoViaId}}",
-								"activar"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Desactivar Tipo de Vía",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/tipos-via/{{tipoViaId}}/desactivar",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"tipos-via",
-								"{{tipoViaId}}",
-								"desactivar"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Eliminar Tipo de Vía",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/tipos-via/{{tipoViaId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"tipos-via",
-								"{{tipoViaId}}"
-							]
-						},
-						"description": "**Requiere rol:** super_admin"
-					},
-					"response": []
-				}
-			],
-			"description": "Gestión del catálogo de tipos de vía (Av, Jr, Ca, Pj, etc.)"
-		},
-		{
-			"name": "2. Calles",
-			"item": [
-				{
-					"name": "Listar Calles Activas",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Status 200', () => pm.response.to.have.status(200));",
-									"pm.test('Respuesta es array', () => {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.be.an('array');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles/activas",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles",
-								"activas"
-							]
-						},
-						"description": "Calles activas para usar en selects/combos"
-					},
-					"response": []
-				},
-				{
-					"name": "Autocomplete de Calles",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Status 200', () => pm.response.to.have.status(200));"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles/autocomplete?q=ejerc&limit=10",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles",
-								"autocomplete"
-							],
-							"query": [
-								{
-									"key": "q",
-									"value": "ejerc",
-									"description": "Mínimo 2 caracteres"
-								},
-								{
-									"key": "limit",
-									"value": "10"
-								}
-							]
-						},
-						"description": "Búsqueda rápida de calles (mínimo 2 caracteres)"
-					},
-					"response": []
-				},
-				{
-					"name": "Calles por Urbanización",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles/urbanizacion/Villa El Salvador",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles",
-								"urbanizacion",
-								"Villa El Salvador"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Listar Todas las Calles",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles?page=1&limit=20",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles"
-							],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "20"
-								},
-								{
-									"key": "search",
-									"value": "ejercito",
-									"disabled": true
-								},
-								{
-									"key": "tipo_via_id",
-									"value": "1",
-									"disabled": true
-								},
-								{
-									"key": "es_principal",
-									"value": "1",
-									"disabled": true
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Calle por ID",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Status 200', () => pm.response.to.have.status(200));",
-									"pm.test('Incluye tipo de vía', () => {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('tipoVia');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles/{{calleId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles",
-								"{{calleId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Cuadrantes de una Calle",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles/{{calleId}}/cuadrantes",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles",
-								"{{calleId}}",
-								"cuadrantes"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Direcciones de una Calle",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles/{{calleId}}/direcciones",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles",
-								"{{calleId}}",
-								"direcciones"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Crear Calle",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const jsonData = pm.response.json();",
-									"    pm.environment.set('calleId', jsonData.data.id);",
-									"    console.log('✅ Calle creada con ID:', jsonData.data.id);",
-									"}",
-									"",
-									"pm.test('Status 201', () => pm.response.to.have.status(201));"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"tipo_via_id\": 1,\n  \"nombre_via\": \"Ejército\",\n  \"longitud_metros\": 3500,\n  \"ancho_metros\": 20,\n  \"tipo_pavimento\": \"ASFALTO\",\n  \"sentido_via\": \"DOBLE_VIA\",\n  \"carriles\": 4,\n  \"es_principal\": 1,\n  \"categoria_via\": \"ARTERIAL\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles"
-							]
-						},
-						"description": "**Requiere rol:** operador, supervisor o super_admin"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Calle",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"longitud_metros\": 3600,\n  \"observaciones\": \"Calle principal del distrito\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles/{{calleId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles",
-								"{{calleId}}"
-							]
-						},
-						"description": "**Requiere rol:** supervisor o super_admin"
-					},
-					"response": []
-				},
-				{
-					"name": "Eliminar Calle",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles/{{calleId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles",
-								"{{calleId}}"
-							]
-						},
-						"description": "**Requiere rol:** super_admin\n\n**Validación:** No se puede eliminar si tiene direcciones activas"
-					},
-					"response": []
-				}
-			],
-			"description": "Gestión del maestro de calles del distrito"
-		},
-		{
-			"name": "3. Calles-Cuadrantes",
-			"item": [
-				{
-					"name": "Listar Relaciones",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles-cuadrantes?page=1&limit=20",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles-cuadrantes"
-							],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "20"
-								},
-								{
-									"key": "calle_id",
-									"value": "5",
-									"disabled": true
-								},
-								{
-									"key": "cuadrante_id",
-									"value": "12",
-									"disabled": true
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Relaciones por Calle",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles-cuadrantes/calle/{{calleId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles-cuadrantes",
-								"calle",
-								"{{calleId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Relaciones por Cuadrante",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles-cuadrantes/cuadrante/{{cuadranteId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles-cuadrantes",
-								"cuadrante",
-								"{{cuadranteId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Buscar Cuadrante (Auto-asignación)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    const jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.cuadrante_id) {",
-									"        pm.environment.set('cuadranteId', jsonData.data.cuadrante_id);",
-									"        console.log('✅ Cuadrante encontrado:', jsonData.data.cuadrante_id);",
-									"        console.log('   Sector:', jsonData.data.sector_id);",
-									"    }",
-									"}",
-									"",
-									"pm.test('Status 200', () => pm.response.to.have.status(200));",
-									"pm.test('Retorna cuadrante_id', () => {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('cuadrante_id');",
-									"    pm.expect(jsonData.data).to.have.property('sector_id');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"calle_id\": 1,\n  \"numero\": 450\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles-cuadrantes/buscar-cuadrante",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles-cuadrantes",
-								"buscar-cuadrante"
-							]
-						},
-						"description": "**Endpoint crítico** usado por direcciones para auto-asignar cuadrante y sector.\n\nRetorna:\n- cuadrante_id\n- sector_id\n- Información del cuadrante"
-					},
-					"response": []
-				},
-				{
-					"name": "Crear Relación Calle-Cuadrante",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const jsonData = pm.response.json();",
-									"    pm.environment.set('callesCuadrantesId', jsonData.data.id);",
-									"    console.log('✅ Relación creada con ID:', jsonData.data.id);",
-									"}",
-									"",
-									"pm.test('Status 201', () => pm.response.to.have.status(201));"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"calle_id\": 1,\n  \"cuadrante_id\": 1,\n  \"numero_inicio\": 100,\n  \"numero_fin\": 299,\n  \"lado\": \"AMBOS\",\n  \"prioridad\": 1\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles-cuadrantes",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles-cuadrantes"
-							]
-						},
-						"description": "**Requiere rol:** operador, supervisor o super_admin\n\n**Validaciones:**\n- numero_fin >= numero_inicio\n- No solapamiento de rangos\n- Relación calle+cuadrante única"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Relación",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"numero_inicio\": 100,\n  \"numero_fin\": 399,\n  \"observaciones\": \"Rango ampliado\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles-cuadrantes/{{callesCuadrantesId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles-cuadrantes",
-								"{{callesCuadrantesId}}"
-							]
-						},
-						"description": "**Requiere rol:** supervisor o super_admin"
-					},
-					"response": []
-				},
-				{
-					"name": "Eliminar Relación",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/calles-cuadrantes/{{callesCuadrantesId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"calles-cuadrantes",
-								"{{callesCuadrantesId}}"
-							]
-						},
-						"description": "**Requiere rol:** super_admin"
-					},
-					"response": []
-				}
-			],
-			"description": "Gestión de relaciones entre calles y cuadrantes con rangos de numeración"
-		},
-		{
-			"name": "4. Direcciones",
-			"item": [
-				{
-					"name": "Listar Direcciones Activas",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/direcciones/activas",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"direcciones",
-								"activas"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Búsqueda Avanzada",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/direcciones/search?calle=ejercito&numero=450",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"direcciones",
-								"search"
-							],
-							"query": [
-								{
-									"key": "calle",
-									"value": "ejercito"
-								},
-								{
-									"key": "numero",
-									"value": "450"
-								},
-								{
-									"key": "urbanizacion",
-									"value": "Villa",
-									"disabled": true
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Direcciones Más Usadas (Stats)",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/direcciones/stats/mas-usadas?limit=20",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"direcciones",
-								"stats",
-								"mas-usadas"
-							],
-							"query": [
-								{
-									"key": "limit",
-									"value": "20"
-								}
-							]
-						},
-						"description": "**Requiere rol:** supervisor o super_admin\n\nRetorna hot spots de incidentes"
-					},
-					"response": []
-				},
-				{
-					"name": "Validar Dirección (sin guardar)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Status 200', () => pm.response.to.have.status(200));",
-									"pm.test('Retorna cuadrante y sector', () => {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('cuadrante_id');",
-									"    pm.expect(jsonData.data).to.have.property('sector_id');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"calle_id\": 1,\n  \"numero_municipal\": \"450\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/direcciones/validar",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"direcciones",
-								"validar"
-							]
-						},
-						"description": "Valida dirección sin guardar.\nRetorna cuadrante_id y sector_id auto-asignados."
-					},
-					"response": []
-				},
-				{
-					"name": "Listar Todas las Direcciones",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/direcciones?page=1&limit=20",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"direcciones"
-							],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "20"
-								},
-								{
-									"key": "search",
-									"value": "450",
-									"disabled": true
-								},
-								{
-									"key": "calle_id",
-									"value": "1",
-									"disabled": true
-								},
-								{
-									"key": "geocodificada",
-									"value": "1",
-									"disabled": true
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Dirección por ID",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/direcciones/{{direccionId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"direcciones",
-								"{{direccionId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Crear Dirección (Numeración Municipal)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const jsonData = pm.response.json();",
-									"    pm.environment.set('direccionId', jsonData.data.id);",
-									"    console.log('✅ Dirección creada con ID:', jsonData.data.id);",
-									"    console.log('   Cuadrante auto-asignado:', jsonData.data.cuadrante_id);",
-									"    console.log('   Sector auto-asignado:', jsonData.data.sector_id);",
-									"}",
-									"",
-									"pm.test('Status 201', () => pm.response.to.have.status(201));",
-									"pm.test('Tiene cuadrante y sector asignados', () => {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('cuadrante_id');",
-									"    pm.expect(jsonData.data).to.have.property('sector_id');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"calle_id\": 1,\n  \"numero_municipal\": \"450\",\n  \"tipo_complemento\": \"DEPTO\",\n  \"numero_complemento\": \"201\",\n  \"referencia\": \"Frente al parque\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/direcciones",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"direcciones"
-							]
-						},
-						"description": "**Sistema de numeración municipal**\n\nAuto-asigna:\n- cuadrante_id\n- sector_id\n\n**Requiere rol:** operador, supervisor o super_admin"
-					},
-					"response": []
-				},
-				{
-					"name": "Crear Dirección (Mz/Lote)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const jsonData = pm.response.json();",
-									"    console.log('✅ Dirección Mz/Lote creada con ID:', jsonData.data.id);",
-									"}",
-									"",
-									"pm.test('Status 201', () => pm.response.to.have.status(201));"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"calle_id\": 1,\n  \"manzana\": \"M\",\n  \"lote\": \"15\",\n  \"urbanizacion\": \"AAHH Los Laureles\",\n  \"referencia\": \"Cerca del parque\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/direcciones",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"direcciones"
-							]
-						},
-						"description": "**Sistema Mz/Lote** (típico de AAHH)\n\nCuadrante y sector deben asignarse manualmente o en la relación calles_cuadrantes sin rango numérico."
-					},
-					"response": []
-				},
-				{
-					"name": "Crear Dirección (Sistema Dual)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"calle_id\": 1,\n  \"numero_municipal\": \"250\",\n  \"manzana\": \"M\",\n  \"lote\": \"08\",\n  \"urbanizacion\": \"Urb. San Martín\",\n  \"tipo_complemento\": \"DEPTO\",\n  \"numero_complemento\": \"201\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/direcciones",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"direcciones"
-							]
-						},
-						"description": "**Sistema dual:** Tiene AMBOS sistemas de numeración"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Dirección",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"referencia\": \"Esquina con Av. Principal\",\n  \"verificada\": 1\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/direcciones/{{direccionId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"direcciones",
-								"{{direccionId}}"
-							]
-						},
-						"description": "**Requiere rol:** supervisor o super_admin\n\nSi se actualiza calle_id o numero_municipal, recalcula cuadrante y sector automáticamente."
-					},
-					"response": []
-				},
-				{
-					"name": "Geocodificar Dirección",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Status 200', () => pm.response.to.have.status(200));",
-									"pm.test('Dirección geocodificada', () => {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.geocodificada).to.equal(1);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"latitud\": -12.04637800,\n  \"longitud\": -77.03066400,\n  \"fuente\": \"Google Maps\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/direcciones/{{direccionId}}/geocodificar",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"direcciones",
-								"{{direccionId}}",
-								"geocodificar"
-							]
-						},
-						"description": "Actualiza SOLO coordenadas GPS.\n\n**Requiere rol:** operador, supervisor o super_admin\n\n**Validación:** Coordenadas en rango válido"
-					},
-					"response": []
-				},
-				{
-					"name": "Eliminar Dirección",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/direcciones/{{direccionId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"direcciones",
-								"{{direccionId}}"
-							]
-						},
-						"description": "**Requiere rol:** super_admin\n\n**Validación:** No se puede eliminar si tiene novedades asociadas"
-					},
-					"response": []
-				}
-			],
-			"description": "Gestión de direcciones normalizadas con sistema dual (numeración municipal y Mz/Lote)"
-		}
-	],
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": "http://localhost:3000",
-			"type": "string"
-		},
-		{
-			"key": "authToken",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "tipoViaId",
-			"value": "1",
-			"type": "string"
-		},
-		{
-			"key": "calleId",
-			"value": "1",
-			"type": "string"
-		},
-		{
-			"key": "cuadranteId",
-			"value": "1",
-			"type": "string"
-		},
-		{
-			"key": "callesCuadrantesId",
-			"value": "1",
-			"type": "string"
-		},
-		{
-			"key": "direccionId",
-			"value": "1",
-			"type": "string"
-		}
-	]
+  "info": {
+    "_postman_id": "calles-direcciones-module-v2",
+    "name": "CitySecure - Módulo Calles y Direcciones v2.2.2",
+    "description": "Colección completa para probar todos los endpoints del módulo de Calles y Direcciones.\n\n**Características:**\n- 40+ endpoints organizados por recurso\n- Variables de entorno configurables\n- Tests automáticos en cada request\n- Ejemplos de datos de prueba\n- Sistema dual de direccionamiento\n\n**Autor:** Claude AI\n**Fecha:** 2025-12-23\n**Versión:** 2.2.2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Guardar token automáticamente",
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.token) {",
+                  "        pm.environment.set('authToken', jsonData.token);",
+                  "        console.log('✅ Token guardado:', jsonData.token.substring(0, 20) + '...');",
+                  "    }",
+                  "}",
+                  "",
+                  "// Test de respuesta",
+                  "pm.test('Login exitoso', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Token recibido', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.token).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Autenticación para obtener JWT token.\n\n**Credenciales por defecto:**\n- Username: admin\n- Password: Admin123!\n\n**Nota:** El token se guarda automáticamente en la variable de entorno `authToken`"
+          },
+          "response": []
+        }
+      ],
+      "description": "Autenticación y gestión de tokens"
+    },
+    {
+      "name": "1. Tipos de Vía",
+      "item": [
+        {
+          "name": "Listar Tipos de Vía Activos (Público)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respuesta es array', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tipos-via/activos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos-via", "activos"]
+            },
+            "description": "**Endpoint público** - No requiere autenticación.\nUtilizado para poblar selects en formularios."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Todos los Tipos de Vía",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene paginación', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.pagination).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tipos-via?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos-via"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "avenida",
+                  "disabled": true
+                },
+                {
+                  "key": "estado",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Tipo de Vía por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene datos del tipo de vía', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('codigo');",
+                  "    pm.expect(jsonData.data).to.have.property('nombre');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tipos-via/{{tipoViaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos-via", "{{tipoViaId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Tipo de Vía",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.environment.set('tipoViaId', jsonData.data.id);",
+                  "    console.log('✅ Tipo de vía creado con ID:', jsonData.data.id);",
+                  "}",
+                  "",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"AV\",\n  \"nombre\": \"Avenida\",\n  \"abreviatura\": \"Av.\",\n  \"descripcion\": \"Vía urbana principal de gran amplitud\",\n  \"orden\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tipos-via",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos-via"]
+            },
+            "description": "**Requiere rol:** supervisor o super_admin"
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Tipo de Vía",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Avenida Principal\",\n  \"descripcion\": \"Vía urbana principal con alta afluencia vehicular\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tipos-via/{{tipoViaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos-via", "{{tipoViaId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar Tipo de Vía",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tipos-via/{{tipoViaId}}/activar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos-via", "{{tipoViaId}}", "activar"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Desactivar Tipo de Vía",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tipos-via/{{tipoViaId}}/desactivar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos-via", "{{tipoViaId}}", "desactivar"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Tipo de Vía",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tipos-via/{{tipoViaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos-via", "{{tipoViaId}}"]
+            },
+            "description": "**Requiere rol:** super_admin"
+          },
+          "response": []
+        }
+      ],
+      "description": "Gestión del catálogo de tipos de vía (Av, Jr, Ca, Pj, etc.)"
+    },
+    {
+      "name": "2. Calles",
+      "item": [
+        {
+          "name": "Listar Calles Activas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respuesta es array', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles/activas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles", "activas"]
+            },
+            "description": "Calles activas para usar en selects/combos"
+          },
+          "response": []
+        },
+        {
+          "name": "Autocomplete de Calles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles/autocomplete?q=ejerc&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles", "autocomplete"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "ejerc",
+                  "description": "Mínimo 2 caracteres"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Búsqueda rápida de calles (mínimo 2 caracteres)"
+          },
+          "response": []
+        },
+        {
+          "name": "Calles por Urbanización",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles/urbanizacion/Villa El Salvador",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles", "urbanizacion", "Villa El Salvador"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Todas las Calles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "search",
+                  "value": "ejercito",
+                  "disabled": true
+                },
+                {
+                  "key": "tipo_via_id",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "es_principal",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Calle por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Incluye tipo de vía', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('tipoVia');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles/{{calleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles", "{{calleId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cuadrantes de una Calle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles/{{calleId}}/cuadrantes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles", "{{calleId}}", "cuadrantes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Direcciones de una Calle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles/{{calleId}}/direcciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles", "{{calleId}}", "direcciones"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Calle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.environment.set('calleId', jsonData.data.id);",
+                  "    console.log('✅ Calle creada con ID:', jsonData.data.id);",
+                  "}",
+                  "",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo_via_id\": 1,\n  \"nombre_via\": \"Ejército\",\n  \"longitud_metros\": 3500,\n  \"ancho_metros\": 20,\n  \"tipo_pavimento\": \"ASFALTO\",\n  \"sentido_via\": \"DOBLE_VIA\",\n  \"carriles\": 4,\n  \"es_principal\": 1,\n  \"categoria_via\": \"ARTERIAL\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles"]
+            },
+            "description": "**Requiere rol:** operador, supervisor o super_admin"
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Calle",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"longitud_metros\": 3600,\n  \"observaciones\": \"Calle principal del distrito\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles/{{calleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles", "{{calleId}}"]
+            },
+            "description": "**Requiere rol:** supervisor o super_admin"
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Calle",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles/{{calleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles", "{{calleId}}"]
+            },
+            "description": "**Requiere rol:** super_admin\n\n**Validación:** No se puede eliminar si tiene direcciones activas"
+          },
+          "response": []
+        }
+      ],
+      "description": "Gestión del maestro de calles del distrito"
+    },
+    {
+      "name": "3. Calles-Cuadrantes",
+      "item": [
+        {
+          "name": "Listar Relaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles-cuadrantes?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles-cuadrantes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "calle_id",
+                  "value": "5",
+                  "disabled": true
+                },
+                {
+                  "key": "cuadrante_id",
+                  "value": "12",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Relaciones por Calle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles-cuadrantes/calle/{{calleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles-cuadrantes", "calle", "{{calleId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Relaciones por Cuadrante",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles-cuadrantes/cuadrante/{{cuadranteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "calles-cuadrantes",
+                "cuadrante",
+                "{{cuadranteId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Cuadrante (Auto-asignación)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.cuadrante_id) {",
+                  "        pm.environment.set('cuadranteId', jsonData.data.cuadrante_id);",
+                  "        console.log('✅ Cuadrante encontrado:', jsonData.data.cuadrante_id);",
+                  "        console.log('   Sector:', jsonData.data.sector_id);",
+                  "    }",
+                  "}",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna cuadrante_id', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('cuadrante_id');",
+                  "    pm.expect(jsonData.data).to.have.property('sector_id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calle_id\": 1,\n  \"numero\": 450\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles-cuadrantes/buscar-cuadrante",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles-cuadrantes", "buscar-cuadrante"]
+            },
+            "description": "**Endpoint crítico** usado por direcciones para auto-asignar cuadrante y sector.\n\nRetorna:\n- cuadrante_id\n- sector_id\n- Información del cuadrante"
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Relación Calle-Cuadrante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.environment.set('callesCuadrantesId', jsonData.data.id);",
+                  "    console.log('✅ Relación creada con ID:', jsonData.data.id);",
+                  "}",
+                  "",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calle_id\": 1,\n  \"cuadrante_id\": 1,\n  \"numero_inicio\": 100,\n  \"numero_fin\": 299,\n  \"lado\": \"AMBOS\",\n  \"manzana\": \"A1\",\n  \"prioridad\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles-cuadrantes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles-cuadrantes"]
+            },
+            "description": "**Requiere rol:** operador, supervisor o super_admin\n\n**Validaciones:**\n- numero_fin >= numero_inicio\n- No solapamiento de rangos\n- Relación calle+cuadrante única"
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Relación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.test('Manzana en mayúsculas', () => {",
+                  "        pm.expect(jsonData.data).to.have.property('manzana');",
+                  "        pm.expect(jsonData.data.manzana).to.equal(jsonData.data.manzana.toUpperCase());",
+                  "    });",
+                  "}",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero_inicio\": 100,\n  \"numero_fin\": 399,\n  \"manzana\": \"A1\",\n  \"observaciones\": \"Rango ampliado\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles-cuadrantes/{{callesCuadrantesId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles-cuadrantes", "{{callesCuadrantesId}}"]
+            },
+            "description": "**Requiere rol:** supervisor o super_admin"
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Relación",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/calles-cuadrantes/{{callesCuadrantesId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calles-cuadrantes", "{{callesCuadrantesId}}"]
+            },
+            "description": "**Requiere rol:** super_admin"
+          },
+          "response": []
+        }
+      ],
+      "description": "Gestión de relaciones entre calles y cuadrantes con rangos de numeración"
+    },
+    {
+      "name": "4. Direcciones",
+      "item": [
+        {
+          "name": "Listar Direcciones Activas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/direcciones/activas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "direcciones", "activas"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Búsqueda Avanzada",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/direcciones/search?calle=ejercito&numero=450",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "direcciones", "search"],
+              "query": [
+                {
+                  "key": "calle",
+                  "value": "ejercito"
+                },
+                {
+                  "key": "numero",
+                  "value": "450"
+                },
+                {
+                  "key": "urbanizacion",
+                  "value": "Villa",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Direcciones Más Usadas (Stats)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/direcciones/stats/mas-usadas?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "direcciones", "stats", "mas-usadas"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "**Requiere rol:** supervisor o super_admin\n\nRetorna hot spots de incidentes"
+          },
+          "response": []
+        },
+        {
+          "name": "Validar Dirección (sin guardar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna cuadrante y sector', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('cuadrante_id');",
+                  "    pm.expect(jsonData.data).to.have.property('sector_id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calle_id\": 1,\n  \"numero_municipal\": \"450\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/direcciones/validar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "direcciones", "validar"]
+            },
+            "description": "Valida dirección sin guardar.\nRetorna cuadrante_id y sector_id auto-asignados."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Todas las Direcciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/direcciones?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "direcciones"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "search",
+                  "value": "450",
+                  "disabled": true
+                },
+                {
+                  "key": "calle_id",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "geocodificada",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Dirección por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/direcciones/{{direccionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "direcciones", "{{direccionId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Dirección (Numeración Municipal)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.environment.set('direccionId', jsonData.data.id);",
+                  "    console.log('✅ Dirección creada con ID:', jsonData.data.id);",
+                  "    console.log('   Cuadrante auto-asignado:', jsonData.data.cuadrante_id);",
+                  "    console.log('   Sector auto-asignado:', jsonData.data.sector_id);",
+                  "}",
+                  "",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Tiene cuadrante y sector asignados', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('cuadrante_id');",
+                  "    pm.expect(jsonData.data).to.have.property('sector_id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calle_id\": 1,\n  \"numero_municipal\": \"450\",\n  \"tipo_complemento\": \"DEPTO\",\n  \"numero_complemento\": \"201\",\n  \"referencia\": \"Frente al parque\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/direcciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "direcciones"]
+            },
+            "description": "**Sistema de numeración municipal**\n\nAuto-asigna:\n- cuadrante_id\n- sector_id\n\n**Requiere rol:** operador, supervisor o super_admin"
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Dirección (Mz/Lote)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    console.log('✅ Dirección Mz/Lote creada con ID:', jsonData.data.id);",
+                  "}",
+                  "",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calle_id\": 1,\n  \"manzana\": \"M\",\n  \"lote\": \"15\",\n  \"urbanizacion\": \"AAHH Los Laureles\",\n  \"referencia\": \"Cerca del parque\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/direcciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "direcciones"]
+            },
+            "description": "**Sistema Mz/Lote** (típico de AAHH)\n\nCuadrante y sector deben asignarse manualmente o en la relación calles_cuadrantes sin rango numérico."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Dirección (Sistema Dual)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calle_id\": 1,\n  \"numero_municipal\": \"250\",\n  \"manzana\": \"M\",\n  \"lote\": \"08\",\n  \"urbanizacion\": \"Urb. San Martín\",\n  \"tipo_complemento\": \"DEPTO\",\n  \"numero_complemento\": \"201\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/direcciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "direcciones"]
+            },
+            "description": "**Sistema dual:** Tiene AMBOS sistemas de numeración"
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Dirección",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"referencia\": \"Esquina con Av. Principal\",\n  \"verificada\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/direcciones/{{direccionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "direcciones", "{{direccionId}}"]
+            },
+            "description": "**Requiere rol:** supervisor o super_admin\n\nSi se actualiza calle_id o numero_municipal, recalcula cuadrante y sector automáticamente."
+          },
+          "response": []
+        },
+        {
+          "name": "Geocodificar Dirección",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Dirección geocodificada', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.geocodificada).to.equal(1);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitud\": -12.04637800,\n  \"longitud\": -77.03066400,\n  \"fuente\": \"Google Maps\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/direcciones/{{direccionId}}/geocodificar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "direcciones", "{{direccionId}}", "geocodificar"]
+            },
+            "description": "Actualiza SOLO coordenadas GPS.\n\n**Requiere rol:** operador, supervisor o super_admin\n\n**Validación:** Coordenadas en rango válido"
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Dirección",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/direcciones/{{direccionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "direcciones", "{{direccionId}}"]
+            },
+            "description": "**Requiere rol:** super_admin\n\n**Validación:** No se puede eliminar si tiene novedades asociadas"
+          },
+          "response": []
+        }
+      ],
+      "description": "Gestión de direcciones normalizadas con sistema dual (numeración municipal y Mz/Lote)"
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoViaId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "calleId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "cuadranteId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "callesCuadrantesId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "direccionId",
+      "value": "1",
+      "type": "string"
+    }
+  ]
 }
