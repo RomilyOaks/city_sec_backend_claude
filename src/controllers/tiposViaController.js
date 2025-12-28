@@ -120,9 +120,6 @@ const tiposViaController = {
         where.estado = parseInt(estado);
       }
 
-      console.log("🔍 [TipoVia] Query params:", { page, limit, search, estado });
-      console.log("🔍 [TipoVia] Where clause:", JSON.stringify(where, null, 2));
-
       // Consultar BD
       // IMPORTANTE: paranoid: false para incluir registros soft-deleted cuando no se filtra por estado
       const { count, rows } = await TipoVia.findAndCountAll({
@@ -137,9 +134,6 @@ const tiposViaController = {
         distinct: true,
         paranoid: false, // Incluir registros soft-deleted (deleted_at no null)
       });
-
-      console.log("✅ [TipoVia] Resultados encontrados:", count);
-      console.log("✅ [TipoVia] Rows:", rows.length);
 
       return res.status(200).json({
         success: true,
@@ -156,9 +150,6 @@ const tiposViaController = {
       });
     } catch (error) {
       console.error("❌ Error al listar tipos de vía:", error);
-      console.error("Stack trace:", error.stack);
-      console.error("Error name:", error.name);
-      console.error("Error message:", error.message);
       return res
         .status(500)
         .json(formatErrorResponse("Error al listar tipos de vía", error));
@@ -196,10 +187,6 @@ const tiposViaController = {
       return res.status(200).json(response);
     } catch (error) {
       console.error("❌ Error al listar tipos de vía activos:", error);
-      console.error("Stack trace:", error.stack);
-      console.error("Error name:", error.name);
-      console.error("Error message:", error.message);
-      if (error.sql) console.error("SQL:", error.sql);
       return res
         .status(500)
         .json(
