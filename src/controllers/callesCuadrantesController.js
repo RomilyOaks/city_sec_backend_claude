@@ -403,6 +403,23 @@ const callesCuadrantesController = {
 
       const manzanaTrim = manzana?.trim().toUpperCase() || null;
 
+      // Si NO hay rango de numeración, manzana es obligatoria
+      const hasRange =
+        numero_inicio !== undefined &&
+        numero_inicio !== null &&
+        numero_fin !== undefined &&
+        numero_fin !== null;
+
+      if (!hasRange && !manzanaTrim) {
+        return res
+          .status(400)
+          .json(
+            formatErrorResponse(
+              "Debe especificar 'manzana' cuando no se proporciona numero_inicio/numero_fin"
+            )
+          );
+      }
+
       // Evitar duplicados por (calle_id, manzana) si se especifica manzana
       if (manzanaTrim) {
         const existeManzana = await CallesCuadrantes.findOne({
@@ -593,10 +610,28 @@ const callesCuadrantesController = {
         observaciones,
       } = req.body;
 
-      // Manejar manzana y validar unicidad si se modifica
-      const nuevoManzana =
-        manzana !== undefined ? manzana?.trim() || null : relacion.manzana;
+      const userId = req.user?.id;
 
+      // Declarar la variable primero para evitar posibles errores de acceso
+      // antes de su inicialización (Temporal Dead Zone)
+      let relacion = null;
+
+      // Cargar relación actual (necesario para validar unicidad y reglas condicionales)
+      relacion = await CallesCuadrantes.findByPk(id);
+
+      if (!relacion) {
+        return res
+          .status(404)
+          .json(formatErrorResponse("Relación no encontrada"));
+      }
+
+      // Determinar nuevo valor de manzana (si fue enviado, sanitizar y poner MAYÚSCULAS)
+      const nuevoManzana =
+        manzana !== undefined
+          ? manzana?.trim().toUpperCase() || null
+          : relacion.manzana;
+
+      // Si se proporciona nueva manzana, validar unicidad por calle
       if (manzana !== undefined && nuevoManzana) {
         const existeManzana = await CallesCuadrantes.findOne({
           where: {
@@ -617,24 +652,29 @@ const callesCuadrantesController = {
         }
       }
 
-      // ... later in update payload use nuevoManzana
-
-      const userId = req.user?.id;
-
-      const relacion = await CallesCuadrantes.findByPk(id);
-
-      if (!relacion) {
-        return res
-          .status(404)
-          .json(formatErrorResponse("Relación no encontrada"));
-      }
-
-      // Validar rangos si se están actualizando
+      // Validar rangos resultantes (combinar valores enviados con los existentes)
       const nuevoInicio =
         numero_inicio !== undefined ? numero_inicio : relacion.numero_inicio;
       const nuevoFin =
         numero_fin !== undefined ? numero_fin : relacion.numero_fin;
       const nuevoLado = lado || relacion.lado;
+
+      // Si no hay rango resultante, manzana ES OBLIGATORIA
+      const hasRangeResult =
+        nuevoInicio !== undefined &&
+        nuevoInicio !== null &&
+        nuevoFin !== undefined &&
+        nuevoFin !== null;
+
+      if (!hasRangeResult && !nuevoManzana) {
+        return res
+          .status(400)
+          .json(
+            formatErrorResponse(
+              "La manzana es obligatoria cuando no existe numero_inicio/numero_fin"
+            )
+          );
+      }
 
       if ((nuevoInicio && !nuevoFin) || (!nuevoInicio && nuevoFin)) {
         return res
