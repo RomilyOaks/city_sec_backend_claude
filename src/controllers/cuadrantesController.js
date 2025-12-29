@@ -77,6 +77,11 @@ const cuadranteAuditInclude = [
  */
 export const getCuadrantes = async (req, res) => {
   try {
+    // DEBUG: Mostrar todos los query params recibidos
+    console.log(
+      "[DEBUG] Query params recibidos en /api/v1/cuadrantes:",
+      req.query
+    );
     // Extraer parámetros de query con valores por defecto
     const {
       page = 1,
@@ -86,6 +91,10 @@ export const getCuadrantes = async (req, res) => {
       search,
     } = req.query;
 
+    // DEBUG: Mostrar resultado de validación (si existe)
+    if (req.validationErrors) {
+      console.log("[DEBUG] Errores de validación:", req.validationErrors);
+    }
     // Calcular offset para paginación
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -512,7 +521,10 @@ export const updateCuadrante = async (req, res) => {
     }
 
     // Si se está actualizando el código, validar que sea único
-    if (cuadrante_code !== undefined && cuadrante_code !== cuadrante.cuadrante_code) {
+    if (
+      cuadrante_code !== undefined &&
+      cuadrante_code !== cuadrante.cuadrante_code
+    ) {
       const codigoNormalizado = cuadrante_code.toUpperCase().trim();
 
       // Verificar si ya existe otro cuadrante con ese código
@@ -534,7 +546,8 @@ export const updateCuadrante = async (req, res) => {
     // Preparar datos a actualizar
     const datosActualizar = { updated_by };
 
-    if (cuadrante_code !== undefined) datosActualizar.cuadrante_code = cuadrante_code.toUpperCase().trim();
+    if (cuadrante_code !== undefined)
+      datosActualizar.cuadrante_code = cuadrante_code.toUpperCase().trim();
     if (nombre !== undefined) datosActualizar.nombre = nombre;
     if (zona_code !== undefined) datosActualizar.zona_code = zona_code;
     if (latitud !== undefined) datosActualizar.latitud = latitud;
