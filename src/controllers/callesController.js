@@ -239,12 +239,30 @@ const callesController = {
         distinct: true, // Para contar correctamente con includes
       });
 
+      // Enriquecer la respuesta para incluir los campos ubigeo_code, distrito, provincia, departamento a nivel raíz de cada calle
+      const enrichedRows = rows.map((calle) => {
+        // Sequelize instance to plain object
+        const calleObj = calle.toJSON();
+        if (calleObj.ubigeo) {
+          calleObj.ubigeo_code = calleObj.ubigeo.ubigeo_code;
+          calleObj.distrito = calleObj.ubigeo.distrito;
+          calleObj.provincia = calleObj.ubigeo.provincia;
+          calleObj.departamento = calleObj.ubigeo.departamento;
+        } else {
+          calleObj.ubigeo_code = null;
+          calleObj.distrito = null;
+          calleObj.provincia = null;
+          calleObj.departamento = null;
+        }
+        return calleObj;
+      });
+
       const totalPages = Math.ceil(count / limit);
 
       return res.status(200).json(
         formatSuccessResponse(
           {
-            items: rows,
+            items: enrichedRows,
             pagination: {
               currentPage: page,
               totalPages,
@@ -287,6 +305,16 @@ const callesController = {
             as: "tipoVia",
             attributes: ["abreviatura", "nombre"],
           },
+          {
+            model: Ubigeo,
+            as: "ubigeo",
+            attributes: [
+              "ubigeo_code",
+              "departamento",
+              "provincia",
+              "distrito",
+            ],
+          },
         ],
         order: [
           ["es_principal", "DESC"],
@@ -301,10 +329,30 @@ const callesController = {
         ],
       });
 
+      // Enriquecer la respuesta para incluir los campos ubigeo_code, distrito, provincia, departamento a nivel raíz de cada calle
+      const enrichedCalles = calles.map((calle) => {
+        const calleObj = calle.toJSON();
+        if (calleObj.ubigeo) {
+          calleObj.ubigeo_code = calleObj.ubigeo.ubigeo_code;
+          calleObj.distrito = calleObj.ubigeo.distrito;
+          calleObj.provincia = calleObj.ubigeo.provincia;
+          calleObj.departamento = calleObj.ubigeo.departamento;
+        } else {
+          calleObj.ubigeo_code = null;
+          calleObj.distrito = null;
+          calleObj.provincia = null;
+          calleObj.departamento = null;
+        }
+        return calleObj;
+      });
+
       return res
         .status(200)
         .json(
-          formatSuccessResponse(calles, "Calles activas obtenidas exitosamente")
+          formatSuccessResponse(
+            enrichedCalles,
+            "Calles activas obtenidas exitosamente"
+          )
         );
     } catch (error) {
       console.error("Error al listar calles activas:", error);
