@@ -1,0 +1,29 @@
+{
+  "info": {
+    "name": "CitySec - Cuadrantes",
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "description": "Pruebas de obtención de cuadrantes por sector",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Obtener Cuadrantes por Sector",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://citysecbackendclaude-production.up.railway.app/api/v1/cuadrantes?page=1&limit=200&sector_id=2",
+          "protocol": "https",
+          "host": ["citysecbackendclaude-production", "up", "railway", "app"],
+          "path": ["api", "v1", "cuadrantes"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "200" },
+            { "key": "sector_id", "value": "2" }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

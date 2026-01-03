@@ -588,9 +588,14 @@ const createUnidad = async (req, res) => {
  */
 const buscarUbigeo = async (req, res) => {
   try {
-    const { search, departamento, provincia } = req.query;
+    const { search, departamento, provincia, ubigeo_code } = req.query;
 
     const whereClause = {};
+
+    // Si se proporciona ubigeo_code, buscar exactamente por ese código
+    if (ubigeo_code) {
+      whereClause.ubigeo_code = ubigeo_code;
+    }
 
     if (search) {
       whereClause[Op.or] = [
