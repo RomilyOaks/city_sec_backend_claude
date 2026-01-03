@@ -200,12 +200,38 @@ export const validateCreateCallesCuadrantes = [
     .customSanitizer((value) => (value ? value.trim() : null)),
 
   // ============================================
-  // VALIDACIÓN: manzana (OPCIONAL)
+  // VALIDACIÓN: manzana (CONDICIONAL)
+  // - Obligatoria si NO se especifica numero_inicio y numero_fin
+  // - Opcional cuando hay numeración municipal (numero_inicio+numero_fin)
   // ============================================
   body("manzana")
+    .custom((value, { req }) => {
+      const numeroInicio = req.body.numero_inicio;
+      const numeroFin = req.body.numero_fin;
+
+      const hasRange =
+        numeroInicio !== undefined &&
+        numeroInicio !== null &&
+        numeroFin !== undefined &&
+        numeroFin !== null;
+
+      // Si NO hay rango, manzana es obligatoria
+      if (!hasRange) {
+        if (!value || (typeof value === "string" && value.trim() === "")) {
+          throw new Error(
+            "La manzana es obligatoria cuando no se especifica numero_inicio/numero_fin"
+          );
+        }
+      }
+
+      // Si viene presente, debe ser texto
+      if (value !== undefined && value !== null && typeof value !== "string") {
+        throw new Error("La manzana debe ser texto");
+      }
+
+      return true;
+    })
     .optional({ nullable: true, checkFalsy: true })
-    .isString()
-    .withMessage("La manzana debe ser texto")
     .trim()
     .isLength({ max: 10 })
     .withMessage("La manzana no puede exceder 10 caracteres")

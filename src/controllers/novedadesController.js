@@ -62,6 +62,8 @@ export const getAllNovedades = async (req, res) => {
       search,
       page = 1,
       limit = 50,
+      sort,
+      order,
     } = req.query;
 
     const whereClause = {
@@ -104,6 +106,26 @@ export const getAllNovedades = async (req, res) => {
 
     const offset = (page - 1) * limit;
 
+    // Validar campo de ordenamiento (whitelist de seguridad)
+    const validSortFields = [
+      "novedad_code",
+      "fecha_hora_ocurrencia",
+      "fecha_hora_reporte",
+      "prioridad_actual",
+      "created_at",
+      "updated_at",
+      "id",
+    ];
+
+    // Determinar campo y orden de ordenamiento
+    const sortField = sort && validSortFields.includes(sort)
+      ? sort
+      : "fecha_hora_ocurrencia";
+
+    const sortOrder = order && ["ASC", "DESC"].includes(order.toUpperCase())
+      ? order.toUpperCase()
+      : "DESC";
+
     const { count, rows } = await Novedad.findAndCountAll({
       where: whereClause,
       include: [
@@ -143,10 +165,7 @@ export const getAllNovedades = async (req, res) => {
           attributes: ["id", "codigo_vehiculo", "placa"],
         },
       ],
-      order: [
-        ["prioridad_actual", "DESC"],
-        ["fecha_hora_ocurrencia", "DESC"],
-      ],
+      order: [[sortField, sortOrder]],
       limit: parseInt(limit),
       offset: parseInt(offset),
     });
