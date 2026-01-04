@@ -37,6 +37,7 @@ import {
   EstadoNovedad,
   Sector,
   Cuadrante,
+  Direccion,
   UnidadOficina,
   Vehiculo,
   PersonalSeguridad,
@@ -268,6 +269,7 @@ export const createNovedad = async (req, res) => {
       observaciones,
       sector_id,
       cuadrante_id,
+      direccion_id,
       num_personas_afectadas,
     } = req.body;
 
@@ -325,6 +327,7 @@ export const createNovedad = async (req, res) => {
         estado_novedad_id: estadoInicial.id,
         sector_id,
         cuadrante_id,
+        direccion_id,
         localizacion,
         referencia_ubicacion,
         latitud,
@@ -367,6 +370,7 @@ export const createNovedad = async (req, res) => {
         { model: EstadoNovedad, as: "novedadEstado" },
         { model: Sector, as: "novedadSector" },
         { model: Cuadrante, as: "novedadCuadrante" },
+        { model: Direccion, as: "direccion" },
       ],
     });
 

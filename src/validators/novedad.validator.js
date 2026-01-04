@@ -327,6 +327,12 @@ export const validarCuadranteId = () =>
     .isInt({ min: 1 })
     .withMessage("El cuadrante debe ser un ID válido");
 
+export const validarDireccionId = () =>
+  body("direccion_id")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("La dirección debe ser un ID válido");
+
 export const validarUnidadOficinaId = () =>
   body("unidad_oficina_id")
     .optional()
@@ -421,6 +427,7 @@ export const validateCreateNovedad = [
   validarObservaciones(),
   validarSectorId(),
   validarCuadranteId(),
+  validarDireccionId(),
   validarUbigeoCode(),
   validarPrioridad(),
   validarGravedad(),
