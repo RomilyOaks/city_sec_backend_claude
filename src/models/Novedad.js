@@ -57,6 +57,10 @@ const Novedad = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    direccion_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     localizacion: {
       type: DataTypes.TEXT,
       allowNull: true,
