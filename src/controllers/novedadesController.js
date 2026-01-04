@@ -118,14 +118,30 @@ export const getAllNovedades = async (req, res) => {
       "id",
     ];
 
-    // Determinar campo y orden de ordenamiento
-    const sortField = sort && validSortFields.includes(sort)
-      ? sort
-      : "fecha_hora_ocurrencia";
+    // Determinar campo(s) y orden de ordenamiento
+    // Soporta múltiples campos separados por comas: sort=prioridad_actual,novedad_code&order=asc,desc
+    let orderClause = [];
 
-    const sortOrder = order && ["ASC", "DESC"].includes(order.toUpperCase())
-      ? order.toUpperCase()
-      : "DESC";
+    if (sort) {
+      const sortFields = sort.split(',').map(f => f.trim());
+      const sortOrders = order ? order.split(',').map(o => o.trim().toUpperCase()) : [];
+
+      sortFields.forEach((field, index) => {
+        // Validar que el campo esté en la whitelist
+        if (validSortFields.includes(field)) {
+          // Usar el orden correspondiente o 'DESC' por defecto
+          const fieldOrder = sortOrders[index] && ["ASC", "DESC"].includes(sortOrders[index])
+            ? sortOrders[index]
+            : "DESC";
+          orderClause.push([field, fieldOrder]);
+        }
+      });
+    }
+
+    // Si no hay ordenamiento válido, usar por defecto fecha_hora_ocurrencia DESC
+    if (orderClause.length === 0) {
+      orderClause = [["fecha_hora_ocurrencia", "DESC"]];
+    }
 
     const { count, rows } = await Novedad.findAndCountAll({
       where: whereClause,
@@ -166,7 +182,7 @@ export const getAllNovedades = async (req, res) => {
           attributes: ["id", "codigo_vehiculo", "placa"],
         },
       ],
-      order: [[sortField, sortOrder]],
+      order: orderClause,
       limit: parseInt(limit),
       offset: parseInt(offset),
     });
