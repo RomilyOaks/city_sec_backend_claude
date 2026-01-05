@@ -98,6 +98,7 @@ import tipoNovedadRoutes from "./tipo-novedad.routes.js";
 import subtipoNovedadRoutes from "./subtipo-novedad.routes.js";
 import estadoNovedadRoutes from "./estado-novedad.routes.js";
 import ubigeoRoutes from "./ubigeo.routes.js"; // ⚠️ TEMPORAL - Comentado para debug
+import configRoutes from "./config.routes.js";
 
 // 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
@@ -392,6 +393,16 @@ router.use("/estados-novedad", estadoNovedadRoutes);
  * @access  Autenticado
  */
 router.use("/ubigeo", ubigeoRoutes);
+
+/**
+ * @route   /config
+ * @desc    Configuración del sistema y valores por defecto
+ * @access  Público
+ * @features
+ *   - Obtener ubigeo por defecto
+ *   - Obtener constantes del sistema
+ */
+router.use("/config", configRoutes);
 
 /**
  * @route   /auditoria
