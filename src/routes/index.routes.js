@@ -97,8 +97,9 @@ import cargosRoutes from "./cargos.routes.js";
 import tipoNovedadRoutes from "./tipo-novedad.routes.js";
 import subtipoNovedadRoutes from "./subtipo-novedad.routes.js";
 import estadoNovedadRoutes from "./estado-novedad.routes.js";
-import ubigeoRoutes from "./ubigeo.routes.js"; // ⚠️ TEMPORAL - Comentado para debug
+import ubigeoRoutes from "./ubigeo.routes.js";
 import configRoutes from "./config.routes.js";
+import unidadOficinaRoutes from "./unidad-oficina.routes.js";
 
 // 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
@@ -403,6 +404,29 @@ router.use("/ubigeo", ubigeoRoutes);
  *   - Obtener constantes del sistema
  */
 router.use("/config", configRoutes);
+
+/**
+ * @route   /unidades-oficina
+ * @desc    Gestión de unidades operativas (Serenazgo, PNP, Bomberos, etc.)
+ * @access  Autenticado (lectura), Admin/Supervisor (escritura)
+ * @version 1.0.0
+ * @features
+ *   - CRUD completo de unidades operativas
+ *   - Tipos: SERENAZGO, PNP, BOMBEROS, AMBULANCIA, DEFENSA_CIVIL, TRANSITO, OTROS
+ *   - Ubicación geográfica con coordenadas GPS
+ *   - Radio de cobertura en kilómetros
+ *   - Horarios de operación (24h o limitado)
+ *   - Soft delete con auditoría
+ *   - Filtros por tipo, estado, ubigeo
+ *   - Búsqueda por nombre o código
+ * @endpoints
+ *   - GET    /unidades-oficina           → Listar (filtros: tipo, estado, ubigeo, search)
+ *   - GET    /unidades-oficina/:id       → Obtener por ID
+ *   - POST   /unidades-oficina           → Crear (Admin/Supervisor)
+ *   - PUT    /unidades-oficina/:id       → Actualizar (Admin/Supervisor)
+ *   - DELETE /unidades-oficina/:id       → Eliminar (Admin)
+ */
+router.use("/unidades-oficina", unidadOficinaRoutes);
 
 /**
  * @route   /auditoria
@@ -974,6 +998,9 @@ router.use((req, res) => {
       "/tipos-novedad",
       "/subtipos-novedad",
       "/estados-novedad",
+      "/unidades-oficina",
+      "/ubigeo",
+      "/config",
       "/tipos-via", // ✨ ✅ v2.4.0
       "/calles", // ✨ ✅ v2.4.0
       "/calles-cuadrantes", // ✨ ✅ v2.4.0
