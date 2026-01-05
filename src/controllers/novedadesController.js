@@ -46,6 +46,7 @@ import {
 } from "../models/index.js";
 import sequelize from "../config/database.js";
 import { Op } from "sequelize";
+import { DEFAULT_UBIGEO_CODE } from "../config/constants.js";
 
 /**
  * Obtener todas las novedades con filtros
@@ -352,7 +353,7 @@ export const createNovedad = async (req, res) => {
         referencia_ubicacion,
         latitud,
         longitud,
-        ubigeo_code,
+        ubigeo_code: ubigeo_code || DEFAULT_UBIGEO_CODE,
         origen_llamada: origen_llamada || "TELEFONO_107",
         reportante_nombre,
         reportante_telefono,
