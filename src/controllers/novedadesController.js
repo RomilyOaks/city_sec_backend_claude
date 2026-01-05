@@ -703,7 +703,7 @@ export const getHistorialEstados = async (req, res) => {
           attributes: ["id", "username", "email"],
         },
       ],
-      order: [["fecha_cambio", "ASC"]],
+      order: [["fecha_cambio", "DESC"]],
     });
 
     res.status(200).json({
