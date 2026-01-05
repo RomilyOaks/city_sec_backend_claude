@@ -502,9 +502,9 @@ export const asignarRecursos = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { 
-      unidad_oficina_id, 
-      vehiculo_id, 
+    const {
+      unidad_oficina_id,
+      vehiculo_id,
       personal_cargo_id,
       personal_seguridad2_id,
       personal_seguridad3_id,
@@ -520,7 +520,8 @@ export const asignarRecursos = async (req, res) => {
       estado_novedad_id,
       requiere_seguimiento,
       fecha_proxima_revision,
-      perdidas_materiales_estimadas
+      perdidas_materiales_estimadas,
+      historial  // ✅ NUEVO: Objeto historial del frontend
     } = req.body;
 
     const novedad = await Novedad.findOne({
@@ -581,9 +582,26 @@ export const asignarRecursos = async (req, res) => {
 
     await novedad.update(datosActualizacion, { transaction });
 
-    // NOTA: No creamos manualmente el registro en historial_estado_novedades
-    // El trigger 'trg_novedades_incidentes_after_update' se encarga automáticamente
-    // de crear el registro cuando detecta cambio en estado_novedad_id
+    // Crear registro en historial manualmente con datos del frontend
+    // IMPORTANTE: Esto evita que el trigger cree un registro sin observaciones
+    // El frontend envía el objeto 'historial' con todos los campos necesarios
+    if (historial && datosActualizacion.estado_novedad_id && datosActualizacion.estado_novedad_id !== estadoAnteriorId) {
+      await HistorialEstadoNovedad.create(
+        {
+          novedad_id: id,
+          estado_anterior_id: historial.estado_anterior_id || estadoAnteriorId,
+          estado_nuevo_id: historial.estado_nuevo_id || datosActualizacion.estado_novedad_id,
+          usuario_id: req.user.id,
+          tiempo_en_estado_min: historial.tiempo_en_estado_min || null,
+          observaciones: historial.observaciones || observaciones,
+          fecha_cambio: historial.fecha_cambio ? new Date(historial.fecha_cambio) : new Date(),
+          metadata: historial.metadata || null,
+          created_by: historial.created_by || req.user.id,
+          updated_by: historial.updated_by || req.user.id,
+        },
+        { transaction }
+      );
+    }
 
     await transaction.commit();
 
