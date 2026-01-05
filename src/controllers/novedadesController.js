@@ -378,6 +378,8 @@ export const createNovedad = async (req, res) => {
         estado_nuevo_id: estadoInicial.id,
         usuario_id: req.user.id,
         observaciones: "Novedad creada",
+        created_by: req.user.id,
+        updated_by: req.user.id,
       },
       { transaction }
     );

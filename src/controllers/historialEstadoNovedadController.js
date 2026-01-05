@@ -127,6 +127,8 @@ export const createHistorialEstado = async (req, res) => {
       tiempo_en_estado_min: tiempoEstado,
       observaciones,
       fecha_cambio: new Date(),
+      created_by: req.user.id,
+      updated_by: req.user.id,
     });
 
     // Actualizar estado de la novedad

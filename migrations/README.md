@@ -27,6 +27,31 @@ mysql -u tu_usuario -p nombre_base_datos < migrations/add_direccion_id_to_noveda
 
 ## Migraciones Disponibles
 
+### `fix_trigger_historial_auditoria.sql`
+
+**Fecha:** 2026-01-04
+
+**Descripción:** Actualiza el trigger `trg_novedades_incidentes_after_update` para incluir los campos de auditoría `created_by` y `updated_by` al crear registros en `historial_estado_novedades`.
+
+**Cambios:**
+- Elimina y recrea el trigger existente
+- Agrega `created_by` y `updated_by` en el INSERT del trigger
+- Usa el mismo `usuario_historial` calculado para todos los campos de auditoría
+
+**Seguridad:**
+- Usa `DROP TRIGGER IF EXISTS` para evitar errores
+- Verifica la creación del trigger consultando `information_schema.TRIGGERS`
+- Es seguro ejecutarlo múltiples veces
+
+**Impacto:**
+- ✅ No destructivo - solo actualiza el trigger
+- ✅ No afecta datos existentes
+- ✅ Los registros futuros incluirán los campos de auditoría
+
+**Orden de ejecución:** Ejecutar ANTES de usar la aplicación para que todos los registros nuevos tengan auditoría completa.
+
+---
+
 ### `add_direccion_id_to_novedades.sql`
 
 **Fecha:** 2026-01-04
