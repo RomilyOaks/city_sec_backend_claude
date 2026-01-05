@@ -262,6 +262,10 @@ export const getNovedadById = async (req, res) => {
 /**
  * Crear una nueva novedad
  * POST /api/v1/novedades
+ *
+ * NOTA IMPORTANTE: Este endpoint crea manualmente el primer registro en historial
+ * porque el trigger solo se ejecuta en UPDATE, no en INSERT.
+ * Todos los cambios posteriores de estado son manejados automáticamente por el trigger.
  */
 export const createNovedad = async (req, res) => {
   const transaction = await sequelize.transaction();
@@ -366,6 +370,7 @@ export const createNovedad = async (req, res) => {
       { transaction }
     );
 
+    // Crear registro inicial en historial (trigger no se ejecuta en INSERT)
     await HistorialEstadoNovedad.create(
       {
         novedad_id: nuevaNovedad.id,
@@ -433,26 +438,9 @@ export const updateNovedad = async (req, res) => {
       });
     }
 
-    if (
-      datosActualizacion.estado_novedad_id &&
-      datosActualizacion.estado_novedad_id !== novedad.estado_novedad_id
-    ) {
-      const tiempoEstado = Math.floor(
-        (Date.now() - new Date(novedad.updated_at)) / 60000
-      );
-
-      await HistorialEstadoNovedad.create(
-        {
-          novedad_id: id,
-          estado_anterior_id: novedad.estado_novedad_id,
-          estado_nuevo_id: datosActualizacion.estado_novedad_id,
-          usuario_id: req.user.id,
-          tiempo_en_estado_min: tiempoEstado,
-          observaciones: datosActualizacion.observaciones_cambio_estado,
-        },
-        { transaction }
-      );
-    }
+    // NOTA: No creamos manualmente el registro en historial_estado_novedades
+    // El trigger 'trg_novedades_incidentes_after_update' se encarga automáticamente
+    // de crear el registro cuando detecta cambio en estado_novedad_id
 
     if (datosActualizacion.fecha_llegada && !novedad.fecha_llegada) {
       const tiempoRespuesta = Math.floor(
@@ -591,23 +579,9 @@ export const asignarRecursos = async (req, res) => {
 
     await novedad.update(datosActualizacion, { transaction });
 
-    if (estadoDespacho && estadoDespacho.id !== estadoAnteriorId) {
-      const tiempoEstado = Math.floor(
-        (Date.now() - new Date(novedad.updated_at)) / 60000
-      );
-
-      await HistorialEstadoNovedad.create(
-        {
-          novedad_id: id,
-          estado_anterior_id: estadoAnteriorId,
-          estado_nuevo_id: estadoDespacho.id,
-          usuario_id: req.user.id,
-          tiempo_en_estado_min: tiempoEstado,
-          observaciones: "Recursos asignados y unidad despachada",
-        },
-        { transaction }
-      );
-    }
+    // NOTA: No creamos manualmente el registro en historial_estado_novedades
+    // El trigger 'trg_novedades_incidentes_after_update' se encarga automáticamente
+    // de crear el registro cuando detecta cambio en estado_novedad_id
 
     await transaction.commit();
 
