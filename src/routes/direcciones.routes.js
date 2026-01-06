@@ -200,6 +200,27 @@ router.get(
 );
 
 /**
+ * @route   GET /api/direcciones/:id/can-delete
+ * @desc    Verificar si una dirección puede ser eliminada (validación previa)
+ * @access  Todos los usuarios autenticados
+ * IMPORTANTE: Esta ruta debe ir ANTES de /:id para evitar conflictos
+ */
+router.get(
+  "/:id/can-delete",
+  requireAnyPermission(["calles.direcciones.delete", "calles.direcciones.read"]),
+  validateDireccionId,
+  (req, res, next) => {
+    // #swagger.tags = ['Direcciones']
+    // #swagger.summary = 'Verificar si dirección puede ser eliminada'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'Información de validación' }
+    // #swagger.responses[404] = { description: 'Dirección no encontrada' }
+    return direccionesController.canDelete(req, res, next);
+  }
+);
+
+/**
  * @route   GET /api/direcciones/:id
  * @desc    Obtener una dirección específica por ID con información completa
  * @access  Todos los usuarios autenticados
