@@ -26,12 +26,27 @@
  */
 
 -- ============================================================================
--- PASO 1: Agregar campo de backup (si no existe)
+-- PASO 1: Agregar campo de backup (verificar primero si no existe)
 -- ============================================================================
 
-ALTER TABLE direcciones
-ADD COLUMN IF NOT EXISTS direccion_code_legacy VARCHAR(50)
-COMMENT 'Backup del código anterior a la migración';
+-- Verificar si la columna ya existe
+SET @col_exists = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'direcciones'
+      AND COLUMN_NAME = 'direccion_code_legacy'
+);
+
+-- Agregar columna solo si no existe
+SET @sql = IF(@col_exists = 0,
+    'ALTER TABLE direcciones ADD COLUMN direccion_code_legacy VARCHAR(50) COMMENT ''Backup del código anterior a la migración''',
+    'SELECT ''La columna direccion_code_legacy ya existe'' AS mensaje'
+);
+
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ============================================================================
 -- PASO 2: Guardar códigos antiguos en el campo legacy
