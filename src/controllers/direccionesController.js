@@ -46,6 +46,7 @@ import Sector from "../models/Sector.js";
 import CallesCuadrantes from "../models/CallesCuadrantes.js";
 import Ubigeo from "../models/Ubigeo.js";
 import Usuario from "../models/Usuario.js";
+import Novedad from "../models/Novedad.js";
 import { Op } from "sequelize";
 
 /**
@@ -906,15 +907,21 @@ const direccionesController = {
           .json(formatErrorResponse("Dirección no encontrada"));
       }
 
-      // Verificar si tiene novedades activas (si el modelo existe)
-      // const totalNovedades = await Novedad.count({
-      //   where: { direccion_id: id, estado: 1 }
-      // });
-      // if (totalNovedades > 0) {
-      //   return res.status(400).json(
-      //     formatErrorResponse(`No se puede eliminar. Hay ${totalNovedades} novedad(es) asociada(s)`)
-      //   );
-      // }
+      // Verificar si tiene novedades asociadas
+      const totalNovedades = await Novedad.count({
+        where: {
+          direccion_id: id,
+          deleted_at: null, // Solo contar novedades no eliminadas
+        },
+      });
+
+      if (totalNovedades > 0) {
+        return res.status(400).json(
+          formatErrorResponse(
+            `No se puede eliminar. Hay ${totalNovedades} novedad(es) asociada(s)`
+          )
+        );
+      }
 
       // Soft delete: cambiar estado a 0, deleted_by y deleted_at
       await direccion.update({
@@ -1100,6 +1107,85 @@ const direccionesController = {
       return res
         .status(500)
         .json(formatErrorResponse("Error al obtener estadísticas", error));
+    }
+  },
+
+  /**
+   * @swagger
+   * /api/direcciones/{id}/can-delete:
+   *   get:
+   *     summary: Verificar si una dirección puede ser eliminada
+   *     tags: [Direcciones]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *     responses:
+   *       200:
+   *         description: Información sobre si puede ser eliminada
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     canDelete:
+   *                       type: boolean
+   *                     message:
+   *                       type: string
+   *                     count:
+   *                       type: integer
+   */
+  canDelete: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Verificar que la dirección existe
+      const direccion = await Direccion.findByPk(id);
+
+      if (!direccion) {
+        return res
+          .status(404)
+          .json(formatErrorResponse("Dirección no encontrada"));
+      }
+
+      // Contar novedades asociadas
+      const totalNovedades = await Novedad.count({
+        where: {
+          direccion_id: id,
+          deleted_at: null, // Solo contar novedades no eliminadas
+        },
+      });
+
+      // Determinar si puede ser eliminada
+      const canDelete = totalNovedades === 0;
+      const message = canDelete
+        ? "La dirección puede ser eliminada"
+        : `No se puede eliminar. Hay ${totalNovedades} novedad(es) asociada(s)`;
+
+      return res.status(200).json(
+        formatSuccessResponse({
+          canDelete,
+          message,
+          count: totalNovedades,
+        })
+      );
+    } catch (error) {
+      console.error("Error al verificar si dirección puede eliminarse:", error);
+      return res
+        .status(500)
+        .json(
+          formatErrorResponse(
+            "Error al verificar si la dirección puede eliminarse",
+            error
+          )
+        );
     }
   },
 };
