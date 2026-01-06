@@ -73,11 +73,51 @@ mysql -u tu_usuario -p nombre_base_datos < migrations/add_direccion_id_to_noveda
 - ✅ No afecta datos existentes
 - ✅ Compatible con versión anterior del código
 
+### `migrate_direccion_codes_to_sequential.sql`
+
+**Fecha:** 2026-01-06
+
+**Descripción:** Migra los códigos de direcciones del formato antiguo `DIR-TIMESTAMP-RANDOM` al nuevo formato secuencial `D-XXXXXX`.
+
+**Formato Anterior:** `DIR-20240105120000-123`
+**Formato Nuevo:** `D-000001`, `D-000002`, ..., `D-999999`
+
+**Cambios:**
+1. Agrega campo temporal `direccion_code_legacy` para backup
+2. Guarda códigos antiguos en el campo legacy
+3. Actualiza códigos a formato secuencial basado en `created_at`
+4. Incluye queries de verificación de integridad
+
+**Capacidad:** Hasta 999,999 direcciones
+
+**Seguridad:**
+- Incluye campo de backup para posible rollback
+- Queries de verificación de formato y duplicados
+- Script de rollback comentado
+
+**Impacto:**
+- ⚠️ **REQUIERE BACKUP COMPLETO** antes de ejecutar
+- ⚠️ Ejecutar en horario de bajo tráfico
+- ✅ Mantiene códigos antiguos en campo legacy
+- ✅ Soporta rollback si es necesario
+
+**Pasos Post-Migración:**
+1. Verificar que todos los códigos tienen formato `D-XXXXXX`
+2. Verificar que no hay duplicados
+3. Probar creación de nuevas direcciones
+4. Actualizar frontend para mostrar nuevos códigos
+5. (Opcional) Eliminar campo legacy después de validar
+
+**Orden de ejecución:** Ejecutar DESPUÉS de asegurar que el código backend ha sido actualizado para usar el nuevo formato.
+
+---
+
 ## Notas Importantes
 
 1. **Backup:** Siempre realiza un backup de la base de datos antes de ejecutar migraciones en producción
 2. **Orden:** Ejecuta las migraciones en orden cronológico según su fecha
 3. **Verificación:** Después de ejecutar una migración, verifica que los cambios se aplicaron correctamente
+4. **Horario:** Ejecuta migraciones importantes en horarios de bajo tráfico
 
 ## Verificar si una migración ya fue aplicada
 

@@ -170,14 +170,21 @@ const Direccion = sequelize.define(
     // IDENTIFICACIÓN DE LA DIRECCIÓN
     // ============================================================================
     direccion_code: {
-      type: DataTypes.STRING(30),
+      type: DataTypes.STRING(10),
       allowNull: false,
-      unique: true,
+      unique: {
+        msg: "El código de dirección ya existe",
+      },
       field: "direccion_code",
-      comment: "Código único de dirección (DIR-YYYYMMDDHHMMSS-NNN)",
+      comment: "Código único de dirección (D-XXXXXX)",
       validate: {
-        notEmpty: true,
-        len: [5, 30],
+        notEmpty: {
+          msg: "El código de dirección es requerido",
+        },
+        is: {
+          args: /^D-\d{6}$/,
+          msg: "El código debe tener el formato D-XXXXXX (6 dígitos)",
+        },
       },
     },
 
@@ -563,15 +570,58 @@ Direccion.prototype.tieneCoordenadas = function () {
 /**
  * Genera un código único de dirección
  */
-Direccion.generarCodigo = function () {
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[-:T.Z]/g, "")
-    .slice(0, 14);
-  const random = Math.floor(Math.random() * 1000)
-    .toString()
-    .padStart(3, "0");
-  return `DIR-${timestamp}-${random}`;
+/**
+ * Genera el siguiente código de dirección secuencial
+ * Formato: D-XXXXXX (6 dígitos con padding de ceros)
+ *
+ * @returns {Promise<string>} Código en formato D-XXXXXX
+ * @example
+ * - Primera dirección: D-000001
+ * - Dirección #123: D-000123
+ * - Dirección #999,999: D-999999
+ *
+ * Capacidad: Hasta 999,999 direcciones
+ */
+Direccion.generarCodigo = async function () {
+  const { Op } = await import("sequelize");
+
+  try {
+    // Buscar la última dirección creada (incluyendo eliminadas para evitar duplicados)
+    const ultimaDireccion = await Direccion.findOne({
+      where: {
+        direccion_code: {
+          [Op.like]: 'D-%'
+        }
+      },
+      order: [['direccion_code', 'DESC']],
+      paranoid: false // Incluir soft-deleted
+    });
+
+    let nuevoSecuencial = 1;
+
+    if (ultimaDireccion && ultimaDireccion.direccion_code) {
+      // Extraer el número del código: "D-000123" → "000123" → 123
+      const match = ultimaDireccion.direccion_code.match(/D-(\d+)$/);
+      if (match) {
+        nuevoSecuencial = parseInt(match[1], 10) + 1;
+      }
+    }
+
+    // Validar que no exceda la capacidad
+    if (nuevoSecuencial > 999999) {
+      throw new Error('Se ha alcanzado el límite máximo de direcciones (999,999)');
+    }
+
+    // Formatear con padding de 6 dígitos
+    const codigo = `D-${String(nuevoSecuencial).padStart(6, '0')}`;
+
+    console.log(`📋 Código de dirección generado: ${codigo}`);
+    return codigo;
+
+  } catch (error) {
+    console.error('❌ Error al generar código de dirección:', error);
+    throw error;
+  }
 };
 
 // ============================================================================

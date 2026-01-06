@@ -594,8 +594,8 @@ const direccionesController = {
           );
       }
 
-      // Generar código único
-      const direccion_code = Direccion.generarCodigo();
+      // Generar código único secuencial
+      const direccion_code = await Direccion.generarCodigo();
 
       // Determinar cuadrante y sector
       // PRIORIDAD: valores del frontend > auto-asignación
