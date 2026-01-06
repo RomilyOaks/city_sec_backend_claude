@@ -52,19 +52,31 @@ DEALLOCATE PREPARE stmt;
 -- PASO 2: Guardar códigos antiguos en el campo legacy
 -- ============================================================================
 
+-- Desactivar temporalmente safe update mode
+SET SQL_SAFE_UPDATES = 0;
+
 UPDATE direcciones
 SET direccion_code_legacy = direccion_code
 WHERE direccion_code_legacy IS NULL;
 
+-- Reactivar safe update mode
+SET SQL_SAFE_UPDATES = 1;
+
 -- ============================================================================
 -- PASO 3: Actualizar códigos al formato secuencial
 -- ============================================================================
+
+-- Desactivar temporalmente safe update mode
+SET SQL_SAFE_UPDATES = 0;
 
 SET @contador := 0;
 
 UPDATE direcciones
 SET direccion_code = CONCAT('D-', LPAD((@contador := @contador + 1), 6, '0'))
 ORDER BY created_at ASC;
+
+-- Reactivar safe update mode
+SET SQL_SAFE_UPDATES = 1;
 
 -- ============================================================================
 -- PASO 4: Verificar la migración
