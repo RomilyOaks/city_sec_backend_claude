@@ -570,6 +570,8 @@ const direccionesController = {
         latitud,
         longitud,
         observaciones,
+        cuadrante_id: cuadranteIdFrontend, // ✅ Recibir del frontend
+        sector_id: sectorIdFrontend,       // ✅ Recibir del frontend
       } = req.body;
 
       const userId = req.user?.id;
@@ -594,11 +596,20 @@ const direccionesController = {
       // Generar código único
       const direccion_code = Direccion.generarCodigo();
 
-      // Auto-asignar cuadrante y sector
-      const { cuadrante_id, sector_id } = await autoAsignarCuadranteYSector(
-        calle_id,
-        numero_municipal
-      );
+      // Determinar cuadrante y sector
+      // PRIORIDAD: valores del frontend > auto-asignación
+      let cuadrante_id = cuadranteIdFrontend || null;
+      let sector_id = sectorIdFrontend || null;
+
+      // Solo auto-asignar si NO vienen del frontend
+      if (!cuadrante_id && !sector_id && numero_municipal) {
+        const autoAsignados = await autoAsignarCuadranteYSector(
+          calle_id,
+          numero_municipal
+        );
+        cuadrante_id = autoAsignados.cuadrante_id;
+        sector_id = autoAsignados.sector_id;
+      }
 
       // Determinar si está geocodificada
       const geocodificada = latitud && longitud ? 1 : 0;
@@ -787,11 +798,25 @@ const direccionesController = {
           .json(formatErrorResponse("Dirección no encontrada"));
       }
 
-      // Si se actualiza calle o número, recalcular cuadrante/sector
+      // Determinar cuadrante y sector
+      // PRIORIDAD: valores explícitos del frontend > auto-asignación > valores actuales
       let cuadrante_id = direccion.cuadrante_id;
       let sector_id = direccion.sector_id;
 
-      if (req.body.calle_id || req.body.numero_municipal) {
+      // Si el frontend envía explícitamente cuadrante_id o sector_id, usarlos
+      if (req.body.cuadrante_id !== undefined) {
+        cuadrante_id = req.body.cuadrante_id;
+      }
+      if (req.body.sector_id !== undefined) {
+        sector_id = req.body.sector_id;
+      }
+
+      // Solo auto-asignar si se cambia calle o número Y no se envían explícitamente
+      if (
+        (req.body.calle_id || req.body.numero_municipal) &&
+        req.body.cuadrante_id === undefined &&
+        req.body.sector_id === undefined
+      ) {
         const nuevaCalleId = req.body.calle_id || direccion.calle_id;
         const nuevoNumero =
           req.body.numero_municipal || direccion.numero_municipal;
