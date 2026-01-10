@@ -36,7 +36,13 @@
  * @date 2025-12-14
  */
 
-import { Sector, Cuadrante, Ubigeo, Usuario, PersonalSeguridad } from "../models/index.js";
+import {
+  Sector,
+  Cuadrante,
+  Ubigeo,
+  Usuario,
+  PersonalSeguridad,
+} from "../models/index.js";
 import { Op } from "sequelize";
 
 // ==================== CONSTANTES ====================
@@ -48,7 +54,20 @@ const sectorAuditInclude = [
   {
     model: PersonalSeguridad,
     as: "supervisor",
-    attributes: ["id", "nombres", "apellidos", "email", "telefono", "cargo_id"],
+    attributes: [
+      "id",
+      "doc_tipo",
+      "doc_numero",
+      "nombres",
+      "apellido_paterno",
+      "apellido_materno",
+      "sexo",
+      "fecha_nacimiento",
+      "direccion",
+      "ubigeo_code",
+      "cargo_id",
+      "nacionalidad",
+    ],
     required: false,
   },
   {
