@@ -92,6 +92,17 @@ const Sector = sequelize.define(
       comment: "Código de zona asociada al sector",
     },
 
+    // Supervisor del sector
+    supervisor_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "personal_seguridad",
+        key: "id",
+      },
+      comment: "ID del supervisor responsable del sector",
+    },
+
     // Polígono del sector en formato GeoJSON
     poligono_json: {
       type: DataTypes.JSON,

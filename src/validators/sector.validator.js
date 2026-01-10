@@ -34,9 +34,7 @@ import { body, param, query, validationResult } from "express-validator";
 
 import {
   LIMITES_TEXTO,
-  LIMITES_NUMERICOS,
   PATTERNS,
-  COLORES_MAPA_ARRAY,
 } from "../constants/validations.js";
 
 // ==========================================
@@ -159,6 +157,15 @@ export const validarZonaCode = () =>
     .withMessage("Formato de código de zona inválido");
 
 /**
+ * Validar supervisor_id
+ */
+export const validarSupervisorId = () =>
+  body("supervisor_id")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("El ID del supervisor debe ser un número positivo");
+
+/**
  * Validar polígono GeoJSON
  */
 export const validarPoligonoJSON = () =>
@@ -198,12 +205,7 @@ export const validarColorMapa = () =>
     .optional()
     .trim()
     .matches(PATTERNS.COLOR_HEX)
-    .withMessage("El color debe estar en formato hexadecimal (#RRGGBB)")
-    .custom((value) => {
-      // Verificar que sea un color predefinido o personalizado válido
-      const normalizado = value.toUpperCase();
-      return true; // Aceptar cualquier color hexadecimal válido
-    });
+    .withMessage("El color debe estar en formato hexadecimal (#RRGGBB)");
 
 /**
  * Validar estado (query param)
@@ -268,6 +270,7 @@ export const validateCreateSector = [
   validarDescripcion(),
   validarUbigeo(),
   validarZonaCode(),
+  validarSupervisorId(),
   validarPoligonoJSON(),
   validarColorMapa(),
   handleValidationErrors,
@@ -284,6 +287,7 @@ export const validateUpdateSector = [
   validarDescripcion(),
   validarUbigeo(),
   validarZonaCode(),
+  validarSupervisorId(),
   validarPoligonoJSON(),
   validarColorMapa(),
   handleValidationErrors,
