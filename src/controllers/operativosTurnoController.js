@@ -192,11 +192,16 @@ export const createTurno = async (req, res) => {
 
     // Detectar error de constraint única para turno duplicado
     if (error.name === "SequelizeUniqueConstraintError") {
-      // Verificar si es la constraint de turno duplicado
-      // error.fields es un objeto, no un array
-      const constraintName = error.parent?.constraint || error.original?.constraint;
+      // En Sequelize, el constraint puede estar en varios lugares
+      // Verificar si es la constraint de turno duplicado buscando en múltiples propiedades
+      const isDateTurnoSectorDuplicate =
+        error.fields?.uq_fecha_turno_sector || // El constraint está aquí
+        error.parent?.constraint === "uq_fecha_turno_sector" ||
+        error.original?.constraint === "uq_fecha_turno_sector" ||
+        (error.parent?.sqlMessage &&
+          error.parent.sqlMessage.includes("uq_fecha_turno_sector"));
 
-      if (constraintName === "uq_fecha_turno_sector") {
+      if (isDateTurnoSectorDuplicate) {
         return res.status(409).json({
           code: "DUPLICATE_TURNO",
           message:
