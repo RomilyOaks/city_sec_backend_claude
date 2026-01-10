@@ -43,7 +43,7 @@
  *   - ✅ Documentación JSDoc completa
  * -----------------------------------------------------------------------
  * v2.0.0 (2025-12-10):
- *   - ✅ Agregado modelo PersonalSeguridad
+ *   -npm run dev ✅ Agregado modelo PersonalSeguridad
  *   - ✅ Refactorización de asociaciones de auditoría
  *
  * v1.0.0 (2025-11-01):
@@ -185,6 +185,28 @@ import Taller from "./Taller.js";
  */
 import MantenimientoVehiculo from "./MantenimientoVehiculo.js";
 
+/**
+ * Modelo OperativosVehiculosCuadrantes
+ * Registro de vehículos asignados a cuadrantes en operativos
+ * @type {Model}
+ */
+import OperativosVehiculosCuadrantes from "./OperativosVehiculosCuadrantes.js";
+
+/**
+ * Modelo OperativosVehiculosNovedades
+ * Registro de novedades asociadas a vehículos en operativos
+ * @type {Model}
+ */
+import OperativosVehiculosNovedades from "./OperativosVehiculosNovedades.js";
+
+/**
+ * Modelo OperativosTurno
+ * Gestión de turnos para el personal de seguridad
+ * @type {Model}
+ */
+import OperativosTurno from "./OperativosTurno.js";
+import OperativosVehiculos from "./operativos-vehiculos.js";
+
 //=============================================
 // IMPORTAR MODELOS - NOVEDADES/INCIDENTES
 //=============================================
@@ -305,6 +327,24 @@ import Direccion from "./Direccion.js";
 console.log("📌 Configurando asociaciones de modelos...");
 
 //=============================================
+// ASOCIACIONES: OPERATIVOS
+//=============================================
+
+/**
+ * Relación: PersonalSeguridad -> OperativosTurno (One-to-Many)
+ * Un personal de seguridad puede tener muchos turnos.
+ */
+PersonalSeguridad.hasMany(OperativosTurno, {
+  foreignKey: "operador_id",
+  as: "turnos",
+});
+
+OperativosTurno.belongsTo(PersonalSeguridad, {
+  foreignKey: "operador_id",
+  as: "personal",
+});
+
+//=============================================
 // ASOCIACIONES: VEHÍCULOS
 //=============================================
 
@@ -388,6 +428,50 @@ UnidadOficina.hasMany(MantenimientoVehiculo, {
 MantenimientoVehiculo.belongsTo(UnidadOficina, {
   foreignKey: "unidad_oficina_id",
   as: "unidadOficina",
+});
+
+//=============================================
+// ASOCIACIONES: OPERATIVOS DE VEHÍCULOS
+//=============================================
+
+/**
+ * Relación: Cuadrante -> OperativosVehiculosCuadrantes (One-to-Many)
+ */
+Cuadrante.hasMany(OperativosVehiculosCuadrantes, {
+  foreignKey: "cuadrante_id",
+  as: "operativosVehiculos",
+});
+
+OperativosVehiculosCuadrantes.belongsTo(Cuadrante, {
+  foreignKey: "cuadrante_id",
+  as: "cuadrante",
+});
+
+/**
+ * Relación: OperativosVehiculos -> OperativosVehiculosCuadrantes (One-to-Many)
+ * NOTA: operativos_vehiculos_cuadrantes tiene operativo_vehiculo_id, NO vehiculo_id
+ */
+OperativosVehiculos.hasMany(OperativosVehiculosCuadrantes, {
+  foreignKey: "operativo_vehiculo_id",
+  as: "cuadrantes",
+});
+
+/**
+ * Relación: OperativosVehiculosCuadrantes -> OperativosVehiculosNovedades (One-to-Many)
+ * NOTA: La relación belongsTo se define en el método associate() del modelo OperativosVehiculosNovedades
+ */
+OperativosVehiculosCuadrantes.hasMany(OperativosVehiculosNovedades, {
+  foreignKey: "operativo_vehiculo_cuadrante_id",
+  as: "novedades",
+});
+
+/**
+ * Relación: Novedad -> OperativosVehiculosNovedades (One-to-Many)
+ * NOTA: La relación belongsTo se define en el método associate() del modelo OperativosVehiculosNovedades
+ */
+Novedad.hasMany(OperativosVehiculosNovedades, {
+  foreignKey: "novedad_id",
+  as: "operativosVehiculosNovedades",
 });
 
 //=============================================
@@ -1107,6 +1191,48 @@ MantenimientoVehiculo.belongsTo(Usuario, {
   as: "eliminadorMantenimientoVehiculo",
 });
 
+// OperativosVehiculosCuadrantes
+OperativosVehiculosCuadrantes.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorOperativosVehiculosCuadrantes",
+});
+OperativosVehiculosCuadrantes.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorOperativosVehiculosCuadrantes",
+});
+OperativosVehiculosCuadrantes.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorOperativosVehiculosCuadrantes",
+});
+
+// OperativosVehiculosNovedades
+OperativosVehiculosNovedades.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorOperativosVehiculosNovedades",
+});
+OperativosVehiculosNovedades.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorOperativosVehiculosNovedades",
+});
+OperativosVehiculosNovedades.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorOperativosVehiculosNovedades",
+});
+
+// OperativosTurno
+OperativosTurno.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorOperativosTurno",
+});
+OperativosTurno.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorOperativosTurno",
+});
+OperativosTurno.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorOperativosTurno",
+});
+
 // ============================================================================
 // DEFINIR RELACIONES DEL MÓDULO CALLES Y DIRECCIONES (✅ 2.2.1)
 // ============================================================================
@@ -1291,6 +1417,20 @@ Direccion.belongsTo(Usuario, {
   as: "eliminadorDireccion",
 });
 
+// OperativosTurno
+OperativosTurno.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "usuarioRegistro",
+});
+OperativosTurno.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorTurno",
+});
+OperativosTurno.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorTurno",
+});
+
 // --- RELACIONES DE AUDITORÍA DE OTROS MÓDULOS ---
 
 // Permiso (ahora con updated_by)
@@ -1339,10 +1479,16 @@ const models = {
   AbastecimientoCombustible,
   Taller,
   MantenimientoVehiculo,
+  OperativosVehiculosCuadrantes,
+  OperativosVehiculosNovedades,
   Sector,
   Cuadrante,
   UnidadOficina,
   PersonalSeguridad,
+  OperativosTurno,
+  OperativosVehiculos,
+  OperativosTurno,
+  OperativosVehiculos,
 
   // Novedades
   Novedad,
@@ -1411,6 +1557,8 @@ export {
   AbastecimientoCombustible,
   Taller,
   MantenimientoVehiculo,
+  OperativosVehiculosCuadrantes,
+  OperativosVehiculosNovedades,
   Sector,
   Cuadrante,
   UnidadOficina,

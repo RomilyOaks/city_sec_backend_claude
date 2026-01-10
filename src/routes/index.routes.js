@@ -90,6 +90,10 @@ import mantenimientosRoutes from "./mantenimientos.routes.js";
 import personalRoutes from "./personal.routes.js";
 import sectoresRoutes from "./sectores.routes.js";
 import cuadrantesRoutes from "./cuadrantes.routes.js";
+import operativosTurnoRoutes from "./operativos-turno.routes.js";
+import operativosVehiculosRoutes from "./operativos-vehiculos.routes.js";
+import operativosVehiculosCuadrantesRoutes from "./operativos-vehiculos-cuadrantes.routes.js";
+import operativosVehiculosNovedadesRoutes from "./operativos-vehiculos-novedades.routes.js";
 
 // 📚 Catálogos y Configuración
 import catalogosRoutes from "./catalogos.routes.js";
@@ -100,6 +104,7 @@ import estadoNovedadRoutes from "./estado-novedad.routes.js";
 import ubigeoRoutes from "./ubigeo.routes.js";
 import configRoutes from "./config.routes.js";
 import unidadOficinaRoutes from "./unidad-oficina.routes.js";
+import radioTetraRoutes from "./radio-tetra.routes.js";
 
 // 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
@@ -345,6 +350,25 @@ router.use("/sectores", sectoresRoutes);
 router.use("/cuadrantes", cuadrantesRoutes);
 
 /**
+ * @route   /operativos
+ * @desc    Módulo completo de operativos (turnos, vehículos, cuadrantes, novedades)
+ * @access  Supervisor, Admin
+ * IMPORTANTE: Las rutas más específicas deben ir ANTES que las generales
+ */
+// Rutas más específicas primero
+router.use(
+  "/operativos/:turnoId/vehiculos/:vehiculoId/cuadrantes/:cuadranteId/novedades",
+  operativosVehiculosNovedadesRoutes
+);
+router.use(
+  "/operativos/:turnoId/vehiculos/:vehiculoId/cuadrantes",
+  operativosVehiculosCuadrantesRoutes
+);
+router.use("/operativos/:turnoId/vehiculos", operativosVehiculosRoutes);
+// Ruta general al final
+router.use("/operativos", operativosTurnoRoutes);
+
+/**
  * @route   /catalogos
  * @desc    Catálogos generales del sistema
  * @access  Autenticado
@@ -427,6 +451,48 @@ router.use("/config", configRoutes);
  *   - DELETE /unidades-oficina/:id       → Eliminar (Admin)
  */
 router.use("/unidades-oficina", unidadOficinaRoutes);
+
+/**
+ * @route   /radios-tetra
+ * @desc    Gestión de radios TETRA de comunicaciones
+ * @access  Autenticado (lectura), Admin/Supervisor (escritura)
+ * @version 1.0.0
+ * @features
+ *   - CRUD completo de radios TETRA
+ *   - Asignación/desasignación a personal de seguridad
+ *   - Control de estado (activo/inactivo)
+ *   - Registro de fecha de fabricación
+ *   - Códigos únicos de identificación
+ *   - Soft delete con auditoría completa
+ *   - Filtros por estado, asignación, personal
+ *   - Búsqueda por código o descripción
+ *   - Listado de radios disponibles para dropdowns
+ * @permissions (4 básicos + 1 especial)
+ *   - radios_tetra.read      → Todos autenticados
+ *   - radios_tetra.create    → Supervisor, Super Admin
+ *   - radios_tetra.update    → Supervisor, Super Admin
+ *   - radios_tetra.delete    → Super Admin
+ *   - radios_tetra.asignar   → Supervisor, Super Admin (opcional)
+ * @endpoints (10)
+ *   - GET    /radios-tetra                    → Listar con filtros y paginación
+ *   - GET    /radios-tetra/disponibles        → Radios sin asignar y activos
+ *   - GET    /radios-tetra/:id                → Obtener por ID
+ *   - POST   /radios-tetra                    → Crear nuevo
+ *   - PUT    /radios-tetra/:id                → Actualizar
+ *   - DELETE /radios-tetra/:id                → Eliminar (soft)
+ *   - PATCH  /radios-tetra/:id/asignar        → Asignar a personal
+ *   - PATCH  /radios-tetra/:id/desasignar     → Desasignar
+ *   - PATCH  /radios-tetra/:id/activar        → Activar radio
+ *   - PATCH  /radios-tetra/:id/desactivar     → Desactivar radio
+ * @examples
+ *   GET  /api/v1/radios-tetra?estado=true&asignado=false
+ *   GET  /api/v1/radios-tetra/disponibles
+ *   POST /api/v1/radios-tetra
+ *   Body: { "radio_tetra_code": "RT-001", "descripcion": "Motorola XTS" }
+ *   PATCH /api/v1/radios-tetra/5/asignar
+ *   Body: { "personal_seguridad_id": 12 }
+ */
+router.use("/radios-tetra", radioTetraRoutes);
 
 /**
  * @route   /auditoria
@@ -999,6 +1065,7 @@ router.use((req, res) => {
       "/subtipos-novedad",
       "/estados-novedad",
       "/unidades-oficina",
+      "/radios-tetra",
       "/ubigeo",
       "/config",
       "/tipos-via", // ✨ ✅ v2.4.0
@@ -1021,5 +1088,34 @@ router.use((req, res) => {
 //=============================================
 // EXPORTAR ROUTER
 //=============================================
+
+//=============================================
+// REGISTRO DE RUTAS CON PREFIJOS
+//=============================================
+
+router.use("/auth", authRoutes);
+router.use("/usuarios", usuariosRoutes);
+router.use("/roles", rolesRoutes);
+router.use("/permisos", permisosRoutes);
+router.use("/novedades", novedadesRoutes);
+router.use("/vehiculos", vehiculosRoutes);
+router.use("/mantenimientos", mantenimientosRoutes);
+router.use("/personal", personalRoutes);
+router.use("/sectores", sectoresRoutes);
+router.use("/cuadrantes", cuadrantesRoutes);
+router.use("/catalogos", catalogosRoutes);
+router.use("/cargos", cargosRoutes);
+router.use("/tipos-novedad", tipoNovedadRoutes);
+router.use("/subtipos-novedad", subtipoNovedadRoutes);
+router.use("/estados-novedad", estadoNovedadRoutes);
+router.use("/ubigeo", ubigeoRoutes);
+router.use("/config", configRoutes);
+router.use("/unidades-oficina", unidadOficinaRoutes);
+router.use("/radios-tetra", radioTetraRoutes);
+router.use("/auditoria-acciones", auditoriaAccionRoutes);
+router.use("/tipos-via", tiposViaRoutes);
+router.use("/calles", callesRoutes);
+router.use("/calles-cuadrantes", callesCuadrantesRoutes);
+router.use("/direcciones", direccionesRoutes);
 
 export default router;

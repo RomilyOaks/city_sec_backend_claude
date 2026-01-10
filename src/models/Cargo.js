@@ -119,6 +119,8 @@ const Cargo = sequelize.define(
      */
     categoria: {
       type: DataTypes.ENUM(
+        "Alcalde",
+        "Gerente",
         "Directivo",
         "Jefatura",
         "Supervisión",
@@ -133,6 +135,8 @@ const Cargo = sequelize.define(
         isIn: {
           args: [
             [
+              "Alcalde",
+              "Gerente",
               "Directivo",
               "Jefatura",
               "Supervisión",

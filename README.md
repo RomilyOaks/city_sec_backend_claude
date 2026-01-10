@@ -60,8 +60,50 @@ Backend API para gestión integral de seguridad ciudadana con autenticación JWT
 - **Sequelize ORM** - Modelado de datos
 - **MySQL** 8.0+ - Base de datos
 - **JWT** - Autenticación
+- **Passport.js** - for Google and Microsoft OAuth
 - **bcryptjs** - Hasheo de contraseñas
 - **CORS** - Control de acceso cross-origin
+- **Swagger** - API Documentation
+- **Jest** - Testing
+- **Supertest** - Testing
+- **Helmet** - Security
+- **Winston** - Logging
+- **Nodemon** - Development
+- **ESLint** - Linter
+
+## 📜 Scripts
+
+In the project directory, you can run:
+
+- `npm start`: Runs the app in production mode.
+- `npm run dev`: Runs the app in development mode with Nodemon.
+- `npm test`: Runs tests with Jest.
+- `npm run test:watch`: Runs tests in watch mode.
+- `npm run swagger`: Generates Swagger documentation.
+- `npm run lint`: Lints the codebase.
+- `npm run lint:fix`: Lints and fixes the codebase.
+- `npm run db:seed`: Runs all seeders.
+- `npm run seed:rbac`: Seeds RBAC data.
+- `npm run seed:estados`: Seeds `estados` data.
+- `npm run db:migrate`: Runs database migrations.
+- `npm run db:migrate:undo`: Reverts database migrations.
+
+## 📜 Scripts
+
+In the project directory, you can run:
+
+- `npm start`: Runs the app in production mode.
+- `npm run dev`: Runs the app in development mode with Nodemon.
+- `npm test`: Runs tests with Jest.
+- `npm run test:watch`: Runs tests in watch mode.
+- `npm run swagger`: Generates Swagger documentation.
+- `npm run lint`: Lints the codebase.
+- `npm run lint:fix`: Lints and fixes the codebase.
+- `npm run db:seed`: Runs all seeders.
+- `npm run seed:rbac`: Seeds RBAC data.
+- `npm run seed:estados`: Seeds `estados` data.
+- `npm run db:migrate`: Runs database migrations.
+- `npm run db:migrate:undo`: Reverts database migrations.
 
 ## 📁 Estructura del Proyecto
 
