@@ -189,6 +189,31 @@ export const createTurno = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error en createTurno:", error);
+
+    // Detectar error de duplicate entry (violación de constraint único)
+    if (
+      error.name === "SequelizeUniqueConstraintError" ||
+      error.parent?.code === "ER_DUP_ENTRY" ||
+      error.message?.includes("Duplicate entry") ||
+      error.message?.includes("uq_fecha_turno_sector")
+    ) {
+      // Extraer información del body para mensaje más descriptivo
+      const fechaFormateada = fecha || "la fecha especificada";
+      const turnoNombre = turno || "este turno";
+
+      return res.status(400).json({
+        success: false,
+        message: `Ya existe un turno ${turnoNombre.toUpperCase()} para el sector seleccionado en la fecha ${fechaFormateada}. No se pueden duplicar turnos en la misma fecha y sector.`,
+        error: "DUPLICATE_TURNO",
+        details: {
+          fecha,
+          turno,
+          sector_id,
+        },
+      });
+    }
+
+    // Otros errores genéricos
     res.status(500).json({
       success: false,
       message: "Error al crear el turno",
