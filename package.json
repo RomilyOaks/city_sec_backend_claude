@@ -13,9 +13,10 @@
     "tree-gen": "find src -path 'src/node_modules' -prune -o -name '.git' -prune -o -print | sed 's|^[^/]*/||g' | sed 's/[^/]*\\//|--/g;s/|--/|  /g' | sed 's/|/|/g'",
     "lint": "eslint src/**/*.js",
     "lint:fix": "eslint src/**/*.js --fix",
-    "db:seed": "node src/seeders/index.js",
-    "seed:rbac": "node src/seeders/seedRBAC.js",
-    "seed:estados": "node src/seeders/runSeedEstados.js",
+    "db:seed": "node src/seeders/runSeeders.js",
+    "db:seed:rbac": "node src/seeders/runSeeders.js rbac",
+    "db:seed:estados": "node src/seeders/runSeeders.js estados",
+    "db:seed:turnos": "node src/seeders/runSeeders.js turnos",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:undo": "sequelize-cli db:migrate:undo"
   },

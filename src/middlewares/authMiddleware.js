@@ -118,14 +118,6 @@ export const verificarToken = async (req, res, next) => {
       permisos: Array.from(todosLosPermisos),
     };
 
-    console.log("✅ Usuario autenticado:", {
-      id: req.user.id,
-      username: req.user.username,
-      roles: req.user.roles,
-      rolSlugs: req.user.rolSlugs, // 🔥 NUEVO LOG
-      total_permisos: req.user.permisos.length,
-    });
-
     next();
   } catch (error) {
     console.error("❌ Error en verificarToken:", error);
@@ -173,11 +165,6 @@ export const verificarRoles = (rolesPermitidos) => {
     const tieneRolPermitido = rolesUsuario.some((rolSlug) =>
       rolesPermitidos.includes(rolSlug)
     );
-
-    console.log("🔍 Verificación de roles:");
-    console.log("  - Roles permitidos:", rolesPermitidos);
-    console.log("  - Roles usuario (slugs):", rolesUsuario);
-    console.log("  - Tiene permiso:", tieneRolPermitido);
 
     if (!tieneRolPermitido) {
       return res.status(403).json({

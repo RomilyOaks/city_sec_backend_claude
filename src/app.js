@@ -283,8 +283,14 @@ app.use((req, res) => {
   });
 });
 
+// // ============================================
+// MIDDLEWARE 4: REGISTRO DE RUTAS ✨ NUEVO
 // ============================================
-// MIDDLEWARE DE MANEJO DE ERRORES GLOBAL
+
+app.use(`/api/${API_VERSION}`, indexRoutes);
+
+// ============================================
+// MIDDLEWARE 5: MANEJO DE ERRORES
 // ============================================
 
 app.use((err, req, res, next) => {

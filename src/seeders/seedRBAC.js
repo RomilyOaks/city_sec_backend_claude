@@ -787,6 +787,137 @@ async function seedRBAC() {
         descripcion: "Actualizar coordenadas GPS de direcciones",
         es_sistema: true,
       },
+
+      // ============================================
+      // MÓDULO: OPERATIVOS
+      // ============================================
+      {
+        modulo: "operativos",
+        recurso: "turnos",
+        accion: "create",
+        descripcion: "Permite registrar nuevos turnos para el personal.",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "turnos",
+        accion: "read",
+        descripcion: "Permite ver la lista de turnos y sus detalles.",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "turnos",
+        accion: "update",
+        descripcion: "Permite modificar la información de un turno existente.",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "turnos",
+        accion: "delete",
+        descripcion: "Permite eliminar un turno (soft delete).",
+        es_sistema: true,
+      },
+
+      // ============================================
+      // MÓDULO: OPERATIVOS - VEHÍCULOS
+      // ============================================
+      {
+        modulo: "operativos",
+        recurso: "vehiculos",
+        accion: "create",
+        descripcion: "Permite registrar nuevos vehículos operativos.",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "vehiculos",
+        accion: "read",
+        descripcion:
+          "Permite ver la lista de vehículos operativos y sus detalles.",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "vehiculos",
+        accion: "update",
+        descripcion:
+          "Permite modificar la información de un vehículo operativo.",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "vehiculos",
+        accion: "delete",
+        descripcion: "Permite eliminar un vehículo operativo (soft delete).",
+        es_sistema: true,
+      },
+
+      // ============================================
+      // MÓDULO: OPERATIVOS - VEHÍCULOS - CUADRANTES
+      // ============================================
+      {
+        modulo: "operativos",
+        recurso: "vehiculos_cuadrantes",
+        accion: "read",
+        descripcion: "Leer cuadrantes de vehículos operativos",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "vehiculos_cuadrantes",
+        accion: "create",
+        descripcion: "Crear cuadrantes de vehículos operativos",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "vehiculos_cuadrantes",
+        accion: "update",
+        descripcion: "Actualizar cuadrantes de vehículos operativos",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "vehiculos_cuadrantes",
+        accion: "delete",
+        descripcion: "Eliminar cuadrantes de vehículos operativos",
+        es_sistema: true,
+      },
+
+      // ============================================
+      // MÓDULO: OPERATIVOS - VEHÍCULOS - NOVEDADES
+      // ============================================
+      {
+        modulo: "operativos",
+        recurso: "vehiculos_novedades",
+        accion: "read",
+        descripcion: "Leer novedades de vehículos operativos en cuadrantes",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "vehiculos_novedades",
+        accion: "create",
+        descripcion: "Crear novedades de vehículos operativos en cuadrantes",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "vehiculos_novedades",
+        accion: "update",
+        descripcion:
+          "Actualizar novedades de vehículos operativos en cuadrantes",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "vehiculos_novedades",
+        accion: "delete",
+        descripcion: "Eliminar novedades de vehículos operativos en cuadrantes",
+        es_sistema: true,
+      },
     ];
 
     // Crear permisos uno por uno
@@ -839,18 +970,68 @@ async function seedRBAC() {
         transaction,
       });
 
-      // Crear nuevos permisos con auditoría (created_by = 1 para sistema/seeder)
+      // Crear nuevos permisos con auditoría (created_by = 13 para sistema/seeder)
       const rolPermisosData = todosLosPermisos.map((permiso) => ({
         rol_id: superAdminRole.id,
         permiso_id: permiso.id,
-        created_by: 1, // Usuario administrador del sistema (seeder)
-        updated_by: 1,
+        created_by: 13, // Usuario administrador del sistema (seeder)
+        updated_by: 13,
       }));
       await RolPermiso.bulkCreate(rolPermisosData, { transaction });
 
       console.log(
         `   ✓ ${todosLosPermisos.length} permisos asignados al rol Super Admin`
       );
+    }
+
+    // Asignar permisos de operativos a Administrador y Supervisor
+    const rolesParaOperativos = await Rol.findAll({
+      where: {
+        slug: { [sequelize.Op.in]: ["admin", "supervisor"] },
+      },
+      transaction,
+    });
+
+    if (rolesParaOperativos.length > 0) {
+      const permisosOperativos = await Permiso.findAll({
+        where: {
+          modulo: "operativos",
+          recurso: {
+            [sequelize.Op.in]: [
+              "turnos",
+              "vehiculos",
+              "vehiculos_cuadrantes",
+              "vehiculos_novedades",
+            ],
+          },
+          accion: { [sequelize.Op.in]: ["create", "read", "update", "delete"] },
+        },
+        transaction,
+      });
+
+      if (permisosOperativos.length > 0) {
+        const { RolPermiso } = await import("../models/index.js");
+        const asignaciones = [];
+        for (const rol of rolesParaOperativos) {
+          for (const permiso of permisosOperativos) {
+            asignaciones.push({
+              rol_id: rol.id,
+              permiso_id: permiso.id,
+              created_by: 13, // Sistema/seeder
+              updated_by: 13,
+            });
+          }
+        }
+
+        // Usar ignoreDuplicates para evitar errores si el seeder se corre de nuevo
+        await RolPermiso.bulkCreate(asignaciones, {
+          transaction,
+          ignoreDuplicates: true,
+        });
+        console.log(
+          `   ✓ ${permisosOperativos.length} permisos de 'operativos' (turnos, vehiculos) asignados a ${rolesParaOperativos.length} roles (Admin, Supervisor)`
+        );
+      }
     }
 
     // ========================================
@@ -889,8 +1070,8 @@ async function seedRBAC() {
           {
             usuario_id: adminUser.id,
             rol_id: superAdminRole.id,
-            created_by: 1, // Sistema/seeder
-            updated_by: 1,
+            created_by: 13, // Sistema/seeder
+            updated_by: 13,
             fecha_asignacion: new Date(),
           },
           { transaction }
