@@ -190,34 +190,48 @@ export const createTurno = async (req, res) => {
   } catch (error) {
     console.error("❌ Error en createTurno:", error);
 
-    // Detectar error de duplicate entry (violación de constraint único)
-    if (
-      error.name === "SequelizeUniqueConstraintError" ||
-      error.parent?.code === "ER_DUP_ENTRY" ||
-      error.message?.includes("Duplicate entry") ||
-      error.message?.includes("uq_fecha_turno_sector")
-    ) {
-      // Extraer información del body para mensaje más descriptivo
-      const fechaFormateada = fecha || "la fecha especificada";
-      const turnoNombre = turno || "este turno";
+    // Detectar error de constraint única para turno duplicado
+    if (error.name === "SequelizeUniqueConstraintError") {
+      // Verificar si es la constraint de turno duplicado
+      if (
+        error.fields &&
+        (error.fields.includes("fecha") ||
+          error.fields.includes("turno") ||
+          error.fields.includes("sector_id") ||
+          error.parent?.constraint === "uq_fecha_turno_sector")
+      ) {
+        return res.status(409).json({
+          code: "DUPLICATE_TURNO",
+          message:
+            "Ya existe un turno operativo para esta fecha, sector y turno",
+          success: false,
+          details: {
+            fecha: req.body.fecha,
+            turno: req.body.turno,
+            sector_id: req.body.sector_id,
+          },
+        });
+      }
+    }
 
+    // Errores de validación de Sequelize
+    if (error.name === "SequelizeValidationError") {
       return res.status(400).json({
+        code: "VALIDATION_ERROR",
+        message: "Error de validación",
         success: false,
-        message: `Ya existe un turno ${turnoNombre.toUpperCase()} para el sector seleccionado en la fecha ${fechaFormateada}. No se pueden duplicar turnos en la misma fecha y sector.`,
-        error: "DUPLICATE_TURNO",
-        details: {
-          fecha,
-          turno,
-          sector_id,
-        },
+        errors: error.errors.map((e) => ({
+          field: e.path,
+          message: e.message,
+        })),
       });
     }
 
-    // Otros errores genéricos
-    res.status(500).json({
+    // Error genérico
+    return res.status(500).json({
+      code: "INTERNAL_ERROR",
+      message: "Error interno del servidor",
       success: false,
-      message: "Error al crear el turno",
-      error: error.message,
     });
   }
 };
