@@ -699,6 +699,20 @@ Sector.belongsTo(Ubigeo, {
 });
 
 /**
+ * Relación: Sector -> PersonalSeguridad (Many-to-One)
+ * Un sector pertenece a un supervisor
+ */
+Sector.belongsTo(PersonalSeguridad, {
+  foreignKey: "supervisor_id",
+  as: "supervisor",
+});
+
+PersonalSeguridad.hasMany(Sector, {
+  foreignKey: "supervisor_id",
+  as: "sectoresSupervisa",
+});
+
+/**
  * Relación: Ubigeo -> UnidadOficina (One-to-Many)
  */
 Ubigeo.hasMany(UnidadOficina, {

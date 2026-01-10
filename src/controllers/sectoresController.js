@@ -36,7 +36,7 @@
  * @date 2025-12-14
  */
 
-import { Sector, Cuadrante, Ubigeo, Usuario } from "../models/index.js";
+import { Sector, Cuadrante, Ubigeo, Usuario, PersonalSeguridad } from "../models/index.js";
 import { Op } from "sequelize";
 
 // ==================== CONSTANTES ====================
@@ -45,6 +45,12 @@ import { Op } from "sequelize";
  * Include para auditoría de Sectores
  */
 const sectorAuditInclude = [
+  {
+    model: PersonalSeguridad,
+    as: "supervisor",
+    attributes: ["id", "nombres", "apellidos", "email", "telefono", "cargo_id"],
+    required: false,
+  },
   {
     model: Usuario,
     as: "creadorSector",

@@ -12,7 +12,8 @@
       "Bash(node:*)",
       "Bash(curl:*)",
       "Bash(echo:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(git push:*)"
     ]
   }
 }
