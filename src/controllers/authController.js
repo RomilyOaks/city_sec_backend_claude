@@ -616,6 +616,7 @@ export const login = async (req, res) => {
           id: usuario.id,
           username: usuario.username,
           email: usuario.email,
+          personal_seguridad_id: usuario.personal_seguridad_id,
           nombres: usuario.nombres,
           apellidos: usuario.apellidos,
           foto_perfil: usuario.foto_perfil,
