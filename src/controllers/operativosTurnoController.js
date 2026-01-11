@@ -293,40 +293,114 @@ export const updateTurno = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      personal_id,
+      operador_id,
+      supervisor_id,
+      sector_id,
+      turno,
+      fecha,
       fecha_hora_inicio,
       fecha_hora_fin,
       estado,
-      novedades,
+      observaciones,
     } = req.body;
 
-    const turno = await OperativosTurno.findOne({
+    const turnoRecord = await OperativosTurno.findOne({
       where: { id, deleted_at: null },
     });
 
-    if (!turno) {
+    if (!turnoRecord) {
       return res.status(404).json({
         success: false,
         message: "Turno no encontrado",
       });
     }
 
-    await turno.update({
-      personal_id,
-      fecha_hora_inicio,
-      fecha_hora_fin,
-      estado,
-      novedades,
+    // Construir objeto de actualización solo con campos enviados
+    const updateData = {
       updated_by: req.user.id,
+    };
+
+    if (operador_id !== undefined) updateData.operador_id = operador_id;
+    if (supervisor_id !== undefined) updateData.supervisor_id = supervisor_id;
+    if (sector_id !== undefined) updateData.sector_id = sector_id;
+    if (turno !== undefined) updateData.turno = turno;
+    if (fecha !== undefined) updateData.fecha = fecha;
+    if (fecha_hora_inicio !== undefined)
+      updateData.fecha_hora_inicio = fecha_hora_inicio;
+    if (fecha_hora_fin !== undefined)
+      updateData.fecha_hora_fin = fecha_hora_fin;
+    if (estado !== undefined) updateData.estado = estado;
+    if (observaciones !== undefined) updateData.observaciones = observaciones;
+
+    await turnoRecord.update(updateData);
+
+    // Recargar con las relaciones
+    await turnoRecord.reload({
+      include: [
+        {
+          model: PersonalSeguridad,
+          as: "operador",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "supervisor",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        },
+        {
+          model: Sector,
+          as: "sector",
+          attributes: ["id", "nombre", "sector_code"],
+        },
+      ],
     });
 
     res.status(200).json({
       success: true,
       message: "Turno actualizado exitosamente",
-      data: turno,
+      data: turnoRecord,
     });
   } catch (error) {
     console.error("❌ Error en updateTurno:", error);
+
+    // Detectar error de constraint única para turno duplicado
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const isDateTurnoSectorDuplicate =
+        error.fields?.uq_fecha_turno_sector ||
+        error.parent?.constraint === "uq_fecha_turno_sector" ||
+        error.original?.constraint === "uq_fecha_turno_sector" ||
+        (error.parent?.sqlMessage &&
+          error.parent.sqlMessage.includes("uq_fecha_turno_sector"));
+
+      if (isDateTurnoSectorDuplicate) {
+        return res.status(409).json({
+          code: "DUPLICATE_TURNO",
+          message:
+            "Ya existe un turno operativo para esta fecha, sector y turno",
+          success: false,
+          details: {
+            fecha: req.body.fecha,
+            turno: req.body.turno,
+            sector_id: req.body.sector_id,
+          },
+        });
+      }
+    }
+
+    // Errores de validación de Sequelize
+    if (error.name === "SequelizeValidationError") {
+      return res.status(400).json({
+        code: "VALIDATION_ERROR",
+        message: "Error de validación",
+        success: false,
+        errors: error.errors.map((e) => ({
+          field: e.path,
+          message: e.message,
+        })),
+      });
+    }
+
+    // Error genérico
     res.status(500).json({
       success: false,
       message: "Error al actualizar el turno",
