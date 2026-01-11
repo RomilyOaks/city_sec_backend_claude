@@ -51,6 +51,7 @@ export const getAllTurnos = async (req, res) => {
 
     const whereClause = {
       deleted_at: null,
+      estado_registro: 1,
     };
 
     // Búsqueda por texto (operador o supervisor)
@@ -163,6 +164,7 @@ export const getTurnoById = async (req, res) => {
       where: {
         id,
         deleted_at: null,
+        estado_registro: 1,
       },
       include: [
         {
@@ -305,7 +307,7 @@ export const updateTurno = async (req, res) => {
     } = req.body;
 
     const turnoRecord = await OperativosTurno.findOne({
-      where: { id, deleted_at: null },
+      where: { id, deleted_at: null, estado_registro: 1 },
     });
 
     if (!turnoRecord) {
@@ -418,7 +420,7 @@ export const deleteTurno = async (req, res) => {
     const { id } = req.params;
 
     const turno = await OperativosTurno.findOne({
-      where: { id, deleted_at: null },
+      where: { id, deleted_at: null, estado_registro: 1 },
     });
 
     if (!turno) {
