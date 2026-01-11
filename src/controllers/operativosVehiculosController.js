@@ -237,17 +237,22 @@ export const createVehiculoInTurno = async (req, res) => {
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
       // Detectar el tipo de constraint violado
-      const constraintName = error.parent?.constraint || error.fields;
+      const constraintName = error.parent?.constraint;
+      const fields = error.fields || {};
 
       // Mensajes específicos según el constraint
-      if (constraintName === "uq_turno_conductor" || error.fields?.conductor_id) {
+      if (constraintName === "uq_turno_conductor" || fields.conductor_id) {
         return res.status(400).json({
           success: false,
           message: "Este conductor ya está asignado a otro vehículo en este turno",
         });
       }
 
-      if (constraintName === "no_turno_vehiculo" || constraintName?.includes("turno_vehiculo") || error.fields?.vehiculo_id) {
+      if (
+        constraintName === "no_turno_vehiculo" ||
+        (typeof constraintName === "string" && constraintName.includes("turno_vehiculo")) ||
+        fields.vehiculo_id
+      ) {
         return res.status(400).json({
           success: false,
           message: "Este vehículo ya está asignado a este turno operativo",
@@ -325,16 +330,21 @@ export const updateVehiculoInTurno = async (req, res) => {
 
     // Constraints de unicidad
     if (error.name === "SequelizeUniqueConstraintError") {
-      const constraintName = error.parent?.constraint || error.fields;
+      const constraintName = error.parent?.constraint;
+      const fields = error.fields || {};
 
-      if (constraintName === "uq_turno_conductor" || error.fields?.conductor_id) {
+      if (constraintName === "uq_turno_conductor" || fields.conductor_id) {
         return res.status(400).json({
           success: false,
           message: "Este conductor ya está asignado a otro vehículo en este turno",
         });
       }
 
-      if (constraintName === "no_turno_vehiculo" || constraintName?.includes("turno_vehiculo") || error.fields?.vehiculo_id) {
+      if (
+        constraintName === "no_turno_vehiculo" ||
+        (typeof constraintName === "string" && constraintName.includes("turno_vehiculo")) ||
+        fields.vehiculo_id
+      ) {
         return res.status(400).json({
           success: false,
           message: "Este vehículo ya está asignado a este turno operativo",
