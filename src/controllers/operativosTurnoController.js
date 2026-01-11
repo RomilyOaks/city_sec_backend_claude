@@ -110,7 +110,7 @@ export const getAllTurnos = async (req, res) => {
       {
         model: Sector,
         as: "sector",
-        attributes: ["id", "nombre", "codigo"],
+        attributes: ["id", "nombre", "sector_code"],
         required: false,
       },
       {
