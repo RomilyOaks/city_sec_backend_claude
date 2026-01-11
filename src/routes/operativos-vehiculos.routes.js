@@ -19,6 +19,7 @@
 
 import { Router } from "express";
 import {
+  getAllVehiculos,
   getAllVehiculosByTurno,
   createVehiculoInTurno,
   updateVehiculoInTurno,

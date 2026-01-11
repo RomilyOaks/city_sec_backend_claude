@@ -92,6 +92,7 @@ import sectoresRoutes from "./sectores.routes.js";
 import cuadrantesRoutes from "./cuadrantes.routes.js";
 import operativosTurnoRoutes from "./operativos-turno.routes.js";
 import operativosVehiculosRoutes from "./operativos-vehiculos.routes.js";
+import operativosVehiculosGeneralRoutes from "./operativos-vehiculos-general.routes.js";
 import operativosVehiculosCuadrantesRoutes from "./operativos-vehiculos-cuadrantes.routes.js";
 import operativosVehiculosNovedadesRoutes from "./operativos-vehiculos-novedades.routes.js";
 
@@ -355,6 +356,9 @@ router.use("/cuadrantes", cuadrantesRoutes);
  * @access  Supervisor, Admin
  * IMPORTANTE: Las rutas más específicas deben ir ANTES que las generales
  */
+// Ruta general de vehículos operativos (sin turnoId)
+router.use("/operativos-vehiculos", operativosVehiculosGeneralRoutes);
+
 // Rutas más específicas primero
 router.use(
   "/operativos/:turnoId/vehiculos/:vehiculoId/cuadrantes/:cuadranteId/novedades",
@@ -371,6 +375,13 @@ router.use("/operativos", operativosTurnoRoutes);
 /**
  * @route   /catalogos
  * @desc    Catálogos generales del sistema
+ *  - Tipos de Novedad
+ *  - Subtipos de Novedad
+ *  - Estados de Novedad
+ *  - Tipos de Vehículo
+ *  - Cargos del Personal
+ *  - Unidades de Oficina
+ *  - UBIGEO
  * @access  Autenticado
  */
 router.use("/catalogos", catalogosRoutes);
