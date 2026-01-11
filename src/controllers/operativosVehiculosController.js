@@ -236,12 +236,44 @@ export const createVehiculoInTurno = async (req, res) => {
     });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
+      // Detectar el tipo de constraint violado
+      const constraintName = error.parent?.constraint || error.fields;
+
+      // Mensajes específicos según el constraint
+      if (constraintName === "uq_turno_conductor" || error.fields?.conductor_id) {
+        return res.status(400).json({
+          success: false,
+          message: "Este conductor ya está asignado a otro vehículo en este turno",
+        });
+      }
+
+      if (constraintName === "no_turno_vehiculo" || constraintName?.includes("turno_vehiculo") || error.fields?.vehiculo_id) {
+        return res.status(400).json({
+          success: false,
+          message: "Este vehículo ya está asignado a este turno operativo",
+        });
+      }
+
+      // Error genérico de unicidad
+      return res.status(400).json({
+        success: false,
+        message: "Ya existe un registro con estos datos en el turno operativo",
+        detalles: error.errors.map((e) => e.message),
+      });
+    }
+
+    // Errores de validación general
+    if (error.name === "SequelizeValidationError") {
       return res.status(400).json({
         success: false,
         message: "Error de validación",
-        error: error.errors.map((e) => e.message),
+        errores: error.errors.map((e) => ({
+          campo: e.path,
+          mensaje: e.message,
+        })),
       });
     }
+
     res.status(500).json({
       success: false,
       message: "Error al asignar el vehículo",
@@ -279,17 +311,54 @@ export const updateVehiculoInTurno = async (req, res) => {
       data: vehiculoAsignado,
     });
   } catch (error) {
+    // Constraint de kilometraje
     if (
       error.name === "SequelizeDatabaseError" &&
-      error.parent.code === "ER_CHECK_CONSTRAINT_VIOLATED" &&
-      error.parent.sqlMessage.includes("chk_kilometraje_vehiculo")
+      error.parent?.code === "ER_CHECK_CONSTRAINT_VIOLATED" &&
+      error.parent?.sqlMessage?.includes("chk_kilometraje_vehiculo")
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Error de validación: El kilometraje final no puede ser menor que el kilometraje inicial.",
+        message: "El kilometraje final no puede ser menor que el kilometraje inicial",
       });
     }
+
+    // Constraints de unicidad
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const constraintName = error.parent?.constraint || error.fields;
+
+      if (constraintName === "uq_turno_conductor" || error.fields?.conductor_id) {
+        return res.status(400).json({
+          success: false,
+          message: "Este conductor ya está asignado a otro vehículo en este turno",
+        });
+      }
+
+      if (constraintName === "no_turno_vehiculo" || constraintName?.includes("turno_vehiculo") || error.fields?.vehiculo_id) {
+        return res.status(400).json({
+          success: false,
+          message: "Este vehículo ya está asignado a este turno operativo",
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: "Ya existe un registro con estos datos en el turno operativo",
+      });
+    }
+
+    // Errores de validación general
+    if (error.name === "SequelizeValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: "Error de validación",
+        errores: error.errors.map((e) => ({
+          campo: e.path,
+          mensaje: e.message,
+        })),
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Error al actualizar la asignación",
