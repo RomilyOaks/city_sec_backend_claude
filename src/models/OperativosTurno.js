@@ -55,6 +55,12 @@ const OperativosTurno = sequelize.define(
       allowNull: false,
       defaultValue: "ACTIVO",
     },
+    estado_registro: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+      comment: "1 = Activo, 0 = Eliminado",
+    },
     observaciones: {
       type: DataTypes.STRING(500),
       allowNull: true,
@@ -112,6 +118,7 @@ const OperativosTurno = sequelize.define(
           turno.deleted_by = options.userId;
         }
         turno.estado = "ANULADO";
+        turno.estado_registro = 0; // Marcar como eliminado
       },
     },
   }
