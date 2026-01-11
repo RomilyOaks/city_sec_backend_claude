@@ -332,7 +332,7 @@ console.log("📌 Configurando asociaciones de modelos...");
 
 /**
  * Relación: PersonalSeguridad -> OperativosTurno (One-to-Many)
- * Un personal de seguridad puede tener muchos turnos.
+ * Un personal de seguridad puede tener muchos turnos como operador.
  */
 PersonalSeguridad.hasMany(OperativosTurno, {
   foreignKey: "operador_id",
@@ -341,7 +341,35 @@ PersonalSeguridad.hasMany(OperativosTurno, {
 
 OperativosTurno.belongsTo(PersonalSeguridad, {
   foreignKey: "operador_id",
-  as: "personal",
+  as: "operador",
+});
+
+/**
+ * Relación: PersonalSeguridad -> OperativosTurno (One-to-Many)
+ * Un personal de seguridad puede supervisar muchos turnos.
+ */
+PersonalSeguridad.hasMany(OperativosTurno, {
+  foreignKey: "supervisor_id",
+  as: "turnosSupervisa",
+});
+
+OperativosTurno.belongsTo(PersonalSeguridad, {
+  foreignKey: "supervisor_id",
+  as: "supervisor",
+});
+
+/**
+ * Relación: Sector -> OperativosTurno (One-to-Many)
+ * Un sector puede tener muchos turnos operativos.
+ */
+Sector.hasMany(OperativosTurno, {
+  foreignKey: "sector_id",
+  as: "turnos",
+});
+
+OperativosTurno.belongsTo(Sector, {
+  foreignKey: "sector_id",
+  as: "sector",
 });
 
 //=============================================
