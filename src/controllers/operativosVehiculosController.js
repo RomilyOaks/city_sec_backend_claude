@@ -244,7 +244,7 @@ export const createVehiculoInTurno = async (req, res) => {
       if (constraintName === "uq_turno_conductor" || fields.conductor_id) {
         return res.status(400).json({
           success: false,
-          message: "Este conductor ya está asignado a otro vehículo en este turno",
+          message: "Conductor ya fue asignado a otro vehículo en el mismo sector, turno y fecha de los Operativos",
         });
       }
 
@@ -255,7 +255,7 @@ export const createVehiculoInTurno = async (req, res) => {
       ) {
         return res.status(400).json({
           success: false,
-          message: "Este vehículo ya está asignado a este turno operativo",
+          message: "Vehículo ya ha sido asignado en el mismo sector, turno y fecha de los Operativos",
         });
       }
 
@@ -336,7 +336,7 @@ export const updateVehiculoInTurno = async (req, res) => {
       if (constraintName === "uq_turno_conductor" || fields.conductor_id) {
         return res.status(400).json({
           success: false,
-          message: "Este conductor ya está asignado a otro vehículo en este turno",
+          message: "Conductor ya fue asignado a otro vehículo en el mismo sector, turno y fecha de los Operativos",
         });
       }
 
@@ -347,7 +347,7 @@ export const updateVehiculoInTurno = async (req, res) => {
       ) {
         return res.status(400).json({
           success: false,
-          message: "Este vehículo ya está asignado a este turno operativo",
+          message: "Vehículo ya ha sido asignado en el mismo sector, turno y fecha de los Operativos",
         });
       }
 
