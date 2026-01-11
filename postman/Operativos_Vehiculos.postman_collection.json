@@ -1,0 +1,965 @@
+{
+	"info": {
+		"_postman_id": "operativos-vehiculos-001",
+		"name": "Operativos - Vehículos",
+		"description": "Colección completa para probar el módulo de vehículos operativos.\n\n**Variables de entorno requeridas:**\n- `RemoteBase_Url`: URL base del servidor (ej: http://localhost:3000)\n- `apiVersion`: Versión de la API (ej: v1)\n- `authToken`: Token JWT de autenticación\n\n**Permisos requeridos:**\n- operativos.vehiculos.read\n- operativos.vehiculos.create\n- operativos.vehiculos.update\n- operativos.vehiculos.delete\n\n**Módulos incluidos:**\n1. Vehículos Operativos (General)\n2. Vehículos por Turno\n3. Cuadrantes de Vehículos\n4. Novedades de Cuadrantes",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "city-sec-backend"
+	},
+	"item": [
+		{
+			"name": "1. Vehículos Operativos (General)",
+			"item": [
+				{
+					"name": "Listar Todos los Vehículos Operativos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData).to.have.property('pagination');",
+									"});",
+									"",
+									"pm.test(\"Data is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"if (pm.response.json().data.length > 0) {",
+									"    pm.test(\"Vehicle has required fields\", function () {",
+									"        var vehiculo = pm.response.json().data[0];",
+									"        pm.expect(vehiculo).to.have.property('id');",
+									"        pm.expect(vehiculo).to.have.property('vehiculo');",
+									"        pm.expect(vehiculo).to.have.property('conductor');",
+									"        pm.expect(vehiculo).to.have.property('copiloto');",
+									"        pm.expect(vehiculo).to.have.property('estado_operativo');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos-vehiculos?page=1&limit=20",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos-vehiculos"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Número de página"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Registros por página"
+								}
+							]
+						},
+						"description": "Obtiene todos los vehículos operativos con paginación.\n\nEndpoint general que no requiere turnoId."
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Vehículos por Texto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Search results contain search term\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var searchTerm = pm.request.url.query.get('search').toLowerCase();",
+									"    ",
+									"    if (jsonData.data.length > 0) {",
+									"        var firstResult = jsonData.data[0];",
+									"        var matchFound = ",
+									"            (firstResult.vehiculo.placa && firstResult.vehiculo.placa.toLowerCase().includes(searchTerm)) ||",
+									"            (firstResult.vehiculo.marca && firstResult.vehiculo.marca.toLowerCase().includes(searchTerm)) ||",
+									"            (firstResult.conductor && firstResult.conductor.nombres && firstResult.conductor.nombres.toLowerCase().includes(searchTerm)) ||",
+									"            (firstResult.copiloto && firstResult.copiloto.nombres && firstResult.copiloto.nombres.toLowerCase().includes(searchTerm));",
+									"        pm.expect(matchFound).to.be.true;",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos-vehiculos?search=ABC&page=1&limit=20",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos-vehiculos"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "ABC",
+									"description": "Busca en placa, marca, conductor, copiloto"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Busca vehículos por texto en:\n- Placa del vehículo\n- Marca del vehículo\n- Nombres del conductor\n- Apellidos del conductor\n- Nombres del copiloto\n- Apellidos del copiloto"
+					},
+					"response": []
+				},
+				{
+					"name": "Filtrar por Turno",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos-vehiculos?turno_id={{turnoId}}&page=1&limit=20",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos-vehiculos"
+							],
+							"query": [
+								{
+									"key": "turno_id",
+									"value": "{{turnoId}}",
+									"description": "ID del turno operativo"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Filtra vehículos por turno operativo específico."
+					},
+					"response": []
+				},
+				{
+					"name": "Filtrar por Vehículo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos-vehiculos?vehiculo_id=1&page=1&limit=20",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos-vehiculos"
+							],
+							"query": [
+								{
+									"key": "vehiculo_id",
+									"value": "1",
+									"description": "ID del vehículo"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Filtra por vehículo específico para ver su historial operativo."
+					},
+					"response": []
+				},
+				{
+					"name": "Filtrar por Estado Operativo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos-vehiculos?estado_operativo_id=1&page=1&limit=20",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos-vehiculos"
+							],
+							"query": [
+								{
+									"key": "estado_operativo_id",
+									"value": "1",
+									"description": "ID del estado operativo (DISPONIBLE, EN_PATRULLA, etc.)"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Filtra vehículos por estado operativo (DISPONIBLE, EN_PATRULLA, MANTENIMIENTO, etc.)."
+					},
+					"response": []
+				},
+				{
+					"name": "Filtrar por Rango de Fechas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos-vehiculos?fecha_inicio=2026-01-01&fecha_fin=2026-01-31&page=1&limit=20",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos-vehiculos"
+							],
+							"query": [
+								{
+									"key": "fecha_inicio",
+									"value": "2026-01-01",
+									"description": "Fecha inicio (YYYY-MM-DD)"
+								},
+								{
+									"key": "fecha_fin",
+									"value": "2026-01-31",
+									"description": "Fecha fin (YYYY-MM-DD)"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Filtra vehículos operativos por rango de fechas."
+					},
+					"response": []
+				},
+				{
+					"name": "Filtros Combinados",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos-vehiculos?turno_id={{turnoId}}&estado_operativo_id=1&search=ABC&fecha_inicio=2026-01-01&fecha_fin=2026-01-31&sort=hora_inicio&order=DESC&page=1&limit=20",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos-vehiculos"
+							],
+							"query": [
+								{
+									"key": "turno_id",
+									"value": "{{turnoId}}"
+								},
+								{
+									"key": "estado_operativo_id",
+									"value": "1"
+								},
+								{
+									"key": "search",
+									"value": "ABC"
+								},
+								{
+									"key": "fecha_inicio",
+									"value": "2026-01-01"
+								},
+								{
+									"key": "fecha_fin",
+									"value": "2026-01-31"
+								},
+								{
+									"key": "sort",
+									"value": "hora_inicio",
+									"description": "Campo para ordenar"
+								},
+								{
+									"key": "order",
+									"value": "DESC",
+									"description": "ASC o DESC"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Ejemplo de uso de múltiples filtros combinados."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints generales para listar y filtrar vehículos operativos sin necesidad de especificar un turno."
+		},
+		{
+			"name": "2. Vehículos por Turno",
+			"item": [
+				{
+					"name": "Listar Vehículos del Turno",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos/{{turnoId}}/vehiculos",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos",
+								"{{turnoId}}",
+								"vehiculos"
+							]
+						},
+						"description": "Obtiene todos los vehículos asignados a un turno operativo específico."
+					},
+					"response": []
+				},
+				{
+					"name": "Asignar Vehículo al Turno",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Vehicle assigned successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    ",
+									"    // Guardar ID para pruebas posteriores",
+									"    pm.environment.set(\"vehiculoAsignadoId\", jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"vehiculo_id\": 1,\n  \"conductor_id\": 1,\n  \"copiloto_id\": 2,\n  \"kilometraje_inicio\": 5000,\n  \"hora_inicio\": \"2026-01-11T08:00:00\",\n  \"estado_operativo_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos/{{turnoId}}/vehiculos",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos",
+								"{{turnoId}}",
+								"vehiculos"
+							]
+						},
+						"description": "Asigna un vehículo a un turno operativo.\n\n**Campos requeridos:**\n- vehiculo_id: ID del vehículo\n- kilometraje_inicio: Kilometraje al inicio\n- hora_inicio: Hora de inicio (ISO 8601)\n- estado_operativo_id: Estado inicial\n\n**Campos opcionales:**\n- conductor_id: ID del conductor\n- copiloto_id: ID del copiloto"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Vehículo del Turno",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Vehicle updated successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('actualizado');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"kilometraje_fin\": 5150,\n  \"hora_fin\": \"2026-01-11T16:00:00\",\n  \"estado_operativo_id\": 2\n}"
+						},
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos/{{turnoId}}/vehiculos/{{vehiculoAsignadoId}}",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos",
+								"{{turnoId}}",
+								"vehiculos",
+								"{{vehiculoAsignadoId}}"
+							]
+						},
+						"description": "Actualiza información de un vehículo asignado a un turno.\n\nUsualmente se usa para registrar el fin del turno (kilometraje_fin, hora_fin)."
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Vehículo del Turno",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Vehicle removed successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('eliminado');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos/{{turnoId}}/vehiculos/{{vehiculoAsignadoId}}",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos",
+								"{{turnoId}}",
+								"vehiculos",
+								"{{vehiculoAsignadoId}}"
+							]
+						},
+						"description": "Elimina (soft delete) un vehículo del turno operativo."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestionar vehículos dentro de un turno operativo específico.\n\nRequiere especificar el turnoId en la URL."
+		},
+		{
+			"name": "3. Cuadrantes de Vehículos",
+			"item": [
+				{
+					"name": "Listar Cuadrantes del Vehículo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos/{{turnoId}}/vehiculos/{{vehiculoAsignadoId}}/cuadrantes",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos",
+								"{{turnoId}}",
+								"vehiculos",
+								"{{vehiculoAsignadoId}}",
+								"cuadrantes"
+							]
+						},
+						"description": "Obtiene todos los cuadrantes asignados a un vehículo operativo.\n\nMuestra el recorrido del vehículo por diferentes zonas."
+					},
+					"response": []
+				},
+				{
+					"name": "Asignar Cuadrante al Vehículo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Cuadrante assigned successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    ",
+									"    // Guardar ID para pruebas posteriores",
+									"    pm.environment.set(\"cuadranteAsignadoId\", jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"cuadrante_id\": 1,\n  \"hora_ingreso\": \"2026-01-11T08:30:00\"\n}"
+						},
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos/{{turnoId}}/vehiculos/{{vehiculoAsignadoId}}/cuadrantes",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos",
+								"{{turnoId}}",
+								"vehiculos",
+								"{{vehiculoAsignadoId}}",
+								"cuadrantes"
+							]
+						},
+						"description": "Asigna un cuadrante (zona) a un vehículo operativo.\n\nRegistra cuando el vehículo ingresa a patrullar un cuadrante específico.\n\n**Campos requeridos:**\n- cuadrante_id: ID del cuadrante\n- hora_ingreso: Hora de ingreso (ISO 8601)"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Cuadrante (Registrar Salida)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Cuadrante updated successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('actualizado');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"hora_salida\": \"2026-01-11T10:30:00\"\n}"
+						},
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos/{{turnoId}}/vehiculos/{{vehiculoAsignadoId}}/cuadrantes/{{cuadranteAsignadoId}}",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos",
+								"{{turnoId}}",
+								"vehiculos",
+								"{{vehiculoAsignadoId}}",
+								"cuadrantes",
+								"{{cuadranteAsignadoId}}"
+							]
+						},
+						"description": "Actualiza la asignación de cuadrante, usualmente para registrar la hora de salida.\n\nPermite calcular el tiempo que el vehículo estuvo patrullando ese cuadrante."
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Cuadrante",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Cuadrante removed successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('eliminado');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos/{{turnoId}}/vehiculos/{{vehiculoAsignadoId}}/cuadrantes/{{cuadranteAsignadoId}}",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos",
+								"{{turnoId}}",
+								"vehiculos",
+								"{{vehiculoAsignadoId}}",
+								"cuadrantes",
+								"{{cuadranteAsignadoId}}"
+							]
+						},
+						"description": "Elimina (soft delete) la asignación de un cuadrante a un vehículo."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestionar los cuadrantes (zonas de patrullaje) asignados a vehículos operativos.\n\nPermite rastrear por qué zonas ha circulado cada vehículo durante su turno."
+		},
+		{
+			"name": "4. Novedades de Cuadrantes",
+			"item": [
+				{
+					"name": "Listar Novedades del Cuadrante",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"if (pm.response.json().data.length > 0) {",
+									"    pm.test(\"Novedad has required fields\", function () {",
+									"        var novedad = pm.response.json().data[0];",
+									"        pm.expect(novedad).to.have.property('id');",
+									"        pm.expect(novedad).to.have.property('tipo_novedad');",
+									"        pm.expect(novedad).to.have.property('subtipo_novedad');",
+									"        pm.expect(novedad).to.have.property('descripcion');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/operativos/{{turnoId}}/vehiculos/{{vehiculoAsignadoId}}/cuadrantes/{{cuadranteAsignadoId}}/novedades",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"operativos",
+								"{{turnoId}}",
+								"vehiculos",
+								"{{vehiculoAsignadoId}}",
+								"cuadrantes",
+								"{{cuadranteAsignadoId}}",
+								"novedades"
+							]
+						},
+						"description": "Obtiene todas las novedades registradas por un vehículo en un cuadrante específico.\n\nMuestra incidentes, reportes, intervenciones realizadas en esa zona."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para consultar novedades (incidentes, reportes) registrados por vehículos en cuadrantes específicos.\n\nLa creación de novedades se hace desde el módulo de Novedades principal."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global pre-request",
+					"// Verificar que las variables necesarias estén definidas",
+					"if (!pm.environment.get('authToken') && !pm.collectionVariables.get('authToken')) {",
+					"    console.warn('⚠️ authToken no está configurado. Por favor configura tu token JWT.');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global de test",
+					"// Validación común para todos los requests",
+					"pm.test(\"Response time is less than 5000ms\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"if (pm.response.code !== 200 && pm.response.code !== 201) {",
+					"    pm.test(\"Error response has message\", function () {",
+					"        var jsonData = pm.response.json();",
+					"        pm.expect(jsonData).to.have.property('error').or.to.have.property('errors');",
+					"    });",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "RemoteBase_Url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "apiVersion",
+			"value": "v1",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "turnoId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "vehiculoAsignadoId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "cuadranteAsignadoId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
