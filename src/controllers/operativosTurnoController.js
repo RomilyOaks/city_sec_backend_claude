@@ -54,9 +54,6 @@ export const getAllTurnos = async (req, res) => {
       estado_registro: 1,
     };
 
-    // Búsqueda por texto (operador o supervisor)
-    // Este filtro se aplicará en las relaciones incluidas, no aquí
-
     // Filtros específicos
     if (personal_id) whereClause.operador_id = personal_id;
     if (operador_id) whereClause.operador_id = operador_id;
@@ -64,6 +61,31 @@ export const getAllTurnos = async (req, res) => {
     if (sector_id) whereClause.sector_id = sector_id;
     if (turno) whereClause.turno = turno;
     if (estado) whereClause.estado = estado;
+
+    // Búsqueda por texto en operador O supervisor
+    // Usamos subquery para buscar en PersonalSeguridad
+    if (search) {
+      whereClause[Op.or] = [
+        {
+          "$operador.nombres$": { [Op.like]: `%${search}%` },
+        },
+        {
+          "$operador.apellido_paterno$": { [Op.like]: `%${search}%` },
+        },
+        {
+          "$operador.apellido_materno$": { [Op.like]: `%${search}%` },
+        },
+        {
+          "$supervisor.nombres$": { [Op.like]: `%${search}%` },
+        },
+        {
+          "$supervisor.apellido_paterno$": { [Op.like]: `%${search}%` },
+        },
+        {
+          "$supervisor.apellido_materno$": { [Op.like]: `%${search}%` },
+        },
+      ];
+    }
 
     // Filtro por fecha exacta
     if (fecha) {
@@ -85,22 +107,13 @@ export const getAllTurnos = async (req, res) => {
     const orderField = sort;
     const orderDir = order.toUpperCase() === "ASC" ? "ASC" : "DESC";
 
-    // Configurar includes con filtros opcionales por búsqueda
+    // Configurar includes - La búsqueda ya está en whereClause principal
     const includeOptions = [
       {
         model: PersonalSeguridad,
         as: "operador",
         attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
         required: false,
-        ...(search && {
-          where: {
-            [Op.or]: [
-              { nombres: { [Op.like]: `%${search}%` } },
-              { apellido_paterno: { [Op.like]: `%${search}%` } },
-              { apellido_materno: { [Op.like]: `%${search}%` } },
-            ],
-          },
-        }),
       },
       {
         model: PersonalSeguridad,
