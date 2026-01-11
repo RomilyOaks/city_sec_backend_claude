@@ -95,7 +95,7 @@ export const getAllVehiculos = async (req, res) => {
       {
         model: Vehiculo,
         as: "vehiculo",
-        attributes: ["id", "placa", "marca", "modelo", "año"],
+        attributes: ["id", "placa", "marca", "modelo_vehiculo", "anio_vehiculo", "codigo_vehiculo"],
         required: false,
       },
       {
@@ -175,7 +175,7 @@ export const getAllVehiculosByTurno = async (req, res) => {
         {
           model: Vehiculo,
           as: "vehiculo",
-          attributes: ["id", "placa", "marca", "modelo", "año"],
+          attributes: ["id", "placa", "marca", "modelo_vehiculo", "anio_vehiculo", "codigo_vehiculo"],
         },
         {
           model: PersonalSeguridad,
