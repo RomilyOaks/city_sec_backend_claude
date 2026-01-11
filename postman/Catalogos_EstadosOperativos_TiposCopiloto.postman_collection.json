@@ -1,0 +1,706 @@
+{
+	"info": {
+		"_postman_id": "catalogos-estados-tipos-001",
+		"name": "Catálogos - Estados Operativos & Tipos Copiloto",
+		"description": "Colección para probar los endpoints de Estados Operativo Recurso y Tipos Copiloto.\n\n**Variables de entorno requeridas:**\n- `RemoteBase_Url`: URL base del servidor (ej: http://localhost:3000)\n- `apiVersion`: Versión de la API (ej: v1)\n- `authToken`: Token JWT de autenticación\n\n**Permisos requeridos:**\n- catalogos.estados_operativo.read\n- catalogos.estados_operativo.create\n- catalogos.estados_operativo.update\n- catalogos.estados_operativo.delete\n- catalogos.tipos_copiloto.read\n- catalogos.tipos_copiloto.create\n- catalogos.tipos_copiloto.update\n- catalogos.tipos_copiloto.delete",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "city-sec-backend"
+	},
+	"item": [
+		{
+			"name": "Estados Operativo Recurso",
+			"item": [
+				{
+					"name": "Listar Estados Activos (Dropdown)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"All records are active\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.data.forEach(function(item) {",
+									"        pm.expect(item.estado).to.equal(1);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/estados-operativo-recurso/activos",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"estados-operativo-recurso",
+								"activos"
+							]
+						},
+						"description": "Obtiene solo los estados operativos activos. Ideal para poblar dropdowns en el frontend."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Todos los Estados (Paginado)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData).to.have.property('pagination');",
+									"    pm.expect(jsonData.pagination).to.have.property('total');",
+									"    pm.expect(jsonData.pagination).to.have.property('page');",
+									"    pm.expect(jsonData.pagination).to.have.property('limit');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/estados-operativo-recurso?page=1&limit=10",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"estados-operativo-recurso"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Número de página"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Registros por página"
+								}
+							]
+						},
+						"description": "Lista todos los estados operativos con paginación."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Estado por ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has estado data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data).to.have.property('codigo');",
+									"    pm.expect(jsonData.data).to.have.property('descripcion');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/estados-operativo-recurso/1",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"estados-operativo-recurso",
+								"1"
+							]
+						},
+						"description": "Obtiene un estado operativo específico por su ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Estado Operativo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Estado created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    ",
+									"    // Guardar ID para pruebas posteriores",
+									"    pm.environment.set(\"estadoOperativoId\", jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"DISP\",\n  \"descripcion\": \"DISPONIBLE\",\n  \"estado\": 1\n}"
+						},
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/estados-operativo-recurso",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"estados-operativo-recurso"
+							]
+						},
+						"description": "Crea un nuevo estado operativo.\n\n**Ejemplos de códigos comunes:**\n- DISP: Disponible\n- PATR: En Patrulla\n- MANT: En Mantenimiento\n- FSERV: Fuera de Servicio\n- REPOS: En Reposo\n- ASIGN: Asignado"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Estado Operativo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Estado updated successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('actualizado');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"DISP\",\n  \"descripcion\": \"DISPONIBLE - ACTUALIZADO\",\n  \"estado\": 1\n}"
+						},
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/estados-operativo-recurso/{{estadoOperativoId}}",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"estados-operativo-recurso",
+								"{{estadoOperativoId}}"
+							]
+						},
+						"description": "Actualiza un estado operativo existente. El ID debe estar en la variable de entorno `estadoOperativoId`."
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Estado Operativo (Soft Delete)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Estado deleted successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('eliminado');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/estados-operativo-recurso/{{estadoOperativoId}}",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"estados-operativo-recurso",
+								"{{estadoOperativoId}}"
+							]
+						},
+						"description": "Elimina (soft delete) un estado operativo. El registro se marca como inactivo y se registra la fecha de eliminación."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestionar los estados operativos de recursos (vehículos, personal).\n\n**Estructura de datos:**\n- `codigo`: STRING(10) - Código único\n- `descripcion`: STRING(35) - Descripción del estado\n- `estado`: TINYINT - 1 = Activo, 0 = Inactivo"
+		},
+		{
+			"name": "Tipos Copiloto",
+			"item": [
+				{
+					"name": "Listar Tipos Activos (Dropdown)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"All records are active\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.data.forEach(function(item) {",
+									"        pm.expect(item.estado).to.equal(1);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/tipos-copiloto/activos",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"tipos-copiloto",
+								"activos"
+							]
+						},
+						"description": "Obtiene solo los tipos de copiloto activos. Ideal para poblar dropdowns en el frontend."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Todos los Tipos (Paginado)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData).to.have.property('pagination');",
+									"    pm.expect(jsonData.pagination).to.have.property('total');",
+									"    pm.expect(jsonData.pagination).to.have.property('page');",
+									"    pm.expect(jsonData.pagination).to.have.property('limit');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/tipos-copiloto?page=1&limit=10",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"tipos-copiloto"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Número de página"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Registros por página"
+								}
+							]
+						},
+						"description": "Lista todos los tipos de copiloto con paginación."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Tipo por ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has tipo data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data).to.have.property('codigo');",
+									"    pm.expect(jsonData.data).to.have.property('descripcion');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/tipos-copiloto/1",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"tipos-copiloto",
+								"1"
+							]
+						},
+						"description": "Obtiene un tipo de copiloto específico por su ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Tipo Copiloto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Tipo created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    ",
+									"    // Guardar ID para pruebas posteriores",
+									"    pm.environment.set(\"tipoCopilotoId\", jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"SERENO\",\n  \"descripcion\": \"SERENAZGO\",\n  \"estado\": 1\n}"
+						},
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/tipos-copiloto",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"tipos-copiloto"
+							]
+						},
+						"description": "Crea un nuevo tipo de copiloto.\n\n**Ejemplos de tipos comunes:**\n- SERENO: Serenazgo\n- PNP: Policía Nacional del Perú\n- BOMBERO: Bombero\n- CIVIL: Personal Civil\n- MUNIC: Personal Municipalidad"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Tipo Copiloto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Tipo updated successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('actualizado');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"SERENO\",\n  \"descripcion\": \"SERENAZGO - ACTUALIZADO\",\n  \"estado\": 1\n}"
+						},
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/tipos-copiloto/{{tipoCopilotoId}}",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"tipos-copiloto",
+								"{{tipoCopilotoId}}"
+							]
+						},
+						"description": "Actualiza un tipo de copiloto existente. El ID debe estar en la variable de entorno `tipoCopilotoId`."
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Tipo Copiloto (Soft Delete)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Tipo deleted successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('eliminado');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/tipos-copiloto/{{tipoCopilotoId}}",
+							"host": [
+								"{{RemoteBase_Url}}"
+							],
+							"path": [
+								"api",
+								"{{apiVersion}}",
+								"tipos-copiloto",
+								"{{tipoCopilotoId}}"
+							]
+						},
+						"description": "Elimina (soft delete) un tipo de copiloto. El registro se marca como inactivo y se registra la fecha de eliminación."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestionar los tipos de copiloto.\n\n**Estructura de datos:**\n- `codigo`: STRING(10) - Código único\n- `descripcion`: STRING(35) - Descripción del tipo\n- `estado`: TINYINT - 1 = Activo, 0 = Inactivo"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global pre-request",
+					"// Aquí puedes agregar lógica que se ejecute antes de cada request"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global de test",
+					"// Aquí puedes agregar validaciones que se ejecuten después de cada request"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "RemoteBase_Url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "apiVersion",
+			"value": "v1",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "estadoOperativoId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tipoCopilotoId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
