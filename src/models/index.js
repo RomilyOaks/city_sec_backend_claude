@@ -14,7 +14,13 @@
  *
  * HISTORIAL DE CAMBIOS:
  * =====================
- * v2.2.1 (2025-12-23):
+ * v2.1.2 (2026-01-11):
+ *  - ✅ Agregado modelo VehiculoCuadrantesAsignados para gestionar
+ *    la asignación de vehículos a cuadrantes en operativos específicos.
+ *  - ✅ Agregado Operativos de Patrullaje por Turnos
+ *  - ✅ Agregado Vehiculos que realizan los Operativos por turnos
+ *
+ * v2.1.1 (2025-12-23):
  * 1. RELACIONES CLAVE DEL MÓDULO CALLES:
  *    - TipoVia (1) -> (N) Calle
  *    - Calle (M) <-> (N) Cuadrante (a través de CallesCuadrantes)
@@ -149,6 +155,14 @@ import Cuadrante from "./Cuadrante.js";
  * @type {Model}
  */
 import Vehiculo from "./Vehiculo.js";
+
+/**
+ * Modelo VehiculoCuadrantesAsignados
+ * Registro de vehículos asignados a cuadrantes en operativos
+ * Autor: RRG
+ * @type {Model}
+ */
+import VehiculoCuadrantesAsignados from "./VehiculoCuadrantesAsignados.js";
 
 /**
  * Modelo PersonalSeguridad
@@ -1494,6 +1508,26 @@ HistorialEstadoNovedad.belongsTo(Usuario, {
 // NOTA: SubtipoNovedad, TipoVehiculo y UnidadOficina ya tienen sus relaciones
 // de auditoría definidas anteriormente en este archivo (líneas 1030-1080)
 
+Vehiculo.hasMany(VehiculoCuadrantesAsignados, {
+  foreignKey: "vehiculo_id",
+  as: "cuadrantesAsignados",
+});
+
+VehiculoCuadrantesAsignados.belongsTo(Vehiculo, {
+  foreignKey: "vehiculo_id",
+  as: "vehiculo",
+});
+
+Cuadrante.hasMany(VehiculoCuadrantesAsignados, {
+  foreignKey: "cuadrante_id",
+  as: "vehiculosAsignados",
+});
+
+VehiculoCuadrantesAsignados.belongsTo(Cuadrante, {
+  foreignKey: "cuadrante_id",
+  as: "cuadrante",
+});
+
 console.log("✅ Asociaciones configuradas exitosamente");
 
 //=============================================
@@ -1527,8 +1561,6 @@ const models = {
   Cuadrante,
   UnidadOficina,
   PersonalSeguridad,
-  OperativosTurno,
-  OperativosVehiculos,
   OperativosTurno,
   OperativosVehiculos,
 
@@ -1629,4 +1661,5 @@ export {
   Calle,
   CallesCuadrantes,
   Direccion,
+  VehiculoCuadrantesAsignados,
 };

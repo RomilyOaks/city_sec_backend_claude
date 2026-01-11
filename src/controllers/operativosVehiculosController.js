@@ -27,6 +27,126 @@ const {
   OperativosVehiculosCuadrantes,
   Cuadrante,
 } = models;
+import { Op } from "sequelize";
+
+/**
+ * Obtener todos los vehículos operativos con filtros y paginación
+ * GET /api/v1/operativos-vehiculos
+ */
+export const getAllVehiculos = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      turno_id,
+      vehiculo_id,
+      conductor_id,
+      copiloto_id,
+      estado_operativo_id,
+      fecha_inicio,
+      fecha_fin,
+      sort = "hora_inicio",
+      order = "DESC",
+    } = req.query;
+
+    const whereClause = {
+      deleted_at: null,
+      estado_registro: 1,
+    };
+
+    // Filtros específicos
+    if (turno_id) whereClause.operativo_turno_id = turno_id;
+    if (vehiculo_id) whereClause.vehiculo_id = vehiculo_id;
+    if (conductor_id) whereClause.conductor_id = conductor_id;
+    if (copiloto_id) whereClause.copiloto_id = copiloto_id;
+    if (estado_operativo_id) whereClause.estado_operativo_id = estado_operativo_id;
+
+    // Búsqueda por texto en placa de vehículo O nombre de conductor O copiloto
+    if (search) {
+      whereClause[Op.or] = [
+        { "$vehiculo.placa$": { [Op.like]: `%${search}%` } },
+        { "$vehiculo.marca$": { [Op.like]: `%${search}%` } },
+        { "$conductor.nombres$": { [Op.like]: `%${search}%` } },
+        { "$conductor.apellido_paterno$": { [Op.like]: `%${search}%` } },
+        { "$conductor.apellido_materno$": { [Op.like]: `%${search}%` } },
+        { "$copiloto.nombres$": { [Op.like]: `%${search}%` } },
+        { "$copiloto.apellido_paterno$": { [Op.like]: `%${search}%` } },
+        { "$copiloto.apellido_materno$": { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    // Filtro por rango de fechas usando hora_inicio
+    if (fecha_inicio && fecha_fin) {
+      whereClause.hora_inicio = {
+        [Op.between]: [fecha_inicio, fecha_fin],
+      };
+    } else if (fecha_inicio) {
+      whereClause.hora_inicio = { [Op.gte]: fecha_inicio };
+    } else if (fecha_fin) {
+      whereClause.hora_inicio = { [Op.lte]: fecha_fin };
+    }
+
+    const offset = (page - 1) * limit;
+    const orderField = sort;
+    const orderDir = order.toUpperCase() === "ASC" ? "ASC" : "DESC";
+
+    const includeOptions = [
+      {
+        model: Vehiculo,
+        as: "vehiculo",
+        attributes: ["id", "placa", "marca", "modelo", "año"],
+        required: false,
+      },
+      {
+        model: PersonalSeguridad,
+        as: "conductor",
+        attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        required: false,
+      },
+      {
+        model: PersonalSeguridad,
+        as: "copiloto",
+        attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        required: false,
+      },
+      {
+        model: OperativosTurno,
+        as: "turno",
+        attributes: ["id", "fecha", "turno", "estado"],
+        required: false,
+      },
+    ];
+
+    const { count, rows } = await OperativosVehiculos.findAndCountAll({
+      where: whereClause,
+      include: includeOptions,
+      order: [[orderField, orderDir]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      distinct: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Vehículos operativos obtenidos exitosamente",
+      data: rows,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(count / limit),
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error en getAllVehiculos:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener los vehículos operativos",
+      error: error.message,
+    });
+  }
+};
 
 /**
  * Obtener todos los vehículos asignados a un turno operativo
@@ -40,33 +160,45 @@ export const getAllVehiculosByTurno = async (req, res) => {
     const turno = await OperativosTurno.findByPk(turnoId);
     if (!turno) {
       return res.status(404).json({
-        status: "error",
+        success: false,
         message: "Turno no encontrado",
       });
     }
 
     const vehiculos = await OperativosVehiculos.findAll({
-      where: { operativo_turno_id: turnoId },
+      where: {
+        operativo_turno_id: turnoId,
+        deleted_at: null,
+        estado_registro: 1,
+      },
       include: [
         {
           model: Vehiculo,
           as: "vehiculo",
+          attributes: ["id", "placa", "marca", "modelo", "año"],
         },
         {
           model: PersonalSeguridad,
           as: "conductor",
           attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
         },
+        {
+          model: PersonalSeguridad,
+          as: "copiloto",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        },
       ],
     });
 
     res.status(200).json({
-      status: "success",
+      success: true,
+      message: "Vehículos del turno obtenidos exitosamente",
       data: vehiculos,
     });
   } catch (error) {
+    console.error("❌ Error en getAllVehiculosByTurno:", error);
     res.status(500).json({
-      status: "error",
+      success: false,
       message: "Error interno del servidor",
       error: error.message,
     });
@@ -176,7 +308,10 @@ export const deleteVehiculoInTurno = async (req, res) => {
   const { id: userId } = req.user;
 
   try {
-    const vehiculoAsignado = await OperativosVehiculos.findByPk(id);
+    const vehiculoAsignado = await OperativosVehiculos.findOne({
+      where: { id, deleted_at: null, estado_registro: 1 },
+    });
+
     if (!vehiculoAsignado) {
       return res.status(404).json({
         success: false,
@@ -184,17 +319,17 @@ export const deleteVehiculoInTurno = async (req, res) => {
       });
     }
 
-    await vehiculoAsignado.update({
-      estado_registro: 0,
-      deleted_by: userId,
+    // Soft delete usando el hook beforeDestroy
+    await vehiculoAsignado.destroy({
+      userId: userId,
     });
-    await vehiculoAsignado.destroy();
 
     res.status(200).json({
       success: true,
       message: "Asignación de vehículo eliminada correctamente",
     });
   } catch (error) {
+    console.error("❌ Error en deleteVehiculoInTurno:", error);
     res.status(500).json({
       success: false,
       message: "Error al eliminar la asignación",

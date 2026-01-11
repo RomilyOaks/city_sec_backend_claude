@@ -217,6 +217,12 @@ OperativosVehiculos.init(
       beforeUpdate: (instance) => {
         instance.updated_at = new Date();
       },
+      beforeDestroy: async (vehiculo, options) => {
+        if (options.userId) {
+          vehiculo.deleted_by = options.userId;
+        }
+        vehiculo.estado_registro = 0;
+      },
     },
   }
 );
