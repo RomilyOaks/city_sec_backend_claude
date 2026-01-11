@@ -223,6 +223,44 @@ export const createVehiculoInTurno = async (req, res) => {
       });
     }
 
+    // Validar que el vehículo no esté ya asignado al turno (solo registros activos)
+    if (req.body.vehiculo_id) {
+      const vehiculoExistente = await OperativosVehiculos.findOne({
+        where: {
+          operativo_turno_id: turnoId,
+          vehiculo_id: req.body.vehiculo_id,
+          estado_registro: 1,
+          deleted_at: null,
+        },
+      });
+
+      if (vehiculoExistente) {
+        return res.status(400).json({
+          success: false,
+          message: "Vehículo ya ha sido asignado en el mismo sector, turno y fecha de los Operativos",
+        });
+      }
+    }
+
+    // Validar que el conductor no esté ya asignado a otro vehículo en el turno (solo registros activos)
+    if (req.body.conductor_id) {
+      const conductorExistente = await OperativosVehiculos.findOne({
+        where: {
+          operativo_turno_id: turnoId,
+          conductor_id: req.body.conductor_id,
+          estado_registro: 1,
+          deleted_at: null,
+        },
+      });
+
+      if (conductorExistente) {
+        return res.status(400).json({
+          success: false,
+          message: "Conductor ya fue asignado a otro vehículo en el mismo sector, turno y fecha de los Operativos",
+        });
+      }
+    }
+
     const newVehiculoAsignado = await OperativosVehiculos.create({
       ...req.body,
       operativo_turno_id: turnoId,
@@ -303,6 +341,46 @@ export const updateVehiculoInTurno = async (req, res) => {
         success: false,
         message: "Asignación de vehículo no encontrada",
       });
+    }
+
+    // Validar que el vehículo no esté ya asignado al turno (solo registros activos, excluyendo el actual)
+    if (req.body.vehiculo_id) {
+      const vehiculoExistente = await OperativosVehiculos.findOne({
+        where: {
+          operativo_turno_id: vehiculoAsignado.operativo_turno_id,
+          vehiculo_id: req.body.vehiculo_id,
+          estado_registro: 1,
+          deleted_at: null,
+          id: { [Op.ne]: id }, // Excluir el registro actual
+        },
+      });
+
+      if (vehiculoExistente) {
+        return res.status(400).json({
+          success: false,
+          message: "Vehículo ya ha sido asignado en el mismo sector, turno y fecha de los Operativos",
+        });
+      }
+    }
+
+    // Validar que el conductor no esté ya asignado a otro vehículo en el turno (solo registros activos, excluyendo el actual)
+    if (req.body.conductor_id) {
+      const conductorExistente = await OperativosVehiculos.findOne({
+        where: {
+          operativo_turno_id: vehiculoAsignado.operativo_turno_id,
+          conductor_id: req.body.conductor_id,
+          estado_registro: 1,
+          deleted_at: null,
+          id: { [Op.ne]: id }, // Excluir el registro actual
+        },
+      });
+
+      if (conductorExistente) {
+        return res.status(400).json({
+          success: false,
+          message: "Conductor ya fue asignado a otro vehículo en el mismo sector, turno y fecha de los Operativos",
+        });
+      }
     }
 
     await vehiculoAsignado.update({
