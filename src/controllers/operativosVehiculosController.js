@@ -262,7 +262,7 @@ export const createVehiculoInTurno = async (req, res) => {
       // Error genérico de unicidad
       return res.status(400).json({
         success: false,
-        message: "Ya existe un registro con estos datos en el turno operativo",
+        message: "Vehículo ya ha sido asignado en el mismo sector, turno y fecha de los Operativos",
         detalles: error.errors.map((e) => e.message),
       });
     }
@@ -353,7 +353,7 @@ export const updateVehiculoInTurno = async (req, res) => {
 
       return res.status(400).json({
         success: false,
-        message: "Ya existe un registro con estos datos en el turno operativo",
+        message: "Vehículo ya ha sido asignado en el mismo sector, turno y fecha de los Operativos",
       });
     }
 
