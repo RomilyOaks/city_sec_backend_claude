@@ -106,6 +106,8 @@ import ubigeoRoutes from "./ubigeo.routes.js";
 import configRoutes from "./config.routes.js";
 import unidadOficinaRoutes from "./unidad-oficina.routes.js";
 import radioTetraRoutes from "./radio-tetra.routes.js";
+import estadosOperativoRecursoRoutes from "./estados-operativo-recurso.routes.js";
+import tiposCopilotoRoutes from "./tipos-copiloto.routes.js";
 
 // 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
@@ -504,6 +506,28 @@ router.use("/unidades-oficina", unidadOficinaRoutes);
  *   Body: { "personal_seguridad_id": 12 }
  */
 router.use("/radios-tetra", radioTetraRoutes);
+
+/**
+ * @route   /estados-operativo-recurso
+ * @desc    Estados operativos de recursos (vehículos, personal)
+ * @access  Protected
+ * @permission catalogos.estados_operativo.read
+ * @features
+ *   - CRUD completo
+ *   - Endpoint /activos para dropdowns
+ */
+router.use("/estados-operativo-recurso", estadosOperativoRecursoRoutes);
+
+/**
+ * @route   /tipos-copiloto
+ * @desc    Tipos de copiloto (SERENO, PNP, BOMBERO, etc.)
+ * @access  Protected
+ * @permission catalogos.tipos_copiloto.read
+ * @features
+ *   - CRUD completo
+ *   - Endpoint /activos para dropdowns
+ */
+router.use("/tipos-copiloto", tiposCopilotoRoutes);
 
 /**
  * @route   /auditoria
@@ -1123,6 +1147,8 @@ router.use("/ubigeo", ubigeoRoutes);
 router.use("/config", configRoutes);
 router.use("/unidades-oficina", unidadOficinaRoutes);
 router.use("/radios-tetra", radioTetraRoutes);
+router.use("/estados-operativo-recurso", estadosOperativoRecursoRoutes);
+router.use("/tipos-copiloto", tiposCopilotoRoutes);
 router.use("/auditoria-acciones", auditoriaAccionRoutes);
 router.use("/tipos-via", tiposViaRoutes);
 router.use("/calles", callesRoutes);

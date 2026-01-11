@@ -221,6 +221,20 @@ import OperativosVehiculosNovedades from "./OperativosVehiculosNovedades.js";
 import OperativosTurno from "./OperativosTurno.js";
 import OperativosVehiculos from "./operativos-vehiculos.js";
 
+/**
+ * Modelo EstadoOperativoRecurso
+ * Catálogo de estados operativos para recursos (vehículos, personal)
+ * @type {Model}
+ */
+import EstadoOperativoRecurso from "./EstadoOperativoRecurso.js";
+
+/**
+ * Modelo TipoCopiloto
+ * Catálogo de tipos de copiloto para operativos
+ * @type {Model}
+ */
+import TipoCopiloto from "./TipoCopiloto.js";
+
 //=============================================
 // IMPORTAR MODELOS - NOVEDADES/INCIDENTES
 //=============================================
@@ -1549,6 +1563,8 @@ const models = {
   EstadoNovedad,
   Cargo,
   Ubigeo,
+  EstadoOperativoRecurso,
+  TipoCopiloto,
 
   // Operativos
   Vehiculo,
@@ -1626,6 +1642,8 @@ export {
   EstadoNovedad,
   Cargo,
   Ubigeo,
+  EstadoOperativoRecurso,
+  TipoCopiloto,
   // Operativos
   Vehiculo,
   AbastecimientoCombustible,
