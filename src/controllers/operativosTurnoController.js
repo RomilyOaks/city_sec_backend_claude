@@ -19,7 +19,7 @@
  */
 
 import models from "../models/index.js";
-const { OperativosTurno, PersonalSeguridad, Usuario } = models;
+const { OperativosTurno, PersonalSeguridad, Usuario, Sector } = models;
 import { Op } from "sequelize";
 
 // ==========================================
@@ -37,10 +37,15 @@ export const getAllTurnos = async (req, res) => {
       limit = 20,
       search,
       personal_id,
+      operador_id,
+      supervisor_id,
+      sector_id,
+      turno,
       estado,
+      fecha,
       fecha_inicio,
       fecha_fin,
-      sort = "fecha_hora_inicio",
+      sort = "fecha",
       order = "DESC",
     } = req.query;
 
@@ -48,35 +53,77 @@ export const getAllTurnos = async (req, res) => {
       deleted_at: null,
     };
 
-    if (search) {
-      whereClause[Op.or] = [{ novedades: { [Op.like]: `%${search}%` } }];
+    // Búsqueda por texto (operador o supervisor)
+    // Este filtro se aplicará en las relaciones incluidas, no aquí
+
+    // Filtros específicos
+    if (personal_id) whereClause.operador_id = personal_id;
+    if (operador_id) whereClause.operador_id = operador_id;
+    if (supervisor_id) whereClause.supervisor_id = supervisor_id;
+    if (sector_id) whereClause.sector_id = sector_id;
+    if (turno) whereClause.turno = turno;
+    if (estado) whereClause.estado = estado;
+
+    // Filtro por fecha exacta
+    if (fecha) {
+      whereClause.fecha = fecha;
     }
 
-    if (personal_id) whereClause.operador_id = personal_id;
-    if (estado) whereClause.estado = estado;
-    if (fecha_inicio)
-      whereClause.fecha_hora_inicio = { [Op.gte]: new Date(fecha_inicio) };
-    if (fecha_fin)
-      whereClause.fecha_hora_fin = { [Op.lte]: new Date(fecha_fin) };
+    // Filtro por rango de fechas
+    if (fecha_inicio && fecha_fin) {
+      whereClause.fecha = {
+        [Op.between]: [fecha_inicio, fecha_fin],
+      };
+    } else if (fecha_inicio) {
+      whereClause.fecha = { [Op.gte]: fecha_inicio };
+    } else if (fecha_fin) {
+      whereClause.fecha = { [Op.lte]: fecha_fin };
+    }
 
     const offset = (page - 1) * limit;
     const orderField = sort;
     const orderDir = order.toUpperCase() === "ASC" ? "ASC" : "DESC";
 
+    // Configurar includes con filtros opcionales por búsqueda
+    const includeOptions = [
+      {
+        model: PersonalSeguridad,
+        as: "operador",
+        attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        required: false,
+        ...(search && {
+          where: {
+            [Op.or]: [
+              { nombres: { [Op.like]: `%${search}%` } },
+              { apellido_paterno: { [Op.like]: `%${search}%` } },
+              { apellido_materno: { [Op.like]: `%${search}%` } },
+            ],
+          },
+        }),
+      },
+      {
+        model: PersonalSeguridad,
+        as: "supervisor",
+        attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        required: false,
+      },
+      {
+        model: Sector,
+        as: "sector",
+        attributes: ["id", "nombre", "codigo"],
+        required: false,
+      },
+      {
+        model: Usuario,
+        as: "usuarioRegistro",
+        attributes: ["id", "username"],
+        required: false,
+      },
+    ];
+
     const { count, rows } = await OperativosTurno.findAndCountAll({
       where: whereClause,
-      include: [
-        {
-          model: PersonalSeguridad,
-          as: "personal",
-          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
-        },
-        {
-          model: Usuario,
-          as: "usuarioRegistro",
-          attributes: ["id", "username"],
-        },
-      ],
+      include: includeOptions,
       order: [[orderField, orderDir]],
       limit: parseInt(limit),
       offset: parseInt(offset),
