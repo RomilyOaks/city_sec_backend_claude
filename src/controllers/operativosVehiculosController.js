@@ -26,6 +26,7 @@ const {
   PersonalSeguridad,
   OperativosVehiculosCuadrantes,
   Cuadrante,
+  Usuario,
 } = models;
 import { Op } from "sequelize";
 
@@ -125,6 +126,24 @@ export const getAllVehiculos = async (req, res) => {
         attributes: ["id", "fecha", "turno", "estado"],
         required: false,
       },
+      {
+        model: Usuario,
+        as: "creador",
+        attributes: ["id", "usuario", "nombres", "apellidos"],
+        required: false,
+      },
+      {
+        model: Usuario,
+        as: "actualizador",
+        attributes: ["id", "usuario", "nombres", "apellidos"],
+        required: false,
+      },
+      {
+        model: Usuario,
+        as: "eliminador",
+        attributes: ["id", "usuario", "nombres", "apellidos"],
+        required: false,
+      },
     ];
 
     const { count, rows } = await OperativosVehiculos.findAndCountAll({
@@ -204,6 +223,24 @@ export const getAllVehiculosByTurno = async (req, res) => {
           model: PersonalSeguridad,
           as: "copiloto",
           attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        },
+        {
+          model: Usuario,
+          as: "creador",
+          attributes: ["id", "usuario", "nombres", "apellidos"],
+          required: false,
+        },
+        {
+          model: Usuario,
+          as: "actualizador",
+          attributes: ["id", "usuario", "nombres", "apellidos"],
+          required: false,
+        },
+        {
+          model: Usuario,
+          as: "eliminador",
+          attributes: ["id", "usuario", "nombres", "apellidos"],
+          required: false,
         },
       ],
     });

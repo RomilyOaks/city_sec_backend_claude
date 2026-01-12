@@ -46,6 +46,22 @@ class OperativosVehiculos extends Model {
       as: "cuadrantesAsignados",
     });
 
+    // Relaciones de auditoría
+    OperativosVehiculos.belongsTo(models.Usuario, {
+      foreignKey: "created_by",
+      as: "creador",
+    });
+
+    OperativosVehiculos.belongsTo(models.Usuario, {
+      foreignKey: "updated_by",
+      as: "actualizador",
+    });
+
+    OperativosVehiculos.belongsTo(models.Usuario, {
+      foreignKey: "deleted_by",
+      as: "eliminador",
+    });
+
     // NOTA: La relación con OperativosVehiculosNovedades es indirecta:
     // OperativosVehiculos → OperativosVehiculosCuadrantes → OperativosVehiculosNovedades
     // No existe una FK directa vehiculo_id en OperativosVehiculosNovedades
