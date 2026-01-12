@@ -1,0 +1,723 @@
+{
+	"info": {
+		"_postman_id": "radios-tetra-001",
+		"name": "Radios TETRA",
+		"description": "Colección completa para probar el módulo de Radios TETRA.\n\n**Variables de entorno requeridas:**\n- `RemoteBase_Url`: URL base del servidor (ej: http://localhost:3000)\n- `apiVersion`: Versión de la API (ej: v1)\n- `authToken`: Token JWT de autenticación\n\n**Permisos requeridos:**\n- catalogos.radios_tetra.read\n- catalogos.radios_tetra.create\n- catalogos.radios_tetra.update\n- catalogos.radios_tetra.delete\n- catalogos.radios_tetra.asignar",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "city-sec-backend"
+	},
+	"item": [
+		{
+			"name": "Listar Radios Disponibles (Dropdown)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has data array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData.data).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"All radios are available (sin asignar y activos)\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    jsonData.data.forEach(function(radio) {",
+							"        pm.expect(radio.estado).to.equal(true);",
+							"        pm.expect(radio.personal_seguridad_id).to.be.null;",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra/disponibles",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra",
+						"disponibles"
+					]
+				},
+				"description": "Obtiene todos los radios disponibles (sin asignar y activos).\nIdeal para dropdowns en el frontend."
+			},
+			"response": []
+		},
+		{
+			"name": "Listar Todos los Radios (Paginado)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has pagination\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData).to.have.property('pagination');",
+							"});",
+							"",
+							"if (pm.response.json().data.length > 0) {",
+							"    pm.test(\"Radio has required fields\", function () {",
+							"        var radio = pm.response.json().data[0];",
+							"        pm.expect(radio).to.have.property('id');",
+							"        pm.expect(radio).to.have.property('radio_tetra_code');",
+							"        pm.expect(radio).to.have.property('estado');",
+							"    });",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra?page=1&limit=10",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1",
+							"description": "Número de página"
+						},
+						{
+							"key": "limit",
+							"value": "10",
+							"description": "Registros por página"
+						},
+						{
+							"key": "search",
+							"value": "",
+							"description": "Buscar por código o descripción",
+							"disabled": true
+						},
+						{
+							"key": "estado",
+							"value": "",
+							"description": "true/false para filtrar por estado",
+							"disabled": true
+						},
+						{
+							"key": "asignado",
+							"value": "",
+							"description": "true/false/all para filtrar por asignación",
+							"disabled": true
+						}
+					]
+				},
+				"description": "Lista todos los radios con filtros y paginación."
+			},
+			"response": []
+		},
+		{
+			"name": "Buscar Radios por Texto",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra?search=RT-001&page=1&limit=10",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra"
+					],
+					"query": [
+						{
+							"key": "search",
+							"value": "RT-001",
+							"description": "Busca en código y descripción"
+						},
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						}
+					]
+				},
+				"description": "Busca radios por texto en código o descripción."
+			},
+			"response": []
+		},
+		{
+			"name": "Filtrar Radios Activos",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra?estado=true&page=1&limit=10",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra"
+					],
+					"query": [
+						{
+							"key": "estado",
+							"value": "true",
+							"description": "true = activos, false = inactivos"
+						},
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						}
+					]
+				},
+				"description": "Filtra solo radios activos."
+			},
+			"response": []
+		},
+		{
+			"name": "Filtrar Radios Asignados",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra?asignado=true&page=1&limit=10",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra"
+					],
+					"query": [
+						{
+							"key": "asignado",
+							"value": "true",
+							"description": "true = asignados, false = sin asignar, all = todos"
+						},
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						}
+					]
+				},
+				"description": "Filtra radios que están asignados a personal."
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener Radio por ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Radio has complete data\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    pm.expect(jsonData.data).to.have.property('radio_tetra_code');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra/1",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra",
+						"1"
+					]
+				},
+				"description": "Obtiene un radio específico por su ID."
+			},
+			"response": []
+		},
+		{
+			"name": "Crear Radio TETRA",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Radio created successfully\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData.data).to.have.property('id');",
+							"    ",
+							"    // Guardar ID para pruebas posteriores",
+							"    pm.environment.set(\"radioTetraId\", jsonData.data.id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"radio_tetra_code\": \"RT-101\",\n  \"descripcion\": \"Radio Motorola XTS 5000\",\n  \"fecha_fabricacion\": \"2023-01-15\",\n  \"estado\": true\n}"
+				},
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra"
+					]
+				},
+				"description": "Crea un nuevo radio TETRA.\n\n**Campos:**\n- radio_tetra_code: string (10 chars, opcional - se autogenera)\n- descripcion: string (50 chars, opcional)\n- personal_seguridad_id: integer (opcional)\n- fecha_fabricacion: date (opcional)\n- estado: boolean (default: true)"
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Radio TETRA",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Radio updated successfully\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.include('actualizado');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"descripcion\": \"Radio Motorola XTS 5000 - Actualizado\",\n  \"estado\": true\n}"
+				},
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra/{{radioTetraId}}",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra",
+						"{{radioTetraId}}"
+					]
+				},
+				"description": "Actualiza un radio TETRA existente."
+			},
+			"response": []
+		},
+		{
+			"name": "Asignar Radio a Personal",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Radio assigned successfully\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.include('asignado');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"personal_seguridad_id\": 1\n}"
+				},
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra/{{radioTetraId}}/asignar",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra",
+						"{{radioTetraId}}",
+						"asignar"
+					]
+				},
+				"description": "Asigna un radio a personal de seguridad.\n\n**Body:**\n- personal_seguridad_id: integer (required)"
+			},
+			"response": []
+		},
+		{
+			"name": "Desasignar Radio",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Radio unassigned successfully\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.include('desasignado');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra/{{radioTetraId}}/desasignar",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra",
+						"{{radioTetraId}}",
+						"desasignar"
+					]
+				},
+				"description": "Desasigna un radio (libera para reasignación)."
+			},
+			"response": []
+		},
+		{
+			"name": "Activar Radio",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Radio activated successfully\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.include('activado');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra/{{radioTetraId}}/activar",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra",
+						"{{radioTetraId}}",
+						"activar"
+					]
+				},
+				"description": "Activa un radio (estado = true)."
+			},
+			"response": []
+		},
+		{
+			"name": "Desactivar Radio",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Radio deactivated successfully\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.include('desactivado');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra/{{radioTetraId}}/desactivar",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra",
+						"{{radioTetraId}}",
+						"desactivar"
+					]
+				},
+				"description": "Desactiva un radio (estado = false)."
+			},
+			"response": []
+		},
+		{
+			"name": "Eliminar Radio (Soft Delete)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Radio deleted successfully\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.include('eliminado');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{RemoteBase_Url}}/api/{{apiVersion}}/radios-tetra/{{radioTetraId}}",
+					"host": [
+						"{{RemoteBase_Url}}"
+					],
+					"path": [
+						"api",
+						"{{apiVersion}}",
+						"radios-tetra",
+						"{{radioTetraId}}"
+					]
+				},
+				"description": "Elimina (soft delete) un radio TETRA."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Verificar token",
+					"if (!pm.environment.get('authToken') && !pm.collectionVariables.get('authToken')) {",
+					"    console.warn('⚠️ authToken no está configurado');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Validación global",
+					"pm.test(\"Response time is less than 3000ms\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+					"});",
+					"",
+					"if (pm.response.code !== 200 && pm.response.code !== 201) {",
+					"    pm.test(\"Error response has message\", function () {",
+					"        var jsonData = pm.response.json();",
+					"        pm.expect(jsonData).to.have.property('error').or.to.have.property('errors');",
+					"    });",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "RemoteBase_Url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "apiVersion",
+			"value": "v1",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "radioTetraId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
