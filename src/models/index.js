@@ -15,6 +15,7 @@
  * HISTORIAL DE CAMBIOS:
  * =====================
  * v2.1.2 (2026-01-11):
+ *  - ✅ Agregado modelo RadioTetra para gestionar radios Tetra asignados a personal
  *  - ✅ Agregado modelo VehiculoCuadrantesAsignados para gestionar
  *    la asignación de vehículos a cuadrantes en operativos específicos.
  *  - ✅ Agregado Operativos de Patrullaje por Turnos
@@ -126,6 +127,14 @@ import TipoVehiculo from "./TipoVehiculo.js";
  * @type {Model}
  */
 import Ubigeo from "./Ubigeo.js";
+
+/**
+ * Modelo RadioTetra
+ * Catálogo de Radios Tetra utilizados en la flota
+ * @type {Model}
+ */
+
+import RadioTetra from "./RadioTetra.js";
 
 //=============================================
 // IMPORTAR MODELOS - UBICACIÓN Y TERRITORIO
@@ -1542,6 +1551,38 @@ VehiculoCuadrantesAsignados.belongsTo(Cuadrante, {
   as: "cuadrante",
 });
 
+// ============================================================================
+// ASOCIACIONES DEL MODELO RADIO TETRA
+// ============================================================================
+
+// Relación: PersonalSeguridad -> RadioTetra (One-to-Many)
+PersonalSeguridad.hasMany(RadioTetra, {
+  foreignKey: "personal_seguridad_id",
+  as: "radiosTetraAsignados",
+});
+
+// Relación: RadioTetra -> PersonalSeguridad (Many-to-One)
+RadioTetra.belongsTo(PersonalSeguridad, {
+  foreignKey: "personal_seguridad_id",
+  as: "personalAsignado", // Este es el alias que usa el controlador
+});
+
+// Relaciones de auditoría para RadioTetra
+RadioTetra.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorRadioTetra",
+});
+
+RadioTetra.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorRadioTetra",
+});
+
+RadioTetra.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorRadioTetra",
+});
+
 console.log("✅ Asociaciones configuradas exitosamente");
 
 //=============================================
@@ -1565,6 +1606,7 @@ const models = {
   Ubigeo,
   EstadoOperativoRecurso,
   TipoCopiloto,
+  RadioTetra, // ✅ NEW 2.1.2
 
   // Operativos
   Vehiculo,
@@ -1589,7 +1631,6 @@ const models = {
   Rol,
   Permiso,
   UsuarioRol,
-
   EmailVerification,
   PasswordReset,
   PasswordHistorial,
@@ -1603,7 +1644,7 @@ const models = {
   LoginIntento,
   AuditoriaAccion,
 
-  // Calles y Direcciones (✅ NEW)
+  // Calles y Direcciones
   TipoVia,
   Calle,
   CallesCuadrantes,
@@ -1644,6 +1685,7 @@ export {
   Ubigeo,
   EstadoOperativoRecurso,
   TipoCopiloto,
+  RadioTetra,
   // Operativos
   Vehiculo,
   AbastecimientoCombustible,
@@ -1674,7 +1716,7 @@ export {
   HistorialUsuario,
   LoginIntento,
   AuditoriaAccion,
-  // Calles y Direcciones (✅ v2.2.1)
+  // Calles y Direcciones (✅ v2.1.1)
   TipoVia,
   Calle,
   CallesCuadrantes,
