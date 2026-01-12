@@ -244,12 +244,12 @@ export const getAllVehiculosByTurno = async (req, res) => {
         {
           model: PersonalSeguridad,
           as: "conductor",
-          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "numero_placa"],
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
         },
         {
           model: PersonalSeguridad,
           as: "copiloto",
-          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "numero_placa"],
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
         },
         {
           model: TipoCopiloto,
