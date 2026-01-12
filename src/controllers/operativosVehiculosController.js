@@ -27,6 +27,9 @@ const {
   OperativosVehiculosCuadrantes,
   Cuadrante,
   Usuario,
+  TipoCopiloto,
+  RadioTetra,
+  EstadoOperativoRecurso,
 } = models;
 import { Op } from "sequelize";
 
@@ -118,6 +121,30 @@ export const getAllVehiculos = async (req, res) => {
         model: PersonalSeguridad,
         as: "copiloto",
         attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        required: false,
+      },
+      {
+        model: TipoCopiloto,
+        as: "tipo_copiloto",
+        attributes: ["id", "descripcion", "estado"],
+        required: false,
+      },
+      {
+        model: RadioTetra,
+        as: "radio_tetra",
+        attributes: [
+          "id",
+          "radio_tetra_code",
+          "descripcion",
+          "fecha_fabricacion",
+          "estado",
+        ],
+        required: false,
+      },
+      {
+        model: EstadoOperativoRecurso,
+        as: "estado_operativo",
+        attributes: ["id", "descripcion", "estado"],
         required: false,
       },
       {
@@ -217,12 +244,36 @@ export const getAllVehiculosByTurno = async (req, res) => {
         {
           model: PersonalSeguridad,
           as: "conductor",
-          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "numero_placa"],
         },
         {
           model: PersonalSeguridad,
           as: "copiloto",
-          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "numero_placa"],
+        },
+        {
+          model: TipoCopiloto,
+          as: "tipo_copiloto",
+          attributes: ["id", "descripcion", "estado"],
+          required: false,
+        },
+        {
+          model: RadioTetra,
+          as: "radio_tetra",
+          attributes: [
+            "id",
+            "radio_tetra_code",
+            "descripcion",
+            "fecha_fabricacion",
+            "estado",
+          ],
+          required: false,
+        },
+        {
+          model: EstadoOperativoRecurso,
+          as: "estado_operativo",
+          attributes: ["id", "descripcion", "estado"],
+          required: false,
         },
         {
           model: Usuario,
@@ -243,6 +294,7 @@ export const getAllVehiculosByTurno = async (req, res) => {
           required: false,
         },
       ],
+      order: [['created_at', 'DESC']],
     });
 
     res.status(200).json({
