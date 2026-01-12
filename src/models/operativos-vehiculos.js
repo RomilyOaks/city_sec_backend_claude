@@ -62,11 +62,27 @@ class OperativosVehiculos extends Model {
       as: "eliminador",
     });
 
+    // Relación con TipoCopiloto
+    OperativosVehiculos.belongsTo(models.TipoCopiloto, {
+      foreignKey: "tipo_copiloto_id",
+      as: "tipo_copiloto",
+    });
+
+    // Relación con RadioTetra
+    OperativosVehiculos.belongsTo(models.RadioTetra, {
+      foreignKey: "radio_tetra_id",
+      as: "radio_tetra",
+    });
+
+    // Relación con EstadoOperativoRecurso
+    OperativosVehiculos.belongsTo(models.EstadoOperativoRecurso, {
+      foreignKey: "estado_operativo_id",
+      as: "estado_operativo",
+    });
+
     // NOTA: La relación con OperativosVehiculosNovedades es indirecta:
     // OperativosVehiculos → OperativosVehiculosCuadrantes → OperativosVehiculosNovedades
     // No existe una FK directa vehiculo_id en OperativosVehiculosNovedades
-
-    // TODO: Agregar asociaciones para tipo_copiloto_id, radio_tetra_id, estado_operativo_id
   }
 }
 
