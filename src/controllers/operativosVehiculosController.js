@@ -129,19 +129,19 @@ export const getAllVehiculos = async (req, res) => {
       {
         model: Usuario,
         as: "creador",
-        attributes: ["id", "usuario", "nombres", "apellidos"],
+        attributes: ["id", "username", "nombres", "apellidos"],
         required: false,
       },
       {
         model: Usuario,
         as: "actualizador",
-        attributes: ["id", "usuario", "nombres", "apellidos"],
+        attributes: ["id", "username", "nombres", "apellidos"],
         required: false,
       },
       {
         model: Usuario,
         as: "eliminador",
-        attributes: ["id", "usuario", "nombres", "apellidos"],
+        attributes: ["id", "username", "nombres", "apellidos"],
         required: false,
       },
     ];
@@ -227,19 +227,19 @@ export const getAllVehiculosByTurno = async (req, res) => {
         {
           model: Usuario,
           as: "creador",
-          attributes: ["id", "usuario", "nombres", "apellidos"],
+          attributes: ["id", "username", "nombres", "apellidos"],
           required: false,
         },
         {
           model: Usuario,
           as: "actualizador",
-          attributes: ["id", "usuario", "nombres", "apellidos"],
+          attributes: ["id", "username", "nombres", "apellidos"],
           required: false,
         },
         {
           model: Usuario,
           as: "eliminador",
-          attributes: ["id", "usuario", "nombres", "apellidos"],
+          attributes: ["id", "username", "nombres", "apellidos"],
           required: false,
         },
       ],
