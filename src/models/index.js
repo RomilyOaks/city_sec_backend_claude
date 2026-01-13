@@ -399,10 +399,10 @@ OperativosTurno.belongsTo(PersonalSeguridad, {
  * Relación: Sector -> OperativosTurno (One-to-Many)
  * Un sector puede tener muchos turnos operativos.
  */
-Sector.hasMany(OperativosTurno, {
-  foreignKey: "sector_id",
-  as: "turnosSector",
-});
+// Sector.hasMany(OperativosTurno, {
+//   foreignKey: "sector_id",
+//   as: "turnosSector",
+// });
 
 OperativosTurno.belongsTo(Sector, {
   foreignKey: "sector_id",
@@ -813,32 +813,30 @@ Novedad.belongsTo(Ubigeo, {
 
 /**
  * Relación: Cargo -> PersonalSeguridad (One-to-Many)
- * Un cargo puede ser asignado a varios miembros del personal
- * Ejemplo: El cargo "Sereno" puede tener 50 personas
+ * Un cargo puede tener muchos personales de seguridad.
  */
-Cargo.hasMany(PersonalSeguridad, {
-  foreignKey: "cargo_id",
-  as: "cargoPersonalSeguridad",
-});
+// Cargo.hasMany(PersonalSeguridad, {
+//   foreignKey: "cargo_id",
+//   as: "personal",
+// });
 
 PersonalSeguridad.belongsTo(Cargo, {
   foreignKey: "cargo_id",
-  as: "PersonalSeguridadCargo",
+  as: "cargo",
 });
 
 /**
  * Relación: Ubigeo -> PersonalSeguridad (One-to-Many)
+ * Un ubigeo puede tener muchos personales de seguridad.
  */
-Ubigeo.hasMany(PersonalSeguridad, {
-  foreignKey: "ubigeo_code",
-  sourceKey: "ubigeo_code",
-  as: "ubigeoPersonalSeguridad",
-});
+// Ubigeo.hasMany(PersonalSeguridad, {
+//   foreignKey: "ubigeo_id",
+//   as: "personal",
+// });
 
 PersonalSeguridad.belongsTo(Ubigeo, {
-  foreignKey: "ubigeo_code",
-  targetKey: "ubigeo_code",
-  as: "PersonalSeguridadUbigeo",
+  foreignKey: "ubigeo_id",
+  as: "ubigeo",
 });
 
 /**
