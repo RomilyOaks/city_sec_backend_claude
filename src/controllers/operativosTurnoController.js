@@ -33,6 +33,8 @@ import { Op } from "sequelize";
 export const getAllTurnos = async (req, res) => {
   try {
     console.log("🐛 DEBUG: Iniciando getAllTurnos");
+    console.log("🐛 DEBUG: URL:", req.originalUrl);
+    console.log("🐛 DEBUG: Method:", req.method);
     console.log("🐛 DEBUG: Query params:", req.query);
     
     const {
@@ -171,6 +173,9 @@ export const getAllTurnos = async (req, res) => {
     });
   } catch (error) {
     console.error("🐛 DEBUG: Error en getAllTurnos:");
+    console.error("🐛 DEBUG: URL:", req.originalUrl);
+    console.error("🐛 DEBUG: Method:", req.method);
+    console.error("🐛 DEBUG: Query params:", req.query);
     console.error("🐛 DEBUG: Error message:", error.message);
     console.error("🐛 DEBUG: Error name:", error.name);
     console.error("🐛 DEBUG: Error stack:", error.stack);
@@ -181,13 +186,30 @@ export const getAllTurnos = async (req, res) => {
       console.error("🐛 DEBUG: Error completo:", JSON.stringify(error, null, 2));
     }
 
+    // Intentar identificar qué include está causando el problema
+    if (error.message.includes('PersonalSeguridad')) {
+      console.error("🐛 DEBUG: El error está relacionado con PersonalSeguridad");
+      console.error("🐛 DEBUG: Revisando includes de PersonalSeguridad...");
+      
+      // Mostrar todas las asociaciones de PersonalSeguridad disponibles
+      try {
+        console.log("🐛 DEBUG: Asociaciones de OperativosTurno:", Object.keys(OperativosTurno.associations));
+        console.log("🐛 DEBUG: Asociaciones de PersonalSeguridad:", Object.keys(PersonalSeguridad.associations));
+      } catch (assocError) {
+        console.error("🐛 DEBUG: Error al obtener asociaciones:", assocError.message);
+      }
+    }
+
     res.status(500).json({
       success: false,
       message: "Error al obtener los turnos",
       error: error.message,
       debug: {
         name: error.name,
-        isAssociationError: error.name === 'SequelizeAssociationError' || error.message.includes('associated')
+        isAssociationError: error.name === 'SequelizeAssociationError' || error.message.includes('associated'),
+        url: req.originalUrl,
+        method: req.method,
+        query: req.query
       }
     });
   }
@@ -199,7 +221,13 @@ export const getAllTurnos = async (req, res) => {
  */
 export const getTurnoById = async (req, res) => {
   try {
+    console.log("🐛 DEBUG: Iniciando getTurnoById");
+    console.log("🐛 DEBUG: URL:", req.originalUrl);
+    console.log("🐛 DEBUG: Params:", req.params);
+    
     const { id } = req.params;
+
+    console.log("🐛 DEBUG: Ejecutando OperativosTurno.findByPk...");
 
     const turno = await OperativosTurno.findOne({
       where: {
@@ -218,6 +246,8 @@ export const getTurnoById = async (req, res) => {
         },
       ],
     });
+
+    console.log("🐛 DEBUG: Turno consultado. Encontrado:", !!turno);
 
     if (!turno) {
       return res.status(404).json({
