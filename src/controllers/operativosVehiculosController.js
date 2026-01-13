@@ -242,12 +242,12 @@ export const getAllVehiculosByTurno = async (req, res) => {
         {
           model: PersonalSeguridad,
           as: "conductor",
-          attributes: ["id", "nombre", "apellido_paterno", "dni"],
+          attributes: ["id", "nombres", "apellido_paterno", "doc_numero"],
         },
         {
           model: PersonalSeguridad,
           as: "copiloto",
-          attributes: ["id", "nombre", "apellido_paterno", "dni"],
+          attributes: ["id", "nombres", "apellido_paterno", "doc_numero"],
         },
         {
           model: EstadoOperativoRecurso,
@@ -310,12 +310,12 @@ export const getVehiculoById = async (req, res) => {
         {
           model: PersonalSeguridad,
           as: "conductor",
-          attributes: ["id", "nombre", "apellido_paterno", "dni"],
+          attributes: ["id", "nombres", "apellido_paterno", "doc_numero"],
         },
         {
           model: PersonalSeguridad,
           as: "copiloto",
-          attributes: ["id", "nombre", "apellido_paterno", "dni"],
+          attributes: ["id", "nombres", "apellido_paterno", "doc_numero"],
         },
         {
           model: EstadoOperativoRecurso,
