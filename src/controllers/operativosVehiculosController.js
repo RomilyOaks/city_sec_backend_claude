@@ -31,6 +31,7 @@ const {
   TipoCopiloto,
   RadioTetra,
   EstadoOperativoRecurso,
+  Sector,
 } = models;
 import { Op } from "sequelize";
 
