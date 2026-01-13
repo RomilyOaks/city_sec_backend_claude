@@ -23,6 +23,7 @@ const {
   OperativosVehiculos,
   OperativosTurno,
   Vehiculo,
+  TipoVehiculo,
   PersonalSeguridad,
   OperativosVehiculosCuadrantes,
   Cuadrante,
