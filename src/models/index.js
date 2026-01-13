@@ -830,12 +830,12 @@ PersonalSeguridad.belongsTo(Cargo, {
  * Un ubigeo puede tener muchos personales de seguridad.
  */
 // Ubigeo.hasMany(PersonalSeguridad, {
-//   foreignKey: "ubigeo_id",
+//   foreignKey: "ubigeo_code",
 //   as: "personal",
 // });
 
 PersonalSeguridad.belongsTo(Ubigeo, {
-  foreignKey: "ubigeo_id",
+  foreignKey: "ubigeo_code",
   as: "PersonalSeguridadUbigeo",
 });
 
