@@ -93,6 +93,8 @@ export const getAllCuadrantesByVehiculo = async (req, res) => {
  * @param {object} res - Response object
  */
 export const createCuadranteInVehiculo = async (req, res) => {
+  console.log("🔥🔥🔥 createCuadranteInVehiculo EJECUTÁNDOSE - VERSIÓN ACTUALIZADA 🔥🔥🔥");
+  
   const { vehiculoId } = req.params;
   
   // Verificar que el usuario existe en el request
