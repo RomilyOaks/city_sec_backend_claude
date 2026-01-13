@@ -117,7 +117,7 @@ export const getAllTurnos = async (req, res) => {
       },
       {
         model: PersonalSeguridad,
-        as: "supervisor",
+        as: "supervisor", 
         attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
         required: false,
       },
