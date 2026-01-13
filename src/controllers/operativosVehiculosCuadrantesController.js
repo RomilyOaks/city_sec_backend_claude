@@ -107,7 +107,12 @@ export const createCuadranteInVehiculo = async (req, res) => {
 
   try {
     console.log("🐛 DEBUG: Iniciando createCuadranteInVehiculo para vehiculoId:", vehiculoId);
-    console.log("🐛 DEBUG: Datos recibidos en req.body:", JSON.stringify(req.body, null, 2));
+    console.log("🐛 DEBUG: req.params:", req.params);
+    console.log("🐛 DEBUG: req.body TIPO:", typeof req.body);
+    console.log("🐛 DEBUG: req.body CONTENIDO:", JSON.stringify(req.body, null, 2));
+    console.log("🐛 DEBUG: req.body KEYS:", Object.keys(req.body));
+    console.log("🐛 DEBUG: req.body.hasOwnProperty('observaciones'):", req.body.hasOwnProperty('observaciones'));
+    console.log("🐛 DEBUG: req.body.observaciones:", req.body.observaciones);
     console.log("🐛 DEBUG: Usuario creando:", created_by);
 
     const operativoVehiculo = await OperativosVehiculos.findByPk(
