@@ -323,6 +323,27 @@ export const getVehiculoById = async (req, res) => {
       },
       include: [
         {
+          model: OperativosTurno,
+          as: "turno",
+          include: [
+            {
+              model: PersonalSeguridad,
+              as: "operador",
+              attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+            },
+            {
+              model: PersonalSeguridad,
+              as: "supervisor",
+              attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+            },
+            {
+              model: Sector,
+              as: "sector",
+              attributes: ["id", "nombre", "sector_code"],
+            },
+          ],
+        },
+        {
           model: Vehiculo,
           as: "vehiculo",
           include: [
