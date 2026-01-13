@@ -822,7 +822,7 @@ Novedad.belongsTo(Ubigeo, {
 
 PersonalSeguridad.belongsTo(Cargo, {
   foreignKey: "cargo_id",
-  as: "cargo",
+  as: "PersonalSeguridadCargo",
 });
 
 /**
@@ -836,7 +836,7 @@ PersonalSeguridad.belongsTo(Cargo, {
 
 PersonalSeguridad.belongsTo(Ubigeo, {
   foreignKey: "ubigeo_id",
-  as: "ubigeo",
+  as: "PersonalSeguridadUbigeo",
 });
 
 /**
