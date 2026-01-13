@@ -31,35 +31,58 @@ export const getAllCuadrantesByVehiculo = async (req, res) => {
   const { vehiculoId } = req.params;
 
   try {
+    console.log("🐛 DEBUG: Iniciando getAllCuadrantesByVehiculo para vehiculoId:", vehiculoId);
+
     const operativoVehiculo = await OperativosVehiculos.findByPk(
       vehiculoId
     );
     if (!operativoVehiculo) {
+      console.log("🐛 DEBUG: Vehículo operativo no encontrado");
       return res.status(404).json({
         status: "error",
         message: "Vehículo operativo no encontrado",
       });
     }
 
+    console.log("🐛 DEBUG: Vehículo encontrado, consultando cuadrantes activos...");
+
     const cuadrantes = await OperativosVehiculosCuadrantes.findAll({
-      where: { operativo_vehiculo_id: vehiculoId },
+      where: { 
+        operativo_vehiculo_id: vehiculoId,
+        estado_registro: 1,  // Solo registros activos
+        deleted_at: null     // No eliminados
+      },
       include: [
         {
-          model: Cuadrante,
-          as: "cuadrante",
+          model: models.Cuadrante,
+          as: "datosCuadrante",
+          where: {
+            estado_registro: 1  // Solo cuadrantes activos
+          }
         },
       ],
+      order: [["hora_ingreso", "ASC"]],
     });
+
+    console.log("🐛 DEBUG: Cuadrantes consultados exitosamente. Count:", cuadrantes.length);
 
     res.status(200).json({
       status: "success",
       data: cuadrantes,
     });
   } catch (error) {
+    console.error("🐛 DEBUG: Error en getAllCuadrantesByVehiculo:");
+    console.error("🐛 DEBUG: Error message:", error.message);
+    console.error("🐛 DEBUG: Error name:", error.name);
+    
     res.status(500).json({
       status: "error",
-      message: "Error interno del servidor",
+      message: "Error al obtener los cuadrantes del vehículo",
       error: error.message,
+      debug: {
+        name: error.name,
+        vehiculoId: req.params.vehiculoId,
+      }
     });
   }
 };
@@ -140,7 +163,22 @@ export const updateCuadranteInVehiculo = async (req, res) => {
     console.log("🐛 DEBUG: Datos recibidos:", req.body);
     console.log("🐛 DEBUG: Usuario actualizando:", updated_by);
 
-    const cuadranteAsignado = await OperativosVehiculosCuadrantes.findByPk(id);
+    const cuadranteAsignado = await OperativosVehiculosCuadrantes.findByPk(id, {
+      include: [
+        {
+          model: OperativosVehiculos,
+          as: "operativoVehiculo",
+          include: [
+            {
+              model: models.OperativosTurno,
+              as: "turno",
+              attributes: ["id", "estado"]
+            }
+          ]
+        }
+      ]
+    });
+
     if (!cuadranteAsignado) {
       console.log("🐛 DEBUG: Asignación de cuadrante no encontrada");
       return res.status(404).json({
@@ -149,38 +187,56 @@ export const updateCuadranteInVehiculo = async (req, res) => {
       });
     }
 
-    console.log("🐛 DEBUG: Asignación encontrada, actualizando...");
+    // Validar que el turno esté ACTIVO para permitir edición
+    const estadoTurno = cuadranteAsignado.operativoVehiculo?.turno?.estado;
+    if (estadoTurno !== 'ACTIVO') {
+      console.log("🐛 DEBUG: Turno no está ACTIVO, estado:", estadoTurno);
+      return res.status(400).json({
+        status: "error",
+        message: "No se puede editar la asignación. El turno no está en estado ACTIVO",
+        debug: {
+          estado_turno: estadoTurno,
+          requerido: "ACTIVO"
+        }
+      });
+    }
 
-    // Validar que si se cambia el cuadrante, exista
-    if (req.body.cuadrante_id && req.body.cuadrante_id !== cuadranteAsignado.cuadrante_id) {
-      const { Cuadrante } = models;
-      const nuevoCuadrante = await Cuadrante.findByPk(req.body.cuadrante_id);
-      if (!nuevoCuadrante) {
-        return res.status(400).json({
-          status: "error",
-          message: "El cuadrante especificado no existe",
-        });
+    console.log("🐛 DEBUG: Turno ACTIVO validado, procediendo con actualización...");
+
+    // Campos permitidos cuando el turno está ACTIVO
+    const camposPermitidos = ['hora_salida', 'observaciones', 'incidentes_reportados'];
+    const updateData = {};
+    
+    // Solo permitir campos específicos y validar que hora_salida no sea obligatoria
+    for (const campo of camposPermitidos) {
+      if (req.body.hasOwnProperty(campo)) {
+        if (campo === 'hora_salida' && req.body[campo] === '') {
+          // Permitir hora_salida vacía (null)
+          updateData[campo] = null;
+        } else if (req.body[campo] !== undefined) {
+          updateData[campo] = req.body[campo];
+        }
       }
     }
 
-    // Validar lógica de fechas
-    if (req.body.hora_salida && req.body.hora_ingreso) {
-      const horaIngreso = new Date(req.body.hora_ingreso);
-      const horaSalida = new Date(req.body.hora_salida);
+    // Validar que si se envía hora_salida, sea posterior a hora_ingreso
+    if (updateData.hora_salida && cuadranteAsignado.hora_ingreso) {
+      const horaIngreso = new Date(cuadranteAsignado.hora_ingreso);
+      const horaSalida = new Date(updateData.hora_salida);
       
       if (horaSalida <= horaIngreso) {
         return res.status(400).json({
           status: "error",
           message: "La hora de salida debe ser posterior a la hora de ingreso",
+          debug: {
+            hora_ingreso: cuadranteAsignado.hora_ingreso,
+            hora_salida: updateData.hora_salida
+          }
         });
       }
     }
 
-    const updateData = {
-      ...req.body,
-      updated_by,
-    };
-
+    updateData.updated_by = updated_by;
     console.log("🐛 DEBUG: Datos a actualizar:", updateData);
 
     await cuadranteAsignado.update(updateData);
@@ -191,7 +247,7 @@ export const updateCuadranteInVehiculo = async (req, res) => {
     const cuadranteActualizado = await OperativosVehiculosCuadrantes.findByPk(id, {
       include: [
         {
-          model: Cuadrante,
+          model: models.Cuadrante,
           as: "datosCuadrante",
         },
       ],
@@ -252,26 +308,50 @@ export const deleteCuadranteInVehiculo = async (req, res) => {
   const { deleted_by } = req.user;
 
   try {
+    console.log("🐛 DEBUG: Iniciando deleteCuadranteInVehiculo para ID:", id);
+    console.log("🐛 DEBUG: Usuario eliminando:", deleted_by);
+
     const cuadranteAsignado = await OperativosVehiculosCuadrantes.findByPk(id);
     if (!cuadranteAsignado) {
+      console.log("🐛 DEBUG: Asignación de cuadrante no encontrada");
       return res.status(404).json({
         status: "error",
         message: "Asignación de cuadrante no encontrada",
       });
     }
 
-    await cuadranteAsignado.update({ deleted_by });
+    console.log("🐛 DEBUG: Asignación encontrada, procediendo con soft delete...");
+
+    // Soft delete: actualizar deleted_by, deleted_at y estado_registro = 0
+    await cuadranteAsignado.update({
+      deleted_by,
+      deleted_at: new Date(),
+      estado_registro: 0,  // Importante: también poner estado_registro = 0
+    });
+
+    // Luego hacer el destroy para que Sequelize maneje el soft delete correctamente
     await cuadranteAsignado.destroy();
+
+    console.log("🐛 DEBUG: Soft delete completado exitosamente");
 
     res.status(200).json({
       status: "success",
       message: "Asignación de cuadrante eliminada correctamente",
     });
   } catch (error) {
+    console.error("🐛 DEBUG: Error en deleteCuadranteInVehiculo:");
+    console.error("🐛 DEBUG: Error message:", error.message);
+    console.error("🐛 DEBUG: Error name:", error.name);
+    console.error("🐛 DEBUG: Error stack:", error.stack);
+    
     res.status(500).json({
       status: "error",
       message: "Error al eliminar la asignación",
       error: error.message,
+      debug: {
+        name: error.name,
+        id: req.params.id,
+      }
     });
   }
 };
