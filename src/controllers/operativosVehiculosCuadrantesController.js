@@ -71,7 +71,16 @@ export const getAllCuadrantesByVehiculo = async (req, res) => {
  */
 export const createCuadranteInVehiculo = async (req, res) => {
   const { vehiculoId } = req.params;
-  const { created_by } = req.user; // Asumiendo que el usuario está en req.user
+  
+  // Verificar que el usuario existe en el request
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({
+      status: "error",
+      message: "Usuario no autenticado",
+    });
+  }
+  
+  const { id: created_by } = req.user;
 
   try {
     const operativoVehiculo = await OperativosVehiculos.findByPk(
@@ -82,6 +91,18 @@ export const createCuadranteInVehiculo = async (req, res) => {
         status: "error",
         message: "Vehículo operativo no encontrado",
       });
+    }
+
+    // Validar que el cuadrante exista
+    if (req.body.cuadrante_id) {
+      const { Cuadrante } = models;
+      const cuadrante = await Cuadrante.findByPk(req.body.cuadrante_id);
+      if (!cuadrante) {
+        return res.status(404).json({
+          status: "error",
+          message: "Cuadrante no encontrado",
+        });
+      }
     }
 
     const newCuadranteAsignado = await OperativosVehiculosCuadrantes.create({
@@ -96,6 +117,7 @@ export const createCuadranteInVehiculo = async (req, res) => {
       data: newCuadranteAsignado,
     });
   } catch (error) {
+    console.error("Error en createCuadranteInVehiculo:", error);
     res.status(500).json({
       status: "error",
       message: "Error al asignar el cuadrante",
