@@ -1,0 +1,225 @@
+{
+	"info": {
+		"_postman_id": "citysec-operativos-cuadrantes",
+		"name": "CitySecure - Operativos Cuadrantes por Vehículo",
+		"description": "Colección para probar endpoints de cuadrantes asignados a vehículos operativos",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "127.0.0.1:3000",
+			"type": "string"
+		},
+		{
+			"key": "TOKEN",
+			"value": "",
+			"type": "string",
+			"description": "Token JWT obtenido del login"
+		},
+		{
+			"key": "VEHICULO_ID",
+			"value": "19",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{TOKEN}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "🔐 Login - Obtener Token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {",
+							"    const response = pm.response.json();",
+							"    if (response.data && response.data.token) {",
+							"        pm.collectionVariables.set('TOKEN', response.data.token);",
+							"        console.log('Token guardado:', response.data.token);",
+							"    }",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username_or_email\": \"admin\",\n    \"password\": \"Admin123!\"\n}"
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/auth/login",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "📋 GET Cuadrantes por Vehículo (CORRECTO - Con Turno)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/operativos/2/vehiculos/{{VEHICULO_ID}}/cuadrantes",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"operativos",
+						"2",
+						"vehiculos",
+						"{{VEHICULO_ID}}",
+						"cuadrantes"
+					]
+				},
+				"description": "✅ RUTA CORRECTA: Incluye turnoId=2"
+			},
+			"response": []
+		},
+		{
+			"name": "❌ GET Cuadrantes por Vehículo (INCORRECTO - Sin Turno)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/operativos/vehiculos/{{VEHICULO_ID}}/cuadrantes",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"operativos",
+						"vehiculos",
+						"{{VEHICULO_ID}}",
+						"cuadrantes"
+					]
+				},
+				"description": "❌ RUTA INCORRECTA: Esta ruta da 404 porque falta el turnoId"
+			},
+			"response": []
+		},
+		{
+			"name": "📋 GET Vehículos Operativos (Test)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/operativos/vehiculos",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"operativos-vehiculos"
+					]
+				},
+				"description": "Para verificar si el vehículo ID 19 existe"
+			},
+			"response": []
+		},
+		{
+			"name": "📋 GET Vehículo por ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/operativos-vehiculos/{{VEHICULO_ID}}",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"operativos-vehiculos",
+						"{{VEHICULO_ID}}"
+					]
+				},
+				"description": "Verificar si el vehículo operativo ID 19 existe"
+			},
+			"response": []
+		},
+		{
+			"name": "📝 POST Crear Cuadrante en Vehículo (CORRECTO)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"cuadrante_id\": 1,\n    \"hora_ingreso\": \"2026-01-12T08:00:00.000Z\",\n    \"observaciones\": \"Prueba de asignación de cuadrante\",\n    \"incidentes_reportados\": \"Sin incidentes\"\n}"
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/operativos/2/vehiculos/{{VEHICULO_ID}}/cuadrantes",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"operativos",
+						"2",
+						"vehiculos",
+						"{{VEHICULO_ID}}",
+						"cuadrantes"
+					]
+				},
+				"description": "✅ RUTA CORRECTA: Incluye turnoId=2"
+			},
+			"response": []
+		},
+		{
+			"name": "🔍 Debug - Listar Todas las Rutas",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/health",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"health"
+					]
+				},
+				"description": "Verificar que el servidor esté funcionando"
+			},
+			"response": []
+		}
+	]
+}
