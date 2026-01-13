@@ -106,10 +106,15 @@ export const createCuadranteInVehiculo = async (req, res) => {
   const { id: created_by } = req.user;
 
   try {
+    console.log("🐛 DEBUG: Iniciando createCuadranteInVehiculo para vehiculoId:", vehiculoId);
+    console.log("🐛 DEBUG: Datos recibidos en req.body:", JSON.stringify(req.body, null, 2));
+    console.log("🐛 DEBUG: Usuario creando:", created_by);
+
     const operativoVehiculo = await OperativosVehiculos.findByPk(
       vehiculoId
     );
     if (!operativoVehiculo) {
+      console.log("🐛 DEBUG: Vehículo operativo no encontrado");
       return res.status(404).json({
         status: "error",
         message: "Vehículo operativo no encontrado",
@@ -121,6 +126,7 @@ export const createCuadranteInVehiculo = async (req, res) => {
       const { Cuadrante } = models;
       const cuadrante = await Cuadrante.findByPk(req.body.cuadrante_id);
       if (!cuadrante) {
+        console.log("🐛 DEBUG: Cuadrante no encontrado con ID:", req.body.cuadrante_id);
         return res.status(404).json({
           status: "error",
           message: "Cuadrante no encontrado",
@@ -128,23 +134,66 @@ export const createCuadranteInVehiculo = async (req, res) => {
       }
     }
 
-    const newCuadranteAsignado = await OperativosVehiculosCuadrantes.create({
+    // Preparar datos para creación
+    const createData = {
       ...req.body,
       operativo_vehiculo_id: vehiculoId,
       created_by,
+    };
+
+    console.log("🐛 DEBUG: Datos a crear:", JSON.stringify(createData, null, 2));
+
+    const newCuadranteAsignado = await OperativosVehiculosCuadrantes.create(createData);
+
+    console.log("🐛 DEBUG: Cuadrante asignado creado exitosamente:");
+    console.log("🐛 DEBUG: ID:", newCuadranteAsignado.id);
+    console.log("🐛 DEBUG: observaciones:", newCuadranteAsignado.observaciones);
+    console.log("🐛 DEBUG: incidentes_reportados:", newCuadranteAsignado.incidentes_reportados);
+
+    // Recargar con datos completos para respuesta
+    const cuadranteCompleto = await OperativosVehiculosCuadrantes.findByPk(newCuadranteAsignado.id, {
+      include: [
+        {
+          model: models.Cuadrante,
+          as: "datosCuadrante",
+        },
+      ],
     });
 
     res.status(201).json({
       status: "success",
       message: "Cuadrante asignado al vehículo operativo correctamente",
-      data: newCuadranteAsignado,
+      data: cuadranteCompleto,
     });
   } catch (error) {
-    console.error("Error en createCuadranteInVehiculo:", error);
+    console.error("🐛 DEBUG: Error en createCuadranteInVehiculo:");
+    console.error("🐛 DEBUG: Error message:", error.message);
+    console.error("🐛 DEBUG: Error name:", error.name);
+    console.error("🐛 DEBUG: Error stack:", error.stack);
+    
+    // Manejar errores específicos de Sequelize
+    if (error.name === 'SequelizeValidationError') {
+      const errors = error.errors.map(err => ({
+        field: err.path,
+        message: err.message,
+        value: err.value,
+      }));
+      return res.status(400).json({
+        status: "error",
+        message: "Error de validación",
+        errors,
+      });
+    }
+
     res.status(500).json({
       status: "error",
       message: "Error al asignar el cuadrante",
       error: error.message,
+      debug: {
+        name: error.name,
+        body: req.body,
+        vehiculoId: req.params.vehiculoId,
+      }
     });
   }
 };
@@ -207,17 +256,27 @@ export const updateCuadranteInVehiculo = async (req, res) => {
     const camposPermitidos = ['hora_salida', 'observaciones', 'incidentes_reportados'];
     const updateData = {};
     
+    console.log("🐛 DEBUG: Procesando campos permitidos:", camposPermitidos);
+    
     // Solo permitir campos específicos y validar que hora_salida no sea obligatoria
     for (const campo of camposPermitidos) {
       if (req.body.hasOwnProperty(campo)) {
+        console.log(`🐛 DEBUG: Procesando campo '${campo}':`, req.body[campo]);
+        
         if (campo === 'hora_salida' && req.body[campo] === '') {
           // Permitir hora_salida vacía (null)
           updateData[campo] = null;
+          console.log("🐛 DEBUG: hora_salida vacía, estableciendo a null");
         } else if (req.body[campo] !== undefined) {
           updateData[campo] = req.body[campo];
+          console.log(`🐛 DEBUG: ${campo} establecido a:`, req.body[campo]);
         }
+      } else {
+        console.log(`🐛 DEBUG: Campo '${campo}' no presente en req.body`);
       }
     }
+
+    console.log("🐛 DEBUG: updateData final antes de validación:", JSON.stringify(updateData, null, 2));
 
     // Validar que si se envía hora_salida, sea posterior a hora_ingreso
     if (updateData.hora_salida && cuadranteAsignado.hora_ingreso) {
@@ -237,11 +296,15 @@ export const updateCuadranteInVehiculo = async (req, res) => {
     }
 
     updateData.updated_by = updated_by;
-    console.log("🐛 DEBUG: Datos a actualizar:", updateData);
+    console.log("🐛 DEBUG: Datos a actualizar (con updated_by):", JSON.stringify(updateData, null, 2));
 
     await cuadranteAsignado.update(updateData);
 
     console.log("🐛 DEBUG: Actualización exitosa");
+    console.log("🐛 DEBUG: Verificando datos guardados:");
+    console.log("🐛 DEBUG: observaciones guardadas:", cuadranteAsignado.observaciones);
+    console.log("🐛 DEBUG: incidentes_reportados guardados:", cuadranteAsignado.incidentes_reportados);
+    console.log("🐛 DEBUG: hora_salida guardada:", cuadranteAsignado.hora_salida);
 
     // Recargar con los datos actualizados y relaciones
     const cuadranteActualizado = await OperativosVehiculosCuadrantes.findByPk(id, {
