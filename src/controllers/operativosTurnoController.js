@@ -32,6 +32,9 @@ import { Op } from "sequelize";
  */
 export const getAllTurnos = async (req, res) => {
   try {
+    console.log("🐛 DEBUG: Iniciando getAllTurnos");
+    console.log("🐛 DEBUG: Query params:", req.query);
+    
     const {
       page = 1,
       limit = 20,
@@ -48,6 +51,8 @@ export const getAllTurnos = async (req, res) => {
       sort = "fecha",
       order = "DESC",
     } = req.query;
+
+    console.log("🐛 DEBUG: Construyendo whereClause");
 
     const whereClause = {
       deleted_at: null,
@@ -107,6 +112,8 @@ export const getAllTurnos = async (req, res) => {
     const orderField = sort;
     const orderDir = order.toUpperCase() === "ASC" ? "ASC" : "DESC";
 
+    console.log("🐛 DEBUG: Configurando includes");
+
     // Configurar includes - La búsqueda ya está en whereClause principal
     const includeOptions = [
       {
@@ -135,6 +142,9 @@ export const getAllTurnos = async (req, res) => {
       },
     ];
 
+    console.log("🐛 DEBUG: Include options configurados:", includeOptions.map(i => ({ model: i.model.name, as: i.as })));
+    console.log("🐛 DEBUG: Ejecutando OperativosTurno.findAndCountAll...");
+
     const { count, rows } = await OperativosTurno.findAndCountAll({
       where: whereClause,
       include: includeOptions,
@@ -143,6 +153,8 @@ export const getAllTurnos = async (req, res) => {
       offset: parseInt(offset),
       distinct: true,
     });
+
+    console.log("🐛 DEBUG: Consulta ejecutada exitosamente. Count:", count, "Rows:", rows.length);
 
     res.status(200).json({
       success: true,
@@ -156,11 +168,25 @@ export const getAllTurnos = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Error en getAllTurnos:", error);
+    console.error("🐛 DEBUG: Error en getAllTurnos:");
+    console.error("🐛 DEBUG: Error message:", error.message);
+    console.error("🐛 DEBUG: Error name:", error.name);
+    console.error("🐛 DEBUG: Error stack:", error.stack);
+    
+    // Si es un error de asociaciones de Sequelize, mostrar detalles adicionales
+    if (error.name === 'SequelizeAssociationError' || error.message.includes('associated')) {
+      console.error("🐛 DEBUG: Error de asociaciones detectado");
+      console.error("🐛 DEBUG: Error completo:", JSON.stringify(error, null, 2));
+    }
+
     res.status(500).json({
       success: false,
       message: "Error al obtener los turnos",
       error: error.message,
+      debug: {
+        name: error.name,
+        isAssociationError: error.name === 'SequelizeAssociationError' || error.message.includes('associated')
+      }
     });
   }
 };
