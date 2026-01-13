@@ -121,12 +121,14 @@ export const getAllTurnos = async (req, res) => {
         as: "operador",
         attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
         required: false,
+        association: OperativosTurno.associations.operador,
       },
       {
         model: PersonalSeguridad,
         as: "supervisor", 
         attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
         required: false,
+        association: OperativosTurno.associations.supervisor,
       },
       {
         model: Sector,
@@ -382,11 +384,13 @@ export const updateTurno = async (req, res) => {
           model: PersonalSeguridad,
           as: "operador",
           attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+          association: OperativosTurno.associations.operador,
         },
         {
           model: PersonalSeguridad,
           as: "supervisor",
           attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+          association: OperativosTurno.associations.supervisor,
         },
         {
           model: Sector,
