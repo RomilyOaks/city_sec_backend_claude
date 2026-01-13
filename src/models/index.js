@@ -373,7 +373,7 @@ console.log("📌 Configurando asociaciones de modelos...");
  */
 PersonalSeguridad.hasMany(OperativosTurno, {
   foreignKey: "operador_id",
-  as: "turnos",
+  as: "turnosComoOperador",
 });
 
 OperativosTurno.belongsTo(PersonalSeguridad, {
@@ -387,7 +387,7 @@ OperativosTurno.belongsTo(PersonalSeguridad, {
  */
 PersonalSeguridad.hasMany(OperativosTurno, {
   foreignKey: "supervisor_id",
-  as: "turnosSupervisa",
+  as: "turnosComoSupervisor",
 });
 
 OperativosTurno.belongsTo(PersonalSeguridad, {
