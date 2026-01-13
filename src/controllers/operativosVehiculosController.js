@@ -116,15 +116,13 @@ export const getAllVehiculos = async (req, res) => {
       {
         model: PersonalSeguridad,
         as: "conductor",
-        attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
-        required: false,
+        attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "doc_tipo", "doc_numero"],
       },
-      // {
-      //   model: PersonalSeguridad,
-      //   as: "copiloto",
-      //   attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
-      //   required: false,
-      // },
+      {
+        model: PersonalSeguridad,
+        as: "copiloto",
+        attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "doc_tipo", "doc_numero"],
+      },
       {
         model: TipoCopiloto,
         as: "tipo_copiloto",
@@ -248,13 +246,13 @@ export const getAllVehiculosByTurno = async (req, res) => {
         {
           model: PersonalSeguridad,
           as: "conductor",
-          attributes: ["id", "nombres", "apellido_paterno", "doc_numero"],
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "doc_tipo", "doc_numero"],
         },
-        // {
-        //   model: PersonalSeguridad,
-        //   as: "copiloto",
-        //   attributes: ["id", "nombres", "apellido_paterno", "doc_numero"],
-        // },
+        {
+          model: PersonalSeguridad,
+          as: "copiloto",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "doc_tipo", "doc_numero"],
+        },
         {
           model: EstadoOperativoRecurso,
           as: "estado_operativo",
@@ -358,13 +356,13 @@ export const getVehiculoById = async (req, res) => {
         {
           model: PersonalSeguridad,
           as: "conductor",
-          attributes: ["id", "nombres", "apellido_paterno", "doc_numero"],
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "doc_tipo", "doc_numero"],
         },
-        // {
-        //   model: PersonalSeguridad,
-        //   as: "copiloto",
-        //   attributes: ["id", "nombres", "apellido_paterno", "doc_numero"],
-        // },
+        {
+          model: PersonalSeguridad,
+          as: "copiloto",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "doc_tipo", "doc_numero"],
+        },
         {
           model: EstadoOperativoRecurso,
           as: "estado_operativo",
