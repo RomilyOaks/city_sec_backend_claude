@@ -213,13 +213,18 @@ export const getAllVehiculosByTurno = async (req, res) => {
   const { turnoId } = req.params;
 
   try {
+    console.log("🐛 DEBUG: Iniciando getAllVehiculosByTurno para turnoId:", turnoId);
+
     const turno = await OperativosTurno.findByPk(turnoId);
     if (!turno) {
+      console.log("🐛 DEBUG: Turno no encontrado");
       return res.status(404).json({
         success: false,
         message: "Turno no encontrado",
       });
     }
+
+    console.log("🐛 DEBUG: Turno encontrado, construyendo consulta de vehículos");
 
     const vehiculos = await OperativosVehiculos.findAll({
       where: {
@@ -258,16 +263,32 @@ export const getAllVehiculosByTurno = async (req, res) => {
       order: [["created_at", "ASC"]],
     });
 
+    console.log("🐛 DEBUG: Vehículos consultados exitosamente. Count:", vehiculos.length);
+
     res.status(200).json({
       success: true,
       data: vehiculos,
     });
   } catch (error) {
-    console.error("Error en getAllVehiculosByTurno:", error);
+    console.error("🐛 DEBUG: Error en getAllVehiculosByTurno:");
+    console.error("🐛 DEBUG: Error message:", error.message);
+    console.error("🐛 DEBUG: Error name:", error.name);
+    console.error("🐛 DEBUG: Error stack:", error.stack);
+    
+    // Si es un error de asociaciones de Sequelize, mostrar detalles adicionales
+    if (error.name === 'SequelizeAssociationError' || error.message.includes('associated')) {
+      console.error("🐛 DEBUG: Error de asociaciones detectado en vehículos");
+      console.error("🐛 DEBUG: Error completo:", JSON.stringify(error, null, 2));
+    }
+
     res.status(500).json({
       success: false,
       message: "Error interno del servidor",
       error: error.message,
+      debug: {
+        name: error.name,
+        isAssociationError: error.name === 'SequelizeAssociationError' || error.message.includes('associated')
+      }
     });
   }
 };
@@ -280,13 +301,18 @@ export const getVehiculoById = async (req, res) => {
   const { turnoId, id } = req.params;
 
   try {
+    console.log("🐛 DEBUG: Iniciando getVehiculoById para turnoId:", turnoId, "vehiculoId:", id);
+
     const turno = await OperativosTurno.findByPk(turnoId);
     if (!turno) {
+      console.log("🐛 DEBUG: Turno no encontrado");
       return res.status(404).json({
         success: false,
         message: "Turno no encontrado",
       });
     }
+
+    console.log("🐛 DEBUG: Turno encontrado, construyendo consulta de vehículo específico");
 
     const vehiculo = await OperativosVehiculos.findOne({
       where: {
@@ -325,6 +351,8 @@ export const getVehiculoById = async (req, res) => {
       ],
     });
 
+    console.log("🐛 DEBUG: Vehículo consultado. Encontrado:", !!vehiculo);
+
     if (!vehiculo) {
       return res.status(404).json({
         success: false,
@@ -337,11 +365,25 @@ export const getVehiculoById = async (req, res) => {
       data: vehiculo,
     });
   } catch (error) {
-    console.error("Error en getVehiculoById:", error);
+    console.error("🐛 DEBUG: Error en getVehiculoById:");
+    console.error("🐛 DEBUG: Error message:", error.message);
+    console.error("🐛 DEBUG: Error name:", error.name);
+    console.error("🐛 DEBUG: Error stack:", error.stack);
+    
+    // Si es un error de asociaciones de Sequelize, mostrar detalles adicionales
+    if (error.name === 'SequelizeAssociationError' || error.message.includes('associated')) {
+      console.error("🐛 DEBUG: Error de asociaciones detectado en vehículo específico");
+      console.error("🐛 DEBUG: Error completo:", JSON.stringify(error, null, 2));
+    }
+
     res.status(500).json({
       success: false,
       message: "Error interno del servidor",
       error: error.message,
+      debug: {
+        name: error.name,
+        isAssociationError: error.name === 'SequelizeAssociationError' || error.message.includes('associated')
+      }
     });
   }
 };
