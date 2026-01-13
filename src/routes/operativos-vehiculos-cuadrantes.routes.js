@@ -43,20 +43,17 @@ const permisos = {
 
 // Rutas para OperativosVehiculosCuadrantes
 router.get(
-  "/:operativoVehiculoId/cuadrantes",
+  "/cuadrantes",
   verificarToken,
   (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
   getAllCuadrantesByVehiculo
 );
 
 router.post(
-  "/:operativoVehiculoId/cuadrantes",
+  "/cuadrantes",
   verificarToken,
   (req, res, next) => requireAnyPermission([permisos.create])(req, res, next),
   [
-    param("operativoVehiculoId")
-      .isInt()
-      .withMessage("El ID del vehículo operativo debe ser un número entero."),
     body("cuadrante_id")
       .isInt()
       .withMessage("El ID del cuadrante debe ser un número entero."),
@@ -79,13 +76,10 @@ router.post(
 );
 
 router.put(
-  "/:operativoVehiculoId/cuadrantes/:id",
+  "/cuadrantes/:id",
   verificarToken,
   (req, res, next) => requireAnyPermission([permisos.update])(req, res, next),
   [
-    param("operativoVehiculoId")
-      .isInt()
-      .withMessage("El ID del vehículo operativo debe ser un número entero."),
     param("id")
       .isInt()
       .withMessage("El ID del cuadrante asignado debe ser un número entero."),
@@ -121,13 +115,10 @@ router.put(
 );
 
 router.delete(
-  "/:operativoVehiculoId/cuadrantes/:id",
+  "/cuadrantes/:id",
   verificarToken,
   (req, res, next) => requireAnyPermission([permisos.delete])(req, res, next),
   [
-    param("operativoVehiculoId")
-      .isInt()
-      .withMessage("El ID del vehículo operativo debe ser un número entero."),
     param("id")
       .isInt()
       .withMessage("El ID del cuadrante asignado debe ser un número entero."),

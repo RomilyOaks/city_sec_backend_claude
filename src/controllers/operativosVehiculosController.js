@@ -230,80 +230,113 @@ export const getAllVehiculosByTurno = async (req, res) => {
         {
           model: Vehiculo,
           as: "vehiculo",
-          attributes: [
-            "id",
-            "placa",
-            "marca",
-            "modelo_vehiculo",
-            "anio_vehiculo",
-            "codigo_vehiculo",
-            "color_vehiculo",
-            "estado_operativo",
+          include: [
+            {
+              model: TipoVehiculo,
+              as: "tipoVehiculo",
+              attributes: ["id", "nombre"],
+            },
           ],
         },
         {
           model: PersonalSeguridad,
           as: "conductor",
-          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+          attributes: ["id", "nombre", "apellido_paterno", "dni"],
         },
         {
           model: PersonalSeguridad,
           as: "copiloto",
-          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
-        },
-        {
-          model: TipoCopiloto,
-          as: "tipo_copiloto",
-          attributes: ["id", "descripcion", "estado"],
-          required: false,
-        },
-        {
-          model: RadioTetra,
-          as: "radio_tetra",
-          attributes: [
-            "id",
-            "radio_tetra_code",
-            "descripcion",
-            "fecha_fabricacion",
-            "estado",
-          ],
-          required: false,
+          attributes: ["id", "nombre", "apellido_paterno", "dni"],
         },
         {
           model: EstadoOperativoRecurso,
           as: "estado_operativo",
-          attributes: ["id", "descripcion", "estado"],
-          required: false,
-        },
-        {
-          model: Usuario,
-          as: "creador",
-          attributes: ["id", "username", "nombres", "apellidos"],
-          required: false,
-        },
-        {
-          model: Usuario,
-          as: "actualizador",
-          attributes: ["id", "username", "nombres", "apellidos"],
-          required: false,
-        },
-        {
-          model: Usuario,
-          as: "eliminador",
-          attributes: ["id", "username", "nombres", "apellidos"],
-          required: false,
+          attributes: ["id", "nombre"],
         },
       ],
-      order: [['created_at', 'DESC']],
+      order: [["created_at", "ASC"]],
     });
 
     res.status(200).json({
       success: true,
-      message: "Vehículos del turno obtenidos exitosamente",
       data: vehiculos,
     });
   } catch (error) {
-    console.error("❌ Error en getAllVehiculosByTurno:", error);
+    console.error("Error en getAllVehiculosByTurno:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Obtener un vehículo específico por ID dentro de un turno
+ * GET /:turnoId/vehiculos/:id
+ */
+export const getVehiculoById = async (req, res) => {
+  const { turnoId, id } = req.params;
+
+  try {
+    const turno = await OperativosTurno.findByPk(turnoId);
+    if (!turno) {
+      return res.status(404).json({
+        success: false,
+        message: "Turno no encontrado",
+      });
+    }
+
+    const vehiculo = await OperativosVehiculos.findOne({
+      where: {
+        id: id,
+        operativo_turno_id: turnoId,
+        deleted_at: null,
+        estado_registro: 1,
+      },
+      include: [
+        {
+          model: Vehiculo,
+          as: "vehiculo",
+          include: [
+            {
+              model: TipoVehiculo,
+              as: "tipoVehiculo",
+              attributes: ["id", "nombre"],
+            },
+          ],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "conductor",
+          attributes: ["id", "nombre", "apellido_paterno", "dni"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "copiloto",
+          attributes: ["id", "nombre", "apellido_paterno", "dni"],
+        },
+        {
+          model: EstadoOperativoRecurso,
+          as: "estado_operativo",
+          attributes: ["id", "nombre"],
+        },
+      ],
+    });
+
+    if (!vehiculo) {
+      return res.status(404).json({
+        success: false,
+        message: "Vehículo no encontrado en este turno",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: vehiculo,
+    });
+  } catch (error) {
+    console.error("Error en getVehiculoById:", error);
     res.status(500).json({
       success: false,
       message: "Error interno del servidor",

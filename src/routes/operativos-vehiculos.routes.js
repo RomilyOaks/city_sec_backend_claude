@@ -21,6 +21,7 @@ import { Router } from "express";
 import {
   getAllVehiculos,
   getAllVehiculosByTurno,
+  getVehiculoById,
   createVehiculoInTurno,
   updateVehiculoInTurno,
   deleteVehiculoInTurno,
@@ -83,6 +84,15 @@ router.get(
   verificarToken,
   requireAnyPermission([permisos.leer]),
   getAllVehiculosByTurno
+);
+
+router.get(
+  "/:id",
+  verificarToken,
+  requireAnyPermission([permisos.leer]),
+  param("id").isInt({ min: 1 }).withMessage("ID de vehículo inválido"),
+  handleValidationErrors,
+  getVehiculoById
 );
 
 router.post(

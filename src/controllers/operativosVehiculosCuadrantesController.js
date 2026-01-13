@@ -28,11 +28,11 @@ const { OperativosVehiculosCuadrantes, OperativosVehiculos, Cuadrante } =
  * @param {object} res - Response object
  */
 export const getAllCuadrantesByVehiculo = async (req, res) => {
-  const { operativoVehiculoId } = req.params;
+  const { vehiculoId } = req.params;
 
   try {
     const operativoVehiculo = await OperativosVehiculos.findByPk(
-      operativoVehiculoId
+      vehiculoId
     );
     if (!operativoVehiculo) {
       return res.status(404).json({
@@ -42,7 +42,7 @@ export const getAllCuadrantesByVehiculo = async (req, res) => {
     }
 
     const cuadrantes = await OperativosVehiculosCuadrantes.findAll({
-      where: { operativo_vehiculo_id: operativoVehiculoId },
+      where: { operativo_vehiculo_id: vehiculoId },
       include: [
         {
           model: Cuadrante,
@@ -70,12 +70,12 @@ export const getAllCuadrantesByVehiculo = async (req, res) => {
  * @param {object} res - Response object
  */
 export const createCuadranteInVehiculo = async (req, res) => {
-  const { operativoVehiculoId } = req.params;
+  const { vehiculoId } = req.params;
   const { created_by } = req.user; // Asumiendo que el usuario está en req.user
 
   try {
     const operativoVehiculo = await OperativosVehiculos.findByPk(
-      operativoVehiculoId
+      vehiculoId
     );
     if (!operativoVehiculo) {
       return res.status(404).json({
@@ -86,7 +86,7 @@ export const createCuadranteInVehiculo = async (req, res) => {
 
     const newCuadranteAsignado = await OperativosVehiculosCuadrantes.create({
       ...req.body,
-      operativo_vehiculo_id: operativoVehiculoId,
+      operativo_vehiculo_id: vehiculoId,
       created_by,
     });
 
