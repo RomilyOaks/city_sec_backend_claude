@@ -136,29 +136,108 @@ export const updateCuadranteInVehiculo = async (req, res) => {
   const { updated_by } = req.user;
 
   try {
+    console.log("🐛 DEBUG: Iniciando updateCuadranteInVehiculo para ID:", id);
+    console.log("🐛 DEBUG: Datos recibidos:", req.body);
+    console.log("🐛 DEBUG: Usuario actualizando:", updated_by);
+
     const cuadranteAsignado = await OperativosVehiculosCuadrantes.findByPk(id);
     if (!cuadranteAsignado) {
+      console.log("🐛 DEBUG: Asignación de cuadrante no encontrada");
       return res.status(404).json({
         status: "error",
         message: "Asignación de cuadrante no encontrada",
       });
     }
 
-    await cuadranteAsignado.update({
+    console.log("🐛 DEBUG: Asignación encontrada, actualizando...");
+
+    // Validar que si se cambia el cuadrante, exista
+    if (req.body.cuadrante_id && req.body.cuadrante_id !== cuadranteAsignado.cuadrante_id) {
+      const { Cuadrante } = models;
+      const nuevoCuadrante = await Cuadrante.findByPk(req.body.cuadrante_id);
+      if (!nuevoCuadrante) {
+        return res.status(400).json({
+          status: "error",
+          message: "El cuadrante especificado no existe",
+        });
+      }
+    }
+
+    // Validar lógica de fechas
+    if (req.body.hora_salida && req.body.hora_ingreso) {
+      const horaIngreso = new Date(req.body.hora_ingreso);
+      const horaSalida = new Date(req.body.hora_salida);
+      
+      if (horaSalida <= horaIngreso) {
+        return res.status(400).json({
+          status: "error",
+          message: "La hora de salida debe ser posterior a la hora de ingreso",
+        });
+      }
+    }
+
+    const updateData = {
       ...req.body,
       updated_by,
+    };
+
+    console.log("🐛 DEBUG: Datos a actualizar:", updateData);
+
+    await cuadranteAsignado.update(updateData);
+
+    console.log("🐛 DEBUG: Actualización exitosa");
+
+    // Recargar con los datos actualizados y relaciones
+    const cuadranteActualizado = await OperativosVehiculosCuadrantes.findByPk(id, {
+      include: [
+        {
+          model: Cuadrante,
+          as: "datosCuadrante",
+        },
+      ],
     });
 
     res.status(200).json({
       status: "success",
       message: "Asignación de cuadrante actualizada correctamente",
-      data: cuadranteAsignado,
+      data: cuadranteActualizado,
     });
   } catch (error) {
+    console.error("🐛 DEBUG: Error en updateCuadranteInVehiculo:");
+    console.error("🐛 DEBUG: Error message:", error.message);
+    console.error("🐛 DEBUG: Error name:", error.name);
+    console.error("🐛 DEBUG: Error stack:", error.stack);
+
+    // Manejar errores específicos de Sequelize
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({
+        status: "error",
+        message: "Ya existe una asignación para este vehículo, cuadrante y hora de ingreso",
+        error: error.message,
+      });
+    }
+
+    if (error.name === 'SequelizeValidationError') {
+      const errors = error.errors.map(err => ({
+        field: err.path,
+        message: err.message,
+      }));
+      return res.status(400).json({
+        status: "error",
+        message: "Error de validación",
+        errors,
+      });
+    }
+
     res.status(500).json({
       status: "error",
       message: "Error al actualizar la asignación",
       error: error.message,
+      debug: {
+        name: error.name,
+        id: req.params.id,
+        body: req.body,
+      }
     });
   }
 };
