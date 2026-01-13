@@ -258,6 +258,16 @@ export const getAllVehiculosByTurno = async (req, res) => {
           as: "estado_operativo",
           attributes: ["id", "descripcion"],
         },
+        {
+          model: TipoCopiloto,
+          as: "tipo_copiloto",
+          attributes: ["id", "codigo", "descripcion"],
+        },
+        {
+          model: RadioTetra,
+          as: "radio_tetra",
+          attributes: ["id", "radio_tetra_code", "descripcion"],
+        },
       ],
       order: [["created_at", "ASC"]],
     });
@@ -367,6 +377,16 @@ export const getVehiculoById = async (req, res) => {
           model: EstadoOperativoRecurso,
           as: "estado_operativo",
           attributes: ["id", "descripcion"],
+        },
+        {
+          model: TipoCopiloto,
+          as: "tipo_copiloto",
+          attributes: ["id", "codigo", "descripcion"],
+        },
+        {
+          model: RadioTetra,
+          as: "radio_tetra",
+          attributes: ["id", "radio_tetra_code", "descripcion"],
         },
       ],
     });
