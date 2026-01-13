@@ -238,7 +238,13 @@ export const getTurnoById = async (req, res) => {
       include: [
         {
           model: PersonalSeguridad,
-          as: "personal",
+          as: "operador",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "supervisor",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
         },
         {
           model: Usuario,
