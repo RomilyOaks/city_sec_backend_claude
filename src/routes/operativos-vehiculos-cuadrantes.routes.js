@@ -52,7 +52,11 @@ router.get(
 router.post(
   "/cuadrantes",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.create])(req, res, next),
+  (req, res, next) => {
+    console.log("🚨🚨🚨 RUTA POST /cuadrantes EJECUTÁNDOSE 🚨🚨🚨");
+    console.log("🚨 req.body en ruta:", JSON.stringify(req.body, null, 2));
+    return requireAnyPermission([permisos.create])(req, res, next);
+  },
   [
     body("cuadrante_id")
       .isInt()
@@ -72,7 +76,11 @@ router.post(
   ],
   handleValidationErrors,
   registrarAuditoria("Registro de cuadrante en vehículo operativo"),
-  createCuadranteInVehiculo
+  (req, res, next) => {
+    console.log("🚨🚨🚨 ANTES de llamar al controller 🚨🚨🚨");
+    console.log("🚨 req.body antes del controller:", JSON.stringify(req.body, null, 2));
+    return createCuadranteInVehiculo(req, res, next);
+  }
 );
 
 router.put(
