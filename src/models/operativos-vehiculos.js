@@ -36,10 +36,10 @@ class OperativosVehiculos extends Model {
       as: "conductor",
     });
 
-    OperativosVehiculos.belongsTo(models.PersonalSeguridad, {
-      foreignKey: "copiloto_id",
-      as: "copiloto",
-    });
+    // OperativosVehiculos.belongsTo(models.PersonalSeguridad, {
+    //   foreignKey: "copiloto_id",
+    //   as: "copiloto",
+    // });
 
     OperativosVehiculos.hasMany(models.OperativosVehiculosCuadrantes, {
       foreignKey: "operativo_vehiculo_id",
