@@ -134,12 +134,46 @@ export const createCuadranteInVehiculo = async (req, res) => {
       }
     }
 
-    // Preparar datos para creación
+    // Preparar datos para creación - manejar campos opcionales correctamente
     const createData = {
-      ...req.body,
       operativo_vehiculo_id: vehiculoId,
       created_by,
     };
+
+    // Campos obligatorios
+    if (req.body.cuadrante_id) {
+      createData.cuadrante_id = req.body.cuadrante_id;
+    } else {
+      return res.status(400).json({
+        status: "error",
+        message: "El campo cuadrante_id es obligatorio",
+      });
+    }
+
+    if (req.body.hora_ingreso) {
+      createData.hora_ingreso = req.body.hora_ingreso;
+    } else {
+      return res.status(400).json({
+        status: "error",
+        message: "El campo hora_ingreso es obligatorio",
+      });
+    }
+
+    // Campos opcionales - manejar explícitamente
+    if (req.body.hasOwnProperty('observaciones')) {
+      createData.observaciones = req.body.observaciones === '' ? null : req.body.observaciones;
+      console.log("🐛 DEBUG: observaciones procesadas:", createData.observaciones);
+    }
+
+    if (req.body.hasOwnProperty('incidentes_reportados')) {
+      createData.incidentes_reportados = req.body.incidentes_reportados === '' ? null : req.body.incidentes_reportados;
+      console.log("🐛 DEBUG: incidentes_reportados procesados:", createData.incidentes_reportados);
+    }
+
+    if (req.body.hasOwnProperty('hora_salida')) {
+      createData.hora_salida = req.body.hora_salida === '' ? null : req.body.hora_salida;
+      console.log("🐛 DEBUG: hora_salida procesada:", createData.hora_salida);
+    }
 
     console.log("🐛 DEBUG: Datos a crear:", JSON.stringify(createData, null, 2));
 
