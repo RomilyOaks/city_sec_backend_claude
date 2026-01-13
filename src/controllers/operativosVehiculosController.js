@@ -252,7 +252,7 @@ export const getAllVehiculosByTurno = async (req, res) => {
         {
           model: EstadoOperativoRecurso,
           as: "estado_operativo",
-          attributes: ["id", "nombre"],
+          attributes: ["id", "descripcion"],
         },
       ],
       order: [["created_at", "ASC"]],
@@ -320,7 +320,7 @@ export const getVehiculoById = async (req, res) => {
         {
           model: EstadoOperativoRecurso,
           as: "estado_operativo",
-          attributes: ["id", "nombre"],
+          attributes: ["id", "descripcion"],
         },
       ],
     });
