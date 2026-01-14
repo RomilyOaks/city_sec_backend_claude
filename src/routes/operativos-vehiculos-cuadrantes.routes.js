@@ -47,109 +47,48 @@ router.get(
   }
 );
 
-// 🔥 RUTA PRINCIPAL - VERSIÓN NUEVA DEFINITIVA
+// 🔥 RUTA PRINCIPAL - VERSIÓN SIN MIDDLEWARES PARA DEBUG
 router.post(
   "/cuadrantes",
-  verificarToken,
-  (req, res, next) => {
-    console.log("🆕🆕🆕 RUTA POST /cuadrantes - ARCHIVO NUEVO EJECUTÁNDOSE 🆕🆕🆕");
-    console.log("🆕🆕🆕 req.body en ruta NUEVA:", JSON.stringify(req.body, null, 2));
-    console.log("🆕🆕🆕 ESTE ES EL ARCHIVO NUEVO - DEBE FUNCIONAR 🆕🆕🆕");
-    return requireAnyPermission([permisos.create])(req, res, next);
-  },
-  [
-    body("cuadrante_id")
-      .isInt()
-      .withMessage("El ID del cuadrante debe ser un número entero."),
-    body("hora_ingreso")
-      .isISO8601()
-      .withMessage("La hora de ingreso debe ser una fecha y hora válida."),
-    body("observaciones")
-      .optional()
-      .isString()
-      .isLength({ max: 500 })
-      .withMessage("Las observaciones no deben exceder los 500 caracteres."),
-    body("incidentes_reportados")
-      .optional()
-      .isString()
-      .withMessage("Los incidentes reportados deben ser una cadena de texto."),
-  ],
-  handleValidationErrors,
-  registrarAuditoria("Registro de cuadrante en vehículo operativo"),
   async (req, res) => {
-    console.log("🆕🆕🆕🆕🆕 ARCHIVO NUEVO - EJECUTANDO LÓGICA NUEVA 🆕🆕🆕🆕🆕");
-    console.log("🆕🆕🆕🆕🆕 req.body NUEVO:", JSON.stringify(req.body, null, 2));
-    console.log("🆕🆕🆕🆕🆕 req.user NUEVO:", req.user);
-    console.log("🆕🆕🆕🆕🆕 req.params NUEVO:", req.params);
+    console.log("🆕🆕🆕 RUTA POST /cuadrantes - VERSIÓN SIN MIDDLEWARES 🆕🆕🆕");
+    console.log("🆕🆕🆕 req.body en ruta SIN MIDDLEWARES:", JSON.stringify(req.body, null, 2));
+    console.log("🆕🆕🆕 ESTE DEBERÍA EJECUTARSE SIN BLOQUEOS 🆕🆕🆕");
     
     try {
       const { vehiculoId } = req.params;
-      const { id: created_by } = req.user;
       
-      // 🆕 SOLUCIÓN NUEVA DEFINITIVA - Crear directamente aquí
+      // 🆕 SIMULACIÓN MANUAL - Crear directamente aquí
       const createData = {
         operativo_vehiculo_id: vehiculoId,
-        created_by,
+        cuadrante_id: req.body.cuadrante_id,
+        hora_ingreso: req.body.hora_ingreso,
+        observaciones: req.body.observaciones,
+        incidentes_reportados: req.body.incidentes_reportados,
+        created_by: 13, // Hardcodeado para prueba
       };
 
-      // Campos obligatorios
-      if (req.body.cuadrante_id) {
-        createData.cuadrante_id = req.body.cuadrante_id;
-      } else {
-        return res.status(400).json({
-          status: "error",
-          message: "El campo cuadrante_id es obligatorio",
-        });
-      }
-
-      if (req.body.hora_ingreso) {
-        createData.hora_ingreso = req.body.hora_ingreso;
-      } else {
-        return res.status(400).json({
-          status: "error",
-          message: "El campo hora_ingreso es obligatorio",
-        });
-      }
-
-      // 🆕 CAMPOS OPCIONALES - MANEJO EXPLÍCITO NUEVO
-      if (req.body.hasOwnProperty('observaciones')) {
-        createData.observaciones = req.body.observaciones === '' ? null : req.body.observaciones;
-        console.log("🆕🆕🆕🆕🆕 OBSERVACIONES PROCESADAS NUEVO:", createData.observaciones);
-      }
-
-      if (req.body.hasOwnProperty('incidentes_reportados')) {
-        createData.incidentes_reportados = req.body.incidentes_reportados === '' ? null : req.body.incidentes_reportados;
-        console.log("🆕🆕🆕🆕🆕 INCIDENTES_REPORTADOS PROCESADOS NUEVO:", createData.incidentes_reportados);
-      }
-
-      console.log("🆕🆕🆕🆕🆕 DATOS FINALES A CREAR NUEVO:", JSON.stringify(createData, null, 2));
+      console.log("🆕🆕🆕🆕🆕 DATOS FINALES A CREAR SIN MIDDLEWARES:", JSON.stringify(createData, null, 2));
 
       const newCuadranteAsignado = await OperativosVehiculosCuadrantes.create(createData);
 
-      console.log("🆕🆕🆕🆕🆕 CUADRANTE CREADO EXITOSAMENTE NUEVO:");
-      console.log("🆕🆕🆕🆕🆕 ID NUEVO:", newCuadranteAsignado.id);
-      console.log("🆕🆕🆕🆕🆕 observaciones NUEVO:", newCuadranteAsignado.observaciones);
-      console.log("🆕🆕🆕🆕🆕 incidentes_reportados NUEVO:", newCuadranteAsignado.incidentes_reportados);
+      console.log("🆕🆕🆕🆕🆕 CUADRANTE CREADO SIN MIDDLEWARES:");
+      console.log("🆕🆕🆕🆕🆕 ID:", newCuadranteAsignado.id);
+      console.log("🆕🆕🆕🆕🆕 observaciones:", newCuadranteAsignado.observaciones);
+      console.log("🆕🆕🆕🆕🆕 incidentes_reportados:", newCuadranteAsignado.incidentes_reportados);
 
       res.status(201).json({
         status: "success",
-        message: "Cuadrante asignado al vehículo correctamente - ARCHIVO NUEVO",
+        message: "Cuadrante asignado correctamente - VERSIÓN SIN MIDDLEWARES",
         data: newCuadranteAsignado,
       });
       
     } catch (error) {
-      console.error("🆕🆕🆕🆕🆕 ERROR CAPTURADO NUEVO:", error);
-      console.error("🆕🆕🆕🆕🆕 Error message NUEVO:", error.message);
-      console.error("🆕🆕🆕🆕🆕 Error stack NUEVO:", error.stack);
-      
-      return res.status(500).json({
+      console.error("🆕🆕🆕🆕🆕 ERROR SIN MIDDLEWARES:", error);
+      res.status(500).json({
         status: "error",
-        message: "Error en la ruta de cuadrantes - ARCHIVO NUEVO",
+        message: "Error - VERSIÓN SIN MIDDLEWARES",
         error: error.message,
-        debug: {
-          stack: error.stack,
-          body: req.body
-        }
       });
     }
   }
