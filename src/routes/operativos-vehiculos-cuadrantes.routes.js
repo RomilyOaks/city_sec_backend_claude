@@ -2,14 +2,6 @@
  * ===================================================
  * RUTAS: OperativosVehiculosCuadrantes - ARCHIVO NUEVO
  * ===================================================
- *
- * @author Codi Express
- * @version 2.0.0 - NUEVA VERSIÓN
- * @date 2026-01-14
- *
- * Descripcion:
- * Define las rutas para la gestión de cuadrantes asignados a vehículos operativos.
- * VERSIÓN COMPLETAMENTE NUEVA PARA RESOLVER PROBLEMA DE CACHE.
  */
 
 import { Router } from "express";
@@ -27,6 +19,9 @@ import { handleValidationErrors } from "../middlewares/handleValidationErrors.js
 
 const router = Router();
 
+// 🔥 LOG DIRECTO EN EL NIVEL SUPERIOR PARA VER SI SE EJECUTA
+console.log("🔥🔥🔥 LOG DIRECTO EN NIVEL SUPERIOR - ANTES DE CUALQUIER RUTA 🔥🔥🔥");
+
 const permisos = {
   read: "operativos.vehiculos.cuadrantes.read",
   create: "operativos.vehiculos.cuadrantes.create",
@@ -34,18 +29,11 @@ const permisos = {
   delete: "operativos.vehiculos.cuadrantes.delete",
 };
 
-// Rutas para OperativosVehiculosCuadrantes
-router.get(
-  "/cuadrantes",
-  verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
-  async (req, res) => {
-    res.status(200).json({
-      status: "success",
-      message: "GET cuadrantes - ARCHIVO NUEVO",
-    });
-  }
-);
+// 🔥 RUTA DE PRUEBA MÍNIMA - SOLO LOG
+router.post("/test", (req, res) => {
+  console.log("🔥🔥🔥 RUTA /test EJECUTÁNDOSE 🔥🔥🔥");
+  res.json({ message: "TEST FUNCIONA" });
+});
 
 // 🔥 RUTA PRINCIPAL - VERSIÓN SIN MIDDLEWARES PARA DEBUG
 router.post(
@@ -93,5 +81,7 @@ router.post(
     }
   }
 );
+
+console.log("🔥🔥🔥 LOG FINAL - ANTES DE EXPORTAR ROUTER 🔥🔥🔥");
 
 export default router;
