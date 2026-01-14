@@ -1,33 +1,19 @@
 /**
  * ===================================================
- * RUTAS: OperativosVehiculosCuadrantes - ARCHIVO NUEVO
+ * RUTAS: OperativosVehiculosCuadrantes - VERSIÓN MÍNIMA
  * ===================================================
  */
 
 import { Router } from "express";
-import { body, param } from "express-validator";
 console.log("🆕🆕🆕 ARCHIVO NUEVO - operativos-vehiculos-cuadrantes.routes.js CARGADO 🆕🆕🆕");
 
 // 🎯 Importar modelo directamente para solución
 import OperativosVehiculosCuadrantes from "../models/OperativosVehiculosCuadrantes.js";
-import {
-  verificarToken,
-  requireAnyPermission,
-} from "../middlewares/authMiddleware.js";
-import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
-import { handleValidationErrors } from "../middlewares/handleValidationErrors.js";
 
 const router = Router();
 
 // 🔥 LOG DIRECTO EN EL NIVEL SUPERIOR PARA VER SI SE EJECUTA
 console.log("🔥🔥🔥 LOG DIRECTO EN NIVEL SUPERIOR - ANTES DE CUALQUIER RUTA 🔥🔥🔥");
-
-const permisos = {
-  read: "operativos.vehiculos.cuadrantes.read",
-  create: "operativos.vehiculos.cuadrantes.create",
-  update: "operativos.vehiculos.cuadrantes.update",
-  delete: "operativos.vehiculos.cuadrantes.delete",
-};
 
 // 🔥 RUTA DE PRUEBA MÍNIMA - SOLO LOG
 router.post("/test", (req, res) => {
@@ -35,53 +21,48 @@ router.post("/test", (req, res) => {
   res.json({ message: "TEST FUNCIONA" });
 });
 
-// 🔥 RUTA PRINCIPAL - VERSIÓN SIN MIDDLEWARES PARA DEBUG
-router.post(
-  "/cuadrantes",
-  async (req, res) => {
-    console.log("🆕🆕🆕 RUTA POST /cuadrantes - VERSIÓN SIN MIDDLEWARES 🆕🆕🆕");
-    console.log("🆕🆕🆕 req.body en ruta SIN MIDDLEWARES:", JSON.stringify(req.body, null, 2));
-    console.log("🆕🆕🆕 ESTE DEBERÍA EJECUTARSE SIN BLOQUEOS 🆕🆕🆕");
+// 🔥 RUTA PRINCIPAL - VERSIÓN MÍNIMA ABSOLUTA
+router.post("/cuadrantes", async (req, res) => {
+  console.log("🆕🆕🆕 RUTA POST /cuadrantes - VERSIÓN MÍNIMA ABSOLUTA 🆕🆕🆕");
+  console.log("🆕🆕🆕 req.body en ruta MÍNIMA:", JSON.stringify(req.body, null, 2));
+  
+  try {
+    const { vehiculoId } = req.params;
     
-    try {
-      const { vehiculoId } = req.params;
-      
-      // 🆕 SIMULACIÓN MANUAL - Crear directamente aquí
-      const createData = {
-        operativo_vehiculo_id: vehiculoId,
-        cuadrante_id: req.body.cuadrante_id,
-        hora_ingreso: req.body.hora_ingreso,
-        observaciones: req.body.observaciones,
-        incidentes_reportados: req.body.incidentes_reportados,
-        created_by: 13, // Hardcodeado para prueba
-      };
+    // 🆕 CREACIÓN DIRECTA SIN NADA MÁS
+    const createData = {
+      operativo_vehiculo_id: vehiculoId,
+      cuadrante_id: req.body.cuadrante_id,
+      hora_ingreso: req.body.hora_ingreso,
+      observaciones: req.body.observaciones,
+      incidentes_reportados: req.body.incidentes_reportados,
+      created_by: 13,
+    };
 
-      console.log("🆕🆕🆕🆕🆕 DATOS FINALES A CREAR SIN MIDDLEWARES:", JSON.stringify(createData, null, 2));
+    console.log("🆕🆕🆕🆕🆕 DATOS A CREAR MÍNIMA:", JSON.stringify(createData, null, 2));
 
-      const newCuadranteAsignado = await OperativosVehiculosCuadrantes.create(createData);
+    const newCuadranteAsignado = await OperativosVehiculosCuadrantes.create(createData);
 
-      console.log("🆕🆕🆕🆕🆕 CUADRANTE CREADO SIN MIDDLEWARES:");
-      console.log("🆕🆕🆕🆕🆕 ID:", newCuadranteAsignado.id);
-      console.log("🆕🆕🆕🆕🆕 observaciones:", newCuadranteAsignado.observaciones);
-      console.log("🆕🆕🆕🆕🆕 incidentes_reportados:", newCuadranteAsignado.incidentes_reportados);
+    console.log("🆕🆕🆕🆕🆕 CUADRANTE CREADO MÍNIMA:");
+    console.log("🆕🆕🆕🆕🆕 observaciones:", newCuadranteAsignado.observaciones);
 
-      res.status(201).json({
-        status: "success",
-        message: "Cuadrante asignado correctamente - VERSIÓN SIN MIDDLEWARES",
-        data: newCuadranteAsignado,
-      });
-      
-    } catch (error) {
-      console.error("🆕🆕🆕🆕🆕 ERROR SIN MIDDLEWARES:", error);
-      res.status(500).json({
-        status: "error",
-        message: "Error - VERSIÓN SIN MIDDLEWARES",
-        error: error.message,
-      });
-    }
+    res.status(201).json({
+      status: "success",
+      message: "Cuadrante creado - VERSIÓN MÍNIMA ABSOLUTA",
+      data: newCuadranteAsignado,
+    });
+    
+  } catch (error) {
+    console.error("🆕🆕🆕🆕🆕 ERROR MÍNIMA:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Error - VERSIÓN MÍNIMA ABSOLUTA",
+      error: error.message,
+    });
   }
-);
+});
 
 console.log("🔥🔥🔥 LOG FINAL - ANTES DE EXPORTAR ROUTER 🔥🔥🔥");
+console.log("🔥🔥🔥 ROUTER TIENE ESTAS RUTAS REGISTRADAS:", router.stack.map(layer => layer.route?.path).filter(Boolean));
 
 export default router;
