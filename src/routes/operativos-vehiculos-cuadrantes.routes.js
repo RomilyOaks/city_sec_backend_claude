@@ -30,6 +30,9 @@ import {
 
 console.log("🚨🚨🚨 CONTROLLERS IMPORTADOS:");
 console.log("🚨🚨🚨 createCuadranteInVehiculo:", typeof createCuadranteInVehiculo);
+
+// 🎯 Importar modelo directamente para solución
+import { OperativosVehiculosCuadrantes } from "../models/OperativosVehiculosCuadrantes.js";
 import {
   verificarToken,
   requireAnyPermission,
@@ -83,16 +86,67 @@ router.post(
   registrarAuditoria("Registro de cuadrante en vehículo operativo"),
   async (req, res) => {
     try {
-      console.log("🚨🚨🚨 ANTES de llamar al controller 🚨🚨🚨");
-      console.log("🚨 req.body antes del controller:", JSON.stringify(req.body, null, 2));
+      console.log("🎯🎯🎯 EJECUTANDO CONTROLLER DIRECTO EN RUTA 🎯🎯🎯");
+      console.log("🎯🎯🎯 req.body COMPLETO:", JSON.stringify(req.body, null, 2));
       
-      // Llamar directamente al controller aquí
-      await createCuadranteInVehiculo(req, res);
+      const { vehiculoId } = req.params;
+      const { id: created_by } = req.user;
+      
+      // 🎯 SOLUCIÓN DIRECTA - Crear aquí mismo
+      const createData = {
+        operativo_vehiculo_id: vehiculoId,
+        created_by,
+      };
+
+      // Campos obligatorios
+      if (req.body.cuadrante_id) {
+        createData.cuadrante_id = req.body.cuadrante_id;
+      } else {
+        return res.status(400).json({
+          status: "error",
+          message: "El campo cuadrante_id es obligatorio",
+        });
+      }
+
+      if (req.body.hora_ingreso) {
+        createData.hora_ingreso = req.body.hora_ingreso;
+      } else {
+        return res.status(400).json({
+          status: "error",
+          message: "El campo hora_ingreso es obligatorio",
+        });
+      }
+
+      // 🎯 CAMPOS OPCIONALES - MANEJO EXPLÍCITO
+      if (req.body.hasOwnProperty('observaciones')) {
+        createData.observaciones = req.body.observaciones === '' ? null : req.body.observaciones;
+        console.log("🎯🎯🎯 OBSERVACIONES PROCESADAS:", createData.observaciones);
+      }
+
+      if (req.body.hasOwnProperty('incidentes_reportados')) {
+        createData.incidentes_reportados = req.body.incidentes_reportados === '' ? null : req.body.incidentes_reportados;
+        console.log("🎯🎯🎯 INCIDENTES_REPORTADOS PROCESADOS:", createData.incidentes_reportados);
+      }
+
+      console.log("🎯🎯🎯 DATOS FINALES A CREAR:", JSON.stringify(createData, null, 2));
+
+      const newCuadranteAsignado = await OperativosVehiculosCuadrantes.create(createData);
+
+      console.log("🎯🎯🎯 CUADRANTE CREADO EXITOSAMENTE:");
+      console.log("🎯🎯🎯 ID:", newCuadranteAsignado.id);
+      console.log("🎯🎯🎯 observaciones:", newCuadranteAsignado.observaciones);
+      console.log("🎯🎯🎯 incidentes_reportados:", newCuadranteAsignado.incidentes_reportados);
+
+      res.status(201).json({
+        status: "success",
+        message: "Cuadrante asignado al vehículo correctamente - SOLUCIÓN DIRECTA",
+        data: newCuadranteAsignado,
+      });
       
     } catch (error) {
-      console.error("🚨🚨🚨 ERROR CAPTURADO EN RUTA:", error);
-      console.error("🚨🚨🚨 Error message:", error.message);
-      console.error("🚨🚨🚨 Error stack:", error.stack);
+      console.error("🎯🎯🎯 ERROR CAPTURADO EN RUTA:", error);
+      console.error("🎯🎯🎯 Error message:", error.message);
+      console.error("🎯🎯🎯 Error stack:", error.stack);
       
       return res.status(500).json({
         status: "error",
