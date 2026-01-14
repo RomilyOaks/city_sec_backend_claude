@@ -372,7 +372,8 @@ router.use(
     console.log("🌟🌟🌟 INDEX.ROUTES - ENTRANDO A RUTA CUADRANTES 🌟🌟🌟");
     console.log("🌟 req.body en index.routes:", JSON.stringify(req.body, null, 2));
     console.log("🌟 req.params:", req.params);
-    next();
+    console.log("🌟🌟🌟 PASANDO A operativosVehiculosCuadrantesRoutes 🌟🌟🌟");
+    next();  // ← ¡FORZAR QUE FUNCIONE!
   },
   operativosVehiculosCuadrantesRoutes
 );
