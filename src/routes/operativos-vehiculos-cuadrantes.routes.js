@@ -19,12 +19,17 @@
 
 import { Router } from "express";
 import { body, param } from "express-validator";
+console.log("🚨🚨🚨 operativos-vehiculos-cuadrantes.routes.js CARGADO 🚨🚨🚨");
+
 import {
   getAllCuadrantesByVehiculo,
   createCuadranteInVehiculo,
   updateCuadranteInVehiculo,
   deleteCuadranteInVehiculo,
 } from "../controllers/operativosVehiculosCuadrantesController.js";
+
+console.log("🚨🚨🚨 CONTROLLERS IMPORTADOS:");
+console.log("🚨🚨🚨 createCuadranteInVehiculo:", typeof createCuadranteInVehiculo);
 import {
   verificarToken,
   requireAnyPermission,
