@@ -113,6 +113,7 @@ router.post(
   (req, res, next) => {
     console.log("🚨🚨🚨 RUTA POST /cuadrantes EJECUTÁNDOSE 🚨🚨🚨");
     console.log("🚨 req.body en ruta:", JSON.stringify(req.body, null, 2));
+    console.log("🚨🚨🚨 FORZANDO DETECCIÓN DE CAMBIOS - NUEVA VERSIÓN 🚨🚨🚨");
     return requireAnyPermission([permisos.create])(req, res, next);
   },
   [
