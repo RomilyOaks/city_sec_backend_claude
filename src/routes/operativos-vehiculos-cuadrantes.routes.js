@@ -32,7 +32,7 @@ console.log("🚨🚨🚨 CONTROLLERS IMPORTADOS:");
 console.log("🚨🚨🚨 createCuadranteInVehiculo:", typeof createCuadranteInVehiculo);
 
 // 🎯 Importar modelo directamente para solución
-import { OperativosVehiculosCuadrantes } from "../models/OperativosVehiculosCuadrantes.js";
+import OperativosVehiculosCuadrantes from "../models/OperativosVehiculosCuadrantes.js";
 import {
   verificarToken,
   requireAnyPermission,
