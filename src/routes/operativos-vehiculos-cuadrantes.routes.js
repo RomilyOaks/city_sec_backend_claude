@@ -113,7 +113,7 @@ router.post(
   (req, res, next) => {
     console.log("🚨🚨🚨 RUTA POST /cuadrantes EJECUTÁNDOSE 🚨🚨🚨");
     console.log("🚨 req.body en ruta:", JSON.stringify(req.body, null, 2));
-    console.log("🚨🚨🚨 FORZANDO DETECCIÓN DE CAMBIOS - NUEVA VERSIÓN 🚨🚨🚨");
+    console.log("🚨🚨🚨 VERSIÓN FINAL DIRECTA - SIN CONTROLLER 🚨🚨🚨");
     return requireAnyPermission([permisos.create])(req, res, next);
   },
   [
@@ -136,24 +136,16 @@ router.post(
   handleValidationErrors,
   registrarAuditoria("Registro de cuadrante en vehículo operativo"),
   async (req, res) => {
-    console.log("💥💥💥💥💥 FORZANDO ESTE LOG - SI NO APARECE, HAY UN PROBLEMA DE CACHE 💥💥💥💥💥");
-    console.log("💥💥💥💥💥 req.body:", JSON.stringify(req.body, null, 2));
-    console.log("💥💥💥💥💥 req.user:", req.user);
-    console.log("💥💥💥💥💥 req.params:", req.params);
-    
-    // 💥 FORZAR UNA PAUSA PARA VER SI APARECE ESTE LOG
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    console.log("💥💥💥💥💥 DESPUÉS DE LA PAUSA - CONTINUANDO 💥💥💥💥💥");
+    console.log("🔥🔥🔥🔥🔥 VERSIÓN FINAL - EJECUTANDO LÓGICA DIRECTA 🔥🔥🔥🔥🔥");
+    console.log("🔥🔥🔥🔥🔥 req.body:", JSON.stringify(req.body, null, 2));
+    console.log("🔥🔥🔥🔥🔥 req.user:", req.user);
+    console.log("🔥🔥🔥🔥🔥 req.params:", req.params);
     
     try {
-      console.log("🎯🎯🎯 EJECUTANDO CONTROLLER DIRECTO EN RUTA 🎯🎯🎯");
-      console.log("🎯🎯🎯 req.body COMPLETO:", JSON.stringify(req.body, null, 2));
-      
       const { vehiculoId } = req.params;
       const { id: created_by } = req.user;
       
-      // 🎯 SOLUCIÓN DIRECTA - Crear aquí mismo
+      // 🔥 SOLUCIÓN DEFINITIVA - Crear directamente aquí
       const createData = {
         operativo_vehiculo_id: vehiculoId,
         created_by,
@@ -178,36 +170,36 @@ router.post(
         });
       }
 
-      // 🎯 CAMPOS OPCIONALES - MANEJO EXPLÍCITO
+      // 🔥 CAMPOS OPCIONALES - MANEJO EXPLÍCITO
       if (req.body.hasOwnProperty('observaciones')) {
         createData.observaciones = req.body.observaciones === '' ? null : req.body.observaciones;
-        console.log("🎯🎯🎯 OBSERVACIONES PROCESADAS:", createData.observaciones);
+        console.log("🔥🔥🔥🔥🔥 OBSERVACIONES PROCESADAS:", createData.observaciones);
       }
 
       if (req.body.hasOwnProperty('incidentes_reportados')) {
         createData.incidentes_reportados = req.body.incidentes_reportados === '' ? null : req.body.incidentes_reportados;
-        console.log("🎯🎯🎯 INCIDENTES_REPORTADOS PROCESADOS:", createData.incidentes_reportados);
+        console.log("🔥🔥🔥🔥🔥 INCIDENTES_REPORTADOS PROCESADOS:", createData.incidentes_reportados);
       }
 
-      console.log("🎯🎯🎯 DATOS FINALES A CREAR:", JSON.stringify(createData, null, 2));
+      console.log("🔥🔥🔥🔥🔥 DATOS FINALES A CREAR:", JSON.stringify(createData, null, 2));
 
       const newCuadranteAsignado = await OperativosVehiculosCuadrantes.create(createData);
 
-      console.log("🎯🎯🎯 CUADRANTE CREADO EXITOSAMENTE:");
-      console.log("🎯🎯🎯 ID:", newCuadranteAsignado.id);
-      console.log("🎯🎯🎯 observaciones:", newCuadranteAsignado.observaciones);
-      console.log("🎯🎯🎯 incidentes_reportados:", newCuadranteAsignado.incidentes_reportados);
+      console.log("🔥🔥🔥🔥🔥 CUADRANTE CREADO EXITOSAMENTE:");
+      console.log("🔥🔥🔥🔥🔥 ID:", newCuadranteAsignado.id);
+      console.log("🔥🔥🔥🔥🔥 observaciones:", newCuadranteAsignado.observaciones);
+      console.log("🔥🔥🔥🔥🔥 incidentes_reportados:", newCuadranteAsignado.incidentes_reportados);
 
       res.status(201).json({
         status: "success",
-        message: "Cuadrante asignado al vehículo correctamente - SOLUCIÓN DIRECTA",
+        message: "Cuadrante asignado al vehículo correctamente - VERSIÓN FINAL",
         data: newCuadranteAsignado,
       });
       
     } catch (error) {
-      console.error("🎯🎯🎯 ERROR CAPTURADO EN RUTA:", error);
-      console.error("🎯🎯🎯 Error message:", error.message);
-      console.error("🎯🎯🎯 Error stack:", error.stack);
+      console.error("🔥🔥🔥🔥🔥 ERROR CAPTURADO:", error);
+      console.error("🔥🔥🔥🔥🔥 Error message:", error.message);
+      console.error("🔥🔥🔥🔥🔥 Error stack:", error.stack);
       
       return res.status(500).json({
         status: "error",
