@@ -81,10 +81,29 @@ router.post(
   ],
   handleValidationErrors,
   registrarAuditoria("Registro de cuadrante en vehículo operativo"),
-  (req, res, next) => {
-    console.log("🚨🚨🚨 ANTES de llamar al controller 🚨🚨🚨");
-    console.log("🚨 req.body antes del controller:", JSON.stringify(req.body, null, 2));
-    return createCuadranteInVehiculo(req, res, next);
+  async (req, res) => {
+    try {
+      console.log("🚨🚨🚨 ANTES de llamar al controller 🚨🚨🚨");
+      console.log("🚨 req.body antes del controller:", JSON.stringify(req.body, null, 2));
+      
+      // Llamar directamente al controller aquí
+      await createCuadranteInVehiculo(req, res);
+      
+    } catch (error) {
+      console.error("🚨🚨🚨 ERROR CAPTURADO EN RUTA:", error);
+      console.error("🚨🚨🚨 Error message:", error.message);
+      console.error("🚨🚨🚨 Error stack:", error.stack);
+      
+      return res.status(500).json({
+        status: "error",
+        message: "Error en la ruta de cuadrantes",
+        error: error.message,
+        debug: {
+          stack: error.stack,
+          body: req.body
+        }
+      });
+    }
   }
 );
 
