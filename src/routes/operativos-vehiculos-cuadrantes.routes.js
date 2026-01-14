@@ -85,10 +85,15 @@ router.post(
   handleValidationErrors,
   registrarAuditoria("Registro de cuadrante en vehículo operativo"),
   async (req, res) => {
-    console.log("🎯🎯🎯🎯🎯 ANTES DE TODO - ENTRANDO AL CONTROLLER DIRECTO 🎯🎯🎯🎯🎯");
-    console.log("🎯🎯🎯🎯🎯 req.body AQUÍ:", JSON.stringify(req.body, null, 2));
-    console.log("🎯🎯🎯🎯🎯 req.user:", req.user);
-    console.log("🎯🎯🎯🎯🎯 req.params:", req.params);
+    console.log("💥💥💥💥💥 FORZANDO ESTE LOG - SI NO APARECE, HAY UN PROBLEMA DE CACHE 💥💥💥💥💥");
+    console.log("💥💥💥💥💥 req.body:", JSON.stringify(req.body, null, 2));
+    console.log("💥💥💥💥💥 req.user:", req.user);
+    console.log("💥💥💥💥💥 req.params:", req.params);
+    
+    // 💥 FORZAR UNA PAUSA PARA VER SI APARECE ESTE LOG
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    console.log("💥💥💥💥💥 DESPUÉS DE LA PAUSA - CONTINUANDO 💥💥💥💥💥");
     
     try {
       console.log("🎯🎯🎯 EJECUTANDO CONTROLLER DIRECTO EN RUTA 🎯🎯🎯");
