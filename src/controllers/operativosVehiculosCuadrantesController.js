@@ -142,7 +142,7 @@ export const createCuadranteInVehiculo = async (req, res) => {
       }
     }
 
-    // Preparar datos para creación - manejar campos opcionales correctamente
+    // 🔥 SOLUCIÓN DIRECTA: Forzar creación con todos los campos
     const createData = {
       operativo_vehiculo_id: vehiculoId,
       created_by,
@@ -167,30 +167,30 @@ export const createCuadranteInVehiculo = async (req, res) => {
       });
     }
 
-    // Campos opcionales - manejar explícitamente
+    // 🔥 CAMPOS OPCIONALES - MANEJO EXPLÍCITO
     if (req.body.hasOwnProperty('observaciones')) {
       createData.observaciones = req.body.observaciones === '' ? null : req.body.observaciones;
-      console.log("🐛 DEBUG: observaciones procesadas:", createData.observaciones);
+      console.log("🔥🔥🔥 OBSERVACIONES PROCESADAS:", createData.observaciones);
     }
 
     if (req.body.hasOwnProperty('incidentes_reportados')) {
       createData.incidentes_reportados = req.body.incidentes_reportados === '' ? null : req.body.incidentes_reportados;
-      console.log("🐛 DEBUG: incidentes_reportados procesados:", createData.incidentes_reportados);
+      console.log("🔥🔥🔥 INCIDENTES_REPORTADOS PROCESADOS:", createData.incidentes_reportados);
     }
 
     if (req.body.hasOwnProperty('hora_salida')) {
       createData.hora_salida = req.body.hora_salida === '' ? null : req.body.hora_salida;
-      console.log("🐛 DEBUG: hora_salida procesada:", createData.hora_salida);
+      console.log("🔥🔥🔥 HORA_SALIDA PROCESADA:", createData.hora_salida);
     }
 
-    console.log("🐛 DEBUG: Datos a crear:", JSON.stringify(createData, null, 2));
+    console.log("🔥🔥🔥 DATOS FINALES A CREAR:", JSON.stringify(createData, null, 2));
 
     const newCuadranteAsignado = await OperativosVehiculosCuadrantes.create(createData);
 
-    console.log("🐛 DEBUG: Cuadrante asignado creado exitosamente:");
-    console.log("🐛 DEBUG: ID:", newCuadranteAsignado.id);
-    console.log("🐛 DEBUG: observaciones:", newCuadranteAsignado.observaciones);
-    console.log("🐛 DEBUG: incidentes_reportados:", newCuadranteAsignado.incidentes_reportados);
+    console.log("🔥🔥🔥 CUADRANTE CREADO EXITOSAMENTE:");
+    console.log("🔥🔥🔥 ID:", newCuadranteAsignado.id);
+    console.log("🔥🔥🔥 observaciones:", newCuadranteAsignado.observaciones);
+    console.log("🔥🔥🔥 incidentes_reportados:", newCuadranteAsignado.incidentes_reportados);
 
     // Recargar con datos completos para respuesta
     const cuadranteCompleto = await OperativosVehiculosCuadrantes.findByPk(newCuadranteAsignado.id, {
@@ -208,10 +208,10 @@ export const createCuadranteInVehiculo = async (req, res) => {
       data: cuadranteCompleto,
     });
   } catch (error) {
-    console.error("🐛 DEBUG: Error en createCuadranteInVehiculo:");
-    console.error("🐛 DEBUG: Error message:", error.message);
-    console.error("🐛 DEBUG: Error name:", error.name);
-    console.error("🐛 DEBUG: Error stack:", error.stack);
+    console.error("🔥🔥🔥 ERROR EN createCuadranteInVehiculo:");
+    console.error("🔥🔥🔥 Error message:", error.message);
+    console.error("🔥🔥🔥 Error name:", error.name);
+    console.error("🔥🔥🔥 Error stack:", error.stack);
     
     // Manejar errores específicos de Sequelize
     if (error.name === 'SequelizeValidationError') {
