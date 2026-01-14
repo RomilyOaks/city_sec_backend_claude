@@ -93,8 +93,9 @@ export const getAllCuadrantesByVehiculo = async (req, res) => {
  * @param {object} res - Response object
  */
 export const createCuadranteInVehiculo = async (req, res) => {
-  console.log("🔥🔥🔥 createCuadranteInVehiculo EJECUTÁNDOSE - VERSIÓN ACTUALIZADA 🔥🔥🔥");
-  console.log("🔥🔥🔥 req.body DIRECTO EN CONTROLLER:", JSON.stringify(req.body, null, 2));
+  console.log("🔥🔥🔥🔥🔥 createCuadranteInVehiculo EJECUTÁNDOSE - VERSIÓN FINAL ACTUALIZADA 🔥🔥🔥🔥🔥");
+  console.log("🔥🔥🔥🔥🔥 req.body DIRECTO EN CONTROLLER:", JSON.stringify(req.body, null, 2));
+  console.log("🔥🔥🔥🔥🔥 FECHA ACTUAL:", new Date().toISOString());
   
   const { vehiculoId } = req.params;
   
