@@ -57,6 +57,56 @@ router.get(
   getAllCuadrantesByVehiculo
 );
 
+// 🔥 RUTA TEMPORAL BYPASSEANDO TODO PARA DEBUG
+router.post(
+  "/cuadrantes-debug",
+  verificarToken,
+  async (req, res) => {
+    console.log("🔥🔥🔥🔥🔥 RUTA DEBUG BYPASSEANDO TODO 🔥🔥🔥🔥🔥");
+    console.log("🔥🔥🔥🔥🔥 req.body:", JSON.stringify(req.body, null, 2));
+    console.log("🔥🔥🔥🔥🔥 req.user:", req.user);
+    console.log("🔥🔥🔥🔥🔥 req.params:", req.params);
+    
+    try {
+      const { vehiculoId } = req.params;
+      const { id: created_by } = req.user;
+      
+      // 🔥 CREAR DIRECTAMENTE SIN VALIDACIONES
+      const createData = {
+        operativo_vehiculo_id: vehiculoId,
+        cuadrante_id: req.body.cuadrante_id,
+        hora_ingreso: req.body.hora_ingreso,
+        observaciones: req.body.observaciones,
+        incidentes_reportados: req.body.incidentes_reportados,
+        created_by,
+      };
+
+      console.log("🔥🔥🔥🔥🔥 DATOS A CREAR:", JSON.stringify(createData, null, 2));
+
+      const newCuadranteAsignado = await OperativosVehiculosCuadrantes.create(createData);
+
+      console.log("🔥🔥🔥🔥🔥 CUADRANTE CREADO:");
+      console.log("🔥🔥🔥🔥🔥 ID:", newCuadranteAsignado.id);
+      console.log("🔥🔥🔥🔥🔥 observaciones:", newCuadranteAsignado.observaciones);
+      console.log("🔥🔥🔥🔥🔥 incidentes_reportados:", newCuadranteAsignado.incidentes_reportados);
+
+      res.status(201).json({
+        status: "success",
+        message: "Cuadrante creado - RUTA DEBUG",
+        data: newCuadranteAsignado,
+      });
+      
+    } catch (error) {
+      console.error("🔥🔥🔥🔥🔥 ERROR EN RUTA DEBUG:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Error en ruta debug",
+        error: error.message,
+      });
+    }
+  }
+);
+
 router.post(
   "/cuadrantes",
   verificarToken,
