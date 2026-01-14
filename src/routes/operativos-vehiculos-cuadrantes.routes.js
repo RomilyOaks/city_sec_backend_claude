@@ -85,6 +85,11 @@ router.post(
   handleValidationErrors,
   registrarAuditoria("Registro de cuadrante en vehículo operativo"),
   async (req, res) => {
+    console.log("🎯🎯🎯🎯🎯 ANTES DE TODO - ENTRANDO AL CONTROLLER DIRECTO 🎯🎯🎯🎯🎯");
+    console.log("🎯🎯🎯🎯🎯 req.body AQUÍ:", JSON.stringify(req.body, null, 2));
+    console.log("🎯🎯🎯🎯🎯 req.user:", req.user);
+    console.log("🎯🎯🎯🎯🎯 req.params:", req.params);
+    
     try {
       console.log("🎯🎯🎯 EJECUTANDO CONTROLLER DIRECTO EN RUTA 🎯🎯🎯");
       console.log("🎯🎯🎯 req.body COMPLETO:", JSON.stringify(req.body, null, 2));
