@@ -1296,20 +1296,6 @@ OperativosVehiculosNovedades.belongsTo(Usuario, {
   as: "eliminadorOperativosVehiculosNovedades",
 });
 
-// OperativosTurno
-OperativosTurno.belongsTo(Usuario, {
-  foreignKey: "created_by",
-  as: "creadorOperativosTurno",
-});
-OperativosTurno.belongsTo(Usuario, {
-  foreignKey: "updated_by",
-  as: "actualizadorOperativosTurno",
-});
-OperativosTurno.belongsTo(Usuario, {
-  foreignKey: "deleted_by",
-  as: "eliminadorOperativosTurno",
-});
-
 // ============================================================================
 // DEFINIR RELACIONES DEL MÓDULO CALLES Y DIRECCIONES (✅ 2.2.1)
 // ============================================================================

@@ -59,7 +59,7 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
                     as: "sector"
                   },
                   {
-                    model: Usuario,
+                    model: PersonalSeguridad,
                     as: "operador"
                   },
                   {
