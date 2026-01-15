@@ -144,10 +144,29 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
       }
     }));
 
+    // Crear objeto cuadranteInfo para incluir siempre en la respuesta
+    const cuadranteInfo = {
+      cuadrante: operativoVehiculoCuadrante.cuadrante,
+      operativoVehiculo: {
+        id: operativoVehiculoCuadrante.operativoVehiculo.id,
+        kilometraje_inicio: operativoVehiculoCuadrante.operativoVehiculo.kilometraje_inicio,
+        kilometraje_fin: operativoVehiculoCuadrante.operativoVehiculo.kilometraje_fin,
+        nivel_combustible_inicio: operativoVehiculoCuadrante.operativoVehiculo.nivel_combustible_inicio,
+        nivel_combustible_fin: operativoVehiculoCuadrante.operativoVehiculo.nivel_combustible_fin,
+        hora_inicio: operativoVehiculoCuadrante.operativoVehiculo.hora_inicio,
+        hora_fin: operativoVehiculoCuadrante.operativoVehiculo.hora_fin,
+        turno: operativoVehiculoCuadrante.operativoVehiculo.turno,
+        vehiculo: operativoVehiculoCuadrante.operativoVehiculo.vehiculo,
+        conductor: operativoVehiculoCuadrante.operativoVehiculo.conductor,
+        copiloto: operativoVehiculoCuadrante.operativoVehiculo.copiloto
+      }
+    };
+
     res.status(200).json({
       status: "success",
       message: "Novedades obtenidas exitosamente con información completa",
       data: novedadesEnriquecidas,
+      cuadranteInfo: cuadranteInfo,
       summary: {
         total: novedadesEnriquecidas.length,
         porEstado: {

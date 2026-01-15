@@ -34,6 +34,71 @@ interface OperativosVehiculosNovedades {
   updated_by?: number;                  // ID del usuario que actualizó
   updated_at?: Date;                    // Fecha de actualización
 }
+
+// Interface para respuesta del API
+interface NovedadesResponse {
+  status: "success";
+  message: string;
+  data: OperativosVehiculosNovedades[];  // Array de novedades (puede estar vacío)
+  cuadranteInfo: {
+    cuadrante: {
+      id: number;
+      nombre: string;
+      codigo: string;
+    };
+    operativoVehiculo: {
+      id: number;
+      kilometraje_inicio: number;
+      kilometraje_fin: number | null;
+      nivel_combustible_inicio: number;
+      nivel_combustible_fin: number | null;
+      hora_inicio: string;
+      hora_fin: string | null;
+      turno: {
+        id: number;
+        fecha: string;
+        turno: "MAÑANA" | "TARDE" | "NOCHE";
+        estado: "ACTIVO" | "CERRADO" | "ANULADO";
+      };
+      vehiculo: {
+        id: number;
+        placa: string;
+        marca: string;
+        modelo: string;
+      };
+      conductor: {
+        id: number;
+        nombres: string;
+        apellidos: string;
+      };
+      copiloto: {
+        id: number;
+        nombres: string;
+        apellidos: string;
+      };
+    };
+  };
+  summary: {
+    total: number;
+    porEstado: {
+      activas: number;
+      inactivas: number;
+      atendidas: number;
+    };
+    porPrioridad: {
+      baja: number;
+      media: number;
+      alta: number;
+      urgente: number;
+    };
+    porResultado: {
+      pendientes: number;
+      resueltas: number;
+      escaladas: number;
+      canceladas: number;
+    };
+  };
+}
 ```
 
 ---
@@ -113,6 +178,44 @@ GET /api/v1/operativos/{turnoId}/vehiculos/{vehiculoId}/cuadrantes/{cuadranteId}
       }
     }
   ],
+  "cuadranteInfo": {
+    "cuadrante": {
+      "id": 7,
+      "nombre": "Centro Histórico",
+      "codigo": "C-007"
+    },
+    "operativoVehiculo": {
+      "id": 5,
+      "kilometraje_inicio": 15000,
+      "kilometraje_fin": null,
+      "nivel_combustible_inicio": 80,
+      "nivel_combustible_fin": null,
+      "hora_inicio": "2026-01-14T17:00:00.000Z",
+      "hora_fin": null,
+      "turno": {
+        "id": 3,
+        "fecha": "2026-01-14",
+        "turno": "TARDE",
+        "estado": "ACTIVO"
+      },
+      "vehiculo": {
+        "id": 12,
+        "placa": "ABC-123",
+        "marca": "Toyota",
+        "modelo": "Hilux"
+      },
+      "conductor": {
+        "id": 25,
+        "nombres": "Juan Pérez",
+        "apellidos": "García"
+      },
+      "copiloto": {
+        "id": 30,
+        "nombres": "María López",
+        "apellidos": "Díaz"
+      }
+    }
+  },
   "summary": {
     "total": 1,
     "porEstado": {
@@ -128,6 +231,66 @@ GET /api/v1/operativos/{turnoId}/vehiculos/{vehiculoId}/cuadrantes/{cuadranteId}
     },
     "porResultado": {
       "pendientes": 1,
+      "resueltas": 0,
+      "escaladas": 0,
+      "canceladas": 0
+    }
+  }
+}
+```
+
+**📋 Nota Importante:** 
+- **`data`**: Array de novedades (puede estar vacío `[]`)
+- **`cuadranteInfo`**: Siempre incluye información completa del cuadrante y vehículo, incluso cuando no hay novedades
+- **`summary`**: Estadísticas basadas en las novedades existentes
+
+**Ejemplo de respuesta sin novedades:**
+```json
+{
+  "status": "success",
+  "message": "Novedades obtenidas exitosamente con información completa",
+  "data": [],
+  "cuadranteInfo": {
+    "cuadrante": {
+      "id": 7,
+      "nombre": "Centro Histórico",
+      "codigo": "C-007"
+    },
+    "operativoVehiculo": {
+      "id": 5,
+      "vehiculo": {
+        "id": 12,
+        "placa": "ABC-123",
+        "marca": "Toyota",
+        "modelo": "Hilux"
+      },
+      "conductor": {
+        "id": 25,
+        "nombres": "Juan Pérez",
+        "apellidos": "García"
+      },
+      "copiloto": {
+        "id": 30,
+        "nombres": "María López",
+        "apellidos": "Díaz"
+      }
+    }
+  },
+  "summary": {
+    "total": 0,
+    "porEstado": {
+      "activas": 0,
+      "inactivas": 0,
+      "atendidas": 0
+    },
+    "porPrioridad": {
+      "baja": 0,
+      "media": 0,
+      "alta": 0,
+      "urgente": 0
+    },
+    "porResultado": {
+      "pendientes": 0,
       "resueltas": 0,
       "escaladas": 0,
       "canceladas": 0
