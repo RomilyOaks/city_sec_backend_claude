@@ -13,6 +13,7 @@
  *
  * Endpoints:
  * - GET /:operativoVehiculoCuadranteId/novedades: Obtener todas las novedades de un cuadrante con información completa.
+ * - GET /:operativoVehiculoCuadranteId/novedades/disponibles: Obtener novedades disponibles para el cuadrante.
  * - GET /:operativoVehiculoCuadranteId/novedades/:id: Obtener una novedad específica con información completa.
  * - POST /:operativoVehiculoCuadranteId/novedades: Registrar una nueva novedad atendida en un cuadrante.
  * - PUT /:operativoVehiculoCuadranteId/novedades/:id: Actualizar información de una novedad atendida.
@@ -32,6 +33,102 @@ const {
   Usuario,
   Sector
 } = models;
+
+/**
+ * Obtener novedades disponibles para un cuadrante específico
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ */
+export const getNovedadesDisponiblesByCuadrante = async (req, res) => {
+  const { cuadranteId } = req.params;
+
+  try {
+    // Validar que el cuadrante exista
+    const cuadrante = await Cuadrante.findByPk(cuadranteId);
+    if (!cuadrante) {
+      return res.status(404).json({
+        status: "error",
+        message: "Cuadrante no encontrado",
+      });
+    }
+
+    // Obtener novedades que pertenecen a este cuadrante
+    const novedades = await Novedad.findAll({
+      where: { 
+        cuadrante_id: cuadranteId,
+        estado: 1 // Solo novedades activas
+      },
+      include: [
+        {
+          model: models.TipoNovedad,
+          as: "novedadTipoNovedad",
+          attributes: ["id", "nombre", "color_hex", "icono"]
+        },
+        {
+          model: models.SubtipoNovedad,
+          as: "novedadSubtipoNovedad",
+          attributes: ["id", "nombre", "prioridad"]
+        },
+        {
+          model: models.EstadoNovedad,
+          as: "novedadEstado",
+          attributes: ["id", "nombre", "color_hex", "icono"]
+        },
+        {
+          model: Sector,
+          as: "novedadSector",
+          attributes: ["id", "nombre", "sector_code"]
+        },
+        {
+          model: Cuadrante,
+          as: "novedadCuadrante",
+          attributes: ["id", "nombre", "cuadrante_code"]
+        },
+        {
+          model: Vehiculo,
+          as: "novedadVehiculo",
+          attributes: ["id", "codigo_vehiculo", "placa"]
+        }
+      ],
+      order: [
+        ["prioridad_actual", "DESC"],
+        ["fecha_hora_reporte", "DESC"]
+      ]
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: "Novedades disponibles del cuadrante obtenidas exitosamente",
+      data: novedades,
+      cuadranteInfo: {
+        id: cuadrante.id,
+        nombre: cuadrante.nombre,
+        codigo: cuadrante.codigo || cuadrante.cuadrante_code
+      },
+      summary: {
+        total: novedades.length,
+        porPrioridad: {
+          urgente: novedades.filter(n => n.prioridad_actual === "URGENTE").length,
+          alta: novedades.filter(n => n.prioridad_actual === "ALTA").length,
+          media: novedades.filter(n => n.prioridad_actual === "MEDIA").length,
+          baja: novedades.filter(n => n.prioridad_actual === "BAJA").length,
+        },
+        porEstado: {
+          despachado: novedades.filter(n => n.estado_novedad_id === 2).length,
+          pendiente: novedades.filter(n => n.estado_novedad_id === 1).length,
+          atendido: novedades.filter(n => n.estado_novedad_id === 3).length,
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error en getNovedadesDisponiblesByCuadrante:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
 
 /**
  * Obtener todas las novedades asignadas a un cuadrante de vehículo operativo con información completa

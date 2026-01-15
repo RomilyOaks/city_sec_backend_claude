@@ -22,6 +22,7 @@ import { Router } from "express";
 import { body, param } from "express-validator";
 import {
   getAllNovedadesByCuadrante,
+  getNovedadesDisponiblesByCuadrante,
   createNovedadInCuadrante,
   updateNovedadInCuadrante,
   deleteNovedadInCuadrante,
@@ -41,6 +42,14 @@ const permisos = {
   update: "operativos.vehiculos.novedades.update",
   delete: "operativos.vehiculos.novedades.delete",
 };
+
+// Obtener novedades disponibles para el cuadrante (lista de novedades del sistema)
+router.get(
+  "/disponibles",
+  verificarToken,
+  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  getNovedadesDisponiblesByCuadrante
+);
 
 // Obtener todas las novedades de un cuadrante con información completa
 router.get(

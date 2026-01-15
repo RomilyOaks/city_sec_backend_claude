@@ -89,7 +89,6 @@ interface NovedadesResponse {
       baja: number;
       media: number;
       alta: number;
-      urgente: number;
     };
     porResultado: {
       pendientes: number;
@@ -299,7 +298,79 @@ GET /api/v1/operativos/{turnoId}/vehiculos/{vehiculoId}/cuadrantes/{cuadranteId}
 }
 ```
 
-### **2. Registrar Nueva Novedad**
+### **2. Obtener Novedades Disponibles del Cuadrante**
+```http
+GET /api/v1/operativos/{turnoId}/vehiculos/{vehiculoId}/cuadrantes/{cuadranteId}/novedades/disponibles
+```
+
+**📋 Propósito:** Obtener la lista de novedades del sistema que pertenecen a este cuadrante específico para que el frontend pueda seleccionar cuál atender.
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Novedades disponibles del cuadrante obtenidas exitosamente",
+  "data": [
+    {
+      "id": 40,
+      "novedad_code": "000029",
+      "fecha_hora_ocurrencia": "2026-01-06 05:22:00",
+      "fecha_hora_reporte": "2026-01-06 10:22:58",
+      "descripcion": "Alarma activada en domicilio",
+      "prioridad_actual": "ALTA",
+      "localizacion": "Ca. San Martín N° 852",
+      "novedadTipoNovedad": {
+        "id": 7,
+        "nombre": "ALARMA ACTIVADA",
+        "color_hex": "#F59E0B",
+        "icono": null
+      },
+      "novedadSubtipoNovedad": {
+        "id": 28,
+        "nombre": "DE DOMICILIO",
+        "prioridad": "ALTA"
+      },
+      "novedadEstado": {
+        "id": 2,
+        "nombre": "DESPACHADO",
+        "color_hex": "#F59E0B",
+        "icono": "send"
+      },
+      "novedadCuadrante": {
+        "id": 9,
+        "nombre": "Cuadrante 12",
+        "cuadrante_code": "12"
+      },
+      "novedadVehiculo": {
+        "id": 32,
+        "codigo_vehiculo": "C-02",
+        "placa": "AUE-202"
+      }
+    }
+  ],
+  "cuadranteInfo": {
+    "id": 9,
+    "nombre": "Cuadrante 12",
+    "codigo": "12"
+  },
+  "summary": {
+    "total": 1,
+    "porPrioridad": {
+      "urgente": 0,
+      "alta": 1,
+      "media": 0,
+      "baja": 0
+    },
+    "porEstado": {
+      "despachado": 1,
+      "pendiente": 0,
+      "atendido": 0
+    }
+  }
+}
+```
+
+### **3. Registrar Nueva Novedad Atendida**
 ```http
 POST /api/v1/operativos/{turnoId}/vehiculos/{vehiculoId}/cuadrantes/{cuadranteId}/novedades
 ```
@@ -307,10 +378,10 @@ POST /api/v1/operativos/{turnoId}/vehiculos/{vehiculoId}/cuadrantes/{cuadranteId
 **Request Body:**
 ```json
 {
-  "novedad_id": 5,
+  "novedad_id": 40,  // ID de la novedad disponible (del endpoint /disponibles)
   "reportado": "2026-01-14T18:30:00.000Z",
   "prioridad": "ALTA",
-  "observaciones": "Accidente vehicular en intersección",
+  "observaciones": "Alarma atendida por patrullaje",
   "resultado": "PENDIENTE"
 }
 ```
