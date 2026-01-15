@@ -67,7 +67,7 @@ export const getNovedadesDisponiblesByCuadrante = async (req, res) => {
         {
           model: models.SubtipoNovedad,
           as: "novedadSubtipoNovedad",
-          attributes: ["id", "nombre", "prioridad"]
+          attributes: ["id", "nombre", "descripcion", "prioridad"]
         },
         {
           model: models.EstadoNovedad,
