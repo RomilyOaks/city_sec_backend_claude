@@ -328,6 +328,7 @@ GET /api/v1/operativos/{turnoId}/vehiculos/{vehiculoId}/cuadrantes/{cuadranteId}
       "novedadSubtipoNovedad": {
         "id": 28,
         "nombre": "DE DOMICILIO",
+        "descripcion": "Alarma activada en domicilio particular",
         "prioridad": "ALTA"
       },
       "novedadEstado": {
