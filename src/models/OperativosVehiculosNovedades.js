@@ -31,14 +31,34 @@ const OperativosVehiculosNovedades = sequelize.define(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    atendido: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     estado: {
       type: DataTypes.TINYINT,
       allowNull: true,
       defaultValue: 1,
+      comment: "1: Activo, 0: Inactivo, 2: Atendido",
+    },
+    prioridad: {
+      type: DataTypes.ENUM("BAJA", "MEDIA", "ALTA", "URGENTE"),
+      allowNull: false,
+      defaultValue: "MEDIA",
     },
     observaciones: {
       type: DataTypes.TEXT,
       allowNull: true,
+    },
+    acciones_tomadas: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: "Descripción de las acciones realizadas para atender la novedad",
+    },
+    resultado: {
+      type: DataTypes.ENUM("PENDIENTE", "RESUELTO", "ESCALADO", "CANCELADO"),
+      allowNull: false,
+      defaultValue: "PENDIENTE",
     },
     created_by: {
       type: DataTypes.INTEGER,
@@ -86,9 +106,7 @@ const OperativosVehiculosNovedades = sequelize.define(
     createdAt: "created_at",
     updatedAt: "updated_at",
     deletedAt: "deleted_at",
-    // Evitar que Sequelize infiera columnas adicionales
     underscored: false,
-    // No sincronizar con la base de datos
     sync: { force: false, alter: false },
   }
 );
