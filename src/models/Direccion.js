@@ -590,10 +590,10 @@ Direccion.generarCodigo = async function () {
     const ultimaDireccion = await Direccion.findOne({
       where: {
         direccion_code: {
-          [Op.like]: 'D-%'
+          [Op.like]: "D-%"
         }
       },
-      order: [['direccion_code', 'DESC']],
+      order: [["direccion_code", "DESC"]],
       paranoid: false // Incluir soft-deleted
     });
 
@@ -609,17 +609,16 @@ Direccion.generarCodigo = async function () {
 
     // Validar que no exceda la capacidad
     if (nuevoSecuencial > 999999) {
-      throw new Error('Se ha alcanzado el límite máximo de direcciones (999,999)');
+      throw new Error("Se ha alcanzado el límite máximo de direcciones (999,999)");
     }
 
     // Formatear con padding de 6 dígitos
-    const codigo = `D-${String(nuevoSecuencial).padStart(6, '0')}`;
+    const codigo = `D-${String(nuevoSecuencial).padStart(6, "0")}`;
 
-    console.log(`📋 Código de dirección generado: ${codigo}`);
     return codigo;
 
   } catch (error) {
-    console.error('❌ Error al generar código de dirección:', error);
+    console.error("❌ Error al generar código de dirección:", error);
     throw error;
   }
 };
