@@ -1,0 +1,468 @@
+{
+  "info": {
+    "_postman_id": "operativos-vehiculos-test-2026",
+    "name": "Operativos Vehiculos - Test Local",
+    "description": "Colección para verificar endpoints de operativos vehículos después de homologación de modelos a PascalCase.\n\n## Cambios realizados:\n- OperativosVehiculos.js (antes operativos-vehiculos.js)\n- Eliminados archivos duplicados kebab-case\n\n## Endpoints a verificar:\n1. GET /operativos-vehiculos (general)\n2. GET /operativos/:turnoId/vehiculos\n3. POST /operativos/:turnoId/vehiculos\n4. PUT /operativos/:turnoId/vehiculos/:id\n5. DELETE /operativos/:turnoId/vehiculos/:id",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login - Obtener Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.token) {",
+                  "        pm.environment.set('token', jsonData.data.token);",
+                  "        pm.test('Token guardado correctamente', function() {",
+                  "            pm.expect(pm.environment.get('token')).to.not.be.empty;",
+                  "        });",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Operativos Turno",
+      "item": [
+        {
+          "name": "GET - Listar Turnos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response tiene estructura correcta', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});",
+                  "",
+                  "// Guardar primer turno para pruebas",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.length > 0) {",
+                  "    pm.environment.set('turnoId', jsonData.data[0].id);",
+                  "    console.log('turnoId guardado:', jsonData.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Operativos Vehiculos - General",
+      "item": [
+        {
+          "name": "GET - Listar Todos los Vehículos Operativos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response tiene estructura correcta', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Modelo OperativosVehiculos carga correctamente', function() {",
+                  "    pm.response.to.not.have.status(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos-vehiculos",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos-vehiculos"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Con Paginación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Paginación funciona correctamente', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('pagination');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos-vehiculos?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos-vehiculos"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Operativos Vehiculos - Por Turno",
+      "item": [
+        {
+          "name": "GET - Vehículos por Turno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response tiene estructura correcta', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test('Relaciones incluidas correctamente', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.length > 0) {",
+                  "        var vehiculo = jsonData.data[0];",
+                  "        ",
+                  "        // Verificar relaciones básicas",
+                  "        pm.expect(vehiculo).to.have.property('vehiculo');",
+                  "        ",
+                  "        // Verificar nuevas relaciones agregadas",
+                  "        console.log('tipo_copiloto:', vehiculo.tipo_copiloto);",
+                  "        console.log('radio_tetra:', vehiculo.radio_tetra);",
+                  "        console.log('estado_operativo:', vehiculo.estado_operativo);",
+                  "        ",
+                  "        // Guardar ID para pruebas posteriores",
+                  "        pm.environment.set('vehiculoOperativoId', vehiculo.id);",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Modelo carga sin errores de asociación', function() {",
+                  "    pm.response.to.not.have.status(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/vehiculos",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "vehiculos"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Vehículo por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 404', function() {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Response tiene estructura correcta', function() {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.have.property('success');",
+                  "        pm.expect(jsonData).to.have.property('data');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/vehiculos/{{vehiculoOperativoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "vehiculos", "{{vehiculoOperativoId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Crear Vehículo en Turno (Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 or 400/409', function() {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400, 409]);",
+                  "});",
+                  "",
+                  "pm.test('Modelo funciona para crear', function() {",
+                  "    pm.response.to.not.have.status(500);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "        pm.environment.set('nuevoVehiculoId', jsonData.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"vehiculo_id\": 1,\n    \"conductor_id\": 1,\n    \"kilometraje_inicio\": 50000,\n    \"hora_inicio\": \"2026-01-17T08:00:00.000Z\",\n    \"estado_operativo_id\": 1,\n    \"nivel_combustible_inicio\": \"LLENO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/vehiculos",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "vehiculos"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Operativos Vehiculos - Cuadrantes",
+      "item": [
+        {
+          "name": "GET - Cuadrantes por Vehículo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 404', function() {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});",
+                  "",
+                  "pm.test('Asociación con OperativosVehiculosCuadrantes funciona', function() {",
+                  "    pm.response.to.not.have.status(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/vehiculos/{{vehiculoOperativoId}}/cuadrantes",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "vehiculos", "{{vehiculoOperativoId}}", "cuadrantes"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Verificación de Modelos",
+      "item": [
+        {
+          "name": "Health Check - Conexión DB",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Server está corriendo', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Database conectada', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.database).to.equal('connected');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "turnoId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "vehiculoOperativoId",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}

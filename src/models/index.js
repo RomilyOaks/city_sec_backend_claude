@@ -228,7 +228,7 @@ import OperativosVehiculosNovedades from "./OperativosVehiculosNovedades.js";
  * @type {Model}
  */
 import OperativosTurno from "./OperativosTurno.js";
-import OperativosVehiculos from "./operativos-vehiculos.js";
+import OperativosVehiculos from "./OperativosVehiculos.js";
 
 /**
  * Modelo EstadoOperativoRecurso
@@ -360,8 +360,6 @@ import Direccion from "./Direccion.js";
 //=============================================================================
 // DEFINICIÓN DE ASOCIACIONES (RELACIONES ENTRE MODELOS)
 //=============================================================================
-
-console.log("📌 Configurando asociaciones de modelos...");
 
 //=============================================
 // ASOCIACIONES: OPERATIVOS
@@ -1566,8 +1564,6 @@ RadioTetra.belongsTo(Usuario, {
   foreignKey: "deleted_by",
   as: "eliminadorRadioTetra",
 });
-
-console.log("✅ Asociaciones configuradas exitosamente");
 
 //=============================================
 // EXPORTAR MODELOS

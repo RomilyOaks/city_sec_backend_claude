@@ -3,7 +3,7 @@
  * MODELO: OperativosVehiculos
  * ===================================================
  *
- * Ruta: src/models/operativos-vehiculos.js
+ * Ruta: src/models/OperativosVehiculos.js
  *
  * Descripción:
  * Modelo Sequelize para la tabla 'operativos_vehiculos' de la base de datos.

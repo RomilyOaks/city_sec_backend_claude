@@ -107,7 +107,6 @@ const generarCodigoCalle = async () => {
     }
   }
   const codigoGenerado = `C${numero.toString().padStart(4, "0")}`;
-  console.log("Número generado para código de calle:", codigoGenerado);
   return codigoGenerado;
 };
 
