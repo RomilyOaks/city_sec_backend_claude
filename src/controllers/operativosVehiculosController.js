@@ -210,20 +210,24 @@ export const getAllVehiculos = async (req, res) => {
  */
 export const getAllVehiculosByTurno = async (req, res) => {
   const { turnoId } = req.params;
-
+  const timestamp = new Date().toISOString();
+  
   try {
-    console.log("🐛 DEBUG: Iniciando getAllVehiculosByTurno para turnoId:", turnoId);
+    console.log(`🔥 [${timestamp}] DEBUG: getAllVehiculosByTurno INICIO - turnoId: ${turnoId}`);
+    console.log(`🔥 [${timestamp}] DEBUG: Headers:`, JSON.stringify(req.headers, null, 2));
+    console.log(`🔥 [${timestamp}] DEBUG: Query params:`, JSON.stringify(req.query, null, 2));
+    console.log(`🔥 [${timestamp}] DEBUG: Request URL: ${req.originalUrl}`);
 
     const turno = await OperativosTurno.findByPk(turnoId);
     if (!turno) {
-      console.log("🐛 DEBUG: Turno no encontrado");
+      console.log(`🔥 [${timestamp}] DEBUG: Turno no encontrado - 404`);
       return res.status(404).json({
         success: false,
         message: "Turno no encontrado",
       });
     }
 
-    console.log("🐛 DEBUG: Turno encontrado, construyendo consulta de vehículos");
+    console.log(`🔥 [${timestamp}] DEBUG: Turno encontrado, consultando vehículos...`);
 
     const vehiculos = await OperativosVehiculos.findAll({
       where: {
@@ -272,20 +276,19 @@ export const getAllVehiculosByTurno = async (req, res) => {
       order: [["created_at", "ASC"]],
     });
 
-    console.log("🐛 DEBUG: Vehículos consultados exitosamente. Count:", vehiculos.length);
+    console.log(`🔥 [${timestamp}] DEBUG: Vehículos consultados - Count: ${vehiculos.length}`);
+    console.log(`🔥 [${timestamp}] DEBUG: Enviando respuesta 200 con ${vehiculos.length} vehículos`);
 
     res.status(200).json({
       success: true,
       data: vehiculos,
     });
   } catch (error) {
-    console.error("🐛 DEBUG: Error en getAllVehiculosByTurno:");
-    console.error("🐛 DEBUG: Error message:", error.message);
-    console.error("🐛 DEBUG: Error name:", error.name);
-    console.error("🐛 DEBUG: Error stack:", error.stack);
+    console.error(`🔥 [${timestamp}] DEBUG: ERROR en getAllVehiculosByTurno:`, error.message);
+    console.error(`🔥 [${timestamp}] DEBUG: Error stack:`, error.stack);
     
     // Si es un error de asociaciones de Sequelize, mostrar detalles adicionales
-    if (error.name === 'SequelizeAssociationError' || error.message.includes('associated')) {
+    if (error.name === "SequelizeAssociationError" || error.message.includes("associated")) {
       console.error("🐛 DEBUG: Error de asociaciones detectado en vehículos");
       console.error("🐛 DEBUG: Error completo:", JSON.stringify(error, null, 2));
     }
@@ -296,7 +299,7 @@ export const getAllVehiculosByTurno = async (req, res) => {
       error: error.message,
       debug: {
         name: error.name,
-        isAssociationError: error.name === 'SequelizeAssociationError' || error.message.includes('associated')
+        isAssociationError: error.name === "SequelizeAssociationError" || error.message.includes("associated")
       }
     });
   }
@@ -411,7 +414,7 @@ export const getVehiculoById = async (req, res) => {
     console.error("🐛 DEBUG: Error stack:", error.stack);
     
     // Si es un error de asociaciones de Sequelize, mostrar detalles adicionales
-    if (error.name === 'SequelizeAssociationError' || error.message.includes('associated')) {
+    if (error.name === "SequelizeAssociationError" || error.message.includes("associated")) {
       console.error("🐛 DEBUG: Error de asociaciones detectado en vehículo específico");
       console.error("🐛 DEBUG: Error completo:", JSON.stringify(error, null, 2));
     }
@@ -422,7 +425,7 @@ export const getVehiculoById = async (req, res) => {
       error: error.message,
       debug: {
         name: error.name,
-        isAssociationError: error.name === 'SequelizeAssociationError' || error.message.includes('associated')
+        isAssociationError: error.name === "SequelizeAssociationError" || error.message.includes("associated")
       }
     });
   }
@@ -436,18 +439,29 @@ export const getVehiculoById = async (req, res) => {
 export const createVehiculoInTurno = async (req, res) => {
   const { turnoId } = req.params;
   const { id: created_by } = req.user;
-
+  const timestamp = new Date().toISOString();
+  
   try {
+    console.log(`🔥 [${timestamp}] DEBUG: createVehiculoInTurno INICIO - turnoId: ${turnoId}`);
+    console.log(`🔥 [${timestamp}] DEBUG: Request body:`, JSON.stringify(req.body, null, 2));
+    console.log(`🔥 [${timestamp}] DEBUG: User ID: ${created_by}`);
+    console.log(`🔥 [${timestamp}] DEBUG: Headers:`, JSON.stringify(req.headers, null, 2));
+    console.log(`🔥 [${timestamp}] DEBUG: Request URL: ${req.originalUrl}`);
+
     const turno = await OperativosTurno.findByPk(turnoId);
     if (!turno) {
+      console.log(`🔥 [${timestamp}] DEBUG: Turno no encontrado - 404`);
       return res.status(404).json({
         success: false,
         message: "Turno no encontrado",
       });
     }
 
+    console.log(`🔥 [${timestamp}] DEBUG: Turno encontrado, validando vehículo...`);
+
     // Validar que el vehículo no esté ya asignado al turno (solo registros activos)
     if (req.body.vehiculo_id) {
+      console.log(`🔥 [${timestamp}] DEBUG: Validando vehículo_id: ${req.body.vehiculo_id}`);
       const vehiculoExistente = await OperativosVehiculos.findOne({
         where: {
           operativo_turno_id: turnoId,
@@ -458,6 +472,7 @@ export const createVehiculoInTurno = async (req, res) => {
       });
 
       if (vehiculoExistente) {
+        console.log(`🔥 [${timestamp}] DEBUG: Vehículo ya existe - 400`);
         return res.status(400).json({
           success: false,
           message: "Vehículo ya ha sido asignado en el mismo sector, turno y fecha de los Operativos",
@@ -467,6 +482,7 @@ export const createVehiculoInTurno = async (req, res) => {
 
     // Validar que el conductor no esté ya asignado a otro vehículo en el turno (solo registros activos)
     if (req.body.conductor_id) {
+      console.log(`🔥 [${timestamp}] DEBUG: Validando conductor_id: ${req.body.conductor_id}`);
       const conductorExistente = await OperativosVehiculos.findOne({
         where: {
           operativo_turno_id: turnoId,
@@ -477,6 +493,7 @@ export const createVehiculoInTurno = async (req, res) => {
       });
 
       if (conductorExistente) {
+        console.log(`🔥 [${timestamp}] DEBUG: Conductor ya existe - 400`);
         return res.status(400).json({
           success: false,
           message: "Conductor ya fue asignado a otro vehículo en el mismo sector, turno y fecha de los Operativos",
@@ -484,11 +501,16 @@ export const createVehiculoInTurno = async (req, res) => {
       }
     }
 
+    console.log(`🔥 [${timestamp}] DEBUG: Validaciones OK, creando vehículo...`);
+
     const newVehiculoAsignado = await OperativosVehiculos.create({
       ...req.body,
       operativo_turno_id: turnoId,
       created_by,
     });
+
+    console.log(`🔥 [${timestamp}] DEBUG: Vehículo creado con ID: ${newVehiculoAsignado.id}`);
+    console.log(`🔥 [${timestamp}] DEBUG: Enviando respuesta 201`);
 
     res.status(201).json({
       success: true,
@@ -496,12 +518,15 @@ export const createVehiculoInTurno = async (req, res) => {
       data: newVehiculoAsignado,
     });
   } catch (error) {
+    console.error(`🔥 [${timestamp}] DEBUG: ERROR en createVehiculoInTurno:`, error.message);
+    console.error(`🔥 [${timestamp}] DEBUG: Error name:`, error.name);
+    console.error(`🔥 [${timestamp}] DEBUG: Error stack:`, error.stack);
+    
     if (error.name === "SequelizeUniqueConstraintError") {
-      // Detectar el tipo de constraint violado
+      console.log(`🔥 [${timestamp}] DEBUG: Error de constraint única detectado`);
       const constraintName = error.parent?.constraint;
       const fields = error.fields || {};
 
-      // Mensajes específicos según el constraint
       if (constraintName === "uq_turno_conductor" || fields.conductor_id) {
         return res.status(400).json({
           success: false,

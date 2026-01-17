@@ -29,6 +29,9 @@ import {
 // Importar middleware de auditoría
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 
+// Importar rate limiting (TEMPORAL ANTI-BUCLE)
+import { catalogRateLimit } from "../middlewares/rateLimitMiddleware.js";
+
 // Importar validadores
 import { body, param, query, validationResult } from "express-validator";
 
@@ -639,6 +642,7 @@ router.get(
 router.get(
   "/",
   verificarToken,
+  catalogRateLimit, // 🔥 ANTI-BUCLE: Máximo 5 solicitudes/minuto
   requireAnyPermission(["personal.personal.read"]),
   [
     query("page")

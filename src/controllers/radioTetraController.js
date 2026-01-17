@@ -141,8 +141,19 @@ const radioTetraController = {
    * Para usar en dropdowns del frontend
    */
   getRadiosDisponibles: async (req, res) => {
+    const timestamp = new Date().toISOString();
+    
     try {
+      console.log(`🔥 [${timestamp}] DEBUG: getRadiosDisponibles INICIO`);
+      console.log(`🔥 [${timestamp}] DEBUG: Query params:`, JSON.stringify(req.query, null, 2));
+      console.log(`🔥 [${timestamp}] DEBUG: Headers:`, JSON.stringify(req.headers, null, 2));
+      console.log(`🔥 [${timestamp}] DEBUG: Request URL: ${req.originalUrl}`);
+      
+      console.log(`🔥 [${timestamp}] DEBUG: Consultando radios disponibles...`);
       const radios = await RadioTetra.findDisponibles();
+      
+      console.log(`🔥 [${timestamp}] DEBUG: Radios disponibles encontrados: ${radios.length}`);
+      console.log(`🔥 [${timestamp}] DEBUG: Enviando respuesta 200`);
 
       return res.status(200).json(
         formatResponse({
@@ -151,7 +162,9 @@ const radioTetraController = {
         })
       );
     } catch (error) {
-      console.error("Error al obtener radios disponibles:", error);
+      console.error(`🔥 [${timestamp}] DEBUG: ERROR en getRadiosDisponibles:`, error.message);
+      console.error(`🔥 [${timestamp}] DEBUG: Error stack:`, error.stack);
+      
       return res
         .status(500)
         .json(

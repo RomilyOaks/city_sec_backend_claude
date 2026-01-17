@@ -32,6 +32,7 @@ import {
   requireAnyPermission,
 } from "../middlewares/authMiddleware.js";
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
+import { catalogRateLimit } from "../middlewares/rateLimitMiddleware.js";
 import { body, param } from "express-validator";
 import { handleValidationErrors } from "../middlewares/handleValidationErrors.js";
 
@@ -69,6 +70,7 @@ const validateEstadoData = [
 router.get(
   "/activos",
   verificarToken,
+  catalogRateLimit, // 🔥 ANTI-BUCLE: Máximo 5 solicitudes/minuto
   requireAnyPermission([permisos.leer]),
   getEstadosActivos
 );

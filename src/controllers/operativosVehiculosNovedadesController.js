@@ -181,7 +181,7 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
           },
           {
             model: Cuadrante,
-            as: "cuadrante"
+            as: "datosCuadrante"
           }
         ]
       }
@@ -224,7 +224,7 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
         hora_salida: operativoVehiculoCuadrante.hora_salida,
         observaciones: operativoVehiculoCuadrante.observaciones,
         incidentes_reportados: operativoVehiculoCuadrante.incidentes_reportados,
-        cuadrante: operativoVehiculoCuadrante.cuadrante,
+        cuadrante: operativoVehiculoCuadrante.datosCuadrante,
         operativoVehiculo: {
           id: operativoVehiculoCuadrante.operativoVehiculo.id,
           kilometraje_inicio: operativoVehiculoCuadrante.operativoVehiculo.kilometraje_inicio,
@@ -243,7 +243,7 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
 
     // Crear objeto cuadranteInfo para incluir siempre en la respuesta
     const cuadranteInfo = {
-      cuadrante: operativoVehiculoCuadrante.cuadrante,
+      cuadrante: operativoVehiculoCuadrante.datosCuadrante,
       operativoVehiculo: {
         id: operativoVehiculoCuadrante.operativoVehiculo.id,
         kilometraje_inicio: operativoVehiculoCuadrante.operativoVehiculo.kilometraje_inicio,
@@ -315,9 +315,12 @@ export const createNovedadInCuadrante = async (req, res) => {
             as: "operativoVehiculo",
             include: [
               { model: OperativosTurno, as: "turno" },
-              { model: Vehiculo, as: "vehiculo" },
-              { model: Cuadrante, as: "cuadrante" }
+              { model: Vehiculo, as: "vehiculo" }
             ]
+          },
+          {
+            model: Cuadrante,
+            as: "datosCuadrante"
           }
         ]
       }
@@ -379,7 +382,7 @@ export const createNovedadInCuadrante = async (req, res) => {
         hora_salida: operativoVehiculoCuadrante.hora_salida,
         observaciones: operativoVehiculoCuadrante.observaciones,
         incidentes_reportados: operativoVehiculoCuadrante.incidentes_reportados,
-        cuadrante: operativoVehiculoCuadrante.cuadrante,
+        cuadrante: operativoVehiculoCuadrante.datosCuadrante,
         operativoVehiculo: {
           id: operativoVehiculoCuadrante.operativoVehiculo.id,
           kilometraje_inicio: operativoVehiculoCuadrante.operativoVehiculo.kilometraje_inicio,
