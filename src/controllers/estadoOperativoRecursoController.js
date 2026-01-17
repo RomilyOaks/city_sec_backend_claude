@@ -24,7 +24,16 @@ const { EstadoOperativoRecurso } = models;
  * GET /api/v1/estados-operativo-recurso/activos
  */
 export const getEstadosActivos = async (req, res) => {
+  const timestamp = new Date().toISOString();
+  
   try {
+    console.log(`🔥 [${timestamp}] DEBUG: getEstadosActivos INICIO`);
+    console.log(`🔥 [${timestamp}] DEBUG: Query params:`, JSON.stringify(req.query, null, 2));
+    console.log(`🔥 [${timestamp}] DEBUG: Headers:`, JSON.stringify(req.headers, null, 2));
+    console.log(`🔥 [${timestamp}] DEBUG: Request URL: ${req.originalUrl}`);
+    
+    console.log(`🔥 [${timestamp}] DEBUG: Consultando estados operativos activos...`);
+    
     const estados = await EstadoOperativoRecurso.findAll({
       where: {
         estado: 1,
@@ -34,13 +43,18 @@ export const getEstadosActivos = async (req, res) => {
       order: [["descripcion", "ASC"]],
     });
 
+    console.log(`🔥 [${timestamp}] DEBUG: Estados activos encontrados: ${estados.length}`);
+    console.log(`🔥 [${timestamp}] DEBUG: Enviando respuesta 200`);
+
     res.status(200).json({
       success: true,
       message: "Estados operativos activos obtenidos exitosamente",
       data: estados,
     });
   } catch (error) {
-    console.error("❌ Error en getEstadosActivos:", error);
+    console.error(`🔥 [${timestamp}] DEBUG: ERROR en getEstadosActivos:`, error.message);
+    console.error(`🔥 [${timestamp}] DEBUG: Error stack:`, error.stack);
+    
     res.status(500).json({
       success: false,
       message: "Error al obtener estados operativos activos",

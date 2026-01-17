@@ -87,6 +87,11 @@ import {
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 
 // ==========================================
+// IMPORTAR RATE LIMITING (TEMPORAL ANTI-BUCLE)
+// ==========================================
+import { catalogRateLimit } from "../middlewares/rateLimitMiddleware.js";
+
+// ==========================================
 // RUTAS ESPECIALES (ANTES DE /:id)
 // ==========================================
 
@@ -118,6 +123,7 @@ router.get(
 router.get(
   "/disponibles",
   verificarToken,
+  catalogRateLimit, // 🔥 ANTI-BUCLE: Máximo 5 solicitudes/minuto
   verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
   (req, res, next) => {
     // #swagger.tags = ['Vehiculos']
@@ -127,6 +133,7 @@ router.get(
     // #swagger.responses[200] = { description: 'OK' }
     // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     // #swagger.responses[403] = { description: 'No autorizado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    // #swagger.responses[429] = { description: 'Too Many Requests - Posible bucle infinito', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     return vehiculosController.getVehiculosDisponibles(req, res, next);
   }
 );

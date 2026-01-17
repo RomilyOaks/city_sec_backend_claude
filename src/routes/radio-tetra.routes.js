@@ -57,6 +57,9 @@ import {
   requireAnyPermission,
 } from "../middlewares/authMiddleware.js";
 
+// Importar rate limiting (TEMPORAL ANTI-BUCLE)
+import { catalogRateLimit } from "../middlewares/rateLimitMiddleware.js";
+
 /**
  * =====================================================
  * TODAS LAS RUTAS REQUIEREN AUTENTICACIÓN
@@ -76,6 +79,7 @@ import {
 router.get(
   "/disponibles",
   verificarToken,
+  catalogRateLimit, // 🔥 ANTI-BUCLE: Máximo 5 solicitudes/minuto
   requireAnyPermission(["catalogos.radios_tetra.read"]),
   (req, res, next) => {
     return radioTetraController.getRadiosDisponibles(req, res, next);

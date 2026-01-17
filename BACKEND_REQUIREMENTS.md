@@ -85,7 +85,8 @@ const vehiculos = await OperativoVehiculo.findAll({
         'nombres',
         'apellido_paterno',
         'apellido_materno',
-        'numero_placa'
+        'doc_tipo',
+        'doc_numero'
       ]
     },
     {
@@ -242,7 +243,8 @@ OperativoVehiculo.belongsTo(models.User, {
         "nombres": "Jaime",
         "apellido_paterno": "TORRES",
         "apellido_materno": "CARO",
-        "numero_placa": "001234"
+        "doc_tipo": "DNI",
+        "doc_numero": "12345678"
       },
 
       "copiloto": {
@@ -250,7 +252,8 @@ OperativoVehiculo.belongsTo(models.User, {
         "nombres": "Romily Herman",
         "apellido_paterno": "ROBLES",
         "apellido_materno": "GUERRERO",
-        "numero_placa": "005678"
+        "doc_tipo": "DNI",
+        "doc_numero": "87654321"
       },
 
       "tipo_copiloto": {

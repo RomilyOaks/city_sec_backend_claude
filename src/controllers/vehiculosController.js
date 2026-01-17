@@ -79,7 +79,6 @@ import sequelize from "../config/database.js";
 export const getAllVehiculos = async (req, res) => {
   try {
     const {
-      tipo,
       tipo_id,
       estado_operativo,
       unidad_id,
@@ -233,8 +232,17 @@ export const getHistorialMantenimientos = async (req, res) => {
  * 🔥 CORREGIDO: Alias y nombre de campo vehiculo_id
  */
 export const getVehiculosDisponibles = async (req, res) => {
+  const timestamp = new Date().toISOString();
+  
   try {
+    console.log(`🔥 [${timestamp}] DEBUG: getVehiculosDisponibles INICIO`);
+    console.log(`🔥 [${timestamp}] DEBUG: Query params:`, JSON.stringify(req.query, null, 2));
+    console.log(`🔥 [${timestamp}] DEBUG: Headers:`, JSON.stringify(req.headers, null, 2));
+    console.log(`🔥 [${timestamp}] DEBUG: Request URL: ${req.originalUrl}`);
+    
     const { tipo_id } = req.query;
+
+    console.log(`🔥 [${timestamp}] DEBUG: Consultando vehículos en uso...`);
 
     const vehiculosEnUso = await Novedad.findAll({
       where: {
@@ -258,6 +266,7 @@ export const getVehiculosDisponibles = async (req, res) => {
     });
 
     const idsEnUso = vehiculosEnUso.map((n) => n.vehiculo_id);
+    console.log(`🔥 [${timestamp}] DEBUG: Vehículos en uso: ${idsEnUso.length}, IDs: [${idsEnUso.join(", ")}]`);
 
     const whereClause = {
       estado: 1,
@@ -268,7 +277,10 @@ export const getVehiculosDisponibles = async (req, res) => {
 
     if (tipo_id) {
       whereClause.tipo_id = tipo_id;
+      console.log(`🔥 [${timestamp}] DEBUG: Filtrando por tipo_id: ${tipo_id}`);
     }
+
+    console.log(`🔥 [${timestamp}] DEBUG: Consultando vehículos disponibles...`);
 
     const vehiculosDisponibles = await Vehiculo.findAll({
       where: whereClause,
@@ -287,13 +299,18 @@ export const getVehiculosDisponibles = async (req, res) => {
       order: [["codigo_vehiculo", "ASC"]],
     });
 
+    console.log(`🔥 [${timestamp}] DEBUG: Vehículos disponibles encontrados: ${vehiculosDisponibles.length}`);
+    console.log(`🔥 [${timestamp}] DEBUG: Enviando respuesta 200`);
+
     res.status(200).json({
       success: true,
       data: vehiculosDisponibles,
       total: vehiculosDisponibles.length,
     });
   } catch (error) {
-    console.error("Error al obtener vehículos disponibles:", error);
+    console.error(`🔥 [${timestamp}] DEBUG: ERROR en getVehiculosDisponibles:`, error.message);
+    console.error(`🔥 [${timestamp}] DEBUG: Error stack:`, error.stack);
+    
     res.status(500).json({
       success: false,
       message: "Error al obtener vehículos disponibles",
