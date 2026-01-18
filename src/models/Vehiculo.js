@@ -270,16 +270,22 @@ Vehiculo.init(
     hooks: {
       /**
        * Antes de crear: Generar código automático si no se proporciona
+       *
+       * Lógica de generación:
+       * 1. Si tipo_vehiculo.prefijo está definido:
+       *    - Usar ese prefijo con formato sin ceros: PREFIJO-NUMERO (ej: M-1, M-23, M-501)
+       * 2. Si tipo_vehiculo.prefijo es NULL:
+       *    - Usar lógica anterior: primera letra del nombre + ceros (ej: M-01, M-02)
        */
       beforeCreate: async (vehiculo, options) => {
         if (!vehiculo.codigo_vehiculo) {
-          // Obtener el tipo de vehículo para generar el código
           const TipoVehiculo = sequelize.models.TipoVehiculo;
           const tipo = await TipoVehiculo.findByPk(vehiculo.tipo_id);
 
           if (tipo) {
-            // Generar prefijo según el tipo (primera letra del nombre)
-            const prefijo = tipo.nombre.substring(0, 1).toUpperCase();
+            // Determinar prefijo y formato según si tipo.prefijo está definido
+            const usarNuevoFormato = tipo.prefijo !== null && tipo.prefijo !== undefined && tipo.prefijo.trim() !== "";
+            const prefijo = usarNuevoFormato ? tipo.prefijo.trim().toUpperCase() : tipo.nombre.substring(0, 1).toUpperCase();
 
             // Buscar el último código con ese prefijo
             const ultimoVehiculo = await Vehiculo.findOne({
@@ -288,7 +294,9 @@ Vehiculo.init(
                   [sequelize.Sequelize.Op.like]: `${prefijo}-%`,
                 },
               },
-              order: [["codigo_vehiculo", "DESC"]],
+              order: [
+                [sequelize.literal(`CAST(SUBSTRING(codigo_vehiculo, ${prefijo.length + 2}) AS UNSIGNED)`), "DESC"],
+              ],
               transaction: options.transaction,
             });
 
@@ -303,10 +311,14 @@ Vehiculo.init(
               }
             }
 
-            // Generar código: PREFIJO-NUMERO (ej: M-01, M-02, H-01)
-            vehiculo.codigo_vehiculo = `${prefijo}-${String(
-              nuevoNumero
-            ).padStart(2, "0")}`;
+            // Generar código según formato:
+            // - Nuevo formato (prefijo definido): M-1, M-23, M-501 (sin ceros)
+            // - Formato anterior (prefijo NULL): M-01, M-02 (con ceros)
+            if (usarNuevoFormato) {
+              vehiculo.codigo_vehiculo = `${prefijo}-${nuevoNumero}`;
+            } else {
+              vehiculo.codigo_vehiculo = `${prefijo}-${String(nuevoNumero).padStart(2, "0")}`;
+            }
           }
         }
 

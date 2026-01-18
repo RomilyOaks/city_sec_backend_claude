@@ -123,7 +123,7 @@ export const getAllVehiculos = async (req, res) => {
         {
           model: TipoVehiculo,
           as: "tipo",
-          attributes: ["id", "nombre", "descripcion"],
+          attributes: ["id", "nombre", "descripcion", "prefijo"],
         },
         {
           model: UnidadOficina,
@@ -508,7 +508,7 @@ export const createVehiculo = async (req, res) => {
         {
           model: TipoVehiculo,
           as: "tipo",
-          attributes: ["id", "nombre", "descripcion"],
+          attributes: ["id", "nombre", "descripcion", "prefijo"],
         },
         {
           model: UnidadOficina,
@@ -620,7 +620,7 @@ export const updateVehiculo = async (req, res) => {
         {
           model: TipoVehiculo,
           as: "tipo",
-          attributes: ["id", "nombre", "descripcion"],
+          attributes: ["id", "nombre", "descripcion", "prefijo"],
         },
         {
           model: UnidadOficina,
