@@ -231,6 +231,27 @@ import OperativosTurno from "./OperativosTurno.js";
 import OperativosVehiculos from "./OperativosVehiculos.js";
 
 /**
+ * Modelo OperativosPersonal
+ * Gestión de personal asignado a patrullaje a pie
+ * @type {Model}
+ */
+import OperativosPersonal from "./OperativosPersonal.js";
+
+/**
+ * Modelo OperativosPersonalCuadrantes
+ * Cuadrantes cubiertos por personal a pie
+ * @type {Model}
+ */
+import OperativosPersonalCuadrantes from "./OperativosPersonalCuadrantes.js";
+
+/**
+ * Modelo OperativosPersonalNovedades
+ * Novedades atendidas por personal a pie en cuadrantes
+ * @type {Model}
+ */
+import OperativosPersonalNovedades from "./OperativosPersonalNovedades.js";
+
+/**
  * Modelo EstadoOperativoRecurso
  * Catálogo de estados operativos para recursos (vehículos, personal)
  * @type {Model}
@@ -535,6 +556,157 @@ OperativosVehiculosCuadrantes.hasMany(OperativosVehiculosNovedades, {
 Novedad.hasMany(OperativosVehiculosNovedades, {
   foreignKey: "novedad_id",
   as: "operativosVehiculosNovedades",
+});
+
+//=============================================
+// ASOCIACIONES: OPERATIVOS DE PERSONAL (PATRULLAJE A PIE)
+//=============================================
+
+/**
+ * Relación: OperativosTurno -> OperativosPersonal (One-to-Many)
+ * Un turno puede tener muchos personales asignados a patrullaje a pie
+ */
+OperativosTurno.hasMany(OperativosPersonal, {
+  foreignKey: "operativo_turno_id",
+  as: "personalAsignado",
+});
+
+OperativosPersonal.belongsTo(OperativosTurno, {
+  foreignKey: "operativo_turno_id",
+  as: "turno",
+});
+
+/**
+ * Relación: PersonalSeguridad -> OperativosPersonal (One-to-Many)
+ * Personal principal asignado al patrullaje
+ */
+PersonalSeguridad.hasMany(OperativosPersonal, {
+  foreignKey: "personal_id",
+  as: "asignacionesOperativas",
+});
+
+OperativosPersonal.belongsTo(PersonalSeguridad, {
+  foreignKey: "personal_id",
+  as: "personal",
+});
+
+/**
+ * Relación: PersonalSeguridad -> OperativosPersonal (One-to-Many)
+ * Sereno/compañero de patrullaje (opcional)
+ */
+OperativosPersonal.belongsTo(PersonalSeguridad, {
+  foreignKey: "sereno_id",
+  as: "sereno",
+});
+
+/**
+ * Relación: RadioTetra -> OperativosPersonal (One-to-Many)
+ */
+OperativosPersonal.belongsTo(RadioTetra, {
+  foreignKey: "radio_tetra_id",
+  as: "radio_tetra",
+});
+
+/**
+ * Relación: EstadoOperativoRecurso -> OperativosPersonal (One-to-Many)
+ */
+OperativosPersonal.belongsTo(EstadoOperativoRecurso, {
+  foreignKey: "estado_operativo_id",
+  as: "estado_operativo",
+});
+
+/**
+ * Relación: OperativosPersonal -> OperativosPersonalCuadrantes (One-to-Many)
+ */
+OperativosPersonal.hasMany(OperativosPersonalCuadrantes, {
+  foreignKey: "operativo_personal_id",
+  as: "cuadrantesAsignados",
+});
+
+OperativosPersonalCuadrantes.belongsTo(OperativosPersonal, {
+  foreignKey: "operativo_personal_id",
+  as: "operativoPersonal",
+});
+
+/**
+ * Relación: Cuadrante -> OperativosPersonalCuadrantes (One-to-Many)
+ */
+Cuadrante.hasMany(OperativosPersonalCuadrantes, {
+  foreignKey: "cuadrante_id",
+  as: "operativosPersonal",
+});
+
+OperativosPersonalCuadrantes.belongsTo(Cuadrante, {
+  foreignKey: "cuadrante_id",
+  as: "datosCuadrante",
+});
+
+/**
+ * Relación: OperativosPersonalCuadrantes -> OperativosPersonalNovedades (One-to-Many)
+ */
+OperativosPersonalCuadrantes.hasMany(OperativosPersonalNovedades, {
+  foreignKey: "operativo_personal_cuadrante_id",
+  as: "novedades",
+});
+
+OperativosPersonalNovedades.belongsTo(OperativosPersonalCuadrantes, {
+  foreignKey: "operativo_personal_cuadrante_id",
+  as: "cuadranteOperativo",
+});
+
+/**
+ * Relación: Novedad -> OperativosPersonalNovedades (One-to-Many)
+ */
+Novedad.hasMany(OperativosPersonalNovedades, {
+  foreignKey: "novedad_id",
+  as: "operativosPersonalNovedades",
+});
+
+OperativosPersonalNovedades.belongsTo(Novedad, {
+  foreignKey: "novedad_id",
+  as: "novedad",
+});
+
+// Auditoría OperativosPersonal
+OperativosPersonal.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorOperativosPersonal",
+});
+OperativosPersonal.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorOperativosPersonal",
+});
+OperativosPersonal.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorOperativosPersonal",
+});
+
+// Auditoría OperativosPersonalCuadrantes
+OperativosPersonalCuadrantes.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorOperativosPersonalCuadrantes",
+});
+OperativosPersonalCuadrantes.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorOperativosPersonalCuadrantes",
+});
+OperativosPersonalCuadrantes.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorOperativosPersonalCuadrantes",
+});
+
+// Auditoría OperativosPersonalNovedades
+OperativosPersonalNovedades.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorOperativosPersonalNovedades",
+});
+OperativosPersonalNovedades.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorOperativosPersonalNovedades",
+});
+OperativosPersonalNovedades.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorOperativosPersonalNovedades",
 });
 
 //=============================================
@@ -1602,6 +1774,11 @@ const models = {
   OperativosTurno,
   OperativosVehiculos,
 
+  // Operativos Personal (Patrullaje a pie) ✅ NEW 2.2.2
+  OperativosPersonal,
+  OperativosPersonalCuadrantes,
+  OperativosPersonalNovedades,
+
   // Novedades
   Novedad,
   HistorialEstadoNovedad,
@@ -1702,4 +1879,11 @@ export {
   CallesCuadrantes,
   Direccion,
   VehiculoCuadrantesAsignados,
+  // Operativos Turno y Vehículos (✅ v2.2.1)
+  OperativosTurno,
+  OperativosVehiculos,
+  // Operativos Personal (✅ v2.2.2)
+  OperativosPersonal,
+  OperativosPersonalCuadrantes,
+  OperativosPersonalNovedades,
 };

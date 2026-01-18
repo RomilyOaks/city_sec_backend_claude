@@ -58,9 +58,8 @@ const RETRY_TIMEOUT = parseInt(process.env.DB_RETRY_TIMEOUT) || 3000;
 // Timezone
 const DB_TIMEZONE = process.env.DB_TIMEZONE || "-05:00"; // Perú GMT-5
 
-// Logging
-const ENABLE_LOGGING =
-  process.env.DB_LOGGING === "true" || NODE_ENV === "development";
+// Logging (solo se activa si DB_LOGGING=true explícitamente)
+const ENABLE_LOGGING = process.env.DB_LOGGING === "true";
 
 /**
  * Configuraciones por entorno
