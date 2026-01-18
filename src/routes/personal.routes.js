@@ -518,6 +518,21 @@ const validateActualizarLicencia = [
 // ==========================================
 
 router.get(
+  "/selector",
+  verificarToken,
+  requireAnyPermission(["personal.personal.read"]),
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Obtener personal para selectores/dropdowns'
+    // #swagger.description = 'Devuelve solo campos básicos de todo el personal activo, sin paginación, optimizado para selectores'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return personalController.getPersonalSelector(req, res, next);
+  }
+);
+
+router.get(
   "/stats",
   verificarToken,
   (req, res, next) => {

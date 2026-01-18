@@ -767,6 +767,52 @@ export const restorePersonal = async (req, res) => {
 // ==========================================
 
 /**
+ * Obtener personal para selectores/dropdowns
+ * GET /api/v1/personal/selector
+ *
+ * Devuelve solo campos básicos de todo el personal activo,
+ * sin límite de paginación, optimizado para selectores.
+ */
+export const getPersonalSelector = async (req, res) => {
+  try {
+    const personal = await PersonalSeguridad.findAll({
+      where: {
+        estado: 1,
+        deleted_at: null,
+      },
+      attributes: [
+        "id",
+        "nombres",
+        "apellido_paterno",
+        "apellido_materno",
+        "doc_tipo",
+        "doc_numero",
+        "sexo",
+        "nacionalidad",
+      ],
+      order: [
+        ["apellido_paterno", "ASC"],
+        ["apellido_materno", "ASC"],
+        ["nombres", "ASC"],
+      ],
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Personal para selector obtenido exitosamente",
+      data: personal,
+      total: personal.length,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener el personal para selector",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Obtener estadísticas del personal
  * GET /api/v1/personal/stats
  */
