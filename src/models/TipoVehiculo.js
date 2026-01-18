@@ -81,6 +81,13 @@ const TipoVehiculo = sequelize.define(
       comment: "Descripción del tipo de vehículo",
     },
 
+    // Prefijo para autogeneración de código del vehículo
+    prefijo: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      comment: "Prefijo para autogeneración de código del vehículo (ej: M, H, C, B)",
+    },
+
     // Estado del tipo
     estado: {
       type: DataTypes.BOOLEAN,
