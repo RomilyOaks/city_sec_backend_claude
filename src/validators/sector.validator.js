@@ -144,17 +144,25 @@ export const validarUbigeo = () =>
 
 /**
  * Validar código de zona
+ * Permite valores vacíos (opcional)
  */
 export const validarZonaCode = () =>
   body("zona_code")
-    .optional()
+    .optional({ values: "falsy" }) // Permite null, undefined, y strings vacíos
     .trim()
-    .isLength({ max: LIMITES_TEXTO.ZONA_CODE_MAX })
-    .withMessage(
-      `El código de zona no puede exceder ${LIMITES_TEXTO.ZONA_CODE_MAX} caracteres`
-    )
-    .matches(PATTERNS.ZONA_CODE)
-    .withMessage("Formato de código de zona inválido");
+    .custom((value) => {
+      // Si el valor está vacío después del trim, es válido (opcional)
+      if (!value || value.trim() === "") return true;
+      // Validar longitud máxima
+      if (value.length > LIMITES_TEXTO.ZONA_CODE_MAX) {
+        throw new Error(`El código de zona no puede exceder ${LIMITES_TEXTO.ZONA_CODE_MAX} caracteres`);
+      }
+      // Si tiene valor, validar el formato
+      if (!PATTERNS.ZONA_CODE.test(value)) {
+        throw new Error("Formato de código de zona inválido");
+      }
+      return true;
+    });
 
 /**
  * Validar supervisor_id
