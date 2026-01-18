@@ -96,6 +96,11 @@ import operativosVehiculosGeneralRoutes from "./operativos-vehiculos-general.rou
 import operativosVehiculosCuadrantesRoutes from "./operativos-vehiculos-cuadrantes.routes.js";
 import operativosVehiculosNovedadesRoutes from "./operativos-vehiculos-novedades.routes.js";
 
+// 🚶 Módulo Operativos Personal (Patrullaje a pie) ✅ v2.2.2
+import operativosPersonalRoutes from "./operativos-personal.routes.js";
+import operativosPersonalGeneralRoutes from "./operativos-personal-general.routes.js";
+import operativosPersonalNovedadesRoutes from "./operativos-personal-novedades.routes.js";
+
 // 📚 Catálogos y Configuración
 import catalogosRoutes from "./catalogos.routes.js";
 import cargosRoutes from "./cargos.routes.js";
@@ -361,6 +366,9 @@ router.use("/cuadrantes", cuadrantesRoutes);
 // Ruta general de vehículos operativos (sin turnoId)
 router.use("/operativos-vehiculos", operativosVehiculosGeneralRoutes);
 
+// Ruta general de personal operativo (sin turnoId) ✅ v2.2.2
+router.use("/operativos-personal", operativosPersonalGeneralRoutes);
+
 // Rutas más específicas primero
 router.use(
   "/operativos/:turnoId/vehiculos/:vehiculoId/cuadrantes/:cuadranteId/novedades",
@@ -378,6 +386,18 @@ router.use(
   operativosVehiculosCuadrantesRoutes
 );
 router.use("/operativos/:turnoId/vehiculos", operativosVehiculosRoutes);
+
+// ============================================================
+// 🚶 RUTAS DE OPERATIVOS PERSONAL (Patrullaje a pie) ✅ v2.2.2
+// ============================================================
+// Rutas de novedades del personal (más específicas primero)
+router.use(
+  "/operativos/:turnoId/personal/:personalId/cuadrantes/:cuadranteId/novedades",
+  operativosPersonalNovedadesRoutes
+);
+// Rutas de personal operativo
+router.use("/operativos/:turnoId/personal", operativosPersonalRoutes);
+
 // Ruta general al final
 router.use("/operativos", operativosTurnoRoutes);
 
@@ -1114,6 +1134,10 @@ router.use((req, res) => {
       "/calles", // ✨ ✅ v2.4.0
       "/calles-cuadrantes", // ✨ ✅ v2.4.0
       "/direcciones", // ✨ ✅ v2.4.0
+      "/operativos-personal", // 🚶 ✅ v2.2.2 (general)
+      "/operativos/:turnoId/personal", // 🚶 ✅ v2.2.2
+      "/operativos/:turnoId/personal/:personalId/cuadrantes", // 🚶 ✅ v2.2.2
+      "/operativos/:turnoId/personal/:personalId/cuadrantes/:cuadranteId/novedades", // 🚶 ✅ v2.2.2
       "/roles",
       "/permisos",
       "/auditoria",

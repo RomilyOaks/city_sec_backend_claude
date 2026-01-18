@@ -1,0 +1,451 @@
+{
+  "info": {
+    "name": "Operativos Personal v2.2.2 (Patrullaje a Pie)",
+    "description": "Colección completa para probar los endpoints de personal operativo.\n\n## Módulos:\n1. **Personal Operativo** - CRUD de asignaciones de personal\n2. **Cuadrantes del Personal** - Cuadrantes cubiertos por el personal\n3. **Novedades del Personal** - Novedades atendidas en cuadrantes\n\n## Jerarquía:\n```\nOperativosTurno (abuelo)\n  └─ OperativosPersonal (padre)\n      └─ OperativosPersonalCuadrantes (hijo)\n          └─ OperativosPersonalNovedades (nieto)\n```\n\n## Permisos RBAC:\n- operativos.personal.cuadrantes.read\n- operativos.personal.cuadrantes.create\n- operativos.personal.cuadrantes.update\n- operativos.personal.cuadrantes.delete\n- operativos.personal.novedades.read\n- operativos.personal.novedades.create\n- operativos.personal.novedades.update\n- operativos.personal.novedades.delete",
+    "_postman_id": "oppers-2026-01-17",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1"
+    },
+    {
+      "key": "turnoId",
+      "value": "1"
+    },
+    {
+      "key": "personalId",
+      "value": ""
+    },
+    {
+      "key": "cuadranteId",
+      "value": ""
+    },
+    {
+      "key": "novedadId",
+      "value": ""
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00. Auth - Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.data && jsonData.data.accessToken) {",
+              "        pm.collectionVariables.set('token', jsonData.data.accessToken);",
+              "        console.log('Token guardado exitosamente');",
+              "    }",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"admin@serenazgo.gob.pe\",\n    \"password\": \"Admin123!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "01. Personal Operativo",
+      "item": [
+        {
+          "name": "GET - Listar todo el personal (general)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos-personal?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos-personal"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "turno_id", "value": "", "disabled": true },
+                { "key": "tipo_patrullaje", "value": "SERENAZGO", "disabled": true },
+                { "key": "estado_operativo_id", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET - Listar personal por turno",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal"]
+            }
+          }
+        },
+        {
+          "name": "GET - Obtener personal por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal/{{personalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal", "{{personalId}}"]
+            }
+          }
+        },
+        {
+          "name": "POST - Asignar personal a turno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "        pm.collectionVariables.set('personalId', jsonData.data.id);",
+                  "        console.log('personalId guardado: ' + jsonData.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"personal_id\": 1,\n    \"tipo_patrullaje\": \"SERENAZGO\",\n    \"sereno_id\": null,\n    \"radio_tetra_id\": 1,\n    \"estado_operativo_id\": 1,\n    \"hora_inicio\": \"2026-01-17T08:00:00.000Z\",\n    \"chaleco_balistico\": true,\n    \"porra_policial\": true,\n    \"esposas\": true,\n    \"linterna\": true,\n    \"kit_primeros_auxilios\": false,\n    \"observaciones\": \"Patrullaje de prueba\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal"]
+            }
+          }
+        },
+        {
+          "name": "PUT - Actualizar asignación de personal",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"hora_fin\": \"2026-01-17T20:00:00.000Z\",\n    \"observaciones\": \"Turno completado sin novedad\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal/{{personalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal", "{{personalId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE - Eliminar asignación de personal",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal/{{personalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal", "{{personalId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Cuadrantes del Personal",
+      "item": [
+        {
+          "name": "GET - Listar cuadrantes del personal",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal/{{personalId}}/cuadrantes",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal", "{{personalId}}", "cuadrantes"]
+            }
+          }
+        },
+        {
+          "name": "POST - Asignar cuadrante a personal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "        pm.collectionVariables.set('cuadranteId', jsonData.data.id);",
+                  "        console.log('cuadranteId guardado: ' + jsonData.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"cuadrante_id\": 1,\n    \"hora_ingreso\": \"2026-01-17T08:30:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal/{{personalId}}/cuadrantes",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal", "{{personalId}}", "cuadrantes"]
+            }
+          }
+        },
+        {
+          "name": "PUT - Actualizar cuadrante (hora salida)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"hora_salida\": \"2026-01-17T12:30:00.000Z\",\n    \"observaciones\": \"Patrullaje completado sin incidentes\",\n    \"incidentes_reportados\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal/{{personalId}}/cuadrantes/{{cuadranteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal", "{{personalId}}", "cuadrantes", "{{cuadranteId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE - Eliminar asignación de cuadrante",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal/{{personalId}}/cuadrantes/{{cuadranteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal", "{{personalId}}", "cuadrantes", "{{cuadranteId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Novedades del Personal",
+      "item": [
+        {
+          "name": "GET - Novedades disponibles para cuadrante",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal/{{personalId}}/cuadrantes/{{cuadranteId}}/novedades/disponibles",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal", "{{personalId}}", "cuadrantes", "{{cuadranteId}}", "novedades", "disponibles"]
+            }
+          }
+        },
+        {
+          "name": "GET - Listar novedades del cuadrante",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal/{{personalId}}/cuadrantes/{{cuadranteId}}/novedades",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal", "{{personalId}}", "cuadrantes", "{{cuadranteId}}", "novedades"]
+            }
+          }
+        },
+        {
+          "name": "POST - Registrar novedad atendida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "        pm.collectionVariables.set('novedadId', jsonData.data.id);",
+                  "        console.log('novedadId guardado: ' + jsonData.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"novedad_id\": 1,\n    \"reportado\": \"2026-01-17T10:30:00.000Z\",\n    \"prioridad\": \"MEDIA\",\n    \"observaciones\": \"Atención realizada durante patrullaje\",\n    \"acciones_tomadas\": \"Se verificó la situación y se brindó apoyo\",\n    \"resultado\": \"PENDIENTE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal/{{personalId}}/cuadrantes/{{cuadranteId}}/novedades",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal", "{{personalId}}", "cuadrantes", "{{cuadranteId}}", "novedades"]
+            }
+          }
+        },
+        {
+          "name": "PUT - Actualizar novedad (resolver)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"resultado\": \"RESUELTO\",\n    \"acciones_tomadas\": \"Se coordinó con la PNP para intervención. Situación controlada.\",\n    \"observaciones\": \"Caso resuelto satisfactoriamente\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal/{{personalId}}/cuadrantes/{{cuadranteId}}/novedades/{{novedadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal", "{{personalId}}", "cuadrantes", "{{cuadranteId}}", "novedades", "{{novedadId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE - Eliminar novedad",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operativos/{{turnoId}}/personal/{{personalId}}/cuadrantes/{{cuadranteId}}/novedades/{{novedadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["operativos", "{{turnoId}}", "personal", "{{personalId}}", "cuadrantes", "{{cuadranteId}}", "novedades", "{{novedadId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
