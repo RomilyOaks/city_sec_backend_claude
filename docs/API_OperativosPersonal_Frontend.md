@@ -535,13 +535,19 @@ DELETE /api/v1/operativos/{turnoId}/personal/{personalId}/cuadrantes/{cuadranteI
 
 ## Permisos RBAC Requeridos
 
-### Personal y Cuadrantes:
+### Personal Operativo (asignación de personal a turnos):
+- `operativos.personal.read` - Leer
+- `operativos.personal.create` - Crear
+- `operativos.personal.update` - Actualizar
+- `operativos.personal.delete` - Eliminar
+
+### Cuadrantes del Personal:
 - `operativos.personal.cuadrantes.read` - Leer
 - `operativos.personal.cuadrantes.create` - Crear
 - `operativos.personal.cuadrantes.update` - Actualizar
 - `operativos.personal.cuadrantes.delete` - Eliminar
 
-### Novedades:
+### Novedades del Personal:
 - `operativos.personal.novedades.read` - Leer
 - `operativos.personal.novedades.create` - Crear
 - `operativos.personal.novedades.update` - Actualizar
