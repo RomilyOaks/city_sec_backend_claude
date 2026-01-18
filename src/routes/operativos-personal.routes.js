@@ -50,7 +50,16 @@ import { handleValidationErrors } from "../middlewares/handleValidationErrors.js
 
 const router = Router({ mergeParams: true });
 
-const permisos = {
+// Permisos para Personal Operativo (CRUD del personal asignado al turno)
+const permisosPersonal = {
+  leer: "operativos.personal.read",
+  crear: "operativos.personal.create",
+  actualizar: "operativos.personal.update",
+  eliminar: "operativos.personal.delete",
+};
+
+// Permisos para Cuadrantes del Personal (CRUD de cuadrantes asignados al personal)
+const permisosCuadrantes = {
   leer: "operativos.personal.cuadrantes.read",
   crear: "operativos.personal.cuadrantes.create",
   actualizar: "operativos.personal.cuadrantes.update",
@@ -125,7 +134,7 @@ const validateUpdatePersonalData = [
 router.get(
   "/",
   verificarToken,
-  requireAnyPermission([permisos.leer]),
+  requireAnyPermission([permisosPersonal.leer]),
   getAllPersonalByTurno
 );
 
@@ -133,7 +142,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisos.leer]),
+  requireAnyPermission([permisosPersonal.leer]),
   param("id").isInt({ min: 1 }).withMessage("ID de personal inválido"),
   handleValidationErrors,
   getPersonalById
@@ -143,10 +152,10 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  requireAnyPermission([permisos.crear]),
+  requireAnyPermission([permisosPersonal.crear]),
   validatePersonalData,
   handleValidationErrors,
-  registrarAuditoria(permisos.crear),
+  registrarAuditoria(permisosPersonal.crear),
   createPersonalInTurno
 );
 
@@ -154,11 +163,11 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisos.actualizar]),
+  requireAnyPermission([permisosPersonal.actualizar]),
   param("id").isInt({ min: 1 }).withMessage("ID de asignación inválido"),
   validateUpdatePersonalData,
   handleValidationErrors,
-  registrarAuditoria(permisos.actualizar),
+  registrarAuditoria(permisosPersonal.actualizar),
   updatePersonalInTurno
 );
 
@@ -166,10 +175,10 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisos.eliminar]),
+  requireAnyPermission([permisosPersonal.eliminar]),
   param("id").isInt({ min: 1 }).withMessage("ID de asignación inválido"),
   handleValidationErrors,
-  registrarAuditoria(permisos.eliminar),
+  registrarAuditoria(permisosPersonal.eliminar),
   deletePersonalInTurno
 );
 
@@ -181,7 +190,7 @@ router.delete(
 router.get(
   "/:id/cuadrantes",
   verificarToken,
-  requireAnyPermission([permisos.leer]),
+  requireAnyPermission([permisosCuadrantes.leer]),
   param("id").isInt({ min: 1 }).withMessage("ID de asignación inválido"),
   handleValidationErrors,
   getCuadrantesByPersonalAsignado
@@ -201,11 +210,11 @@ const validateCuadranteData = [
 router.post(
   "/:id/cuadrantes",
   verificarToken,
-  requireAnyPermission([permisos.crear]),
+  requireAnyPermission([permisosCuadrantes.crear]),
   param("id").isInt({ min: 1 }).withMessage("ID de asignación inválido"),
   validateCuadranteData,
   handleValidationErrors,
-  registrarAuditoria(permisos.crear),
+  registrarAuditoria(permisosCuadrantes.crear),
   createCuadranteForPersonal
 );
 
@@ -230,14 +239,14 @@ const validateUpdateCuadranteData = [
 router.put(
   "/:id/cuadrantes/:cuadranteId",
   verificarToken,
-  requireAnyPermission([permisos.actualizar]),
+  requireAnyPermission([permisosCuadrantes.actualizar]),
   param("id").isInt({ min: 1 }).withMessage("ID de asignación inválido"),
   param("cuadranteId")
     .isInt({ min: 1 })
     .withMessage("ID de asignación de cuadrante inválido"),
   validateUpdateCuadranteData,
   handleValidationErrors,
-  registrarAuditoria(permisos.actualizar),
+  registrarAuditoria(permisosCuadrantes.actualizar),
   updateCuadranteForPersonal
 );
 
@@ -245,13 +254,13 @@ router.put(
 router.delete(
   "/:id/cuadrantes/:cuadranteId",
   verificarToken,
-  requireAnyPermission([permisos.eliminar]),
+  requireAnyPermission([permisosCuadrantes.eliminar]),
   param("id").isInt({ min: 1 }).withMessage("ID de asignación inválido"),
   param("cuadranteId")
     .isInt({ min: 1 })
     .withMessage("ID de asignación de cuadrante inválido"),
   handleValidationErrors,
-  registrarAuditoria(permisos.eliminar),
+  registrarAuditoria(permisosCuadrantes.eliminar),
   deleteCuadranteForPersonal
 );
 

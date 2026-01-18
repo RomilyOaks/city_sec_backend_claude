@@ -28,7 +28,7 @@ import {
 const router = Router();
 
 const permisos = {
-  leer: "operativos.personal.cuadrantes.read",
+  leer: "operativos.personal.read",
 };
 
 /**
