@@ -202,23 +202,13 @@ export const createHorarioTurno = async (req, res) => {
     const { turno, hora_inicio, hora_fin, cruza_medianoche = false } = req.body;
 
     // Verificar si ya existe un horario para este turno
-    console.log(`🔍 Buscando horario existente para turno: ${turno}`);
     const horarioExistente = await HorariosTurnos.findByPk(turno, {
       paranoid: false // Incluir registros eliminados (soft delete)
     });
     
-    console.log(`📊 Horario encontrado:`, horarioExistente ? {
-      turno: horarioExistente.turno,
-      estado: horarioExistente.estado,
-      deleted_at: horarioExistente.deleted_at,
-      hora_inicio: horarioExistente.hora_inicio,
-      hora_fin: horarioExistente.hora_fin
-    } : 'No encontrado');
-    
     if (horarioExistente) {
       // Si existe y está activo (no eliminado y estado=1)
       if (horarioExistente.estado === 1 && !horarioExistente.deleted_at) {
-        console.log(`❌ Error: Ya existe un horario activo para ${turno}`);
         return res.status(400).json({
           success: false,
           message: "Ya existe un horario activo para este turno",
@@ -227,7 +217,6 @@ export const createHorarioTurno = async (req, res) => {
       
       // Si existe pero está inactivo o eliminado, reactivarlo en lugar de crear nuevo
       if (horarioExistente.estado === 0 || horarioExistente.deleted_at) {
-        console.log(`♻️ Reactivando horario inactivo/eliminado para ${turno}`);
         const horarioReactivo = await HorariosTurnos.reactivar(turno, userId);
         
         // Actualizar los datos del horario reactivado
@@ -431,12 +420,9 @@ export const deleteHorarioTurno = async (req, res) => {
     const { id: userId } = req.user;
     const { turno } = req.params;
 
-    console.log(`🗑️ Intentando eliminar horario: ${turno} por usuario: ${userId}`);
-
     const horario = await HorariosTurnos.findByPk(turno);
 
     if (!horario) {
-      console.log(`❌ Horario no encontrado: ${turno}`);
       return res.status(404).json({
         success: false,
         message: "Horario de turno no encontrado",
@@ -444,41 +430,19 @@ export const deleteHorarioTurno = async (req, res) => {
     }
 
     if (horario.estado === 0) {
-      console.log(`⚠️ Horario ya está inactivo: ${turno}`);
       return res.status(400).json({
         success: false,
         message: "El horario ya está inactivo",
       });
     }
 
-    // Primero actualizar estado y deleted_by manualmente
-    console.log(`🔄 Actualizando estado y deleted_by de: ${turno}`);
+    // Soft delete manual (sin paranoid)
     await horario.update({
       estado: 0,
+      deleted_at: new Date(),
       deleted_by: userId,
       updated_by: userId,
       updated_at: new Date(),
-    });
-
-    // Luego usar destroy() para que Sequelize maneje deleted_at automáticamente
-    console.log(`🔄 Realizando soft delete con destroy() de: ${turno}`);
-    await horario.destroy({
-      force: false, // Soft delete (no eliminar permanentemente)
-      individualHooks: true, // Ejecutar hooks
-    });
-
-    console.log(`✅ Horario eliminado exitosamente: ${turno}`);
-    
-    // Verificar que se haya guardado deleted_at
-    const horarioVerificado = await HorariosTurnos.findByPk(turno, {
-      paranoid: false, // Incluir eliminados
-    });
-    
-    console.log(`📊 Verificación post-eliminación:`, {
-      turno: horarioVerificado.turno,
-      estado: horarioVerificado.estado,
-      deleted_at: horarioVerificado.deleted_at,
-      deleted_by: horarioVerificado.deleted_by,
     });
 
     res.status(200).json({
