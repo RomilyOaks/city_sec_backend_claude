@@ -111,6 +111,20 @@ export const getAllVehiculos = async (req, res) => {
           "color_vehiculo",
           "estado_operativo",
         ],
+        include: [
+          {
+            model: TipoVehiculo,
+            as: "tipo",
+            attributes: ["id", "nombre"],
+            required: false,
+          },
+          {
+            model: models.UnidadOficina,
+            as: "unidad",
+            attributes: ["id", "nombre"],
+            required: false,
+          },
+        ],
         required: false,
       },
       {
@@ -233,7 +247,12 @@ export const getAllVehiculosByTurno = async (req, res) => {
           include: [
             {
               model: TipoVehiculo,
-              as: "tipoVehiculo",
+              as: "tipo",
+              attributes: ["id", "nombre"],
+            },
+            {
+              model: models.UnidadOficina,
+              as: "unidad",
               attributes: ["id", "nombre"],
             },
           ],
@@ -332,7 +351,12 @@ export const getVehiculoById = async (req, res) => {
           include: [
             {
               model: TipoVehiculo,
-              as: "tipoVehiculo",
+              as: "tipo",
+              attributes: ["id", "nombre"],
+            },
+            {
+              model: models.UnidadOficina,
+              as: "unidad",
               attributes: ["id", "nombre"],
             },
           ],
