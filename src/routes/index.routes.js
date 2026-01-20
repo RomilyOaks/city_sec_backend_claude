@@ -113,6 +113,7 @@ import unidadOficinaRoutes from "./unidad-oficina.routes.js";
 import radioTetraRoutes from "./radio-tetra.routes.js";
 import estadosOperativoRecursoRoutes from "./estados-operativo-recurso.routes.js";
 import tiposCopilotoRoutes from "./tipos-copiloto.routes.js";
+import horariosTurnosRoutes from "./horariosTurnos.routes.js";
 
 // 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
@@ -429,12 +430,26 @@ router.use("/catalogos", catalogosRoutes);
 router.use("/cargos", cargosRoutes);
 
 /**
- * @route   /tipos-novedad
- * @desc    Gestión de tipos de novedades (categorías principales)
+ * @route   /tipos-copiloto
+ * @desc    Gestión de tipos de copiloto
  * @access  Supervisor, Admin
  * @new true
  */
-router.use("/tipos-novedad", tipoNovedadRoutes);
+router.use("/tipos-copiloto", tiposCopilotoRoutes);
+
+/**
+ * @route   /horarios-turnos
+ * @desc    Gestión de horarios de turnos para operativos de patrullaje
+ * @access  Admin, Supervisor, Operador
+ * @features
+ *   - CRUD completo
+ *   - Soft delete con reactivación
+ *   - Detección automática de horario activo
+ *   - Soporte para horarios que cruzan medianoche
+ * @version 1.0.0
+ * @new true
+ */
+router.use("/horarios-turnos", horariosTurnosRoutes);
 
 /**
  * @route   /subtipos-novedad
