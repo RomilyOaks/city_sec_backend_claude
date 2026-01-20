@@ -141,8 +141,7 @@ const HorariosTurnos = sequelize.define(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
-    paranoid: true, // Habilita soft delete automático
-    deletedAt: "deleted_at",
+    paranoid: false, // Desactivar paranoid - manejaremos soft delete manualmente
 
     // Índices para optimización
     indexes: [
@@ -367,9 +366,8 @@ HorariosTurnos.getAllWithFilters = function (options = {}) {
  * @returns {Promise<HorariosTurnos>} Horario reactivado
  */
 HorariosTurnos.reactivar = async function (turno, userId) {
-  const horario = await this.findByPk(turno, {
-    paranoid: false, // Incluir registros eliminados
-  });
+  // Buscar horario incluyendo eliminados (sin paranoid)
+  const horario = await this.findByPk(turno);
   
   if (!horario) {
     throw new Error("Horario no encontrado");
@@ -379,14 +377,14 @@ HorariosTurnos.reactivar = async function (turno, userId) {
     throw new Error("El horario ya está activo");
   }
   
-  // Reactivar
-  horario.estado = 1;
-  horario.deleted_at = null;
-  horario.deleted_by = null;
-  horario.updated_by = userId;
-  horario.updated_at = new Date();
-  
-  await horario.save();
+  // Reactivar manualmente (sin paranoid)
+  await horario.update({
+    estado: 1,
+    deleted_at: null, // Limpiar deleted_at explícitamente
+    deleted_by: null, // Limpiar deleted_by explícitamente
+    updated_by: userId,
+    updated_at: new Date(),
+  });
   
   return horario;
 };
