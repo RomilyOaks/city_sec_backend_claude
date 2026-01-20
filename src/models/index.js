@@ -136,6 +136,13 @@ import Ubigeo from "./Ubigeo.js";
 
 import RadioTetra from "./RadioTetra.js";
 
+/**
+ * Modelo HorariosTurnos
+ * Catálogo de horarios para operativos de patrullaje
+ * @type {Model}
+ */
+import HorariosTurnos from "./horariosTurnos.js";
+
 //=============================================
 // IMPORTAR MODELOS - UBICACIÓN Y TERRITORIO
 //=============================================
@@ -1758,8 +1765,8 @@ const models = {
   Ubigeo,
   EstadoOperativoRecurso,
   TipoCopiloto,
-  RadioTetra, // ✅ NEW 2.1.2
-
+  RadioTetra,
+  HorariosTurnos, // ✅ NEW 1.0.0
   // Operativos
   Vehiculo,
   AbastecimientoCombustible,
@@ -1843,6 +1850,7 @@ export {
   EstadoOperativoRecurso,
   TipoCopiloto,
   RadioTetra,
+  HorariosTurnos,
   // Operativos
   Vehiculo,
   AbastecimientoCombustible,

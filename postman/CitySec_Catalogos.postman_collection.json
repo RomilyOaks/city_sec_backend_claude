@@ -1,0 +1,265 @@
+{
+  "info": {
+    "_postman_id": "f3d2a1c0-8e7b-4f6a-9d5c-2b1a0e8f7d6c",
+    "name": "CitySec - Catálogos",
+    "description": "Colección para gestionar los catálogos maestros del sistema CitySec.\n\nIncluye:\n- Tipos de Vehículo\n- (Otros catálogos pueden agregarse aquí)\n\nVariables de colección:\n- baseUrl: URL base del backend\n- apiVersion: versión del API (v1)\n- token: JWT para autenticación\n\nUso:\n1. Ejecuta Login desde la colección Auth para obtener el token\n2. El token se usará automáticamente en todas las peticiones",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Tipos de Vehículo",
+      "description": "CRUD para la tabla `tipos_vehiculo`.\n\nCampos del modelo:\n- id: Identificador único\n- nombre: Nombre del tipo (único, requerido)\n- descripcion: Descripción opcional\n- prefijo: Prefijo para autogeneración de código (ej: M, H, C, B)\n- estado: 1=Activo, 0=Inactivo\n- created_at, updated_at: Timestamps\n- deleted_at: Soft delete",
+      "item": [
+        {
+          "name": "GET - Listar Tipos de Vehículo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/catalogos/tipos-vehiculo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "catalogos", "tipos-vehiculo"]
+            },
+            "description": "Obtiene todos los tipos de vehículo activos.\n\n**Respuesta exitosa (200):**\n```json\n{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"nombre\": \"Móvil\",\n      \"descripcion\": \"Patrullero\",\n      \"prefijo\": \"M\",\n      \"estado\": true,\n      \"created_at\": \"2025-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2025-01-01T00:00:00.000Z\"\n    }\n  ]\n}\n```\n\n**Requiere:** Token JWT válido"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has success true', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test('Response has data array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "// Guardar el primer ID para pruebas posteriores",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.length > 0) {",
+                  "    pm.collectionVariables.set('tipoVehiculoId', jsonData.data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST - Crear Tipo de Vehículo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cuatrimoto\",\n  \"descripcion\": \"Vehículo todo terreno de 4 ruedas\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/catalogos/tipos-vehiculo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "catalogos", "tipos-vehiculo"]
+            },
+            "description": "Crea un nuevo tipo de vehículo.\n\n**Body requerido:**\n```json\n{\n  \"nombre\": \"string (requerido, único)\",\n  \"descripcion\": \"string (opcional)\"\n}\n```\n\n**Respuesta exitosa (201):**\n```json\n{\n  \"success\": true,\n  \"message\": \"Tipo de vehículo creado exitosamente\",\n  \"data\": {\n    \"id\": 6,\n    \"nombre\": \"Cuatrimoto\",\n    \"descripcion\": \"Vehículo todo terreno de 4 ruedas\",\n    \"estado\": true,\n    \"created_at\": \"2025-01-19T00:00:00.000Z\",\n    \"updated_at\": \"2025-01-19T00:00:00.000Z\"\n  }\n}\n```\n\n**Errores comunes:**\n- 400: Nombre es requerido\n- 400: Ya existe un tipo con este nombre (unique constraint)\n- 401: Token no válido\n- 403: No tiene permisos (requiere admin/supervisor)\n\n**Permisos:** super_admin, admin, supervisor"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has success true', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test('Response has message', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include('creado');",
+                  "});",
+                  "",
+                  "pm.test('Response has data with id', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "// Guardar el ID creado",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "    pm.collectionVariables.set('tipoVehiculoId', jsonData.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST - Crear Tipo (Sin nombre - Error 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descripcion\": \"Solo descripcion sin nombre\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/catalogos/tipos-vehiculo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "catalogos", "tipos-vehiculo"]
+            },
+            "description": "Prueba de validación: intenta crear un tipo sin nombre.\n\n**Respuesta esperada (400):**\n```json\n{\n  \"success\": false,\n  \"message\": \"Nombre es requerido\"\n}\n```"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response has success false', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(false);",
+                  "});",
+                  "",
+                  "pm.test('Response has error message about nombre', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message.toLowerCase()).to.include('nombre');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET - Sin Token (Error 401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/catalogos/tipos-vehiculo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "catalogos", "tipos-vehiculo"]
+            },
+            "description": "Prueba de autenticación: intenta acceder sin token.\n\n**Respuesta esperada (401):**\n```json\n{\n  \"success\": false,\n  \"message\": \"Token no proporcionado\" | \"Token inválido\"\n}\n```"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Response has success false', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://citysecbackendclaude-production.up.railway.app",
+      "type": "string"
+    },
+    {
+      "key": "apiVersion",
+      "value": "v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoVehiculoId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
