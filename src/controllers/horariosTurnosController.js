@@ -543,22 +543,75 @@ export const reactivarHorarioTurno = async (req, res) => {
 // ==========================================
 
 /**
+ * Convierte hora UTC a hora local de Perú (UTC-5)
+ * @param {Date} date - Fecha en UTC
+ * @param {string} timezone - Timezone IANA (default: America/Lima)
+ * @returns {Object} { horaString, fechaLocal }
+ */
+const convertirAHoraLocal = (date, timezone = "America/Lima") => {
+  try {
+    // Usar Intl.DateTimeFormat para obtener la hora en la timezone especificada
+    const opciones = {
+      timeZone: timezone,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    };
+
+    const formatter = new Intl.DateTimeFormat("en-GB", opciones);
+    const horaString = formatter.format(date);
+
+    // Obtener también la fecha completa para debugging
+    const opcionesFecha = {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    };
+
+    const formatterFecha = new Intl.DateTimeFormat("en-GB", opcionesFecha);
+    const fechaLocal = formatterFecha.format(date);
+
+    return { horaString, fechaLocal };
+  } catch (error) {
+    // Fallback: Si la timezone no es válida, usar UTC-5 manualmente
+    const utcOffset = -5 * 60 * 60 * 1000; // -5 horas en milisegundos
+    const fechaLocal = new Date(date.getTime() + utcOffset);
+    const horaString = fechaLocal.toISOString().slice(11, 19);
+    return { horaString, fechaLocal: fechaLocal.toISOString() };
+  }
+};
+
+/**
  * Obtener el horario activo según la hora actual
  * GET /api/v1/horarios-turnos/activo
- * 
+ *
  * @param {Object} req - Request object
  * @param {Object} res - Response object
  * @returns {Promise<Object>} Horario activo actual
+ *
+ * Query params:
+ * - timestamp: ISO8601 timestamp para pruebas (opcional)
+ * - timezone: Timezone IANA, default "America/Lima" (opcional)
  */
 export const getHorarioActivo = async (req, res) => {
   try {
+    // Timezone por defecto: Perú (UTC-5)
+    const timezone = req.query.timezone || "America/Lima";
+
     // Obtener hora actual (permitir override para pruebas)
-    const horaActual = req.query.timestamp 
+    const horaUTC = req.query.timestamp
       ? new Date(req.query.timestamp)
       : new Date();
 
-    const horaString = horaActual.toTimeString().slice(0, 8); // HH:MM:SS
-    
+    // Convertir a hora local de Perú
+    const { horaString, fechaLocal } = convertirAHoraLocal(horaUTC, timezone);
+
     // Obtener todos los horarios activos
     const horariosActivos = await HorariosTurnos.findAll({
       where: {
@@ -585,21 +638,32 @@ export const getHorarioActivo = async (req, res) => {
     let horarioActivo = null;
 
     for (const horario of horariosActivos) {
-      const inicio = new Date(`2000-01-01 ${horario.hora_inicio}`);
-      let fin = new Date(`2000-01-01 ${horario.hora_fin}`);
-      
+      const inicio = horario.hora_inicio; // "HH:MM:SS"
+      const fin = horario.hora_fin; // "HH:MM:SS"
+
       if (horario.cruza_medianoche) {
-        // Si cruza medianoche, el fin es del día siguiente
-        fin = new Date(`2000-01-02 ${horario.hora_fin}`);
-      }
-      
-      const horaVerificar = new Date(`2000-01-01 ${horaString}`);
-      
-      if (horaVerificar >= inicio && horaVerificar <= fin) {
-        horarioActivo = horario;
-        break;
+        // Turno nocturno: 23:00 - 07:00
+        // La hora actual debe ser >= inicio O < fin
+        if (horaString >= inicio || horaString < fin) {
+          horarioActivo = horario;
+          break;
+        }
+      } else {
+        // Turno normal: inicio <= hora < fin
+        if (horaString >= inicio && horaString < fin) {
+          horarioActivo = horario;
+          break;
+        }
       }
     }
+
+    // Información de debug para entender la conversión
+    const debugInfo = {
+      servidor_utc: horaUTC.toISOString(),
+      timezone_usada: timezone,
+      hora_local_calculada: horaString,
+      fecha_local_completa: fechaLocal,
+    };
 
     if (!horarioActivo) {
       return res.status(404).json({
@@ -613,6 +677,7 @@ export const getHorarioActivo = async (req, res) => {
             hora_fin: h.hora_fin,
             cruza_medianoche: h.cruza_medianoche,
           })),
+          debug: debugInfo,
         },
       });
     }
@@ -624,6 +689,7 @@ export const getHorarioActivo = async (req, res) => {
         ...horarioActivo.toJSON(),
         hora_actual: horaString,
         esta_en_turno: true,
+        debug: debugInfo,
       },
     });
   } catch (error) {
