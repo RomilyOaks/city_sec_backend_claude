@@ -430,8 +430,32 @@ router.use("/catalogos", catalogosRoutes);
 router.use("/cargos", cargosRoutes);
 
 /**
+ * @route   /tipos-novedad
+ * @desc    Gestión de tipos de novedades (categorías principales)
+ * @access  Supervisor, Admin
+ * @new true
+ */
+router.use("/tipos-novedad", tipoNovedadRoutes);
+
+/**
+ * @route   /subtipos-novedad
+ * @desc    Gestión de subtipos de novedades (subcategorías)
+ * @access  Supervisor, Admin
+ * @new true
+ */
+router.use("/subtipos-novedad", subtipoNovedadRoutes);
+
+/**
+ * @route   /estados-novedad
+ * @desc    Gestión de estados de workflow de novedades
+ * @access  Supervisor, Admin
+ * @new true
+ */
+router.use("/estados-novedad", estadoNovedadRoutes);
+
+/**
  * @route   /tipos-copiloto
- * @desc    Gestión de tipos de copiloto
+ * @desc    CRUD completo para tipos de copiloto
  * @access  Supervisor, Admin
  * @new true
  */
@@ -450,22 +474,6 @@ router.use("/tipos-copiloto", tiposCopilotoRoutes);
  * @new true
  */
 router.use("/horarios-turnos", horariosTurnosRoutes);
-
-/**
- * @route   /subtipos-novedad
- * @desc    Gestión de subtipos de novedades (subcategorías)
- * @access  Supervisor, Admin
- * @new true
- */
-router.use("/subtipos-novedad", subtipoNovedadRoutes);
-
-/**
- * @route   /estados-novedad
- * @desc    Gestión de estados de workflow de novedades
- * @access  Supervisor, Admin
- * @new true
- */
-router.use("/estados-novedad", estadoNovedadRoutes);
 
 /**
  * @route   /ubigeo
@@ -559,17 +567,6 @@ router.use("/radios-tetra", radioTetraRoutes);
  *   - Endpoint /activos para dropdowns
  */
 router.use("/estados-operativo-recurso", estadosOperativoRecursoRoutes);
-
-/**
- * @route   /tipos-copiloto
- * @desc    Tipos de copiloto (SERENO, PNP, BOMBERO, etc.)
- * @access  Protected
- * @permission catalogos.tipos_copiloto.read
- * @features
- *   - CRUD completo
- *   - Endpoint /activos para dropdowns
- */
-router.use("/tipos-copiloto", tiposCopilotoRoutes);
 
 /**
  * @route   /auditoria
@@ -1169,36 +1166,5 @@ router.use((req, res) => {
 //=============================================
 // EXPORTAR ROUTER
 //=============================================
-
-//=============================================
-// REGISTRO DE RUTAS CON PREFIJOS
-//=============================================
-
-router.use("/auth", authRoutes);
-router.use("/usuarios", usuariosRoutes);
-router.use("/roles", rolesRoutes);
-router.use("/permisos", permisosRoutes);
-router.use("/novedades", novedadesRoutes);
-router.use("/vehiculos", vehiculosRoutes);
-router.use("/mantenimientos", mantenimientosRoutes);
-router.use("/personal", personalRoutes);
-router.use("/sectores", sectoresRoutes);
-router.use("/cuadrantes", cuadrantesRoutes);
-router.use("/catalogos", catalogosRoutes);
-router.use("/cargos", cargosRoutes);
-router.use("/tipos-novedad", tipoNovedadRoutes);
-router.use("/subtipos-novedad", subtipoNovedadRoutes);
-router.use("/estados-novedad", estadoNovedadRoutes);
-router.use("/ubigeo", ubigeoRoutes);
-router.use("/config", configRoutes);
-router.use("/unidades-oficina", unidadOficinaRoutes);
-router.use("/radios-tetra", radioTetraRoutes);
-router.use("/estados-operativo-recurso", estadosOperativoRecursoRoutes);
-router.use("/tipos-copiloto", tiposCopilotoRoutes);
-router.use("/auditoria-acciones", auditoriaAccionRoutes);
-router.use("/tipos-via", tiposViaRoutes);
-router.use("/calles", callesRoutes);
-router.use("/calles-cuadrantes", callesCuadrantesRoutes);
-router.use("/direcciones", direccionesRoutes);
 
 export default router;
