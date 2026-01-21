@@ -18,7 +18,7 @@ import {
 
 const router = express.Router();
 
-// Todas las rutas requieren autenticación
+// Aplicar verificación de token a todas las rutas
 router.use(verificarToken);
 
 /**
@@ -26,7 +26,7 @@ router.use(verificarToken);
  * @desc  Listar tipos de novedad
  * @access Private (todos autenticados)
  */
-router.get("/", validateQuery, tipoNovedadController.getAll);
+router.get("/", tipoNovedadController.getAll);
 
 /**
  * @route GET /api/v1/tipos-novedad/:id

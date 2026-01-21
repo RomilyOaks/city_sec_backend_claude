@@ -38,6 +38,7 @@ const getAll = async (req, res) => {
       data: items,
     });
   } catch (error) {
+    console.error("❌ Error en tipoNovedadController.getAll:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener tipos de novedad",
