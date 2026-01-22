@@ -74,8 +74,15 @@ export const getAllNovedades = async (req, res) => {
     };
 
     if (fecha_inicio && fecha_fin) {
+      // Interpretar fechas en timezone local (Perú -5)
+      const fechaInicioDate = new Date(fecha_inicio + 'T00:00:00-05:00');
+      const fechaFinDate = new Date(fecha_fin + 'T00:00:00-05:00');
+      
+      // Agregar 23:59:59 a la fecha fin para incluir todo el día
+      fechaFinDate.setHours(23, 59, 59, 999);
+      
       whereClause.fecha_hora_ocurrencia = {
-        [Op.between]: [new Date(fecha_inicio), new Date(fecha_fin)],
+        [Op.between]: [fechaInicioDate, fechaFinDate],
       };
     }
 
@@ -554,10 +561,14 @@ export const asignarRecursos = async (req, res) => {
       updated_by: req.user.id,
     };
 
+    console.log("🔍 DEBUG - Antes de construir datosActualizacion");
     if (unidad_oficina_id) datosActualizacion.unidad_oficina_id = unidad_oficina_id;
     if (vehiculo_id) datosActualizacion.vehiculo_id = vehiculo_id;
     if (personal_cargo_id) datosActualizacion.personal_cargo_id = personal_cargo_id;
-    if (personal_seguridad2_id) datosActualizacion.personal_seguridad2_id = personal_seguridad2_id;
+    if (personal_seguridad2_id) {
+      console.log("🔍 DEBUG - Agregando personal_seguridad2_id a datosActualizacion:", personal_seguridad2_id);
+      datosActualizacion.personal_seguridad2_id = personal_seguridad2_id;
+    }
     if (personal_seguridad3_id) datosActualizacion.personal_seguridad3_id = personal_seguridad3_id;
     if (personal_seguridad4_id) datosActualizacion.personal_seguridad4_id = personal_seguridad4_id;
     if (km_inicial) datosActualizacion.km_inicial = km_inicial;
@@ -570,6 +581,8 @@ export const asignarRecursos = async (req, res) => {
     if (requiere_seguimiento !== undefined) datosActualizacion.requiere_seguimiento = requiere_seguimiento;
     if (fecha_proxima_revision) datosActualizacion.fecha_proxima_revision = new Date(fecha_proxima_revision);
     if (perdidas_materiales_estimadas) datosActualizacion.perdidas_materiales_estimadas = perdidas_materiales_estimadas;
+    
+    console.log("🔍 DEBUG - datosActualizacion final:", JSON.stringify(datosActualizacion, null, 2));
     
     // Fecha de despacho: usar la proporcionada o la actual
     datosActualizacion.fecha_despacho = fecha_despacho ? new Date(fecha_despacho) : new Date();
@@ -606,7 +619,7 @@ export const asignarRecursos = async (req, res) => {
 
     await transaction.commit();
 
-    const novedadActualizada = await Novedad.findByPk(id, {
+    const novedadActualizadaRecursos = await Novedad.findByPk(id, {
       include: [
         { model: UnidadOficina, as: "novedadUnidadOficina" },
         { model: Vehiculo, as: "novedadVehiculo" },
@@ -617,7 +630,7 @@ export const asignarRecursos = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Recursos asignados exitosamente",
-      data: novedadActualizada,
+      data: novedadActualizadaRecursos,
     });
   } catch (error) {
     if (!transaction.finished) {
