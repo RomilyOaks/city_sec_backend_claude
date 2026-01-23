@@ -781,11 +781,20 @@ export const createCuadranteForVehiculo = async (req, res) => {
       });
     }
 
+    // Convertir hora_ingreso a formato completo si viene solo HH:MM
+    let horaIngresoCompleta = hora_ingreso;
+    if (hora_ingreso && hora_ingreso.match(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)) {
+      const hoy = new Date();
+      const [horas, minutos] = hora_ingreso.split(':');
+      hoy.setHours(parseInt(horas), parseInt(minutos), 0, 0);
+      horaIngresoCompleta = hoy.toISOString();
+    }
+
     // Crear la nueva asignación de cuadrante
     const nuevoCuadranteAsignado = await OperativosVehiculosCuadrantes.create({
       operativo_vehiculo_id: id,
       cuadrante_id,
-      hora_ingreso,
+      hora_ingreso: horaIngresoCompleta,
       created_by,
     });
 

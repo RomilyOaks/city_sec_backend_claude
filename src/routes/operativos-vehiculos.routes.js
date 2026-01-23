@@ -141,8 +141,9 @@ const validateCuadranteData = [
     .isInt({ min: 1 })
     .withMessage("ID de cuadrante inválido"),
   body("hora_ingreso")
-    .isISO8601()
-    .withMessage("Formato de hora de ingreso inválido"),
+    .optional()
+    .matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage("Formato de hora de ingreso inválido. Use formato HH:MM (24 horas)"),
 ];
 
 router.post(
