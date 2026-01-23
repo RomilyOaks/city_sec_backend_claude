@@ -84,15 +84,21 @@ const Novedad = sequelize.define(
     origen_llamada: {
       type: DataTypes.ENUM(
         "TELEFONO_107",
-        "BOTON_PANICO",
-        "CAMARA",
-        "PATRULLAJE",
-        "CIUDADANO",
+        "RADIO_TETRA",
+        "REDES_SOCIALES",
+        "BOTON_EMERGENCIA_ALERTA_SURCO",
+        "BOTON_DENUNCIA_VECINO_ALERTA",
         "INTERVENCION_DIRECTA",
-        "OTROS"
+        "ANALITICA",
+        "APP_PODER_JUDICIAL",
+        "VIDEO_CCO"
       ),
       allowNull: true,
       defaultValue: "TELEFONO_107",
+    },
+    radio_tetra_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     reportante_nombre: {
       type: DataTypes.STRING(150),
