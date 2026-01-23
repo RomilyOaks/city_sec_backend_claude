@@ -295,9 +295,20 @@ export const createTurno = async (req, res) => {
       turno,
     } = req.body;
 
+    // Si no se proporciona supervisor_id, obtenerlo del sector
+    let supervisorIdFinal = supervisor_id;
+    if (!supervisor_id && sector_id) {
+      const sector = await Sector.findByPk(sector_id, {
+        attributes: ['supervisor_id']
+      });
+      if (sector) {
+        supervisorIdFinal = sector.supervisor_id;
+      }
+    }
+
     const nuevoTurno = await OperativosTurno.create({
       operador_id,
-      supervisor_id,
+      supervisor_id: supervisorIdFinal,
       sector_id,
       fecha,
       fecha_hora_inicio,

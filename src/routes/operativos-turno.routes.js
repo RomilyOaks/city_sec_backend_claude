@@ -21,6 +21,8 @@ import {
 } from "../middlewares/authMiddleware.js";
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 import { body, param, validationResult } from "express-validator";
+import { Op } from "sequelize";
+import { Sector } from "../models/index.js";
 
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -37,8 +39,9 @@ const handleValidationErrors = (req, res, next) => {
 const validateTurno = [
   body("operador_id").isInt().withMessage("El ID del operador es requerido."),
   body("supervisor_id")
+    .optional()
     .isInt()
-    .withMessage("El ID del supervisor es requerido."),
+    .withMessage("El ID del supervisor debe ser un número entero."),
   body("sector_id").isInt().withMessage("El ID del sector es requerido."),
   body("fecha").isISO8601().withMessage("La fecha es requerida."),
   body("fecha_hora_inicio")
@@ -49,9 +52,28 @@ const validateTurno = [
     .isISO8601()
     .withMessage("El formato de la fecha y hora de fin no es válido."),
   body("estado")
+    .optional()
     .isIn(["ACTIVO", "CERRADO", "ANULADO"])
-    .withMessage("El estado no es válido."),
+    .withMessage("El estado debe ser uno de: ACTIVO, CERRADO, ANULADO."),
   body("observaciones").optional().isString(),
+  
+  // Validación personalizada: asegurar que el sector tenga supervisor si no se proporciona supervisor_id
+  body("sector_id").custom(async (sector_id, { req }) => {
+    if (!req.body.supervisor_id) {
+      const sector = await Sector.findByPk(sector_id, {
+        attributes: ['supervisor_id']
+      });
+      
+      if (!sector) {
+        throw new Error("El sector especificado no existe.");
+      }
+      
+      if (!sector.supervisor_id) {
+        throw new Error("El sector no tiene un supervisor asignado. Debe proporcionar un supervisor_id o asignar un supervisor al sector.");
+      }
+    }
+    return true;
+  }),
 ];
 
 const validateUpdateTurno = [
