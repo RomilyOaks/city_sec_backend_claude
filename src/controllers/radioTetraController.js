@@ -115,15 +115,19 @@ const radioTetraController = {
       });
 
       return res.status(200).json(
-        formatResponse({
-          radios,
-          pagination: {
-            currentPage: parseInt(page),
-            totalPages: Math.ceil(count / parseInt(limit)),
-            totalItems: count,
-            itemsPerPage: parseInt(limit),
-          },
-        })
+        formatResponse(
+          true,
+          "Radios TETRA obtenidos exitosamente",
+          {
+            radios,
+            pagination: {
+              currentPage: parseInt(page),
+              totalPages: Math.ceil(count / parseInt(limit)),
+              totalItems: count,
+              itemsPerPage: parseInt(limit),
+            },
+          }
+        )
       );
     } catch (error) {
       console.error("Error al obtener radios TETRA:", error);
@@ -141,30 +145,20 @@ const radioTetraController = {
    * Para usar en dropdowns del frontend
    */
   getRadiosDisponibles: async (req, res) => {
-    const timestamp = new Date().toISOString();
-    
     try {
-      console.log(`🔥 [${timestamp}] DEBUG: getRadiosDisponibles INICIO`);
-      console.log(`🔥 [${timestamp}] DEBUG: Query params:`, JSON.stringify(req.query, null, 2));
-      console.log(`🔥 [${timestamp}] DEBUG: Headers:`, JSON.stringify(req.headers, null, 2));
-      console.log(`🔥 [${timestamp}] DEBUG: Request URL: ${req.originalUrl}`);
-      
-      console.log(`🔥 [${timestamp}] DEBUG: Consultando radios disponibles...`);
       const radios = await RadioTetra.findDisponibles();
-      
-      console.log(`🔥 [${timestamp}] DEBUG: Radios disponibles encontrados: ${radios.length}`);
-      console.log(`🔥 [${timestamp}] DEBUG: Enviando respuesta 200`);
 
       return res.status(200).json(
-        formatResponse({
-          radios,
-          total: radios.length,
-        })
+        formatResponse(
+          true,
+          "Radios disponibles obtenidos exitosamente",
+          {
+            radios,
+            total: radios.length,
+          }
+        )
       );
     } catch (error) {
-      console.error(`🔥 [${timestamp}] DEBUG: ERROR en getRadiosDisponibles:`, error.message);
-      console.error(`🔥 [${timestamp}] DEBUG: Error stack:`, error.stack);
-      
       return res
         .status(500)
         .json(
@@ -206,7 +200,13 @@ const radioTetraController = {
           .json(formatErrorResponse("Radio TETRA no encontrado"));
       }
 
-      return res.status(200).json(formatResponse({ radio }));
+      return res.status(200).json(
+        formatResponse(
+          true,
+          "Radio TETRA obtenido exitosamente",
+          { radio }
+        )
+      );
     } catch (error) {
       console.error("Error al obtener radio TETRA:", error);
       return res
@@ -297,10 +297,11 @@ const radioTetraController = {
 
       return res.status(201).json(
         formatResponse(
+          true,
+          "Radio TETRA creado exitosamente",
           {
             radio: radioCreado,
-          },
-          "Radio TETRA creado exitosamente"
+          }
         )
       );
     } catch (error) {
@@ -416,10 +417,11 @@ const radioTetraController = {
 
       return res.status(200).json(
         formatResponse(
+          true,
+          "Radio TETRA actualizado exitosamente",
           {
             radio: radioActualizado,
-          },
-          "Radio TETRA actualizado exitosamente"
+          }
         )
       );
     } catch (error) {
@@ -473,7 +475,7 @@ const radioTetraController = {
 
       return res
         .status(200)
-        .json(formatResponse(null, "Radio TETRA eliminado exitosamente"));
+        .json(formatResponse(true, "Radio TETRA eliminado exitosamente"));
     } catch (error) {
       console.error("Error al eliminar radio TETRA:", error);
       return res
@@ -569,10 +571,11 @@ const radioTetraController = {
 
       return res.status(200).json(
         formatResponse(
+          true,
+          "Radio asignado exitosamente",
           {
             radio: radioActualizado,
-          },
-          "Radio asignado exitosamente"
+          }
         )
       );
     } catch (error) {
@@ -620,10 +623,11 @@ const radioTetraController = {
 
       return res.status(200).json(
         formatResponse(
+          true,
+          "Radio desasignado exitosamente",
           {
             radio: radioActualizado,
-          },
-          "Radio desasignado exitosamente"
+          }
         )
       );
     } catch (error) {
@@ -664,10 +668,11 @@ const radioTetraController = {
 
       return res.status(200).json(
         formatResponse(
+          true,
+          "Radio activado exitosamente",
           {
             radio: await RadioTetra.findByPk(id),
-          },
-          "Radio activado exitosamente"
+          }
         )
       );
     } catch (error) {
@@ -719,10 +724,11 @@ const radioTetraController = {
 
       return res.status(200).json(
         formatResponse(
+          true,
+          "Radio desactivado exitosamente",
           {
             radio: await RadioTetra.findByPk(id),
-          },
-          "Radio desactivado exitosamente"
+          }
         )
       );
     } catch (error) {
