@@ -22,7 +22,7 @@ import {
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 import { body, param, validationResult } from "express-validator";
 import { Op } from "sequelize";
-import { Sector } from "../models/index.js";
+import { Sector, PersonalSeguridad } from "../models/index.js";
 
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -38,10 +38,26 @@ const handleValidationErrors = (req, res, next) => {
 
 const validateTurno = [
   body("operador_id").isInt().withMessage("El ID del operador es requerido."),
+  body("operador_id").custom(async (operador_id) => {
+    const operador = await PersonalSeguridad.findByPk(operador_id);
+    if (!operador) {
+      throw new Error(`El operador con ID ${operador_id} no existe.`);
+    }
+    return true;
+  }),
   body("supervisor_id")
     .optional()
     .isInt()
     .withMessage("El ID del supervisor debe ser un número entero."),
+  body("supervisor_id").custom(async (supervisor_id, { req }) => {
+    if (supervisor_id) {
+      const supervisor = await PersonalSeguridad.findByPk(supervisor_id);
+      if (!supervisor) {
+        throw new Error(`El supervisor con ID ${supervisor_id} no existe.`);
+      }
+    }
+    return true;
+  }),
   body("sector_id").isInt().withMessage("El ID del sector es requerido."),
   body("fecha").isISO8601().withMessage("La fecha es requerida."),
   body("fecha_hora_inicio")
