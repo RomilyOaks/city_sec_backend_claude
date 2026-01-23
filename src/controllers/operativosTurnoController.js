@@ -353,6 +353,20 @@ export const createTurno = async (req, res) => {
       }
     }
 
+    // Error de foreign key constraint
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      return res.status(400).json({
+        code: "FOREIGN_KEY_ERROR",
+        message: "Error de referencia: El ID proporcionado no existe",
+        success: false,
+        details: {
+          field: error.index,
+          table: error.table,
+          value: error.value,
+        },
+      });
+    }
+
     // Errores de validación de Sequelize
     if (error.name === "SequelizeValidationError") {
       return res.status(400).json({
