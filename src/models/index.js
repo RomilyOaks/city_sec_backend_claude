@@ -565,6 +565,15 @@ Novedad.hasMany(OperativosVehiculosNovedades, {
   as: "operativosVehiculosNovedades",
 });
 
+/**
+ * Relación: Novedad -> RadioTetra (Many-to-One)
+ * Una novedad puede tener un radio TETRA asociado
+ */
+Novedad.belongsTo(RadioTetra, {
+  foreignKey: "radio_tetra_id",
+  as: "radio_tetra",
+});
+
 //=============================================
 // ASOCIACIONES: OPERATIVOS DE PERSONAL (PATRULLAJE A PIE)
 //=============================================
