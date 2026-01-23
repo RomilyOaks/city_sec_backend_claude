@@ -272,11 +272,69 @@ export const validarReportanteNombre = () =>
 
 export const validarReportanteTelefono = () =>
   body("reportante_telefono")
-    .optional()
-    .matches(PATTERNS.TELEFONO)
-    .withMessage(
-      `El teléfono debe tener entre ${LIMITES_TEXTO.TELEFONO_MIN} y ${LIMITES_TEXTO.TELEFONO_MAX} dígitos`
-    );
+    .custom((value, { req }) => {
+      const origen = req.body.origen_llamada;
+      const radioTetraId = req.body.radio_tetra_id;
+      
+      // Si origen es RADIO_TETRA, no validar teléfono pero sí radio_tetra_id
+      if (origen === "RADIO_TETRA") {
+        if (!radioTetraId) {
+          throw new Error("Cuando origen_llamada es RADIO_TETRA, radio_tetra_id es requerido");
+        }
+        return true; // No validar teléfono en este caso
+      }
+      
+      // Para otros orígenes, validar teléfono si se proporciona
+      if (value && !PATTERNS.TELEFONO.test(value)) {
+        throw new Error(
+          `El teléfono debe tener entre ${LIMITES_TEXTO.TELEFONO_MIN} y ${LIMITES_TEXTO.TELEFONO_MAX} dígitos`
+        );
+      }
+      
+      return true;
+    });
+
+export const validarRadioTetraId = () =>
+  body("radio_tetra_id")
+    .custom((value, { req }) => {
+      const origen = req.body.origen_llamada;
+      const reportanteTelefono = req.body.reportante_telefono;
+      
+      // Si origen es RADIO_TETRA, radio_tetra_id es requerido
+      if (origen === "RADIO_TETRA") {
+        if (!value) {
+          throw new Error("Cuando origen_llamada es RADIO_TETRA, radio_tetra_id es requerido");
+        }
+        if (!Number.isInteger(Number(value)) || value < 1) {
+          throw new Error("radio_tetra_id debe ser un número entero positivo");
+        }
+        return true;
+      }
+      
+      // Para otros orígenes, radio_tetra_id es opcional
+      return true;
+    });
+
+export const validarOrigenReportante = () =>
+  body("origen_llamada")
+    .custom((value, { req }) => {
+      const reportanteTelefono = req.body.reportante_telefono;
+      const radioTetraId = req.body.radio_tetra_id;
+      
+      // Validar que al menos uno de los dos campos esté presente según el origen
+      if (value === "RADIO_TETRA") {
+        if (!radioTetraId) {
+          throw new Error("Para origen RADIO_TETRA debe proporcionar radio_tetra_id");
+        }
+      } else {
+        // Para otros orígenes, al menos teléfono o algún otro dato de reportante
+        if (!reportanteTelefono && !req.body.reportante_nombre) {
+          throw new Error("Debe proporcionar al menos teléfono o nombre del reportante");
+        }
+      }
+      
+      return true;
+    });
 
 export const validarReportanteDocIdentidad = () =>
   body("reportante_doc_identidad")
@@ -420,8 +478,10 @@ export const validateCreateNovedad = [
   validarLatitud(),
   validarLongitud(),
   validarOrigenLlamada(),
+  validarOrigenReportante(),
   validarReportanteNombre(),
   validarReportanteTelefono(),
+  validarRadioTetraId(),
   validarReportanteDocIdentidad(),
   validarEsAnonimo(),
   validarObservaciones(),
