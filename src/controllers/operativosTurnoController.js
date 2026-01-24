@@ -21,7 +21,7 @@
 import models from "../models/index.js";
 const { OperativosTurno, PersonalSeguridad, Usuario, Sector, HorariosTurnos } = models;
 import { Op } from "sequelize";
-import { getNowInTimezone, getTimeInTimezone, getDateInTimezone } from "../utils/dateHelper.js";
+import { getTimeInTimezone, getDateInTimezone } from "../utils/dateHelper.js";
 
 // ==========================================
 // CRUD BÁSICO
@@ -315,8 +315,9 @@ export const createTurno = async (req, res) => {
     // ========================================
     // CALCULAR FECHA CORRECTA PARA EL TURNO
     // ========================================
+    // NOTA: Solo se ajusta el campo 'fecha' (fecha del turno operativo)
+    // El campo 'fecha_hora_inicio' mantiene la fecha/hora REAL de asignación del recurso
     let fechaFinal = fecha;
-    let fechaHoraInicioFinal = fecha_hora_inicio;
 
     // Si se proporciona el nombre del turno, verificar si cruza medianoche
     if (turno) {
@@ -346,18 +347,8 @@ export const createTurno = async (req, res) => {
           const month = String(fechaDate.getMonth() + 1).padStart(2, "0");
           const day = String(fechaDate.getDate()).padStart(2, "0");
           fechaFinal = `${year}-${month}-${day}`;
-
-          // Si no se proporcionó fecha_hora_inicio, calcularla con la fecha correcta
-          if (!fecha_hora_inicio) {
-            fechaHoraInicioFinal = `${fechaFinal} ${horarioTurno.hora_inicio}`;
-          }
         }
       }
-    }
-
-    // Si no se calculó fecha_hora_inicio y no se proporcionó, usar fecha + hora actual
-    if (!fechaHoraInicioFinal) {
-      fechaHoraInicioFinal = getNowInTimezone();
     }
 
     const nuevoTurno = await OperativosTurno.create({
@@ -365,7 +356,7 @@ export const createTurno = async (req, res) => {
       supervisor_id: supervisorIdFinal,
       sector_id,
       fecha: fechaFinal,
-      fecha_hora_inicio: fechaHoraInicioFinal,
+      fecha_hora_inicio, // Mantiene la fecha/hora REAL de asignación
       fecha_hora_fin,
       estado,
       observaciones,
