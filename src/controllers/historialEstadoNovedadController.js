@@ -23,6 +23,7 @@ import {
   Novedad,
 } from "../models/index.js";
 import { Op } from "sequelize";
+import { getNowInTimezone } from "../utils/dateHelper.js";
 
 /**
  * Obtener historial de estados de una novedad
@@ -126,7 +127,7 @@ export const createHistorialEstado = async (req, res) => {
       usuario_id: req.user.id,
       tiempo_en_estado_min: tiempoEstado,
       observaciones,
-      fecha_cambio: new Date(),
+      fecha_cambio: getNowInTimezone(),
       created_by: req.user.id,
       updated_by: req.user.id,
     });
