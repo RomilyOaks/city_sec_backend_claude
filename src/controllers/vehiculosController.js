@@ -227,67 +227,38 @@ export const getHistorialMantenimientos = async (req, res) => {
 };
 
 /**
- * Obtener vehículos disponibles (no asignados a novedades activas)
+ * Obtener vehículos disponibles para asignación a novedades
  * @route GET /api/vehiculos/disponibles
- * 🔥 CORREGIDO: Alias y nombre de campo vehiculo_id
+ * 
+ * Criterio de disponibilidad:
+ * 1. Estado general activo (estado: 1, deleted_at: null)
+ * 2. Estado operativo: DISPONIBLE o EN_SERVICIO
+ * 3. Sin restricción de novedades asignadas (pueden atender múltiples novedades)
  */
 export const getVehiculosDisponibles = async (req, res) => {
-  const timestamp = new Date().toISOString();
-  
   try {
-    console.log(`🔥 [${timestamp}] DEBUG: getVehiculosDisponibles INICIO`);
-    console.log(`🔥 [${timestamp}] DEBUG: Query params:`, JSON.stringify(req.query, null, 2));
-    console.log(`🔥 [${timestamp}] DEBUG: Headers:`, JSON.stringify(req.headers, null, 2));
-    console.log(`🔥 [${timestamp}] DEBUG: Request URL: ${req.originalUrl}`);
-    
     const { tipo_id } = req.query;
 
-    console.log(`🔥 [${timestamp}] DEBUG: Consultando vehículos en uso...`);
-
-    const vehiculosEnUso = await Novedad.findAll({
-      where: {
-        vehiculo_id: { [Op.ne]: null },
-        estado: 1,
-        deleted_at: null,
-      },
-      include: [
-        {
-          model: EstadoNovedad,
-          as: "novedadEstado", // ✅ Cambiado de "estadoNovedad" a "novedadEstado"
-          where: {
-            nombre: {
-              [Op.notIn]: ["CERRADO", "CANCELADO", "FINALIZADO"],
-            },
-          },
-        },
-      ],
-      attributes: ["vehiculo_id"],
-      raw: true,
-    });
-
-    const idsEnUso = vehiculosEnUso.map((n) => n.vehiculo_id);
-    console.log(`🔥 [${timestamp}] DEBUG: Vehículos en uso: ${idsEnUso.length}, IDs: [${idsEnUso.join(", ")}]`);
-
+    // Construir where clause con criterio flexible
     const whereClause = {
       estado: 1,
       deleted_at: null,
-      estado_operativo: "DISPONIBLE",
-      id: { [Op.notIn]: idsEnUso.length > 0 ? idsEnUso : [0] },
+      estado_operativo: {
+        [Op.in]: ["DISPONIBLE", "EN_SERVICIO"]
+      }
     };
 
+    // Filtro opcional por tipo
     if (tipo_id) {
       whereClause.tipo_id = tipo_id;
-      console.log(`🔥 [${timestamp}] DEBUG: Filtrando por tipo_id: ${tipo_id}`);
     }
-
-    console.log(`🔥 [${timestamp}] DEBUG: Consultando vehículos disponibles...`);
 
     const vehiculosDisponibles = await Vehiculo.findAll({
       where: whereClause,
       include: [
         {
           model: TipoVehiculo,
-          as: "tipoVehiculo", // ✅ Verificar que este alias también esté bien
+          as: "tipoVehiculo",
           attributes: ["id", "nombre"],
         },
         {
@@ -299,18 +270,14 @@ export const getVehiculosDisponibles = async (req, res) => {
       order: [["codigo_vehiculo", "ASC"]],
     });
 
-    console.log(`🔥 [${timestamp}] DEBUG: Vehículos disponibles encontrados: ${vehiculosDisponibles.length}`);
-    console.log(`🔥 [${timestamp}] DEBUG: Enviando respuesta 200`);
-
     res.status(200).json({
       success: true,
+      message: "Vehículos disponibles obtenidos exitosamente",
       data: vehiculosDisponibles,
       total: vehiculosDisponibles.length,
     });
   } catch (error) {
-    console.error(`🔥 [${timestamp}] DEBUG: ERROR en getVehiculosDisponibles:`, error.message);
-    console.error(`🔥 [${timestamp}] DEBUG: Error stack:`, error.stack);
-    
+    console.error("Error al obtener vehículos disponibles:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener vehículos disponibles",
