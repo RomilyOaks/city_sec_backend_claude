@@ -19,8 +19,9 @@
  */
 
 import models from "../models/index.js";
-const { OperativosTurno, PersonalSeguridad, Usuario, Sector } = models;
+const { OperativosTurno, PersonalSeguridad, Usuario, Sector, HorariosTurnos } = models;
 import { Op } from "sequelize";
+import { getNowInTimezone, getTimeInTimezone, getDateInTimezone } from "../utils/dateHelper.js";
 
 // ==========================================
 // CRUD BÁSICO
@@ -280,6 +281,11 @@ export const getTurnoById = async (req, res) => {
 /**
  * Crear un nuevo turno
  * POST /api/v1/turnos
+ *
+ * LÓGICA DE FECHA PARA TURNOS NOCTURNOS:
+ * Si el turno cruza medianoche (ej: 23:00 - 07:00) y el registro se crea
+ * entre 00:00 y hora_fin, la fecha del turno debe ser el día ANTERIOR
+ * (cuando realmente empezó el turno).
  */
 export const createTurno = async (req, res) => {
   try {
@@ -306,12 +312,60 @@ export const createTurno = async (req, res) => {
       }
     }
 
+    // ========================================
+    // CALCULAR FECHA CORRECTA PARA EL TURNO
+    // ========================================
+    let fechaFinal = fecha;
+    let fechaHoraInicioFinal = fecha_hora_inicio;
+
+    // Si se proporciona el nombre del turno, verificar si cruza medianoche
+    if (turno) {
+      const horarioTurno = await HorariosTurnos.findOne({
+        where: {
+          turno: turno,
+          estado: 1,
+          deleted_at: null,
+        },
+      });
+
+      if (horarioTurno && horarioTurno.cruza_medianoche) {
+        // Obtener hora actual en timezone de Perú
+        const horaActual = getTimeInTimezone(); // "HH:MM:SS"
+        const horaFin = horarioTurno.hora_fin; // "07:00:00"
+
+        // Si la hora actual es menor que hora_fin (estamos después de medianoche)
+        // entonces el turno empezó el día anterior
+        if (horaActual < horaFin) {
+          // Calcular fecha del día anterior
+          const fechaActual = getDateInTimezone(); // "YYYY-MM-DD"
+          const fechaDate = new Date(fechaActual + "T12:00:00"); // Mediodía para evitar problemas de timezone
+          fechaDate.setDate(fechaDate.getDate() - 1);
+
+          // Formatear como YYYY-MM-DD
+          const year = fechaDate.getFullYear();
+          const month = String(fechaDate.getMonth() + 1).padStart(2, "0");
+          const day = String(fechaDate.getDate()).padStart(2, "0");
+          fechaFinal = `${year}-${month}-${day}`;
+
+          // Si no se proporcionó fecha_hora_inicio, calcularla con la fecha correcta
+          if (!fecha_hora_inicio) {
+            fechaHoraInicioFinal = `${fechaFinal} ${horarioTurno.hora_inicio}`;
+          }
+        }
+      }
+    }
+
+    // Si no se calculó fecha_hora_inicio y no se proporcionó, usar fecha + hora actual
+    if (!fechaHoraInicioFinal) {
+      fechaHoraInicioFinal = getNowInTimezone();
+    }
+
     const nuevoTurno = await OperativosTurno.create({
       operador_id,
       supervisor_id: supervisorIdFinal,
       sector_id,
-      fecha,
-      fecha_hora_inicio,
+      fecha: fechaFinal,
+      fecha_hora_inicio: fechaHoraInicioFinal,
       fecha_hora_fin,
       estado,
       observaciones,
