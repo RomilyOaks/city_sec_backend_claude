@@ -47,6 +47,7 @@ import {
 import sequelize from "../config/database.js";
 import { Op } from "sequelize";
 import { DEFAULT_UBIGEO_CODE } from "../config/constants.js";
+import { getNowInTimezone } from "../utils/dateHelper.js";
 
 /**
  * Obtener todas las novedades con filtros
@@ -608,7 +609,7 @@ export const asignarRecursos = async (req, res) => {
           usuario_id: req.user.id,
           tiempo_en_estado_min: historial.tiempo_en_estado_min || null,
           observaciones: historial.observaciones || observaciones,
-          fecha_cambio: historial.fecha_cambio ? new Date(historial.fecha_cambio) : new Date(),
+          fecha_cambio: historial.fecha_cambio ? new Date(historial.fecha_cambio) : getNowInTimezone(),
           metadata: historial.metadata || null,
           created_by: historial.created_by || req.user.id,
           updated_by: historial.updated_by || req.user.id,
