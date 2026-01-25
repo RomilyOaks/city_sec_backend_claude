@@ -1483,6 +1483,24 @@ OperativosVehiculosNovedades.belongsTo(Usuario, {
 });
 
 // ============================================================================
+// ASOCIACIONES: OperativosVehiculos -> Usuario (Auditoría)
+// ============================================================================
+OperativosVehiculos.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadoPorUsuario",
+});
+
+OperativosVehiculos.belongsTo(Usuario, {
+  foreignKey: "updated_by", 
+  as: "actualizadoPorUsuario",
+});
+
+OperativosVehiculos.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadoPorUsuario",
+});
+
+// ============================================================================
 // DEFINIR RELACIONES DEL MÓDULO CALLES Y DIRECCIONES (✅ 2.2.1)
 // ============================================================================
 
