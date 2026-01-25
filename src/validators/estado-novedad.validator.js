@@ -58,6 +58,11 @@ export const validarEstadoNovedadId = () =>
     .isInt({ min: 1 })
     .withMessage("ID de estado de novedad debe ser un número positivo");
 
+export const validarEstadoActualId = () =>
+  param("estadoActualId")
+    .isInt({ min: 1 })
+    .withMessage("ID de estado actual debe ser un número positivo");
+
 export const validarNombre = (opcional = false) => {
   const validator = body("nombre")
     .trim()
@@ -195,6 +200,11 @@ export const validateUpdate = [
 export const validateId = [validarEstadoNovedadId(), handleValidationErrors];
 
 /**
+ * GET /api/v1/estados-novedad/siguientes/:estadoActualId
+ */
+export const validateEstadoActualId = [validarEstadoActualId(), handleValidationErrors];
+
+/**
  * GET /api/v1/estados-novedad
  */
 export const validateQuery = [
@@ -208,6 +218,7 @@ export default {
   validateCreate,
   validateUpdate,
   validateId,
+  validateEstadoActualId,
   validateQuery,
   handleValidationErrors,
 };
