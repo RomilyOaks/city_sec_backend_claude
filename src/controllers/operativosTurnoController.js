@@ -182,13 +182,13 @@ export const getAllTurnos = async (req, res) => {
     console.error("🐛 DEBUG: Error stack:", error.stack);
     
     // Si es un error de asociaciones de Sequelize, mostrar detalles adicionales
-    if (error.name === 'SequelizeAssociationError' || error.message.includes('associated')) {
+    if (error.name === "SequelizeAssociationError" || error.message.includes("associated")) {
       console.error("🐛 DEBUG: Error de asociaciones detectado");
       console.error("🐛 DEBUG: Error completo:", JSON.stringify(error, null, 2));
     }
 
     // Intentar identificar qué include está causando el problema
-    if (error.message.includes('PersonalSeguridad')) {
+    if (error.message.includes("PersonalSeguridad")) {
       console.error("🐛 DEBUG: El error está relacionado con PersonalSeguridad");
       console.error("🐛 DEBUG: Revisando includes de PersonalSeguridad...");
       
@@ -207,7 +207,7 @@ export const getAllTurnos = async (req, res) => {
       error: error.message,
       debug: {
         name: error.name,
-        isAssociationError: error.name === 'SequelizeAssociationError' || error.message.includes('associated'),
+        isAssociationError: error.name === "SequelizeAssociationError" || error.message.includes("associated"),
         url: req.originalUrl,
         method: req.method,
         query: req.query
@@ -250,6 +250,11 @@ export const getTurnoById = async (req, res) => {
         {
           model: Usuario,
           as: "usuarioRegistro",
+        },
+        {
+          model: Sector,
+          as: "sector",
+          attributes: ["id", "sector_code", "nombre"]
         },
       ],
     });
@@ -305,7 +310,7 @@ export const createTurno = async (req, res) => {
     let supervisorIdFinal = supervisor_id;
     if (!supervisor_id && sector_id) {
       const sector = await Sector.findByPk(sector_id, {
-        attributes: ['supervisor_id']
+        attributes: ["supervisor_id"]
       });
       if (sector) {
         supervisorIdFinal = sector.supervisor_id;
