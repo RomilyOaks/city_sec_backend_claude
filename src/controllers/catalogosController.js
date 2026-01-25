@@ -37,7 +37,7 @@ const getTiposNovedad = async (req, res) => {
         ? [
             {
               model: SubtipoNovedad,
-              as: "subtipos",
+              as: "tipoNovedadSubtipoNovedad",
               where: { estado: 1, deleted_at: null },
               required: false,
             },
@@ -157,7 +157,7 @@ const getSubtiposNovedad = async (req, res) => {
       include: [
         {
           model: TipoNovedad,
-          as: "tipo",
+          as: "subtipoNovedadTipoNovedad",
           attributes: ["id", "nombre", "tipo_code"],
         },
       ],
@@ -244,7 +244,7 @@ const createSubtipoNovedad = async (req, res) => {
     });
 
     const subtipoCompleto = await SubtipoNovedad.findByPk(nuevoSubtipo.id, {
-      include: [{ model: TipoNovedad, as: "tipo" }],
+      include: [{ model: TipoNovedad, as: "subtipoNovedadTipoNovedad" }],
     });
 
     res.status(201).json({
@@ -562,7 +562,7 @@ const createUnidad = async (req, res) => {
     });
 
     const unidadCompleta = await UnidadOficina.findByPk(nuevaUnidad.id, {
-      include: [{ model: Ubigeo, as: "ubigeo_rel" }],
+      include: [{ model: Ubigeo, as: "unidadOficinaUbigeo" }],
     });
 
     res.status(201).json({

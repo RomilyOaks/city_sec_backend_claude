@@ -182,7 +182,7 @@ export const createHistorialEstado = async (req, res) => {
           },
           {
             model: Usuario,
-            as: "usuarioCambio",
+            as: "historialEstadoNovedadUsuario",
             attributes: ["id", "username", "nombres", "apellidos"],
           },
         ],
