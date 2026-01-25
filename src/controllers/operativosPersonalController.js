@@ -311,17 +311,17 @@ export const getPersonalById = async (req, res) => {
         },
         {
           model: Usuario,
-          as: "creadoPorUsuario",
+          as: "creadorOperativosPersonal",
           attributes: ["id", "username", "nombres", "apellidos"]
         },
         {
           model: Usuario,
-          as: "actualizadoPorUsuario",
+          as: "actualizadorOperativosPersonal",
           attributes: ["id", "username", "nombres", "apellidos"]
         },
         {
           model: Usuario,
-          as: "eliminadoPorUsuario",
+          as: "eliminadorOperativosPersonal",
           attributes: ["id", "username", "nombres", "apellidos"]
         },
       ],
@@ -625,17 +625,17 @@ export const getCuadrantesByPersonalAsignado = async (req, res) => {
             },
             {
               model: Usuario,
-              as: "creadoPorUsuario",
+              as: "creadorOperativosPersonalCuadrantes",
               attributes: ["id", "username", "nombres", "apellidos"]
             },
             {
               model: Usuario,
-              as: "actualizadoPorUsuario",
+              as: "actualizadorOperativosPersonalCuadrantes",
               attributes: ["id", "username", "nombres", "apellidos"]
             },
             {
               model: Usuario,
-              as: "eliminadoPorUsuario",
+              as: "eliminadorOperativosPersonalCuadrantes",
               attributes: ["id", "username", "nombres", "apellidos"]
             },
           ],
@@ -701,7 +701,7 @@ export const createCuadranteForPersonal = async (req, res) => {
         },
         {
           model: Usuario,
-          as: "creadoPorUsuario",
+          as: "creadorOperativosPersonalCuadrantes",
           attributes: ["id", "username", "nombres", "apellidos"]
         },
       ],
@@ -779,12 +779,12 @@ export const updateCuadranteForPersonal = async (req, res) => {
         },
         {
           model: Usuario,
-          as: "creadoPorUsuario",
+          as: "creadorOperativosPersonalCuadrantes",
           attributes: ["id", "username", "nombres", "apellidos"]
         },
         {
           model: Usuario,
-          as: "actualizadoPorUsuario",
+          as: "actualizadorOperativosPersonalCuadrantes",
           attributes: ["id", "username", "nombres", "apellidos"]
         },
       ],
