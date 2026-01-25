@@ -864,17 +864,17 @@ export const getCuadrantesByVehiculoAsignado = async (req, res) => {
             },
             {
               model: Usuario,
-              as: "creadoPorUsuario",
+              as: "creadorOperativosVehiculosCuadrantes",
               attributes: ["id", "username", "nombres", "apellidos"]
             },
             {
               model: Usuario,
-              as: "actualizadoPorUsuario",
+              as: "actualizadorOperativosVehiculosCuadrantes",
               attributes: ["id", "username", "nombres", "apellidos"]
             },
             {
               model: Usuario,
-              as: "eliminadoPorUsuario",
+              as: "eliminadorOperativosVehiculosCuadrantes",
               attributes: ["id", "username", "nombres", "apellidos"]
             },
           ],
