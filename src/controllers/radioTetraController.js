@@ -169,6 +169,65 @@ const radioTetraController = {
 
   /**
    * =====================================================
+   * GET /api/radios-tetra/para-dropdown
+   * =====================================================
+   * Listar todos los radios activos para dropdown con precarga
+   * Incluye personal_seguridad_id para identificar radios ya asignados
+   *
+   * Uso en Frontend:
+   * - Cargar este endpoint al abrir panel de edición
+   * - Buscar en la lista si conductor_id o copiloto_id coincide con personal_seguridad_id
+   * - Si coincide, preseleccionar ese radio en el dropdown
+   */
+  getRadiosParaDropdown: async (req, res) => {
+    try {
+      const radios = await RadioTetra.findAll({
+        where: {
+          estado: true,
+          deleted_at: null,
+        },
+        include: [
+          {
+            model: PersonalSeguridad,
+            as: "personalAsignado",
+            attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+            required: false,
+          },
+        ],
+        attributes: ["id", "radio_tetra_code", "descripcion", "personal_seguridad_id", "estado"],
+        order: [["radio_tetra_code", "ASC"]],
+      });
+
+      // Separar en disponibles y asignados para facilitar al frontend
+      const disponibles = radios.filter(r => !r.personal_seguridad_id);
+      const asignados = radios.filter(r => r.personal_seguridad_id);
+
+      return res.status(200).json(
+        formatResponse(
+          true,
+          "Radios para dropdown obtenidos exitosamente",
+          {
+            radios,
+            resumen: {
+              total: radios.length,
+              disponibles: disponibles.length,
+              asignados: asignados.length,
+            },
+            // Helper para frontend: buscar radio por personal_id
+            // Frontend puede usar: radios.find(r => r.personal_seguridad_id === conductorId)
+          }
+        )
+      );
+    } catch (error) {
+      console.error("Error al obtener radios para dropdown:", error);
+      return res
+        .status(500)
+        .json(formatErrorResponse("Error al obtener radios para dropdown", error));
+    }
+  },
+
+  /**
+   * =====================================================
    * GET /api/radios-tetra/:id
    * =====================================================
    * Obtener un radio por su ID

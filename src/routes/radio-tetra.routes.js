@@ -88,6 +88,33 @@ router.get(
 
 /**
  * =====================================================
+ * GET /api/radios-tetra/para-dropdown
+ * =====================================================
+ * Listar todos los radios activos para dropdown con precarga
+ * Incluye personal_seguridad_id para identificar radios ya asignados
+ *
+ * Uso en Frontend (panel edición operativos_vehiculos):
+ * 1. Cargar este endpoint al abrir el panel
+ * 2. Buscar si conductor_id coincide con algún radio.personal_seguridad_id
+ * 3. Si coincide, preseleccionar ese radio en el dropdown
+ *
+ * Respuesta incluye:
+ * - radios[]: lista completa con personal_seguridad_id
+ * - resumen: { total, disponibles, asignados }
+ *
+ * @access  Requiere permiso de lectura
+ */
+router.get(
+  "/para-dropdown",
+  verificarToken,
+  requireAnyPermission(["catalogos.radios_tetra.read"]),
+  (req, res, next) => {
+    return radioTetraController.getRadiosParaDropdown(req, res, next);
+  }
+);
+
+/**
+ * =====================================================
  * GET /api/radios-tetra
  * =====================================================
  * Listar todos los radios con filtros y paginación
