@@ -13,6 +13,7 @@ import {
   validateCreate,
   validateUpdate,
   validateId,
+  validateEstadoActualId,
   validateQuery,
 } from "../validators/estado-novedad.validator.js";
 
@@ -40,7 +41,7 @@ router.get("/", validateQuery, estadoNovedadController.getAll);
  *   estados con orden >= 2 (Despachado, En Atención, Resuelto, etc.)
  * - Esto evita que el usuario pueda "retroceder" en el workflow
  */
-router.get("/siguientes/:estadoActualId", validateId, estadoNovedadController.getSiguientes);
+router.get("/siguientes/:estadoActualId", validateEstadoActualId, estadoNovedadController.getSiguientes);
 
 /**
  * @route GET /api/v1/estados-novedad/:id
