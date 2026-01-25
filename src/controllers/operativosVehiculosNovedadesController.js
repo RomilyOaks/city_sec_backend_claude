@@ -21,9 +21,9 @@
  */
 
 import models from "../models/index.js";
-const { 
-  OperativosVehiculosNovedades, 
-  OperativosVehiculosCuadrantes, 
+const {
+  OperativosVehiculosNovedades,
+  OperativosVehiculosCuadrantes,
   OperativosVehiculos,
   OperativosTurno,
   Novedad,
@@ -31,7 +31,8 @@ const {
   Cuadrante,
   PersonalSeguridad,
   Usuario,
-  Sector
+  Sector,
+  EstadoNovedad
 } = models;
 
 /**
@@ -202,13 +203,18 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
           as: "novedad",
         },
         {
+          model: EstadoNovedad,
+          as: "estadoNovedadVehiculo",
+          attributes: ["id", "nombre", "color_hex", "icono", "orden"]
+        },
+        {
           model: Usuario,
-          as: "creadoPor",
+          as: "creadorOperativosVehiculosNovedades",
           attributes: ["id", "username", "nombres", "apellidos"]
         },
         {
           model: Usuario,
-          as: "actualizadoPor",
+          as: "actualizadorOperativosVehiculosNovedades",
           attributes: ["id", "username", "nombres", "apellidos"]
         }
       ],
@@ -344,6 +350,7 @@ export const createNovedadInCuadrante = async (req, res) => {
 
     const newNovedadAsignada = await OperativosVehiculosNovedades.create({
       novedad_id: req.body.novedad_id,
+      estado_novedad_id: req.body.estado_novedad_id || 1,
       reportado: req.body.reportado || new Date(),
       atendido: req.body.atendido,
       estado: req.body.estado || 1,
@@ -365,8 +372,13 @@ export const createNovedadInCuadrante = async (req, res) => {
             as: "novedad",
           },
           {
+            model: EstadoNovedad,
+            as: "estadoNovedadVehiculo",
+            attributes: ["id", "nombre", "color_hex", "icono", "orden"]
+          },
+          {
             model: Usuario,
-            as: "creadoPor",
+            as: "creadorOperativosVehiculosNovedades",
             attributes: ["id", "username", "nombres", "apellidos"]
           }
         ]
@@ -455,13 +467,18 @@ export const updateNovedadInCuadrante = async (req, res) => {
             as: "novedad",
           },
           {
+            model: EstadoNovedad,
+            as: "estadoNovedadVehiculo",
+            attributes: ["id", "nombre", "color_hex", "icono", "orden"]
+          },
+          {
             model: Usuario,
-            as: "creadoPor",
+            as: "creadorOperativosVehiculosNovedades",
             attributes: ["id", "username", "nombres", "apellidos"]
           },
           {
             model: Usuario,
-            as: "actualizadoPor",
+            as: "actualizadorOperativosVehiculosNovedades",
             attributes: ["id", "username", "nombres", "apellidos"]
           }
         ]

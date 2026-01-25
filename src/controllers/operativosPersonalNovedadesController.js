@@ -34,7 +34,8 @@ const {
   Cuadrante,
   PersonalSeguridad,
   Usuario,
-  Sector
+  Sector,
+  EstadoNovedad
 } = models;
 
 /**
@@ -197,6 +198,11 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
           as: "novedad",
         },
         {
+          model: EstadoNovedad,
+          as: "estadoNovedadPersonal",
+          attributes: ["id", "nombre", "color_hex", "icono", "orden"]
+        },
+        {
           model: Usuario,
           as: "creadorOperativosPersonalNovedades",
           attributes: ["id", "username", "nombres", "apellidos"]
@@ -326,6 +332,7 @@ export const createNovedadInCuadrante = async (req, res) => {
 
     const newNovedadAsignada = await OperativosPersonalNovedades.create({
       novedad_id: req.body.novedad_id,
+      estado_novedad_id: req.body.estado_novedad_id || 1,
       reportado: req.body.reportado || new Date(),
       atendido: req.body.atendido,
       prioridad: req.body.prioridad || "MEDIA",
@@ -344,6 +351,11 @@ export const createNovedadInCuadrante = async (req, res) => {
           {
             model: Novedad,
             as: "novedad",
+          },
+          {
+            model: EstadoNovedad,
+            as: "estadoNovedadPersonal",
+            attributes: ["id", "nombre", "color_hex", "icono", "orden"]
           },
           {
             model: Usuario,
@@ -429,6 +441,11 @@ export const updateNovedadInCuadrante = async (req, res) => {
           {
             model: Novedad,
             as: "novedad",
+          },
+          {
+            model: EstadoNovedad,
+            as: "estadoNovedadPersonal",
+            attributes: ["id", "nombre", "color_hex", "icono", "orden"]
           },
           {
             model: Usuario,

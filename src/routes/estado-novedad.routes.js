@@ -22,15 +22,29 @@ const router = express.Router();
 router.use(verificarToken);
 
 /**
- * @route GET /api/v1/tipos-novedad
- * @desc  Listar tipos de novedad
+ * @route GET /api/v1/estados-novedad
+ * @desc  Listar estados de novedad
  * @access Private (todos autenticados)
  */
 router.get("/", validateQuery, estadoNovedadController.getAll);
 
 /**
- * @route GET /api/v1/tipos-novedad/:id
- * @desc  Obtener tipo de novedad por ID
+ * @route GET /api/v1/estados-novedad/siguientes/:estadoActualId
+ * @desc  Obtener estados siguientes para dropdown (orden >= estado actual)
+ * @access Private (todos autenticados)
+ *
+ * NOTA: Esta ruta debe estar ANTES de /:id para evitar conflictos
+ *
+ * USO EN FRONTEND:
+ * - Cuando la novedad está en estado 2 (Despachado), el dropdown solo mostrará
+ *   estados con orden >= 2 (Despachado, En Atención, Resuelto, etc.)
+ * - Esto evita que el usuario pueda "retroceder" en el workflow
+ */
+router.get("/siguientes/:estadoActualId", validateId, estadoNovedadController.getSiguientes);
+
+/**
+ * @route GET /api/v1/estados-novedad/:id
+ * @desc  Obtener estado de novedad por ID
  * @access Private (todos autenticados)
  */
 router.get("/:id", validateId, estadoNovedadController.getById);

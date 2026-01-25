@@ -377,6 +377,73 @@ const remove = async (req, res) => {
 };
 
 // ==========================================
+// OBTENER ESTADOS SIGUIENTES (GET /siguientes/:estadoActualId)
+// ==========================================
+
+/**
+ * Obtener estados siguientes para dropdown
+ * Solo devuelve estados con orden >= al estado actual
+ * Útil para que el frontend muestre solo estados válidos para transición
+ *
+ * @param {number} estadoActualId - ID del estado actual de la novedad
+ * @returns {Array} Lista de estados con orden >= al estado actual
+ *
+ * EJEMPLO:
+ * Si estado actual es 2 (Despachado, orden=2), retorna estados con orden >= 2
+ * Es decir: Despachado (2), En Atención (3), Resuelto (4), Cerrado (5), etc.
+ */
+const getSiguientes = async (req, res) => {
+  try {
+    const { estadoActualId } = req.params;
+
+    // Obtener el estado actual para conocer su orden
+    const estadoActual = await EstadoNovedad.findOne({
+      where: { id: estadoActualId, deleted_at: null },
+    });
+
+    if (!estadoActual) {
+      return res.status(404).json({
+        success: false,
+        message: "Estado actual no encontrado",
+      });
+    }
+
+    // Obtener estados con orden >= al orden del estado actual
+    const estadosSiguientes = await EstadoNovedad.findAll({
+      where: {
+        orden: { [Op.gte]: estadoActual.orden },
+        estado: true,
+        deleted_at: null,
+      },
+      order: [["orden", "ASC"]],
+      attributes: ["id", "nombre", "color_hex", "icono", "orden", "es_final", "descripcion"],
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Estados siguientes obtenidos exitosamente",
+      data: estadosSiguientes,
+      estadoActual: {
+        id: estadoActual.id,
+        nombre: estadoActual.nombre,
+        orden: estadoActual.orden,
+      },
+      info: {
+        total: estadosSiguientes.length,
+        descripcion: "Solo se muestran estados con orden >= al estado actual para garantizar transiciones válidas",
+      },
+    });
+  } catch (error) {
+    console.error("Error en getSiguientes estados:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener estados siguientes",
+      error: error.message,
+    });
+  }
+};
+
+// ==========================================
 // EXPORTAR
 // ==========================================
 
@@ -386,4 +453,5 @@ export default {
   create,
   update,
   remove,
+  getSiguientes,
 };
