@@ -83,13 +83,32 @@ export const getHistorialByNovedad = async (req, res) => {
 };
 
 /**
- * Registrar cambio de estado manual
+ * Registrar cambio de estado o agregar observaciones/acciones al historial
  * POST /api/v1/novedades/:novedadId/historial
+ *
+ * CASOS DE USO:
+ * 1. Cambiar estado de la novedad (estado_nuevo_id diferente al actual)
+ * 2. Agregar observaciones/acciones sin cambiar estado (estado_nuevo_id igual al actual o no enviado)
+ *
+ * PAYLOAD:
+ * {
+ *   "estado_nuevo_id": 2,           // Opcional si solo se agregan observaciones
+ *   "observaciones": "Texto...",    // Requerido
+ *   "metadata": {}                  // Opcional
+ * }
  */
 export const createHistorialEstado = async (req, res) => {
   try {
     const { novedadId } = req.params;
-    const { estado_nuevo_id, observaciones } = req.body;
+    const { estado_nuevo_id, observaciones, metadata } = req.body;
+
+    // Verificar que se envíen observaciones
+    if (!observaciones || observaciones.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Las observaciones son requeridas",
+      });
+    }
 
     // Verificar que la novedad existe
     const novedad = await Novedad.findOne({
@@ -103,16 +122,21 @@ export const createHistorialEstado = async (req, res) => {
       });
     }
 
-    // Verificar que el estado nuevo existe
-    const estadoNuevo = await EstadoNovedad.findByPk(estado_nuevo_id);
-    if (!estadoNuevo) {
-      return res.status(404).json({
-        success: false,
-        message: "Estado no encontrado",
-      });
-    }
-
     const estadoAnteriorId = novedad.estado_novedad_id;
+
+    // Determinar el estado nuevo (si no se envía, mantener el actual)
+    const estadoNuevoId = estado_nuevo_id || estadoAnteriorId;
+
+    // Verificar que el estado nuevo existe (si se especificó uno diferente)
+    if (estado_nuevo_id && estado_nuevo_id !== estadoAnteriorId) {
+      const estadoNuevo = await EstadoNovedad.findByPk(estado_nuevo_id);
+      if (!estadoNuevo) {
+        return res.status(404).json({
+          success: false,
+          message: "Estado no encontrado",
+        });
+      }
+    }
 
     // Calcular tiempo en estado anterior
     const tiempoEstado = Math.floor(
@@ -123,20 +147,23 @@ export const createHistorialEstado = async (req, res) => {
     const nuevoHistorial = await HistorialEstadoNovedad.create({
       novedad_id: novedadId,
       estado_anterior_id: estadoAnteriorId,
-      estado_nuevo_id,
+      estado_nuevo_id: estadoNuevoId,
       usuario_id: req.user.id,
       tiempo_en_estado_min: tiempoEstado,
       observaciones,
+      metadata: metadata || null,
       fecha_cambio: getNowInTimezone(),
       created_by: req.user.id,
       updated_by: req.user.id,
     });
 
-    // Actualizar estado de la novedad
-    await novedad.update({
-      estado_novedad_id: estado_nuevo_id,
-      updated_by: req.user.id,
-    });
+    // Solo actualizar estado de la novedad si realmente cambió
+    if (estadoNuevoId !== estadoAnteriorId) {
+      await novedad.update({
+        estado_novedad_id: estadoNuevoId,
+        updated_by: req.user.id,
+      });
+    }
 
     // Obtener el registro con las relaciones
     const historialCompleto = await HistorialEstadoNovedad.findByPk(
@@ -162,16 +189,21 @@ export const createHistorialEstado = async (req, res) => {
       }
     );
 
+    // Mensaje según si hubo cambio de estado o solo observaciones
+    const mensaje = estadoNuevoId !== estadoAnteriorId
+      ? "Cambio de estado registrado exitosamente"
+      : "Observaciones/acciones registradas exitosamente";
+
     res.status(201).json({
       success: true,
-      message: "Cambio de estado registrado exitosamente",
+      message: mensaje,
       data: historialCompleto,
     });
   } catch (error) {
     console.error("❌ Error en createHistorialEstado:", error);
     res.status(500).json({
       success: false,
-      message: "Error al registrar el cambio de estado",
+      message: "Error al registrar en el historial",
       error: error.message,
     });
   }
