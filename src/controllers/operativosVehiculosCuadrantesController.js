@@ -115,7 +115,7 @@ export const createCuadranteInVehiculo = async (req, res) => {
     console.log("🐛 DEBUG: req.body TIPO:", typeof req.body);
     console.log("🐛 DEBUG: req.body CONTENIDO:", JSON.stringify(req.body, null, 2));
     console.log("🐛 DEBUG: req.body KEYS:", Object.keys(req.body));
-    console.log("🐛 DEBUG: req.body.hasOwnProperty('observaciones'):", req.body.hasOwnProperty('observaciones'));
+    console.log("🐛 DEBUG: req.body.hasOwnProperty('observaciones'):", req.body.hasOwnProperty("observaciones"));
     console.log("🐛 DEBUG: req.body.observaciones:", req.body.observaciones);
     console.log("🐛 DEBUG: Usuario creando:", created_by);
 
@@ -169,18 +169,18 @@ export const createCuadranteInVehiculo = async (req, res) => {
     }
 
     // 🔥 CAMPOS OPCIONALES - MANEJO EXPLÍCITO
-    if (req.body.hasOwnProperty('observaciones')) {
-      createData.observaciones = req.body.observaciones === '' ? null : req.body.observaciones;
+    if (req.body.hasOwnProperty("observaciones")) {
+      createData.observaciones = req.body.observaciones === "" ? null : req.body.observaciones;
       console.log("🔥🔥🔥 OBSERVACIONES PROCESADAS:", createData.observaciones);
     }
 
-    if (req.body.hasOwnProperty('incidentes_reportados')) {
-      createData.incidentes_reportados = req.body.incidentes_reportados === '' ? null : req.body.incidentes_reportados;
+    if (req.body.hasOwnProperty("incidentes_reportados")) {
+      createData.incidentes_reportados = req.body.incidentes_reportados === "" ? null : req.body.incidentes_reportados;
       console.log("🔥🔥🔥 INCIDENTES_REPORTADOS PROCESADOS:", createData.incidentes_reportados);
     }
 
-    if (req.body.hasOwnProperty('hora_salida')) {
-      createData.hora_salida = req.body.hora_salida === '' ? null : req.body.hora_salida;
+    if (req.body.hasOwnProperty("hora_salida")) {
+      createData.hora_salida = req.body.hora_salida === "" ? null : req.body.hora_salida;
       console.log("🔥🔥🔥 HORA_SALIDA PROCESADA:", createData.hora_salida);
     }
 
@@ -200,6 +200,11 @@ export const createCuadranteInVehiculo = async (req, res) => {
           model: models.Cuadrante,
           as: "datosCuadrante",
         },
+        {
+          model: models.Usuario,
+          as: "creadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
       ],
     });
 
@@ -215,7 +220,7 @@ export const createCuadranteInVehiculo = async (req, res) => {
     console.error("🔥🔥🔥 Error stack:", error.stack);
     
     // Manejar errores específicos de Sequelize
-    if (error.name === 'SequelizeValidationError') {
+    if (error.name === "SequelizeValidationError") {
       const errors = error.errors.map(err => ({
         field: err.path,
         message: err.message,
@@ -281,7 +286,7 @@ export const updateCuadranteInVehiculo = async (req, res) => {
 
     // Validar que el turno esté ACTIVO para permitir edición
     const estadoTurno = cuadranteAsignado.operativoVehiculo?.turno?.estado;
-    if (estadoTurno !== 'ACTIVO') {
+    if (estadoTurno !== "ACTIVO") {
       console.log("🐛 DEBUG: Turno no está ACTIVO, estado:", estadoTurno);
       return res.status(400).json({
         status: "error",
@@ -296,7 +301,7 @@ export const updateCuadranteInVehiculo = async (req, res) => {
     console.log("🐛 DEBUG: Turno ACTIVO validado, procediendo con actualización...");
 
     // Campos permitidos cuando el turno está ACTIVO
-    const camposPermitidos = ['hora_salida', 'observaciones', 'incidentes_reportados'];
+    const camposPermitidos = ["hora_salida", "observaciones", "incidentes_reportados"];
     const updateData = {};
     
     console.log("🐛 DEBUG: Procesando campos permitidos:", camposPermitidos);
@@ -306,7 +311,7 @@ export const updateCuadranteInVehiculo = async (req, res) => {
       if (req.body.hasOwnProperty(campo)) {
         console.log(`🐛 DEBUG: Procesando campo '${campo}':`, req.body[campo]);
         
-        if (campo === 'hora_salida' && req.body[campo] === '') {
+        if (campo === "hora_salida" && req.body[campo] === "") {
           // Permitir hora_salida vacía (null)
           updateData[campo] = null;
           console.log("🐛 DEBUG: hora_salida vacía, estableciendo a null");
@@ -356,6 +361,16 @@ export const updateCuadranteInVehiculo = async (req, res) => {
           model: models.Cuadrante,
           as: "datosCuadrante",
         },
+        {
+          model: models.Usuario,
+          as: "creadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
+        {
+          model: models.Usuario,
+          as: "actualizadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
       ],
     });
 
@@ -371,7 +386,7 @@ export const updateCuadranteInVehiculo = async (req, res) => {
     console.error("🐛 DEBUG: Error stack:", error.stack);
 
     // Manejar errores específicos de Sequelize
-    if (error.name === 'SequelizeUniqueConstraintError') {
+    if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(400).json({
         status: "error",
         message: "Ya existe una asignación para este vehículo, cuadrante y hora de ingreso",
@@ -379,7 +394,7 @@ export const updateCuadranteInVehiculo = async (req, res) => {
       });
     }
 
-    if (error.name === 'SequelizeValidationError') {
+    if (error.name === "SequelizeValidationError") {
       const errors = error.errors.map(err => ({
         field: err.path,
         message: err.message,

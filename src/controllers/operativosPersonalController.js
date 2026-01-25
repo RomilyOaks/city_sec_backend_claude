@@ -309,6 +309,21 @@ export const getPersonalById = async (req, res) => {
           as: "radio_tetra",
           attributes: ["id", "radio_tetra_code", "descripcion"],
         },
+        {
+          model: Usuario,
+          as: "creadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
+        {
+          model: Usuario,
+          as: "actualizadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
+        {
+          model: Usuario,
+          as: "eliminadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
       ],
     });
 
@@ -608,6 +623,21 @@ export const getCuadrantesByPersonalAsignado = async (req, res) => {
               model: Cuadrante,
               as: "datosCuadrante",
             },
+            {
+              model: Usuario,
+              as: "creadoPorUsuario",
+              attributes: ["id", "username", "nombres", "apellidos"]
+            },
+            {
+              model: Usuario,
+              as: "actualizadoPorUsuario",
+              attributes: ["id", "username", "nombres", "apellidos"]
+            },
+            {
+              model: Usuario,
+              as: "eliminadoPorUsuario",
+              attributes: ["id", "username", "nombres", "apellidos"]
+            },
           ],
         },
       ],
@@ -662,10 +692,25 @@ export const createCuadranteForPersonal = async (req, res) => {
       created_by,
     });
 
+    // Recargar con datos completos para respuesta
+    const cuadranteCompleto = await OperativosPersonalCuadrantes.findByPk(nuevoCuadranteAsignado.id, {
+      include: [
+        {
+          model: Cuadrante,
+          as: "datosCuadrante",
+        },
+        {
+          model: Usuario,
+          as: "creadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
+      ],
+    });
+
     res.status(201).json({
       success: true,
       message: "Cuadrante asignado al personal correctamente",
-      data: nuevoCuadranteAsignado,
+      data: cuadranteCompleto,
     });
   } catch (error) {
     res.status(500).json({
@@ -725,10 +770,30 @@ export const updateCuadranteForPersonal = async (req, res) => {
       updated_by,
     });
 
+    // Recargar con datos completos para respuesta
+    const asignacionActualizada = await OperativosPersonalCuadrantes.findByPk(asignacion.id, {
+      include: [
+        {
+          model: Cuadrante,
+          as: "datosCuadrante",
+        },
+        {
+          model: Usuario,
+          as: "creadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
+        {
+          model: Usuario,
+          as: "actualizadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
+      ],
+    });
+
     res.status(200).json({
       success: true,
       message: "Asignación de cuadrante actualizada correctamente",
-      data: asignacion,
+      data: asignacionActualizada,
     });
   } catch (error) {
     res.status(500).json({
