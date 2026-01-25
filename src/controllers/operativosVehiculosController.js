@@ -386,6 +386,21 @@ export const getVehiculoById = async (req, res) => {
           as: "radio_tetra",
           attributes: ["id", "radio_tetra_code", "descripcion"],
         },
+        {
+          model: Usuario,
+          as: "creadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
+        {
+          model: Usuario,
+          as: "actualizadoPorUsuario", 
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
+        {
+          model: Usuario,
+          as: "eliminadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
       ],
     });
 
@@ -735,6 +750,21 @@ export const getCuadrantesByVehiculoAsignado = async (req, res) => {
               model: Cuadrante,
               as: "datosCuadrante",
             },
+            {
+              model: Usuario,
+              as: "creadoPorUsuario",
+              attributes: ["id", "username", "nombres", "apellidos"]
+            },
+            {
+              model: Usuario,
+              as: "actualizadoPorUsuario",
+              attributes: ["id", "username", "nombres", "apellidos"]
+            },
+            {
+              model: Usuario,
+              as: "eliminadoPorUsuario",
+              attributes: ["id", "username", "nombres", "apellidos"]
+            },
           ],
         },
       ],
@@ -785,7 +815,7 @@ export const createCuadranteForVehiculo = async (req, res) => {
     let horaIngresoCompleta = hora_ingreso;
     if (hora_ingreso && hora_ingreso.match(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)) {
       const hoy = new Date();
-      const [horas, minutos] = hora_ingreso.split(':');
+      const [horas, minutos] = hora_ingreso.split(":");
       hoy.setHours(parseInt(horas), parseInt(minutos), 0, 0);
       horaIngresoCompleta = hoy.toISOString();
     }
