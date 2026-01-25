@@ -706,6 +706,49 @@ router.get(
   }
 );
 
+/**
+ * =====================================================
+ * GET /api/personal/buscar-para-dropdown
+ * =====================================================
+ * Búsqueda optimizada de personal para dropdowns
+ * 
+ * Query params:
+ * - q: término de búsqueda (mínimo 3 caracteres)
+ * - limit: número de resultados (default 20, max 50)
+ * 
+ * @access Requiere permiso de lectura de personal
+ */
+router.get(
+  "/buscar-para-dropdown",
+  verificarToken,
+  catalogRateLimit, // 🔥 ANTI-BUCLE: Máximo 10 solicitudes/minuto
+  requireAnyPermission(["personal.personal.read"]),
+  [
+    query("q")
+      .notEmpty()
+      .withMessage("El término de búsqueda es requerido")
+      .isLength({ min: 3 })
+      .withMessage("El término de búsqueda debe tener al menos 3 caracteres")
+      .isString()
+      .withMessage("El término de búsqueda debe ser texto"),
+    query("limit")
+      .optional()
+      .isInt({ min: 1, max: 50 })
+      .withMessage("limit debe estar entre 1 y 50"),
+    handleValidationErrors,
+  ],
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Buscar personal para dropdown'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['q'] = { in: 'query', required: true, type: 'string', example: 'Pérez' }
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', example: 20 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[400] = { description: 'Término de búsqueda inválido' }
+    return personalController.buscarPersonalParaDropdown(req, res, next);
+  }
+);
+
 router.post(
   "/",
   verificarToken,
