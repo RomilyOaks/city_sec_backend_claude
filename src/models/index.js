@@ -566,6 +566,20 @@ Novedad.hasMany(OperativosVehiculosNovedades, {
 });
 
 /**
+ * Relación: OperativosVehiculosNovedades -> EstadoNovedad (Many-to-One)
+ * Cada registro de atención de vehículo tiene un estado de novedad
+ */
+OperativosVehiculosNovedades.belongsTo(EstadoNovedad, {
+  foreignKey: "estado_novedad_id",
+  as: "estadoNovedadVehiculo",
+});
+
+EstadoNovedad.hasMany(OperativosVehiculosNovedades, {
+  foreignKey: "estado_novedad_id",
+  as: "operativosVehiculosNovedades",
+});
+
+/**
  * Relación: Novedad -> RadioTetra (Many-to-One)
  * Una novedad puede tener un radio TETRA asociado
  */
@@ -681,6 +695,20 @@ Novedad.hasMany(OperativosPersonalNovedades, {
 OperativosPersonalNovedades.belongsTo(Novedad, {
   foreignKey: "novedad_id",
   as: "novedad",
+});
+
+/**
+ * Relación: OperativosPersonalNovedades -> EstadoNovedad (Many-to-One)
+ * Cada registro de atención tiene un estado de novedad
+ */
+OperativosPersonalNovedades.belongsTo(EstadoNovedad, {
+  foreignKey: "estado_novedad_id",
+  as: "estadoNovedadPersonal",
+});
+
+EstadoNovedad.hasMany(OperativosPersonalNovedades, {
+  foreignKey: "estado_novedad_id",
+  as: "operativosPersonalNovedades",
 });
 
 // Auditoría OperativosPersonal
