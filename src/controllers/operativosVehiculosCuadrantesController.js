@@ -202,7 +202,7 @@ export const createCuadranteInVehiculo = async (req, res) => {
         },
         {
           model: models.Usuario,
-          as: "creadoPorUsuario",
+          as: "creadorOperativosVehiculosCuadrantes",
           attributes: ["id", "username", "nombres", "apellidos"]
         },
       ],
@@ -363,12 +363,12 @@ export const updateCuadranteInVehiculo = async (req, res) => {
         },
         {
           model: models.Usuario,
-          as: "creadoPorUsuario",
+          as: "creadorOperativosVehiculosCuadrantes",
           attributes: ["id", "username", "nombres", "apellidos"]
         },
         {
           model: models.Usuario,
-          as: "actualizadoPorUsuario",
+          as: "actualizadorOperativosVehiculosCuadrantes",
           attributes: ["id", "username", "nombres", "apellidos"]
         },
       ],
