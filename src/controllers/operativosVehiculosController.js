@@ -36,9 +36,121 @@ const {
 import { Op } from "sequelize";
 
 /**
- * Obtener todos los vehículos operativos con filtros y paginación
- * GET /api/v1/operativos-vehiculos
+ * Obtener un vehículo operativo por ID (general)
+ * GET /api/v1/operativos-vehiculos/:id
  */
+export const getVehiculoByIdGeneral = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const vehiculo = await OperativosVehiculos.findOne({
+      where: {
+        id,
+        deleted_at: null,
+        estado_registro: 1,
+      },
+      include: [
+        {
+          model: OperativosTurno,
+          as: "turno",
+          include: [
+            {
+              model: PersonalSeguridad,
+              as: "operador",
+              attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+            },
+            {
+              model: PersonalSeguridad,
+              as: "supervisor",
+              attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+            },
+            {
+              model: Sector,
+              as: "sector",
+              attributes: ["id", "nombre", "sector_code"],
+            },
+          ],
+        },
+        {
+          model: Vehiculo,
+          as: "vehiculo",
+          include: [
+            {
+              model: TipoVehiculo,
+              as: "tipo",
+              attributes: ["id", "nombre"],
+            },
+            {
+              model: models.UnidadOficina,
+              as: "unidad",
+              attributes: ["id", "nombre"],
+            },
+          ],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "conductor",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "doc_tipo", "doc_numero"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "copiloto",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "doc_tipo", "doc_numero"],
+        },
+        {
+          model: EstadoOperativoRecurso,
+          as: "estado_operativo",
+          attributes: ["id", "descripcion"],
+        },
+        {
+          model: TipoCopiloto,
+          as: "tipo_copiloto",
+          attributes: ["id", "codigo", "descripcion"],
+        },
+        {
+          model: RadioTetra,
+          as: "radio_tetra",
+          attributes: ["id", "radio_tetra_code", "descripcion"],
+        },
+        {
+          model: Usuario,
+          as: "creadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
+        {
+          model: Usuario,
+          as: "actualizadoPorUsuario", 
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
+        {
+          model: Usuario,
+          as: "eliminadoPorUsuario",
+          attributes: ["id", "username", "nombres", "apellidos"]
+        },
+      ],
+    });
+
+    if (!vehiculo) {
+      return res.status(404).json({
+        success: false,
+        message: "Vehículo operativo no encontrado",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Vehículo operativo obtenido exitosamente",
+      data: vehiculo,
+    });
+  } catch (error) {
+    console.error("Error en getVehiculoByIdGeneral:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener el vehículo operativo",
+      error: error.message,
+    });
+  }
+};
 export const getAllVehiculos = async (req, res) => {
   try {
     const {
