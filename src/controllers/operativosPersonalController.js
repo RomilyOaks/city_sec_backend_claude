@@ -43,6 +43,7 @@ const {
   Sector,
 } = models;
 import { Op } from "sequelize";
+import { obtenerRadioDelPersonal } from "../services/operativosHelperService.js";
 
 /**
  * Obtener todos los registros de personal operativo con filtros y paginación
@@ -393,8 +394,26 @@ export const createPersonalInTurno = async (req, res) => {
       });
     }
 
+    // ========================================
+    // AUTO-POBLAR radio_tetra_id SI NO SE ENVÍA
+    // ========================================
+    // Si no se envía radio_tetra_id, buscar si el personal o sereno tiene radio asignado
+    let radio_tetra_id = req.body.radio_tetra_id || null;
+    if (!radio_tetra_id && (req.body.personal_id || req.body.sereno_id)) {
+      // Primero intentar con el personal principal
+      radio_tetra_id = await obtenerRadioDelPersonal(req.body.personal_id);
+      // Si el personal principal no tiene radio, intentar con el sereno
+      if (!radio_tetra_id && req.body.sereno_id) {
+        radio_tetra_id = await obtenerRadioDelPersonal(req.body.sereno_id);
+      }
+      if (radio_tetra_id) {
+        console.log(`📻 Radio auto-asignado al personal operativo: ${radio_tetra_id}`);
+      }
+    }
+
     const newPersonalAsignado = await OperativosPersonal.create({
       ...req.body,
+      radio_tetra_id, // Usar el radio encontrado (o null si no hay)
       operativo_turno_id: turnoId,
       created_by,
     });
@@ -494,8 +513,33 @@ export const updatePersonalInTurno = async (req, res) => {
       });
     }
 
+    // ========================================
+    // AUTO-POBLAR radio_tetra_id SI NO SE ENVÍA
+    // ========================================
+    // Si no se envía radio_tetra_id, buscar si el personal o sereno tiene radio asignado
+    let radio_tetra_id = req.body.radio_tetra_id;
+
+    // Solo auto-buscar si se está actualizando personal/sereno y no se envía radio_tetra_id
+    if (radio_tetra_id === undefined || radio_tetra_id === null) {
+      const personal_id = req.body.personal_id !== undefined ? req.body.personal_id : personalAsignado.personal_id;
+      const sereno_id = req.body.sereno_id !== undefined ? req.body.sereno_id : personalAsignado.sereno_id;
+
+      if (personal_id || sereno_id) {
+        // Primero intentar con el personal principal
+        radio_tetra_id = await obtenerRadioDelPersonal(personal_id);
+        // Si el personal no tiene radio, intentar con el sereno
+        if (!radio_tetra_id && sereno_id) {
+          radio_tetra_id = await obtenerRadioDelPersonal(sereno_id);
+        }
+        if (radio_tetra_id) {
+          console.log(`📻 Radio auto-asignado en actualización de personal operativo: ${radio_tetra_id}`);
+        }
+      }
+    }
+
     await personalAsignado.update({
       ...req.body,
+      radio_tetra_id: radio_tetra_id !== undefined ? radio_tetra_id : personalAsignado.radio_tetra_id,
       updated_by,
     });
 

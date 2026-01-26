@@ -15,7 +15,7 @@
  */
 
 import models from "../models/index.js";
-const { OperativosTurno, HorariosTurnos, Sector } = models;
+const { OperativosTurno, HorariosTurnos, Sector, RadioTetra } = models;
 import { getDateInTimezone, getTimeInTimezone } from "../utils/dateHelper.js";
 
 /**
@@ -237,7 +237,39 @@ export const findOperativosTurnos = async (params) => {
   }
 };
 
+/**
+ * Obtiene el radio TETRA asignado a un personal de seguridad
+ * @param {number} personalId - ID del personal de seguridad
+ * @returns {number|null} ID del radio asignado o null si no tiene
+ */
+export const obtenerRadioDelPersonal = async (personalId) => {
+  if (!personalId) return null;
+
+  try {
+    const radio = await RadioTetra.findOne({
+      where: {
+        personal_seguridad_id: personalId,
+        estado: true,
+        deleted_at: null
+      },
+      attributes: ["id", "radio_tetra_code"]
+    });
+
+    if (radio) {
+      console.log(`📻 Radio encontrado para personal ${personalId}: ID=${radio.id}, código=${radio.radio_tetra_code}`);
+      return radio.id;
+    }
+
+    console.log(`📻 No se encontró radio asignado para personal ${personalId}`);
+    return null;
+  } catch (error) {
+    console.error(`❌ Error al buscar radio del personal ${personalId}:`, error.message);
+    return null;
+  }
+};
+
 export default {
   findOrCreateOperativoTurno,
-  findOperativosTurnos
+  findOperativosTurnos,
+  obtenerRadioDelPersonal
 };

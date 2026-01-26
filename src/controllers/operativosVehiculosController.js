@@ -34,6 +34,7 @@ const {
   Sector,
 } = models;
 import { Op } from "sequelize";
+import { obtenerRadioDelPersonal } from "../services/operativosHelperService.js";
 
 /**
  * Obtener un vehículo operativo por ID (general)
@@ -593,8 +594,26 @@ export const createVehiculoInTurno = async (req, res) => {
       }
     }
 
+    // ========================================
+    // AUTO-POBLAR radio_tetra_id SI NO SE ENVÍA
+    // ========================================
+    // Si no se envía radio_tetra_id, buscar si el conductor o copiloto tiene radio asignado
+    let radio_tetra_id = req.body.radio_tetra_id || null;
+    if (!radio_tetra_id && (req.body.conductor_id || req.body.copiloto_id)) {
+      // Primero intentar con el conductor
+      radio_tetra_id = await obtenerRadioDelPersonal(req.body.conductor_id);
+      // Si el conductor no tiene radio, intentar con el copiloto
+      if (!radio_tetra_id && req.body.copiloto_id) {
+        radio_tetra_id = await obtenerRadioDelPersonal(req.body.copiloto_id);
+      }
+      if (radio_tetra_id) {
+        console.log(`📻 Radio auto-asignado al vehículo: ${radio_tetra_id}`);
+      }
+    }
+
     const newVehiculoAsignado = await OperativosVehiculos.create({
       ...req.body,
+      radio_tetra_id, // Usar el radio encontrado (o null si no hay)
       operativo_turno_id: turnoId,
       created_by,
     });
@@ -715,8 +734,33 @@ export const updateVehiculoInTurno = async (req, res) => {
       }
     }
 
+    // ========================================
+    // AUTO-POBLAR radio_tetra_id SI NO SE ENVÍA
+    // ========================================
+    // Si no se envía radio_tetra_id, buscar si el conductor o copiloto tiene radio asignado
+    let radio_tetra_id = req.body.radio_tetra_id;
+
+    // Solo auto-buscar si se está actualizando conductor/copiloto y no se envía radio_tetra_id
+    if (radio_tetra_id === undefined || radio_tetra_id === null) {
+      const conductor_id = req.body.conductor_id !== undefined ? req.body.conductor_id : vehiculoAsignado.conductor_id;
+      const copiloto_id = req.body.copiloto_id !== undefined ? req.body.copiloto_id : vehiculoAsignado.copiloto_id;
+
+      if (conductor_id || copiloto_id) {
+        // Primero intentar con el conductor
+        radio_tetra_id = await obtenerRadioDelPersonal(conductor_id);
+        // Si el conductor no tiene radio, intentar con el copiloto
+        if (!radio_tetra_id && copiloto_id) {
+          radio_tetra_id = await obtenerRadioDelPersonal(copiloto_id);
+        }
+        if (radio_tetra_id) {
+          console.log(`📻 Radio auto-asignado en actualización de vehículo: ${radio_tetra_id}`);
+        }
+      }
+    }
+
     await vehiculoAsignado.update({
       ...req.body,
+      radio_tetra_id: radio_tetra_id !== undefined ? radio_tetra_id : vehiculoAsignado.radio_tetra_id,
       updated_by,
     });
 
