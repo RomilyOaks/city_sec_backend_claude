@@ -546,7 +546,7 @@ export const reactivarHorarioTurno = async (req, res) => {
  * Convierte hora UTC a hora local de Perú (UTC-5)
  * @param {Date} date - Fecha en UTC
  * @param {string} timezone - Timezone IANA (default: America/Lima)
- * @returns {Object} { horaString, fechaLocal }
+ * @returns {Object} { horaString, fechaLocal, fechaYYYYMMDD }
  */
 const convertirAHoraLocal = (date, timezone = "America/Lima") => {
   try {
@@ -577,13 +577,29 @@ const convertirAHoraLocal = (date, timezone = "America/Lima") => {
     const formatterFecha = new Intl.DateTimeFormat("en-GB", opcionesFecha);
     const fechaLocal = formatterFecha.format(date);
 
-    return { horaString, fechaLocal };
+    // Obtener fecha en formato YYYY-MM-DD
+    const opcionesFechaSolo = {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    };
+
+    const formatterFechaSolo = new Intl.DateTimeFormat("en-GB", opcionesFechaSolo);
+    const fechaParts = formatterFechaSolo.formatToParts(date);
+    const year = fechaParts.find(part => part.type === 'year').value;
+    const month = fechaParts.find(part => part.type === 'month').value;
+    const day = fechaParts.find(part => part.type === 'day').value;
+    const fechaYYYYMMDD = `${year}-${month}-${day}`;
+
+    return { horaString, fechaLocal, fechaYYYYMMDD };
   } catch (error) {
     // Fallback: Si la timezone no es válida, usar UTC-5 manualmente
     const utcOffset = -5 * 60 * 60 * 1000; // -5 horas en milisegundos
     const fechaLocal = new Date(date.getTime() + utcOffset);
     const horaString = fechaLocal.toISOString().slice(11, 19);
-    return { horaString, fechaLocal: fechaLocal.toISOString() };
+    const fechaYYYYMMDD = fechaLocal.toISOString().slice(0, 10);
+    return { horaString, fechaLocal: fechaLocal.toISOString(), fechaYYYYMMDD };
   }
 };
 
@@ -610,7 +626,7 @@ export const getHorarioActivo = async (req, res) => {
       : new Date();
 
     // Convertir a hora local de Perú
-    const { horaString, fechaLocal } = convertirAHoraLocal(horaUTC, timezone);
+    const { horaString, fechaLocal, fechaYYYYMMDD } = convertirAHoraLocal(horaUTC, timezone);
 
     // Obtener todos los horarios activos
     const horariosActivos = await HorariosTurnos.findAll({
@@ -636,6 +652,7 @@ export const getHorarioActivo = async (req, res) => {
 
     // Encontrar el horario activo actual
     let horarioActivo = null;
+    let fechaTurno = fechaYYYYMMDD; // Fecha actual por defecto
 
     for (const horario of horariosActivos) {
       const inicio = horario.hora_inicio; // "HH:MM:SS"
@@ -646,6 +663,16 @@ export const getHorarioActivo = async (req, res) => {
         // La hora actual debe ser >= inicio O < fin
         if (horaString >= inicio || horaString < fin) {
           horarioActivo = horario;
+          
+          // Si el turno cruza medianoche y la hora actual es < hora_inicio,
+          // el turno empezó el día anterior
+          if (horaString < inicio) {
+            // Ajustar fecha al día anterior
+            const fecha = new Date(fechaYYYYMMDD);
+            fecha.setDate(fecha.getDate() - 1);
+            fechaTurno = fecha.toISOString().split('T')[0];
+          }
+          
           break;
         }
       } else {
@@ -689,6 +716,7 @@ export const getHorarioActivo = async (req, res) => {
         ...horarioActivo.toJSON(),
         hora_actual: horaString,
         esta_en_turno: true,
+        fecha: fechaTurno, // ← CAMPO REQUERIDO: fecha correcta del turno
         debug: debugInfo,
       },
     });

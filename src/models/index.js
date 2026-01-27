@@ -135,6 +135,7 @@ import Ubigeo from "./Ubigeo.js";
  */
 
 import RadioTetra from "./RadioTetra.js";
+import CuadranteVehiculoAsignado from "./CuadranteVehiculoAsignado.js";
 
 /**
  * Modelo HorariosTurnos
@@ -1800,6 +1801,50 @@ RadioTetra.belongsTo(Usuario, {
 });
 
 //=============================================
+// ASOCIACIONES DEL MODELO CUADRANTE VEHICULO ASIGNADO
+// ============================================================================
+
+// Relación: Cuadrante -> CuadranteVehiculoAsignado (One-to-Many)
+Cuadrante.hasMany(CuadranteVehiculoAsignado, {
+  foreignKey: "cuadrante_id",
+  as: "asignacionesVehiculos",
+});
+
+// Relación: CuadranteVehiculoAsignado -> Cuadrante (Many-to-One)
+CuadranteVehiculoAsignado.belongsTo(Cuadrante, {
+  foreignKey: "cuadrante_id",
+  as: "cuadrante",
+});
+
+// Relación: Vehiculo -> CuadranteVehiculoAsignado (One-to-Many)
+Vehiculo.hasMany(CuadranteVehiculoAsignado, {
+  foreignKey: "vehiculo_id",
+  as: "asignacionesCuadrantes",
+});
+
+// Relación: CuadranteVehiculoAsignado -> Vehiculo (Many-to-One)
+CuadranteVehiculoAsignado.belongsTo(Vehiculo, {
+  foreignKey: "vehiculo_id",
+  as: "vehiculo",
+});
+
+// Relaciones de auditoría para CuadranteVehiculoAsignado
+CuadranteVehiculoAsignado.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorAsignacion",
+});
+
+CuadranteVehiculoAsignado.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorAsignacion",
+});
+
+CuadranteVehiculoAsignado.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorAsignacion",
+});
+
+//=============================================
 // EXPORTAR MODELOS
 //=============================================
 
@@ -1821,6 +1866,7 @@ const models = {
   EstadoOperativoRecurso,
   TipoCopiloto,
   RadioTetra,
+  CuadranteVehiculoAsignado,
   HorariosTurnos, // ✅ NEW 1.0.0
   // Operativos
   Vehiculo,
@@ -1905,6 +1951,7 @@ export {
   EstadoOperativoRecurso,
   TipoCopiloto,
   RadioTetra,
+  CuadranteVehiculoAsignado,
   HorariosTurnos,
   // Operativos
   Vehiculo,
