@@ -81,7 +81,7 @@ export const getAllAsignaciones = async (req, res) => {
         {
           model: Vehiculo,
           as: "vehiculo",
-          attributes: ["id", "placa", "marca", "modelo"],
+          attributes: ["id", "placa", "marca", "modelo_vehiculo"],
         },
         {
           model: Usuario,
@@ -140,7 +140,7 @@ export const getAsignacionById = async (req, res) => {
         {
           model: Vehiculo,
           as: "vehiculo",
-          attributes: ["id", "placa", "marca", "modelo"],
+          attributes: ["id", "placa", "marca", "modelo_vehiculo"],
         },
         {
           model: Usuario,
@@ -244,7 +244,7 @@ export const createAsignacion = async (req, res) => {
           {
             model: Vehiculo,
             as: "vehiculo",
-            attributes: ["id", "placa", "marca", "modelo"],
+            attributes: ["id", "placa", "marca", "modelo_vehiculo"],
           },
         ],
       }
@@ -382,7 +382,7 @@ export const updateAsignacion = async (req, res) => {
         {
           model: Vehiculo,
           as: "vehiculo",
-          attributes: ["id", "placa", "marca", "modelo"],
+          attributes: ["id", "placa", "marca", "modelo_vehiculo"],
         },
       ],
     });
@@ -482,7 +482,7 @@ export const reactivarAsignacion = async (req, res) => {
         {
           model: Vehiculo,
           as: "vehiculo",
-          attributes: ["id", "placa", "marca", "modelo"],
+          attributes: ["id", "placa", "marca", "modelo_vehiculo"],
         },
       ],
     });
@@ -535,7 +535,7 @@ export const toggleEstadoAsignacion = async (req, res) => {
         {
           model: Vehiculo,
           as: "vehiculo",
-          attributes: ["id", "placa", "marca", "modelo"],
+          attributes: ["id", "placa", "marca", "modelo_vehiculo"],
         },
       ],
     });
@@ -591,7 +591,7 @@ export const getAsignacionesEliminadas = async (req, res) => {
         {
           model: Vehiculo,
           as: "vehiculo",
-          attributes: ["id", "placa", "marca", "modelo"],
+          attributes: ["id", "placa", "marca", "modelo_vehiculo"],
         },
         {
           model: Usuario,
