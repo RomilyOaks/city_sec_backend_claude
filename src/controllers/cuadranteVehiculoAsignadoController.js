@@ -76,7 +76,7 @@ export const getAllAsignaciones = async (req, res) => {
         {
           model: Cuadrante,
           as: "cuadrante",
-          attributes: ["id", "nombre", "codigo"],
+          attributes: ["id", "nombre", "cuadrante_code"],
         },
         {
           model: Vehiculo,
@@ -135,7 +135,7 @@ export const getAsignacionById = async (req, res) => {
         {
           model: Cuadrante,
           as: "cuadrante",
-          attributes: ["id", "nombre", "codigo"],
+          attributes: ["id", "nombre", "cuadrante_code"],
         },
         {
           model: Vehiculo,
@@ -239,7 +239,7 @@ export const createAsignacion = async (req, res) => {
           {
             model: Cuadrante,
             as: "cuadrante",
-            attributes: ["id", "nombre", "codigo"],
+            attributes: ["id", "nombre", "cuadrante_code"],
           },
           {
             model: Vehiculo,
@@ -377,7 +377,7 @@ export const updateAsignacion = async (req, res) => {
         {
           model: Cuadrante,
           as: "cuadrante",
-          attributes: ["id", "nombre", "codigo"],
+          attributes: ["id", "nombre", "cuadrante_code"],
         },
         {
           model: Vehiculo,
@@ -477,7 +477,7 @@ export const reactivarAsignacion = async (req, res) => {
         {
           model: Cuadrante,
           as: "cuadrante",
-          attributes: ["id", "nombre", "codigo"],
+          attributes: ["id", "nombre", "cuadrante_code"],
         },
         {
           model: Vehiculo,
@@ -530,7 +530,7 @@ export const toggleEstadoAsignacion = async (req, res) => {
         {
           model: Cuadrante,
           as: "cuadrante",
-          attributes: ["id", "nombre", "codigo"],
+          attributes: ["id", "nombre", "cuadrante_code"],
         },
         {
           model: Vehiculo,
@@ -586,7 +586,7 @@ export const getAsignacionesEliminadas = async (req, res) => {
         {
           model: Cuadrante,
           as: "cuadrante",
-          attributes: ["id", "nombre", "codigo"],
+          attributes: ["id", "nombre", "cuadrante_code"],
         },
         {
           model: Vehiculo,
