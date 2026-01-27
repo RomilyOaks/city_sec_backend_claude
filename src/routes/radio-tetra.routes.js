@@ -44,13 +44,7 @@ import {
   validateAsignarPersonal,
   validateQueryRadios,
 } from "../middlewares/validators/radio-tetra.validator.js";
-//import { verifyToken } from "../middlewares/auth/auth.middleware.js";
-/*
-import {
-  requireAnyPermission,
-  requireAllPermissions,
-} from "../middlewares/auth/permission.middleware.js";
-*/
+
 import {
   verificarToken,
   verificarRoles,

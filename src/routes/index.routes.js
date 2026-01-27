@@ -111,6 +111,7 @@ import ubigeoRoutes from "./ubigeo.routes.js";
 import configRoutes from "./config.routes.js";
 import unidadOficinaRoutes from "./unidad-oficina.routes.js";
 import radioTetraRoutes from "./radio-tetra.routes.js";
+import cuadranteVehiculoAsignadoRoutes from "./cuadranteVehiculoAsignado.routes.js";
 import estadosOperativoRecursoRoutes from "./estados-operativo-recurso.routes.js";
 import tiposCopilotoRoutes from "./tipos-copiloto.routes.js";
 import horariosTurnosRoutes from "./horariosTurnos.routes.js";
@@ -556,6 +557,7 @@ router.use("/unidades-oficina", unidadOficinaRoutes);
  *   Body: { "personal_seguridad_id": 12 }
  */
 router.use("/radios-tetra", radioTetraRoutes);
+router.use("/cuadrantes-vehiculos-asignados", cuadranteVehiculoAsignadoRoutes);
 
 /**
  * @route   /estados-operativo-recurso
@@ -1140,6 +1142,7 @@ router.use((req, res) => {
       "/estados-novedad",
       "/unidades-oficina",
       "/radios-tetra",
+      "/cuadrantes-vehiculos-asignados",
       "/ubigeo",
       "/config",
       "/tipos-via", // ✨ ✅ v2.4.0
