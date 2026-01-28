@@ -436,10 +436,15 @@ const startServer = async () => {
       console.log(`  • GET    /api/${API_VERSION}/vehiculos`);
       console.log(`  • GET    /api/${API_VERSION}/novedades`);
       console.log("");
-      console.log("✨ NUEVO - Módulo Calles y Direcciones:");
+      console.log("📍 Módulo Calles y Direcciones:");
       console.log(`  • GET    /api/${API_VERSION}/tipos-via/activos`);
       console.log(`  • GET    /api/${API_VERSION}/calles`);
       console.log(`  • GET    /api/${API_VERSION}/direcciones`);
+      console.log("");
+      console.log("📋 Módulo Catálogos:");
+      console.log(`  • GET    /api/${API_VERSION}/radios-tetra`);
+      console.log(`  • GET    /api/${API_VERSION}/unidades-oficina`);
+      console.log(`  • GET    /api/${API_VERSION}/cuadrantes-vehiculos-asignados`);
       console.log("");
       console.log(`📝 Documentación completa en /api/${API_VERSION}\n`);
 
