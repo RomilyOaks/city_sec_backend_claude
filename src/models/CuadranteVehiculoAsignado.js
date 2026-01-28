@@ -287,11 +287,23 @@ CuadranteVehiculoAsignado.prototype.softDelete = async function (userId) {
  * Reactivar asignación (restaurar soft delete)
  */
 CuadranteVehiculoAsignado.prototype.reactivar = async function (userId) {
+  // Forzar la restauración del soft delete
+  await this.restore(); // Método Sequelize para restaurar paranoid
+  
+  // Asegurar que todos los campos queden limpios
   this.deleted_at = null;
   this.deleted_by = null;
   this.estado = 1;
   this.updated_by = userId;
+  
   await this.save();
+  
+  console.log(`✅ Asignación ${this.id} reactivada por usuario ${userId}:`, {
+    deleted_at: this.deleted_at,
+    deleted_by: this.deleted_by,
+    estado: this.estado,
+    updated_by: this.updated_by
+  });
 };
 
 export default CuadranteVehiculoAsignado;

@@ -469,7 +469,21 @@ export const reactivarAsignacion = async (req, res) => {
       });
     }
 
+    console.log(`🔄 Iniciando reactivación de asignación ${id} por usuario ${req.user.id}`);
+    console.log(`📊 Estado antes de reactivar:`, {
+      deleted_at: asignacion.deleted_at,
+      deleted_by: asignacion.deleted_by,
+      estado: asignacion.estado
+    });
+
     await asignacion.reactivar(req.user.id);
+
+    console.log(`✅ Reactivación completada. Estado después:`, {
+      deleted_at: asignacion.deleted_at,
+      deleted_by: asignacion.deleted_by,
+      estado: asignacion.estado,
+      updated_by: asignacion.updated_by
+    });
 
     // Obtener asignación reactivada con relaciones
     const asignacionReactivada = await CuadranteVehiculoAsignado.findByPk(id, {
