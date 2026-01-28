@@ -40,7 +40,17 @@ export const getAllAsignaciones = async (req, res) => {
     };
 
     if (estado !== "") {
-      whereClause.estado = estado === "true" ? 1 : 0;
+      if (estado === "true") {
+        // Activos: estado = 1 y no eliminados
+        whereClause.estado = 1;
+        whereClause.deleted_at = null;
+      } else {
+        // Eliminados: soft-deleted (deleted_at no es null)
+        whereClause.deleted_at = { [Op.not]: null };
+      }
+    } else {
+      // Por defecto, solo mostrar no eliminados
+      whereClause.deleted_at = null;
     }
 
     if (cuadrante_id) {
