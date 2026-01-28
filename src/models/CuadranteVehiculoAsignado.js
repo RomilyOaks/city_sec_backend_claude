@@ -297,13 +297,6 @@ CuadranteVehiculoAsignado.prototype.reactivar = async function (userId) {
   this.updated_by = userId;
   
   await this.save();
-  
-  console.log(`✅ Asignación ${this.id} reactivada por usuario ${userId}:`, {
-    deleted_at: this.deleted_at,
-    deleted_by: this.deleted_by,
-    estado: this.estado,
-    updated_by: this.updated_by
-  });
 };
 
 export default CuadranteVehiculoAsignado;
