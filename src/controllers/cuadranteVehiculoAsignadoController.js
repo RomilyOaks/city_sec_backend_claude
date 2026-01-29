@@ -35,6 +35,8 @@ export const getAllAsignaciones = async (req, res) => {
       order = "DESC",
     } = req.query;
 
+    console.log("🔍 Backend recibió parámetros:", { estado, cuadrante_id, search, page, limit });
+
     // Construir where clause
     const whereClause = {
       deleted_at: null,
