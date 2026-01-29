@@ -66,7 +66,7 @@ const validacionesAsignacion = [
     .withMessage("El ID del vehículo debe ser un número positivo"),
   
   body("observaciones")
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
     .isString()
     .withMessage("Las observaciones deben ser texto")
     .isLength({ max: 500 })
