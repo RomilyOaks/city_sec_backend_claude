@@ -164,7 +164,13 @@ export const getAsignacionById = async (req, res) => {
           as: "actualizadorAsignacion",
           attributes: ["id", "username", "nombres", "apellidos"],
         },
+        {
+          model: Usuario,
+          as: "eliminadorAsignacion",
+          attributes: ["id", "username", "nombres", "apellidos"],
+        },
       ],
+      paranoid: false, // Incluir soft-deleted para mostrar información completa
     });
 
     if (!asignacion) {
