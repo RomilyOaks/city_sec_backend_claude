@@ -32,6 +32,7 @@ import {
   reactivarAsignacion,
   toggleEstadoAsignacion,
   getAsignacionesEliminadas,
+  getCuadrantesByVehiculoId,
 } from "../controllers/cuadranteVehiculoAsignadoController.js";
 import {
   verificarToken,
@@ -355,6 +356,37 @@ router.patch(
     // #swagger.responses[200] = { description: 'OK' }
     // #swagger.responses[404] = { description: 'No encontrado' }
     return toggleEstadoAsignacion(req, res, next);
+  }
+);
+
+/**
+ * @route   GET /api/v1/cuadrantes-vehiculos-asignados/vehiculo/:vehiculo_id
+ * @desc    Obtener cuadrantes asignados a un vehículo específico
+ * @access  Usuarios con permiso de lectura
+ */
+router.get(
+  "/vehiculo/:vehiculo_id",
+  verificarToken,
+  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  [
+    param("vehiculo_id")
+      .isInt({ min: 1 })
+      .withMessage("El ID del vehículo debe ser un número entero positivo"),
+    query("estado")
+      .optional()
+      .isIn(["true", "false", "1", "0"])
+      .withMessage("El estado debe ser true, false, 1 o 0"),
+  ],
+  handleValidationErrors,
+  (req, res, next) => {
+    // #swagger.tags = ['Cuadrantes Vehículos Asignados']
+    // #swagger.summary = 'Obtener cuadrantes asignados a un vehículo'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['vehiculo_id'] = { in: 'path', required: true, type: 'integer', example: 5 }
+    // #swagger.parameters['estado'] = { in: 'query', required: false, type: 'string', enum: ['true', 'false', '1', '0'], example: 'true' }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'Vehículo no encontrado' }
+    return getCuadrantesByVehiculoId(req, res, next);
   }
 );
 

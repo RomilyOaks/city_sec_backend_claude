@@ -18,6 +18,7 @@ import Cuadrante from "../models/Cuadrante.js";
 import Vehiculo from "../models/Vehiculo.js";
 import TipoVehiculo from "../models/TipoVehiculo.js";
 import Usuario from "../models/Usuario.js";
+import Sector from "../models/Sector.js";
 
 /**
  * Obtener todas las asignaciones con paginación y filtros
@@ -610,6 +611,90 @@ export const toggleEstadoAsignacion = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error al cambiar el estado de la asignación",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Obtener cuadrantes asignados a un vehículo específico
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ */
+export const getCuadrantesByVehiculoId = async (req, res) => {
+  try {
+    const { vehiculo_id } = req.params;
+    const { estado = "true" } = req.query;
+
+    // Validar que el vehículo exista
+    const vehiculo = await Vehiculo.findByPk(vehiculo_id);
+    if (!vehiculo) {
+      return res.status(404).json({
+        success: false,
+        message: "Vehículo no encontrado",
+      });
+    }
+
+    // Construir where clause
+    const whereClause = { vehiculo_id };
+
+    if (estado === "true" || estado === "1") {
+      // Solo asignaciones activas
+      whereClause.estado = 1;
+      whereClause.deleted_at = null;
+    } else if (estado === "false" || estado === "0") {
+      // Solo asignaciones inactivas/eliminadas
+      whereClause.deleted_at = { [Op.not]: null };
+    }
+
+    // Buscar asignaciones con relaciones completas
+    const asignaciones = await CuadranteVehiculoAsignado.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: Cuadrante,
+          as: "cuadrante",
+          attributes: ["id", "nombre", "cuadrante_code", "color_mapa"],
+          include: [
+            {
+              model: Sector,
+              as: "sector",
+              attributes: ["id", "nombre", "sector_code"],
+            },
+          ],
+        },
+        {
+          model: Vehiculo,
+          as: "vehiculo",
+          attributes: ["id", "placa", "codigo_vehiculo", "marca", "modelo_vehiculo"],
+          include: [
+            {
+              model: TipoVehiculo,
+              as: "tipo",
+              attributes: ["id", "nombre"],
+            },
+          ],
+        },
+        {
+          model: Usuario,
+          as: "creadorAsignacion",
+          attributes: ["id", "username", "email"],
+        },
+      ],
+      order: [["created_at", "DESC"]],
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Cuadrantes asignados al vehículo ${vehiculo.placa}`,
+      data: asignaciones,
+      count: asignaciones.length,
+    });
+  } catch (error) {
+    console.error("Error en getCuadrantesByVehiculoId:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener cuadrantes asignados al vehículo",
       error: error.message,
     });
   }
