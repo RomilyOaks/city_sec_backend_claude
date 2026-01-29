@@ -36,9 +36,7 @@ export const getAllAsignaciones = async (req, res) => {
     } = req.query;
 
     // Construir where clause
-    const whereClause = {
-      deleted_at: null,
-    };
+    const whereClause = {};
 
     if (estado !== "") {
       if (estado === "true" || estado === "1") {
@@ -50,8 +48,8 @@ export const getAllAsignaciones = async (req, res) => {
         whereClause.deleted_at = { [Op.not]: null };
       }
     } else {
-      // Por defecto, solo mostrar no eliminados
-      whereClause.deleted_at = null;
+      // TODOS: mostrar ambos activos y eliminados (sin filtro de deleted_at)
+      // No agregamos ninguna condición para deleted_at, así incluye todo
     }
 
     if (cuadrante_id) {
@@ -105,7 +103,7 @@ export const getAllAsignaciones = async (req, res) => {
           attributes: ["id", "username", "nombres", "apellidos"],
         },
       ],
-      paranoid: estado === "false" || estado === "0" ? false : true, // Incluir soft-deleted si se piden eliminados
+      paranoid: estado === "false" || estado === "0" || estado === "" ? false : true, // Incluir soft-deleted si se piden eliminados o TODOS
       order: [[orderField, orderDir]],
       limit: parseInt(limit),
       offset: parseInt(offset),
