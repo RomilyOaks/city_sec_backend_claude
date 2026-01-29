@@ -16,6 +16,7 @@ import { Op } from "sequelize";
 import CuadranteVehiculoAsignado from "../models/CuadranteVehiculoAsignado.js";
 import Cuadrante from "../models/Cuadrante.js";
 import Vehiculo from "../models/Vehiculo.js";
+import TipoVehiculo from "../models/TipoVehiculo.js";
 import Usuario from "../models/Usuario.js";
 
 /**
@@ -209,7 +210,15 @@ export const createAsignacion = async (req, res) => {
       });
     }
 
-    const vehiculo = await Vehiculo.findByPk(vehiculo_id);
+    const vehiculo = await Vehiculo.findByPk(vehiculo_id, {
+      include: [
+        {
+          model: TipoVehiculo,
+          as: "tipo",
+          attributes: ["id", "nombre"],
+        },
+      ],
+    });
     if (!vehiculo) {
       return res.status(400).json({
         success: false,
@@ -232,11 +241,18 @@ export const createAsignacion = async (req, res) => {
       });
     }
 
+    // Generar observaciones automáticas si no se proporcionan
+    let observacionesFinales = observaciones;
+    if (!observaciones || observaciones.trim() === "") {
+      const tipoVehiculoNombre = vehiculo.tipo?.nombre || "vehículo";
+      observacionesFinales = `Se ha asignado el ${tipoVehiculoNombre} con placa ${vehiculo.placa} al cuadrante ${cuadrante.nombre} satisfactoriamente`;
+    }
+
     // Crear asignación
     const nuevaAsignacion = await CuadranteVehiculoAsignado.create({
       cuadrante_id,
       vehiculo_id,
-      observaciones: observaciones || null,
+      observaciones: observacionesFinales,
       estado: estado ? 1 : 0,
       created_by: req.user.id,
     });
@@ -362,7 +378,15 @@ export const updateAsignacion = async (req, res) => {
     }
 
     if (vehiculo_id) {
-      const vehiculo = await Vehiculo.findByPk(vehiculo_id);
+      const vehiculo = await Vehiculo.findByPk(vehiculo_id, {
+        include: [
+          {
+            model: TipoVehiculo,
+            as: "tipo",
+            attributes: ["id", "nombre"],
+          },
+        ],
+      });
       if (!vehiculo) {
         return res.status(400).json({
           success: false,
@@ -372,11 +396,32 @@ export const updateAsignacion = async (req, res) => {
       }
     }
 
+    // Generar observaciones automáticas si no se proporcionan o están vacías
+    let observacionesFinales = observaciones;
+    if (observaciones !== undefined && (!observaciones || observaciones.trim() === "")) {
+      // Obtener datos actualizados para generar el mensaje
+      const cuadranteFinal = await Cuadrante.findByPk(cuadrante_id || asignacion.cuadrante_id);
+      const vehiculoFinal = await Vehiculo.findByPk(vehiculo_id || asignacion.vehiculo_id, {
+        include: [
+          {
+            model: TipoVehiculo,
+            as: "tipo",
+            attributes: ["id", "nombre"],
+          },
+        ],
+      });
+      
+      if (cuadranteFinal && vehiculoFinal) {
+        const tipoVehiculoNombre = vehiculoFinal.tipo?.nombre || "vehículo";
+        observacionesFinales = `Se ha asignado el ${tipoVehiculoNombre} con placa ${vehiculoFinal.placa} al cuadrante ${cuadranteFinal.nombre} satisfactoriamente`;
+      }
+    }
+
     // Actualizar asignación
     await asignacion.update({
       cuadrante_id: cuadrante_id || asignacion.cuadrante_id,
       vehiculo_id: vehiculo_id || asignacion.vehiculo_id,
-      observaciones: observaciones !== undefined ? observaciones : asignacion.observaciones,
+      observaciones: observacionesFinales !== undefined ? observacionesFinales : asignacion.observaciones,
       estado: estado !== undefined ? (estado ? 1 : 0) : asignacion.estado,
       updated_by: req.user.id,
     });
