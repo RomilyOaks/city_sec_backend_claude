@@ -101,8 +101,8 @@ const validacionesQuery = [
   
   query("estado")
     .optional()
-    .isIn(["true", "false"])
-    .withMessage("El estado debe ser true o false"),
+    .isIn(["true", "false", "1", "0"])
+    .withMessage("El estado debe ser true, false, 1 o 0"),
   
   query("cuadrante_id")
     .optional()
