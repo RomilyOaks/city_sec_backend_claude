@@ -105,6 +105,7 @@ export const getAllAsignaciones = async (req, res) => {
           attributes: ["id", "username", "nombres", "apellidos"],
         },
       ],
+      paranoid: estado === "false" || estado === "0" ? false : true, // Incluir soft-deleted si se piden eliminados
       order: [[orderField, orderDir]],
       limit: parseInt(limit),
       offset: parseInt(offset),
