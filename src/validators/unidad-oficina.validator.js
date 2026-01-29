@@ -129,7 +129,7 @@ export const validarTelefono = () =>
   body("telefono")
     .optional()
     .trim()
-    .matches(/^[0-9\s\-\+\(\)]+$/)
+    .matches(/^[0-9\s\-+()]+$/)
     .withMessage("El teléfono contiene caracteres inválidos")
     .isLength({ max: 20 })
     .withMessage("El teléfono no puede exceder 20 caracteres");

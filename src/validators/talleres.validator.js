@@ -27,7 +27,7 @@ export const handleValidationErrors = (req, res, next) => {
 };
 
 const RUC_REGEX = /^\d{11}$/;
-const TELEFONO_REGEX = /^[0-9\s\-\+\(\)]+$/;
+const TELEFONO_REGEX = /^[0-9\s\-+()]+$/;
 
 export const validateTallerId = [
   param("id").isInt({ min: 1 }).withMessage("ID inválido"),

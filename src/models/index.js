@@ -16,8 +16,6 @@
  * =====================
  * v2.1.2 (2026-01-11):
  *  - ✅ Agregado modelo RadioTetra para gestionar radios Tetra asignados a personal
- *  - ✅ Agregado modelo VehiculoCuadrantesAsignados para gestionar
- *    la asignación de vehículos a cuadrantes en operativos específicos.
  *  - ✅ Agregado Operativos de Patrullaje por Turnos
  *  - ✅ Agregado Vehiculos que realizan los Operativos por turnos
  *
@@ -172,14 +170,6 @@ import Cuadrante from "./Cuadrante.js";
  * @type {Model}
  */
 import Vehiculo from "./Vehiculo.js";
-
-/**
- * Modelo VehiculoCuadrantesAsignados
- * Registro de vehículos asignados a cuadrantes en operativos
- * Autor: RRG
- * @type {Model}
- */
-import VehiculoCuadrantesAsignados from "./VehiculoCuadrantesAsignados.js";
 
 /**
  * Modelo PersonalSeguridad
@@ -1748,26 +1738,6 @@ HistorialEstadoNovedad.belongsTo(Usuario, {
 // NOTA: SubtipoNovedad, TipoVehiculo y UnidadOficina ya tienen sus relaciones
 // de auditoría definidas anteriormente en este archivo (líneas 1030-1080)
 
-Vehiculo.hasMany(VehiculoCuadrantesAsignados, {
-  foreignKey: "vehiculo_id",
-  as: "cuadrantesAsignados",
-});
-
-VehiculoCuadrantesAsignados.belongsTo(Vehiculo, {
-  foreignKey: "vehiculo_id",
-  as: "vehiculo",
-});
-
-Cuadrante.hasMany(VehiculoCuadrantesAsignados, {
-  foreignKey: "cuadrante_id",
-  as: "vehiculosAsignados",
-});
-
-VehiculoCuadrantesAsignados.belongsTo(Cuadrante, {
-  foreignKey: "cuadrante_id",
-  as: "cuadrante",
-});
-
 // ============================================================================
 // ASOCIACIONES DEL MODELO RADIO TETRA
 // ============================================================================
@@ -1988,7 +1958,6 @@ export {
   Calle,
   CallesCuadrantes,
   Direccion,
-  VehiculoCuadrantesAsignados,
   // Operativos Turno y Vehículos (✅ v2.2.1)
   OperativosTurno,
   OperativosVehiculos,
