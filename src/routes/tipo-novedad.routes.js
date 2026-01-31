@@ -64,6 +64,33 @@ router.get(
 );
 
 /**
+ * @route   GET /api/v1/tipos-novedad/eliminadas
+ * @desc    Listar tipos de novedad eliminados
+ * @access  Usuarios con permiso de lectura
+ * @note    IMPORTANTE: Esta ruta debe estar ANTES de /:id para que no sea capturada como parámetro
+ */
+router.get(
+  "/eliminadas",
+  verificarToken,
+  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  [
+    query("search")
+      .optional()
+      .isString()
+      .withMessage("El búsqueda debe ser texto"),
+  ],
+  handleValidationErrors,
+  (req, res, next) => {
+    // #swagger.tags = ['Tipos Novedad']
+    // #swagger.summary = 'Listar tipos de novedad eliminados'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'Robo' }
+    // #swagger.responses[200] = { description: 'OK' }
+    return tipoNovedadController.getEliminadas(req, res, next);
+  }
+);
+
+/**
  * @route   GET /api/v1/tipos-novedad/:id
  * @desc    Obtener tipo de novedad por ID
  * @access  Usuarios con permiso de lectura
@@ -178,32 +205,6 @@ router.patch(
     // #swagger.responses[404] = { description: 'Tipo de novedad no encontrado' }
     // #swagger.responses[400] = { description: 'Tipo de novedad no está eliminado' }
     return tipoNovedadController.reactivar(req, res, next);
-  }
-);
-
-/**
- * @route   GET /api/v1/tipos-novedad/eliminadas
- * @desc    Listar tipos de novedad eliminados
- * @access  Usuarios con permiso de lectura
- */
-router.get(
-  "/eliminadas",
-  verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
-  [
-    query("search")
-      .optional()
-      .isString()
-      .withMessage("El búsqueda debe ser texto"),
-  ],
-  handleValidationErrors,
-  (req, res, next) => {
-    // #swagger.tags = ['Tipos Novedad']
-    // #swagger.summary = 'Listar tipos de novedad eliminados'
-    // #swagger.security = [{ bearerAuth: [] }]
-    // #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'Robo' }
-    // #swagger.responses[200] = { description: 'OK' }
-    return tipoNovedadController.getEliminadas(req, res, next);
   }
 );
 
