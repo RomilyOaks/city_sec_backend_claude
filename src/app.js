@@ -129,15 +129,6 @@ app.use(
 
 const corsOptions = {
   origin: function (origin, callback) {
-    const whitelist = [
-      process.env.FRONTEND_URL,
-      process.env.CORS_ORIGIN,
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://localhost:4200",
-      "http://127.0.0.1:5173",
-    ].filter(Boolean);
-
     // Allow requests with no origin (mobile apps, curl, Postman, etc.)
     if (!origin) {
       return callback(null, true);
@@ -156,10 +147,20 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    // In production, allow localhost:5173 for development
-    if (process.env.NODE_ENV === "production" && origin === "http://localhost:5173") {
+    // TEMPORARY: Allow any origin in production for development
+    if (process.env.NODE_ENV === "production") {
+      console.log(`CORS allowing origin (temp): ${origin}`);
       return callback(null, true);
     }
+
+    const whitelist = [
+      process.env.FRONTEND_URL,
+      process.env.CORS_ORIGIN,
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:4200",
+      "http://127.0.0.1:5173",
+    ].filter(Boolean);
 
     if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);
