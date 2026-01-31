@@ -24,8 +24,27 @@
  * @date 2026-01-29
  */
 
-import { TipoNovedad, SubtipoNovedad } from "../models/index.js";
+import { TipoNovedad, SubtipoNovedad, Usuario } from "../models/index.js";
 import { Op } from "sequelize";
+
+// Configuración común de includes para auditoría
+const auditoriaIncludes = [
+  {
+    model: Usuario,
+    as: "creadorTipoNovedad",
+    attributes: ["id", "username", "nombres", "apellidos"],
+  },
+  {
+    model: Usuario,
+    as: "actualizadorTipoNovedad",
+    attributes: ["id", "username", "nombres", "apellidos"],
+  },
+  {
+    model: Usuario,
+    as: "eliminadorTipoNovedad",
+    attributes: ["id", "username", "nombres", "apellidos"],
+  },
+];
 
 // LISTAR (GET /)
 const getAll = async (req, res) => {
@@ -47,6 +66,7 @@ const getAll = async (req, res) => {
 
     const items = await TipoNovedad.findAll({
       where: whereClause,
+      include: auditoriaIncludes,
       order: [
         ["orden", "ASC"],
         ["nombre", "ASC"],
@@ -74,6 +94,7 @@ const getById = async (req, res) => {
 
     const item = await TipoNovedad.findOne({
       where: { id, deleted_at: null },
+      include: auditoriaIncludes,
     });
 
     if (!item) {
@@ -270,6 +291,7 @@ const getEliminadas = async (req, res) => {
 
     const items = await TipoNovedad.findAll({
       where: whereClause,
+      include: auditoriaIncludes,
       order: [
         ["deleted_at", "DESC"],
         ["nombre", "ASC"],
