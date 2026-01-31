@@ -274,15 +274,15 @@ SubtipoNovedad.findConRequerimiento = async function (requerimiento) {
   };
 
   switch (requerimiento) {
-    case "ambulancia":
-      whereClause.requiere_ambulancia = true;
-      break;
-    case "bomberos":
-      whereClause.requiere_bomberos = true;
-      break;
-    case "pnp":
-      whereClause.requiere_pnp = true;
-      break;
+  case "ambulancia":
+    whereClause.requiere_ambulancia = true;
+    break;
+  case "bomberos":
+    whereClause.requiere_bomberos = true;
+    break;
+  case "pnp":
+    whereClause.requiere_pnp = true;
+    break;
   }
 
   return await SubtipoNovedad.findAll({

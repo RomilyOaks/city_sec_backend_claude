@@ -587,9 +587,9 @@ const convertirAHoraLocal = (date, timezone = "America/Lima") => {
 
     const formatterFechaSolo = new Intl.DateTimeFormat("en-GB", opcionesFechaSolo);
     const fechaParts = formatterFechaSolo.formatToParts(date);
-    const year = fechaParts.find(part => part.type === 'year').value;
-    const month = fechaParts.find(part => part.type === 'month').value;
-    const day = fechaParts.find(part => part.type === 'day').value;
+    const year = fechaParts.find(part => part.type === "year").value;
+    const month = fechaParts.find(part => part.type === "month").value;
+    const day = fechaParts.find(part => part.type === "day").value;
     const fechaYYYYMMDD = `${year}-${month}-${day}`;
 
     return { horaString, fechaLocal, fechaYYYYMMDD };
@@ -670,7 +670,7 @@ export const getHorarioActivo = async (req, res) => {
             // Ajustar fecha al día anterior
             const fecha = new Date(fechaYYYYMMDD);
             fecha.setDate(fecha.getDate() - 1);
-            fechaTurno = fecha.toISOString().split('T')[0];
+            fechaTurno = fecha.toISOString().split("T")[0];
           }
           
           break;

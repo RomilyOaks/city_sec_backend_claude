@@ -321,8 +321,8 @@ export const createUsuario = async (req, res) => {
         const usuarioRolesData = rolesEncontrados.map((rol) => ({
           usuario_id: nuevoUsuario.id,
           rol_id: rol.id,
-          created_by: userId,
-          updated_by: userId,
+          created_by: created_by,
+          updated_by: created_by,
           fecha_asignacion: new Date(),
         }));
         await UsuarioRol.bulkCreate(usuarioRolesData, { transaction: t });
@@ -450,7 +450,7 @@ export const updateUsuario = async (req, res) => {
             personal_seguridad_id,
             id: { [Op.ne]: id }, // Excluir el usuario actual
             deleted_at: null, // Solo usuarios no eliminados
-            estado: { [Op.ne]: 'INACTIVO' }, // Excluir usuarios INACTIVOS
+            estado: { [Op.ne]: "INACTIVO" }, // Excluir usuarios INACTIVOS
           },
           transaction: t,
         });
@@ -483,8 +483,8 @@ export const updateUsuario = async (req, res) => {
       const usuarioRolesData = rolesEncontrados.map((rol) => ({
         usuario_id: id,
         rol_id: rol.id,
-        created_by: userId,
-        updated_by: userId,
+        created_by: updated_by,
+        updated_by: updated_by,
         fecha_asignacion: new Date(),
       }));
       await UsuarioRol.bulkCreate(usuarioRolesData, { transaction: t });

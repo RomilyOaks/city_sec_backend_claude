@@ -277,9 +277,9 @@ export const getEstadisticas = async (req, res) => {
         tasaExito:
           totalAcciones > 0
             ? (
-                ((totalAcciones - accionesFallidas) / totalAcciones) *
+              ((totalAcciones - accionesFallidas) / totalAcciones) *
                 100
-              ).toFixed(2)
+            ).toFixed(2)
             : 0,
         accionesPorTipo,
         accionesPorSeveridad,

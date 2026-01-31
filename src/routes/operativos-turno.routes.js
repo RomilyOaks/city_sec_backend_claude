@@ -77,7 +77,7 @@ const validateTurno = [
   body("sector_id").custom(async (sector_id, { req }) => {
     if (!req.body.supervisor_id) {
       const sector = await Sector.findByPk(sector_id, {
-        attributes: ['supervisor_id']
+        attributes: ["supervisor_id"]
       });
       
       if (!sector) {

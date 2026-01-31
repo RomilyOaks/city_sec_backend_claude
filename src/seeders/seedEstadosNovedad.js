@@ -145,7 +145,7 @@ export async function seedEstadosNovedad() {
     }
   }
 
-  console.log(`\n📊 Resumen Estados de Novedad:`);
+  console.log("\n📊 Resumen Estados de Novedad:");
   console.log(`   - Creados: ${created}`);
   console.log(`   - Actualizados: ${updated}`);
   console.log(`   - Sin cambios: ${skipped}`);

@@ -35,13 +35,13 @@ const getTiposNovedad = async (req, res) => {
     const include =
       incluir_subtipos === "true"
         ? [
-            {
-              model: SubtipoNovedad,
-              as: "tipoNovedadSubtipoNovedad",
-              where: { estado: 1, deleted_at: null },
-              required: false,
-            },
-          ]
+          {
+            model: SubtipoNovedad,
+            as: "tipoNovedadSubtipoNovedad",
+            where: { estado: 1, deleted_at: null },
+            required: false,
+          },
+        ]
         : [];
 
     const tipos = await TipoNovedad.findAll({

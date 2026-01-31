@@ -174,7 +174,7 @@ const Calle = sequelize.define(
       type: DataTypes.STRING(250),
       allowNull: true, // Se genera automáticamente por trigger en BD
       field: "nombre_completo",
-      comment: 'Nombre completo (ej: "Av. Ejército") - Generado por trigger BD',
+      comment: "Nombre completo (ej: \"Av. Ejército\") - Generado por trigger BD",
     },
 
     // ============================================================================
