@@ -18,6 +18,7 @@
  */
 
 import { Router } from "express";
+import { query } from "express-validator";
 import subtipoNovedadController from "../controllers/subtipoNovedadController.js";
 import {
   verificarToken,
