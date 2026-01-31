@@ -187,7 +187,7 @@ const create = async (req, res) => {
       nombre,
       tipo_novedad_id,
       descripcion,
-      subtipo_code: subtipoCodeNormalizado,
+      subtipo_code: subtipoCodeNormalizado, // Puede ser null, se generará después
       color_hex,
       icono,
       orden,
@@ -198,6 +198,13 @@ const create = async (req, res) => {
       requiere_pnp,
       created_by: req.user.id,
     });
+
+    // Si no se envió subtipo_code, generar automáticamente: ST + ID con padding
+    if (!subtipoCodeNormalizado) {
+      const codigoGenerado = `ST${String(nuevo.id).padStart(3, "0")}`;
+      await nuevo.update({ subtipo_code: codigoGenerado });
+      console.log(`📝 Código de subtipo generado automáticamente: ${codigoGenerado}`);
+    }
 
     // Obtener subtipo completo con relación
     const subtipoCompleto = await SubtipoNovedad.findByPk(nuevo.id, {
