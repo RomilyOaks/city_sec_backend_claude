@@ -31,8 +31,27 @@
  * @version 1.1.0
  */
 
-import { SubtipoNovedad, TipoNovedad, Novedad } from "../models/index.js";
+import { SubtipoNovedad, TipoNovedad, Novedad, Usuario } from "../models/index.js";
 import { Op } from "sequelize";
+
+// Configuración común de includes para auditoría
+const auditoriaIncludes = [
+  {
+    model: Usuario,
+    as: "creadorSubtipoNovedad",
+    attributes: ["id", "username", "nombres", "apellidos"],
+  },
+  {
+    model: Usuario,
+    as: "actualizadorSubtipoNovedad",
+    attributes: ["id", "username", "nombres", "apellidos"],
+  },
+  {
+    model: Usuario,
+    as: "eliminadorSubtipoNovedad",
+    attributes: ["id", "username", "nombres", "apellidos"],
+  },
+];
 
 // ==========================================
 // LISTAR SUBTIPOS (GET /)
@@ -70,6 +89,7 @@ const getAll = async (req, res) => {
           as: "subtipoNovedadTipoNovedad",
           attributes: ["id", "nombre", "tipo_code"],
         },
+        ...auditoriaIncludes,
       ],
       order: [
         ["orden", "ASC"],
@@ -107,6 +127,7 @@ const getById = async (req, res) => {
           as: "subtipoNovedadTipoNovedad",
           attributes: ["id", "nombre", "tipo_code"],
         },
+        ...auditoriaIncludes,
       ],
     });
 
@@ -447,6 +468,7 @@ const getEliminados = async (req, res) => {
           as: "tipoNovedad",
           attributes: ["id", "nombre", "tipo_code"],
         },
+        ...auditoriaIncludes,
       ],
       order: [
         ["deleted_at", "DESC"],
