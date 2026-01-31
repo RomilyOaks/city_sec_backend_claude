@@ -272,7 +272,7 @@ console.log(`\n📦 Registrando rutas en /api/${API_VERSION}...`);
 
 app.use(`/api/${API_VERSION}`, indexRoutes);
 
-console.log(`✅ Rutas registradas correctamente\n`);
+console.log("✅ Rutas registradas correctamente\n");
 
 // ============================================
 // MANEJO DE RUTAS NO ENCONTRADAS (404)
@@ -415,7 +415,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log("┌─────────────────────────────────────────────────┐");
       console.log("│                                                 │");
-      console.log(`│  🚀 Servidor iniciado exitosamente              │`);
+      console.log("│  🚀 Servidor iniciado exitosamente              │");
       console.log("│                                                 │");
       console.log(`│  🌐 URL: http://localhost:${PORT}                  │`);
       console.log(

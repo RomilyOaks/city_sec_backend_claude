@@ -230,7 +230,7 @@ const direccionesController = {
 
       // Nuevo parámetro: incluir soft-deleted (default: 'true' = NO incluir eliminados)
       const paranoid = req.query.paranoid !== undefined
-        ? req.query.paranoid === 'true'
+        ? req.query.paranoid === "true"
         : true;
 
       const offset = (page - 1) * limit;
@@ -745,17 +745,17 @@ const direccionesController = {
             },
             cuadrante: cuadrante
               ? {
-                  id: cuadrante.id,
-                  codigo: cuadrante.cuadrante_code,
-                  nombre: cuadrante.nombre,
-                }
+                id: cuadrante.id,
+                codigo: cuadrante.cuadrante_code,
+                nombre: cuadrante.nombre,
+              }
               : null,
             sector: sector
               ? {
-                  id: sector.id,
-                  codigo: sector.sector_code,
-                  nombre: sector.nombre,
-                }
+                id: sector.id,
+                codigo: sector.sector_code,
+                nombre: sector.nombre,
+              }
               : null,
             auto_asignado: cuadrante_id !== null,
           },

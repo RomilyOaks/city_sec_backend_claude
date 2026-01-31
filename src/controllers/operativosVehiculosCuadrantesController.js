@@ -115,7 +115,7 @@ export const createCuadranteInVehiculo = async (req, res) => {
     console.log("🐛 DEBUG: req.body TIPO:", typeof req.body);
     console.log("🐛 DEBUG: req.body CONTENIDO:", JSON.stringify(req.body, null, 2));
     console.log("🐛 DEBUG: req.body KEYS:", Object.keys(req.body));
-    console.log("🐛 DEBUG: req.body.hasOwnProperty('observaciones'):", req.body.hasOwnProperty("observaciones"));
+    console.log("🐛 DEBUG: 'observaciones' in req.body:", "observaciones" in req.body);
     console.log("🐛 DEBUG: req.body.observaciones:", req.body.observaciones);
     console.log("🐛 DEBUG: Usuario creando:", created_by);
 
@@ -169,17 +169,17 @@ export const createCuadranteInVehiculo = async (req, res) => {
     }
 
     // 🔥 CAMPOS OPCIONALES - MANEJO EXPLÍCITO
-    if (req.body.hasOwnProperty("observaciones")) {
+    if ("observaciones" in req.body) {
       createData.observaciones = req.body.observaciones === "" ? null : req.body.observaciones;
       console.log("🔥🔥🔥 OBSERVACIONES PROCESADAS:", createData.observaciones);
     }
 
-    if (req.body.hasOwnProperty("incidentes_reportados")) {
+    if ("incidentes_reportados" in req.body) {
       createData.incidentes_reportados = req.body.incidentes_reportados === "" ? null : req.body.incidentes_reportados;
       console.log("🔥🔥🔥 INCIDENTES_REPORTADOS PROCESADOS:", createData.incidentes_reportados);
     }
 
-    if (req.body.hasOwnProperty("hora_salida")) {
+    if ("hora_salida" in req.body) {
       createData.hora_salida = req.body.hora_salida === "" ? null : req.body.hora_salida;
       console.log("🔥🔥🔥 HORA_SALIDA PROCESADA:", createData.hora_salida);
     }
@@ -308,7 +308,7 @@ export const updateCuadranteInVehiculo = async (req, res) => {
     
     // Solo permitir campos específicos y validar que hora_salida no sea obligatoria
     for (const campo of camposPermitidos) {
-      if (req.body.hasOwnProperty(campo)) {
+      if (campo in req.body) {
         console.log(`🐛 DEBUG: Procesando campo '${campo}':`, req.body[campo]);
         
         if (campo === "hora_salida" && req.body[campo] === "") {

@@ -442,8 +442,8 @@ export const validarEdad = (fechaNacimiento) => {
       edad < LIMITES_NUMERICOS.EDAD_MINIMA
         ? `Debe ser mayor de ${LIMITES_NUMERICOS.EDAD_MINIMA} años`
         : edad > LIMITES_NUMERICOS.EDAD_MAXIMA
-        ? "Fecha de nacimiento inválida"
-        : null,
+          ? "Fecha de nacimiento inválida"
+          : null,
   };
 };
 
@@ -492,8 +492,8 @@ export const validarAnioVehiculo = (anio) => {
       anioNum < LIMITES_NUMERICOS.ANIO_VEHICULO_MIN
         ? `El año no puede ser menor a ${LIMITES_NUMERICOS.ANIO_VEHICULO_MIN}`
         : anioNum > anioActual + 1
-        ? `El año no puede ser mayor a ${anioActual + 1}`
-        : null,
+          ? `El año no puede ser mayor a ${anioActual + 1}`
+          : null,
   };
 };
 
@@ -507,8 +507,8 @@ export const validarKilometraje = (kmNuevo, kmActual) => {
       nuevo < actual
         ? "El kilometraje nuevo no puede ser menor al actual"
         : nuevo > LIMITES_NUMERICOS.KM_MAX
-        ? `El kilometraje no puede exceder ${LIMITES_NUMERICOS.KM_MAX}`
-        : null,
+          ? `El kilometraje no puede exceder ${LIMITES_NUMERICOS.KM_MAX}`
+          : null,
   };
 };
 
@@ -541,8 +541,8 @@ export const validarRadioMetros = (radio) => {
       radioNum < LIMITES_NUMERICOS.RADIO_METROS_MIN
         ? `El radio debe ser mínimo ${LIMITES_NUMERICOS.RADIO_METROS_MIN} metros`
         : radioNum > LIMITES_NUMERICOS.RADIO_METROS_MAX
-        ? `El radio no puede exceder ${LIMITES_NUMERICOS.RADIO_METROS_MAX} metros`
-        : null,
+          ? `El radio no puede exceder ${LIMITES_NUMERICOS.RADIO_METROS_MAX} metros`
+          : null,
   };
 };
 

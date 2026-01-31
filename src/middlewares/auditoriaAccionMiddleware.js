@@ -186,8 +186,8 @@ export const auditarCambiosCriticos = (entidad, severidad = "ALTA") => {
             req.method === "POST"
               ? "CREATE"
               : req.method === "DELETE"
-              ? "DELETE"
-              : "UPDATE",
+                ? "DELETE"
+                : "UPDATE",
           entidad,
           entidad_id: req.params.id || data.data?.id,
           descripcion: `Modificación de ${entidad} crítico`,

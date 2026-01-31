@@ -76,8 +76,8 @@ export const getAllNovedades = async (req, res) => {
 
     if (fecha_inicio && fecha_fin) {
       // Interpretar fechas en timezone local (Perú -5)
-      const fechaInicioDate = new Date(fecha_inicio + 'T00:00:00-05:00');
-      const fechaFinDate = new Date(fecha_fin + 'T00:00:00-05:00');
+      const fechaInicioDate = new Date(fecha_inicio + "T00:00:00-05:00");
+      const fechaFinDate = new Date(fecha_fin + "T00:00:00-05:00");
       
       // Agregar 23:59:59 a la fecha fin para incluir todo el día
       fechaFinDate.setHours(23, 59, 59, 999);
@@ -132,8 +132,8 @@ export const getAllNovedades = async (req, res) => {
     let orderClause = [];
 
     if (sort) {
-      const sortFields = sort.split(',').map(f => f.trim());
-      const sortOrders = order ? order.split(',').map(o => o.trim().toUpperCase()) : [];
+      const sortFields = sort.split(",").map(f => f.trim());
+      const sortOrders = order ? order.split(",").map(o => o.trim().toUpperCase()) : [];
 
       sortFields.forEach((field, index) => {
         // Validar que el campo esté en la whitelist

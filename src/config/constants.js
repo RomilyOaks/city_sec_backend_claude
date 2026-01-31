@@ -13,15 +13,15 @@
 // Código UBIGEO por defecto
 // Formato: DDPPDD (Departamento - Provincia - Distrito)
 // Referencia: INEI - Sistema de Ubigeos del Perú
-export const DEFAULT_UBIGEO_CODE = process.env.DEFAULT_UBIGEO_CODE || '150101';
+export const DEFAULT_UBIGEO_CODE = process.env.DEFAULT_UBIGEO_CODE || "150101";
 
 // Nombre completo del ubigeo por defecto
 // Lee desde variables de entorno o usa valores por defecto
 export const DEFAULT_UBIGEO_INFO = {
   code: DEFAULT_UBIGEO_CODE,
-  departamento: process.env.DEFAULT_UBIGEO_DEPARTMENT || 'Arequipa',
-  provincia: process.env.DEFAULT_UBIGEO_PROVINCE || 'Arequipa',
-  distrito: process.env.DEFAULT_UBIGEO_DISTRICT || 'Arequipa',
+  departamento: process.env.DEFAULT_UBIGEO_DEPARTMENT || "Arequipa",
+  provincia: process.env.DEFAULT_UBIGEO_PROVINCE || "Arequipa",
+  distrito: process.env.DEFAULT_UBIGEO_DISTRICT || "Arequipa",
   departamento_code: DEFAULT_UBIGEO_CODE.substring(0, 2),
   provincia_code: DEFAULT_UBIGEO_CODE.substring(2, 4),
   distrito_code: DEFAULT_UBIGEO_CODE.substring(4, 6)
@@ -51,9 +51,9 @@ export const ESTADOS_SISTEMA = {
 // TURNOS
 // ==========================================
 export const TURNOS = {
-  MANANA: 'MAÑANA',
-  TARDE: 'TARDE',
-  NOCHE: 'NOCHE'
+  MANANA: "MAÑANA",
+  TARDE: "TARDE",
+  NOCHE: "NOCHE"
 };
 
 // Horarios de turnos
@@ -70,9 +70,9 @@ export const HORARIOS_TURNOS = {
 // PRIORIDADES
 // ==========================================
 export const PRIORIDADES = {
-  ALTA: 'ALTA',
-  MEDIA: 'MEDIA',
-  BAJA: 'BAJA'
+  ALTA: "ALTA",
+  MEDIA: "MEDIA",
+  BAJA: "BAJA"
 };
 
 // ==========================================

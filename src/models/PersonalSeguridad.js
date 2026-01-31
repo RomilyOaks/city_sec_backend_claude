@@ -569,7 +569,7 @@ const PersonalSeguridad = sequelize.define(
             const urlPattern =
               /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i;
             const pathPattern =
-              /^(\/|\.\/|\.\.\/)?[\w\/.-]+\.(jpg|jpeg|png|gif|webp)$/i;
+              /^(\/|\.\/|\.\.\/)?[\w/.-]+\.(jpg|jpeg|png|gif|webp)$/i;
 
             if (!urlPattern.test(value) && !pathPattern.test(value)) {
               throw new Error(

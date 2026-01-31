@@ -202,9 +202,9 @@ const config = {
       ssl:
         process.env.DB_SSL === "true"
           ? {
-              require: true,
-              rejectUnauthorized: false,
-            }
+            require: true,
+            rejectUnauthorized: false,
+          }
           : undefined,
     },
 
