@@ -3,20 +3,35 @@
  * CONTROLADOR: Subtipos de Novedad
  * ===================================================
  *
- * Ruta: src/controllers/subtipoNovedadController.js
- *
- * VERSIÓN: 1.0.1 (CORREGIDO)
- * FECHA: 2025-12-14
+ * File: src/controllers/subtipoNovedadController.js
+ * @version 1.1.0
+ * @date 2026-01-29
  *
  * Descripción:
- * Controlador para gestión de subtipos de novedad.
- * Maneja CRUD completo con validaciones y soft delete.
+ * Controlador para gestión de subtipos de novedad (subcategorías).
+ * Maneja CRUD completo con validaciones, soft delete y reactivación.
+ * 
+ * Funcionalidades:
+ * - CRUD completo con soft delete
+ * - Reactivación de registros eliminados
+ * - Listado de eliminados para recuperación
+ * - Validación de dependencias con novedades
+ * - Auditoría completa
+ * 
+ * Endpoints:
+ * - GET /api/v1/subtipos-novedad - Listar subtipos activos
+ * - GET /api/v1/subtipos-novedad/:id - Obtener por ID
+ * - POST /api/v1/subtipos-novedad - Crear nuevo subtipo
+ * - PUT /api/v1/subtipos-novedad/:id - Actualizar existente
+ * - DELETE /api/v1/subtipos-novedad/:id - Soft delete
+ * - PATCH /api/v1/subtipos-novedad/:id/reactivar - Reactivar eliminado
+ * - GET /api/v1/subtipos-novedad/eliminados - Listar eliminados
  *
  * @module controllers/subtipoNovedadController
- * @version 1.0.0
+ * @version 1.1.0
  */
 
-import { SubtipoNovedad, TipoNovedad } from "../models/index.js";
+import { SubtipoNovedad, TipoNovedad, Novedad } from "../models/index.js";
 import { Op } from "sequelize";
 
 // ==========================================
@@ -349,7 +364,6 @@ const remove = async (req, res) => {
     }
 
     // Verificar si tiene novedades asociadas
-    const { Novedad } = await import("../models/index.js");
     const tieneNovedades = await Novedad.count({
       where: {
         subtipo_novedad_id: id,
@@ -386,6 +400,120 @@ const remove = async (req, res) => {
   }
 };
 
+/**
+ * Obtener subtipos de novedad eliminados (para reactivación)
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ */
+const getEliminados = async (req, res) => {
+  try {
+    const { tipo_novedad_id, search } = req.query;
+
+    const whereClause = {
+      deleted_at: { [Op.not]: null },
+    };
+
+    // Filtro por tipo de novedad
+    if (tipo_novedad_id) {
+      whereClause.tipo_novedad_id = tipo_novedad_id;
+    }
+
+    // Búsqueda por nombre o código
+    if (search) {
+      whereClause[Op.or] = [
+        { nombre: { [Op.like]: `%${search}%` } },
+        { subtipo_code: { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    const items = await SubtipoNovedad.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: TipoNovedad,
+          as: "tipoNovedad",
+          attributes: ["id", "nombre", "tipo_code"],
+        },
+      ],
+      order: [
+        ["deleted_at", "DESC"],
+        ["nombre", "ASC"],
+      ],
+      paranoid: false, // Incluir eliminados
+    });
+
+    res.status(200).json({
+      success: true,
+      data: items,
+      count: items.length,
+    });
+  } catch (error) {
+    console.error("❌ Error en subtipoNovedadController.getEliminados:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener subtipos de novedad eliminados",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Reactivar subtipo de novedad eliminado
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ */
+const reactivar = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const item = await SubtipoNovedad.findByPk(id, {
+      include: [
+        {
+          model: TipoNovedad,
+          as: "tipoNovedad",
+          attributes: ["id", "nombre", "tipo_code"],
+        },
+      ],
+      paranoid: false, // Incluir eliminados
+    });
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Subtipo de novedad no encontrado",
+      });
+    }
+
+    if (!item.deleted_at) {
+      return res.status(400).json({
+        success: false,
+        message: "El subtipo de novedad no está eliminado",
+      });
+    }
+
+    // Reactivar
+    await item.update({
+      estado: true,
+      deleted_at: null,
+      deleted_by: null,
+      updated_by: req.user.id,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Subtipo de novedad reactivado exitosamente",
+      data: item,
+    });
+  } catch (error) {
+    console.error("❌ Error en subtipoNovedadController.reactivar:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al reactivar subtipo de novedad",
+      error: error.message,
+    });
+  }
+};
+
 // ==========================================
 // EXPORTAR
 // ==========================================
@@ -396,4 +524,6 @@ export default {
   create,
   update,
   remove,
+  getEliminados,
+  reactivar,
 };

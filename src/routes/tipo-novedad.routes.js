@@ -1,14 +1,30 @@
 /**
- * Ruta: src/routes/tipo-novedad.routes.js
- * VERSIÓN: 1.0.0
+ * File: src/routes/tipo-novedad.routes.js
+ * @version 1.1.0
+ * @description Rutas para gestión de tipos de novedad (categorías principales)
+ * 
+ * Endpoints:
+ * - GET /api/v1/tipos-novedad - Listar tipos activos
+ * - GET /api/v1/tipos-novedad/:id - Obtener tipo por ID
+ * - POST /api/v1/tipos-novedad - Crear nuevo tipo
+ * - PUT /api/v1/tipos-novedad/:id - Actualizar existente
+ * - DELETE /api/v1/tipos-novedad/:id - Soft delete
+ * - PATCH /api/v1/tipos-novedad/:id/reactivar - Reactivar eliminado
+ * - GET /api/v1/tipos-novedad/eliminadas - Listar eliminados
+ * 
+ * @module src/routes/tipo-novedad.routes.js
+ * @version 1.1.0
+ * @date 2026-01-29
  */
 
-import express from "express";
+import { Router } from "express";
 import tipoNovedadController from "../controllers/tipoNovedadController.js";
 import {
   verificarToken,
-  verificarRoles,
+  requireAnyPermission,
 } from "../middlewares/authMiddleware.js";
+import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
+import { handleValidationErrors } from "../middlewares/handleValidationErrors.js";
 import {
   validateCreate,
   validateUpdate,
@@ -16,59 +32,178 @@ import {
   validateQuery,
 } from "../validators/tipo-novedad.validator.js";
 
-const router = express.Router();
+const router = Router();
 
-// Aplicar verificación de token a todas las rutas
-router.use(verificarToken);
+const permisos = {
+  read: "catalogos.tipos_novedad.read",
+  create: "catalogos.tipos_novedad.create",
+  update: "catalogos.tipos_novedad.update",
+  delete: "catalogos.tipos_novedad.delete",
+};
 
 /**
- * @route GET /api/v1/tipos-novedad
- * @desc  Listar tipos de novedad
- * @access Private (todos autenticados)
+ * @route   GET /api/v1/tipos-novedad
+ * @desc    Obtener todos los tipos de novedad
+ * @access  Usuarios con permiso de lectura
  */
-router.get("/", tipoNovedadController.getAll);
+router.get(
+  "/",
+  verificarToken,
+  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  validateQuery,
+  (req, res, next) => {
+    // #swagger.tags = ['Tipos Novedad']
+    // #swagger.summary = 'Listar tipos de novedad'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['estado'] = { in: 'query', required: false, type: 'string', enum: ['true', 'false', '1', '0'], example: 'true' }
+    // #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'Robo' }
+    // #swagger.responses[200] = { description: 'OK' }
+    return tipoNovedadController.getAll(req, res, next);
+  }
+);
 
 /**
- * @route GET /api/v1/tipos-novedad/:id
- * @desc  Obtener tipo de novedad por ID
- * @access Private (todos autenticados)
+ * @route   GET /api/v1/tipos-novedad/:id
+ * @desc    Obtener tipo de novedad por ID
+ * @access  Usuarios con permiso de lectura
  */
-router.get("/:id", validateId, tipoNovedadController.getById);
+router.get(
+  "/:id",
+  verificarToken,
+  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  validateId,
+  (req, res, next) => {
+    // #swagger.tags = ['Tipos Novedad']
+    // #swagger.summary = 'Obtener tipo de novedad por ID'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'Tipo de novedad no encontrado' }
+    return tipoNovedadController.getById(req, res, next);
+  }
+);
 
 /**
- * @route POST /api/v1/tipos-novedad
- * @desc  Crear tipo de novedad
- * @access Private (admin, supervisor)
+ * @route   POST /api/v1/tipos-novedad
+ * @desc    Crear nuevo tipo de novedad
+ * @access  Usuarios con permiso de creación
  */
 router.post(
   "/",
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarToken,
+  (req, res, next) => requireAnyPermission([permisos.create])(req, res, next),
   validateCreate,
-  tipoNovedadController.create
+  handleValidationErrors,
+  registrarAuditoria("Creación de tipo de novedad"),
+  (req, res, next) => {
+    // #swagger.tags = ['Tipos Novedad']
+    // #swagger.summary = 'Crear tipo de novedad'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/TipoNovedadCreateRequest" } } } }
+    // #swagger.responses[201] = { description: 'Creado' }
+    // #swagger.responses[400] = { description: 'Validación' }
+    return tipoNovedadController.create(req, res, next);
+  }
 );
 
 /**
- * @route PUT /api/v1/tipos-novedad/:id
- * @desc  Actualizar tipo de novedad
- * @access Private (admin, supervisor)
+ * @route   PUT /api/v1/tipos-novedad/:id
+ * @desc    Actualizar tipo de novedad existente
+ * @access  Usuarios con permiso de actualización
  */
 router.put(
   "/:id",
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarToken,
+  (req, res, next) => requireAnyPermission([permisos.update])(req, res, next),
+  validateId,
   validateUpdate,
-  tipoNovedadController.update
+  handleValidationErrors,
+  registrarAuditoria("Actualización de tipo de novedad"),
+  (req, res, next) => {
+    // #swagger.tags = ['Tipos Novedad']
+    // #swagger.summary = 'Actualizar tipo de novedad'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/TipoNovedadUpdateRequest" } } } }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[400] = { description: 'Validación' }
+    // #swagger.responses[404] = { description: 'Tipo de novedad no encontrado' }
+    return tipoNovedadController.update(req, res, next);
+  }
 );
 
 /**
- * @route DELETE /api/v1/tipos-novedad/:id
- * @desc  Eliminar tipo de novedad
- * @access Private (admin)
+ * @route   DELETE /api/v1/tipos-novedad/:id
+ * @desc    Eliminar tipo de novedad (soft delete)
+ * @access  Usuarios con permiso de eliminación
  */
 router.delete(
   "/:id",
-  verificarRoles(["super_admin", "admin"]),
+  verificarToken,
+  (req, res, next) => requireAnyPermission([permisos.delete])(req, res, next),
   validateId,
-  tipoNovedadController.remove
+  handleValidationErrors,
+  registrarAuditoria("Eliminación de tipo de novedad"),
+  (req, res, next) => {
+    // #swagger.tags = ['Tipos Novedad']
+    // #swagger.summary = 'Eliminar tipo de novedad'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'Tipo de novedad no encontrado' }
+    // #swagger.responses[400] = { description: 'No se puede eliminar - tiene dependencias' }
+    return tipoNovedadController.remove(req, res, next);
+  }
+);
+
+/**
+ * @route   PATCH /api/v1/tipos-novedad/:id/reactivar
+ * @desc    Reactivar tipo de novedad eliminado
+ * @access  Usuarios con permiso de actualización
+ */
+router.patch(
+  "/:id/reactivar",
+  verificarToken,
+  (req, res, next) => requireAnyPermission([permisos.update])(req, res, next),
+  validateId,
+  handleValidationErrors,
+  registrarAuditoria("Reactivación de tipo de novedad"),
+  (req, res, next) => {
+    // #swagger.tags = ['Tipos Novedad']
+    // #swagger.summary = 'Reactivar tipo de novedad'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[404] = { description: 'Tipo de novedad no encontrado' }
+    // #swagger.responses[400] = { description: 'Tipo de novedad no está eliminado' }
+    return tipoNovedadController.reactivar(req, res, next);
+  }
+);
+
+/**
+ * @route   GET /api/v1/tipos-novedad/eliminadas
+ * @desc    Listar tipos de novedad eliminados
+ * @access  Usuarios con permiso de lectura
+ */
+router.get(
+  "/eliminadas",
+  verificarToken,
+  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  [
+    query("search")
+      .optional()
+      .isString()
+      .withMessage("El búsqueda debe ser texto"),
+  ],
+  handleValidationErrors,
+  (req, res, next) => {
+    // #swagger.tags = ['Tipos Novedad']
+    // #swagger.summary = 'Listar tipos de novedad eliminados'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'Robo' }
+    // #swagger.responses[200] = { description: 'OK' }
+    return tipoNovedadController.getEliminadas(req, res, next);
+  }
 );
 
 export default router;
