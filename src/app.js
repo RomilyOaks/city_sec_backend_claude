@@ -156,6 +156,11 @@ const corsOptions = {
       return callback(null, true);
     }
 
+    // In production, allow localhost:5173 for development
+    if (process.env.NODE_ENV === "production" && origin === "http://localhost:5173") {
+      return callback(null, true);
+    }
+
     if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
