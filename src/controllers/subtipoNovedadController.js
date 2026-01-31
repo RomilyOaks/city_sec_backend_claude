@@ -168,18 +168,31 @@ const create = async (req, res) => {
       });
     }
 
-    // Verificar código duplicado
-    if (subtipoCodeNormalizado) {
-      const existente = await SubtipoNovedad.findOne({
-        where: { subtipo_code: subtipoCodeNormalizado, deleted_at: null },
-      });
+    // Determinar el código a usar
+    let codigoFinal = subtipoCodeNormalizado;
 
-      if (existente) {
-        return res.status(400).json({
-          success: false,
-          message: "Ya existe un subtipo de novedad con este código",
-        });
-      }
+    // Si no se envió código, generar automáticamente
+    if (!codigoFinal) {
+      // Obtener el máximo ID actual para generar el próximo código
+      const maxResult = await SubtipoNovedad.findOne({
+        attributes: [[SubtipoNovedad.sequelize.fn("MAX", SubtipoNovedad.sequelize.col("id")), "maxId"]],
+        paranoid: false, // Incluir eliminados para no reusar IDs
+      });
+      const nextId = (maxResult?.dataValues?.maxId || 0) + 1;
+      codigoFinal = `ST${String(nextId).padStart(3, "0")}`;
+      console.log(`📝 Código de subtipo generado automáticamente: ${codigoFinal}`);
+    }
+
+    // Verificar código duplicado
+    const existente = await SubtipoNovedad.findOne({
+      where: { subtipo_code: codigoFinal, deleted_at: null },
+    });
+
+    if (existente) {
+      return res.status(400).json({
+        success: false,
+        message: "Ya existe un subtipo de novedad con este código",
+      });
     }
 
     // Crear subtipo
@@ -187,7 +200,7 @@ const create = async (req, res) => {
       nombre,
       tipo_novedad_id,
       descripcion,
-      subtipo_code: subtipoCodeNormalizado, // Puede ser null, se generará después
+      subtipo_code: codigoFinal,
       color_hex,
       icono,
       orden,
@@ -198,13 +211,6 @@ const create = async (req, res) => {
       requiere_pnp,
       created_by: req.user.id,
     });
-
-    // Si no se envió subtipo_code, generar automáticamente: ST + ID con padding
-    if (!subtipoCodeNormalizado) {
-      const codigoGenerado = `ST${String(nuevo.id).padStart(3, "0")}`;
-      await nuevo.update({ subtipo_code: codigoGenerado });
-      console.log(`📝 Código de subtipo generado automáticamente: ${codigoGenerado}`);
-    }
 
     // Obtener subtipo completo con relación
     const subtipoCompleto = await SubtipoNovedad.findByPk(nuevo.id, {

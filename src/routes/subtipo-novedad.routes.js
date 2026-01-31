@@ -65,6 +65,38 @@ router.get(
 );
 
 /**
+ * @route   GET /api/v1/subtipos-novedad/eliminados
+ * @desc    Listar subtipos de novedad eliminados
+ * @access  Usuarios con permiso de lectura
+ * @note    IMPORTANTE: Esta ruta debe estar ANTES de /:id para que no sea capturada como parámetro
+ */
+router.get(
+  "/eliminados",
+  verificarToken,
+  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  [
+    query("tipo_novedad_id")
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage("El ID del tipo de novedad debe ser un entero positivo"),
+    query("search")
+      .optional()
+      .isString()
+      .withMessage("La búsqueda debe ser texto"),
+  ],
+  handleValidationErrors,
+  (req, res, next) => {
+    // #swagger.tags = ['Subtipos Novedad']
+    // #swagger.summary = 'Listar subtipos de novedad eliminados'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['tipo_novedad_id'] = { in: 'query', required: false, type: 'integer', example: 1 }
+    // #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'Hurto' }
+    // #swagger.responses[200] = { description: 'OK' }
+    return subtipoNovedadController.getEliminados(req, res, next);
+  }
+);
+
+/**
  * @route   GET /api/v1/subtipos-novedad/:id
  * @desc    Obtener subtipo de novedad por ID
  * @access  Usuarios con permiso de lectura
@@ -179,37 +211,6 @@ router.patch(
     // #swagger.responses[404] = { description: 'Subtipo de novedad no encontrado' }
     // #swagger.responses[400] = { description: 'Subtipo de novedad no está eliminado' }
     return subtipoNovedadController.reactivar(req, res, next);
-  }
-);
-
-/**
- * @route   GET /api/v1/subtipos-novedad/eliminados
- * @desc    Listar subtipos de novedad eliminados
- * @access  Usuarios con permiso de lectura
- */
-router.get(
-  "/eliminados",
-  verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
-  [
-    query("tipo_novedad_id")
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage("El ID del tipo de novedad debe ser un entero positivo"),
-    query("search")
-      .optional()
-      .isString()
-      .withMessage("La búsqueda debe ser texto"),
-  ],
-  handleValidationErrors,
-  (req, res, next) => {
-    // #swagger.tags = ['Subtipos Novedad']
-    // #swagger.summary = 'Listar subtipos de novedad eliminados'
-    // #swagger.security = [{ bearerAuth: [] }]
-    // #swagger.parameters['tipo_novedad_id'] = { in: 'query', required: false, type: 'integer', example: 1 }
-    // #swagger.parameters['search'] = { in: 'query', required: false, type: 'string', example: 'Hurto' }
-    // #swagger.responses[200] = { description: 'OK' }
-    return subtipoNovedadController.getEliminados(req, res, next);
   }
 );
 
