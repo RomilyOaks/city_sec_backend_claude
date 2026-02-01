@@ -350,7 +350,7 @@ export const createNovedad = async (req, res) => {
       {
         novedad_code,
         fecha_hora_ocurrencia,
-        fecha_hora_reporte: new Date(),
+        fecha_hora_reporte: getNowInTimezone(),
         tipo_novedad_id,
         subtipo_novedad_id,
         estado_novedad_id: estadoInicial.id,
@@ -585,8 +585,8 @@ export const asignarRecursos = async (req, res) => {
     
     console.log("🔍 DEBUG - datosActualizacion final:", JSON.stringify(datosActualizacion, null, 2));
     
-    // Fecha de despacho: usar la proporcionada o la actual
-    datosActualizacion.fecha_despacho = fecha_despacho ? new Date(fecha_despacho) : new Date();
+    // Fecha de despacho: usar la proporcionada o la actual (timezone Perú)
+    datosActualizacion.fecha_despacho = fecha_despacho ? new Date(fecha_despacho) : getNowInTimezone();
     
     // Actualizar estado: usar el proporcionado explícitamente o el de despacho automático
     if (estado_novedad_id) {
@@ -667,7 +667,7 @@ export const deleteNovedad = async (req, res) => {
 
     await novedad.update({
       estado: 0,
-      deleted_at: new Date(),
+      deleted_at: getNowInTimezone(),
       deleted_by: req.user.id,
     });
 
@@ -737,11 +737,9 @@ export const getHistorialEstados = async (req, res) => {
  */
 export const getDashboardStats = async (req, res) => {
   try {
-    // Usar zona horaria de Perú (UTC-5)
-    const ahora = new Date();
-    const offsetPeru = -5 * 60; // UTC-5 en minutos
-    const ahoraPeru = new Date(ahora.getTime() + (offsetPeru - ahora.getTimezoneOffset()) * 60000);
-    
+    // Usar zona horaria de Perú (UTC-5) con helper
+    const ahoraPeru = getNowInTimezone();
+
     const hoy = new Date(ahoraPeru);
     hoy.setHours(0, 0, 0, 0);
 
