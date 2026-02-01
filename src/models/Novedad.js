@@ -86,15 +86,16 @@ const Novedad = sequelize.define(
         "TELEFONO_107",
         "RADIO_TETRA",
         "REDES_SOCIALES",
-        "BOTON_EMERGENCIA_ALERTA_SURCO",
+        "BOTON_EMERGENCIA_ALERTA",
         "BOTON_DENUNCIA_VECINO_ALERTA",
         "INTERVENCION_DIRECTA",
+        "VIDEO_CCO",
         "ANALITICA",
-        "APP_PODER_JUDICIAL",
-        "VIDEO_CCO"
+        "APP_PODER_JUDICIAL"
       ),
       allowNull: true,
       defaultValue: "TELEFONO_107",
+      comment: "Medio que origina la Novedad/Incidente e inicia el flujo de atención de Seguridad Ciudadana",
     },
     radio_tetra_id: {
       type: DataTypes.INTEGER,

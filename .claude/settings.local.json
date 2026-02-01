@@ -13,7 +13,11 @@
       "Bash(curl:*)",
       "Bash(echo:*)",
       "Bash(npx eslint:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run:*)"
     ]
   }
 }
