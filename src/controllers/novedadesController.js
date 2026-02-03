@@ -863,6 +863,144 @@ export const getDashboardStats = async (req, res) => {
   }
 };
 
+/**
+ * Obtener estadísticas de novedades en atención
+ * GET /api/v1/novedades/dashboard/en-atencion
+ *
+ * Retorna novedades con estados activos:
+ * - DESPACHADA (2)
+ * - EN RUTA (3)
+ * - EN LUGAR (4)
+ * - EN ATENCION (5)
+ */
+export const getNovedadesEnAtencion = async (req, res) => {
+  try {
+    // IDs de estados "en atención" (activos/en proceso)
+    const ESTADOS_EN_ATENCION = [2, 3, 4, 5];
+
+    // Condición base para novedades activas en atención
+    const whereCondition = {
+      estado_novedad_id: { [Op.in]: ESTADOS_EN_ATENCION },
+      estado: 1,
+      deleted_at: null,
+    };
+
+    // Total de novedades en atención
+    const totalEnAtencion = await Novedad.count({
+      where: whereCondition,
+    });
+
+    // Desglose por estado
+    const porEstado = await Novedad.findAll({
+      where: whereCondition,
+      attributes: [
+        "estado_novedad_id",
+        [sequelize.fn("COUNT", sequelize.col("Novedad.id")), "cantidad"],
+      ],
+      include: [
+        {
+          model: EstadoNovedad,
+          as: "novedadEstado",
+          attributes: ["id", "nombre", "color_hex", "icono", "orden"],
+        },
+      ],
+      group: ["estado_novedad_id", "novedadEstado.id"],
+      order: [[{ model: EstadoNovedad, as: "novedadEstado" }, "orden", "ASC"]],
+      raw: false,
+    });
+
+    // Desglose por prioridad
+    const porPrioridad = await Novedad.findAll({
+      where: whereCondition,
+      attributes: [
+        "prioridad_actual",
+        [sequelize.fn("COUNT", sequelize.col("id")), "cantidad"],
+      ],
+      group: ["prioridad_actual"],
+      raw: true,
+    });
+
+    // Desglose por tipo de novedad
+    const porTipo = await Novedad.findAll({
+      where: whereCondition,
+      attributes: [
+        "tipo_novedad_id",
+        [sequelize.fn("COUNT", sequelize.col("Novedad.id")), "cantidad"],
+      ],
+      include: [
+        {
+          model: TipoNovedad,
+          as: "novedadTipoNovedad",
+          attributes: ["id", "nombre", "color_hex", "icono"],
+        },
+      ],
+      group: ["tipo_novedad_id", "novedadTipoNovedad.id"],
+      raw: false,
+    });
+
+    // Lista detallada de novedades en atención (últimas 50)
+    const novedadesDetalle = await Novedad.findAll({
+      where: whereCondition,
+      attributes: [
+        "id",
+        "novedad_code",
+        "fecha_hora_ocurrencia",
+        "localizacion",
+        "prioridad_actual",
+        "fecha_despacho",
+        "tiempo_respuesta_min",
+      ],
+      include: [
+        {
+          model: EstadoNovedad,
+          as: "novedadEstado",
+          attributes: ["id", "nombre", "color_hex", "icono"],
+        },
+        {
+          model: TipoNovedad,
+          as: "novedadTipoNovedad",
+          attributes: ["id", "nombre", "color_hex"],
+        },
+        {
+          model: UnidadOficina,
+          as: "novedadUnidadOficina",
+          attributes: ["id", "nombre", "codigo"],
+        },
+        {
+          model: Vehiculo,
+          as: "novedadVehiculo",
+          attributes: ["id", "placa", "codigo_vehiculo"],
+        },
+      ],
+      order: [
+        ["prioridad_actual", "DESC"],
+        ["fecha_hora_ocurrencia", "ASC"],
+      ],
+      limit: 50,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Novedades en atención obtenidas exitosamente",
+      data: {
+        totalEnAtencion,
+        porEstado,
+        porPrioridad,
+        porTipo,
+        novedadesDetalle,
+        estadosIncluidos: ESTADOS_EN_ATENCION,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error en getNovedadesEnAtencion:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener novedades en atención",
+      error: error.message,
+    });
+  }
+};
+
 export default {
   getAllNovedades,
   getNovedadById,
@@ -872,4 +1010,5 @@ export default {
   deleteNovedad,
   getHistorialEstados,
   getDashboardStats,
+  getNovedadesEnAtencion,
 };

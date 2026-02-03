@@ -81,6 +81,26 @@ router.get(
 );
 
 /**
+ * @route   GET /api/v1/novedades/dashboard/en-atencion
+ * @desc    Obtener estadísticas de novedades en atención (estados 2,3,4,5)
+ * @access  Todos los usuarios autenticados
+ * IMPORTANTE: Esta ruta debe ir ANTES de /:id para evitar conflictos
+ */
+router.get(
+  "/dashboard/en-atencion",
+  verificarToken,
+  (req, res, next) => {
+    // #swagger.tags = ['Novedades']
+    // #swagger.summary = 'Novedades en atención (DESPACHADA, EN RUTA, EN LUGAR, EN ATENCION)'
+    // #swagger.description = 'Retorna estadísticas de novedades activas con estados: DESPACHADA(2), EN RUTA(3), EN LUGAR(4), EN ATENCION(5)'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return novedadesController.getNovedadesEnAtencion(req, res, next);
+  }
+);
+
+/**
  * @route   GET /api/v1/novedades/:id/historial
  * @desc    Obtener historial de cambios de estado de una novedad
  * @access  Operador, Supervisor, Administrador
