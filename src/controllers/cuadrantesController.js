@@ -543,6 +543,7 @@ export const createCuadrante = async (req, res) => {
       cuadrante_code,
       nombre,
       sector_id,
+      subsector_id,  // ✅ AGREGAR subsector_id
       zona_code,
       latitud,
       longitud,
@@ -554,10 +555,10 @@ export const createCuadrante = async (req, res) => {
     const created_by = req.user.id;
 
     // Validar campos requeridos
-    if (!nombre || !sector_id) {
+    if (!nombre || !sector_id || !subsector_id) {  // ✅ Validar subsector_id
       return res.status(400).json({
         success: false,
-        message: "Nombre y sector_id son requeridos",
+        message: "Nombre, sector_id y subsector_id son requeridos",  // ✅ Mensaje actualizado
       });
     }
 
@@ -568,6 +569,16 @@ export const createCuadrante = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "El sector especificado no existe",
+      });
+    }
+
+    // ✅ Verificar que el subsector existe
+    const subsector = await Subsector.findByPk(subsector_id);
+
+    if (!subsector || subsector.deleted_at !== null) {
+      return res.status(404).json({
+        success: false,
+        message: "El subsector especificado no existe",
       });
     }
 
@@ -590,6 +601,7 @@ export const createCuadrante = async (req, res) => {
       cuadrante_code,
       nombre,
       sector_id,
+      subsector_id,  // ✅ AGREGAR subsector_id
       zona_code,
       latitud,
       longitud,
@@ -607,6 +619,11 @@ export const createCuadrante = async (req, res) => {
           model: Sector,
           as: "sector",
           attributes: ["id", "nombre", "sector_code"],
+        },
+        {
+          model: Subsector,
+          as: "subsector",  // ✅ AGREGAR relación subsector
+          attributes: ["id", "nombre", "subsector_code"],
         },
         ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
@@ -646,6 +663,8 @@ export const updateCuadrante = async (req, res) => {
     const {
       cuadrante_code,
       nombre,
+      sector_id,        // ✅ AGREGAR sector_id
+      subsector_id,     // ✅ AGREGAR subsector_id
       zona_code,
       latitud,
       longitud,
@@ -664,6 +683,28 @@ export const updateCuadrante = async (req, res) => {
         success: false,
         message: "Cuadrante no encontrado",
       });
+    }
+
+    // ✅ Validar sector_id si se proporciona
+    if (sector_id !== undefined) {
+      const sector = await Sector.findByPk(sector_id);
+      if (!sector || sector.deleted_at !== null) {
+        return res.status(404).json({
+          success: false,
+          message: "El sector especificado no existe",
+        });
+      }
+    }
+
+    // ✅ Validar subsector_id si se proporciona
+    if (subsector_id !== undefined) {
+      const subsector = await Subsector.findByPk(subsector_id);
+      if (!subsector || subsector.deleted_at !== null) {
+        return res.status(404).json({
+          success: false,
+          message: "El subsector especificado no existe",
+        });
+      }
     }
 
     // Si se está actualizando el código, validar que sea único
@@ -695,6 +736,8 @@ export const updateCuadrante = async (req, res) => {
     if (cuadrante_code !== undefined)
       datosActualizar.cuadrante_code = cuadrante_code.toUpperCase().trim();
     if (nombre !== undefined) datosActualizar.nombre = nombre;
+    if (sector_id !== undefined) datosActualizar.sector_id = sector_id;  // ✅ AGREGAR
+    if (subsector_id !== undefined) datosActualizar.subsector_id = subsector_id;  // ✅ AGREGAR
     if (zona_code !== undefined) datosActualizar.zona_code = zona_code;
     if (latitud !== undefined) datosActualizar.latitud = latitud;
     if (longitud !== undefined) datosActualizar.longitud = longitud;
@@ -713,6 +756,11 @@ export const updateCuadrante = async (req, res) => {
           model: Sector,
           as: "sector",
           attributes: ["id", "nombre", "sector_code"],
+        },
+        {
+          model: Subsector,
+          as: "subsector",  // ✅ AGREGAR relación subsector
+          attributes: ["id", "nombre", "subsector_code"],
         },
         ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
