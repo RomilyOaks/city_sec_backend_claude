@@ -256,6 +256,7 @@ const createSector = async (req, res) => {
       descripcion,
       ubigeo,
       zona_code,
+      supervisor_id,
       poligono_json,
       color_mapa,
     } = req.body;
@@ -287,6 +288,7 @@ const createSector = async (req, res) => {
       descripcion,
       ubigeo,
       zona_code,
+      supervisor_id,
       poligono_json,
       color_mapa: color_mapa || "#3B82F6",
       created_by: req.user.id,
