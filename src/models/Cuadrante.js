@@ -118,6 +118,20 @@ const Cuadrante = sequelize.define(
     },
 
     /**
+     * Foreign Key al subsector al que pertenece este cuadrante
+     * Nivel intermedio entre sector y cuadrante
+     */
+    subsector_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "subsectores",
+        key: "id",
+      },
+      comment: "ID del subsector al que pertenece el cuadrante",
+    },
+
+    /**
      * Código de zona opcional para clasificación adicional
      * Permite agrupar cuadrantes por zonas dentro de un sector
      */
@@ -125,6 +139,30 @@ const Cuadrante = sequelize.define(
       type: DataTypes.STRING(20),
       allowNull: true,
       comment: "Código de zona asociada al cuadrante",
+    },
+
+    /**
+     * Foreign Key al supervisor responsable del cuadrante
+     */
+    personal_supervisor_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "personal_seguridad",
+        key: "id",
+      },
+      comment: "ID del supervisor responsable del cuadrante",
+    },
+
+    /**
+     * Referencia textual del cuadrante
+     * Descripción de los cruces de vías que conforman el polígono
+     */
+    referencia: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment:
+        "Referencia de los cruces de vias que conforman el polígono del cuadrante",
     },
 
     // ============================================
@@ -322,6 +360,14 @@ const Cuadrante = sequelize.define(
         // Índice compuesto para filtrar activos no eliminados
         // Optimiza la consulta más común: WHERE estado=1 AND deleted_at IS NULL
         fields: ["estado", "deleted_at"],
+      },
+      {
+        // Índice en subsector_id para búsquedas por subsector
+        fields: ["subsector_id"],
+      },
+      {
+        // Índice en personal_supervisor_id para búsquedas por supervisor
+        fields: ["personal_supervisor_id"],
       },
     ],
 
@@ -597,6 +643,7 @@ Cuadrante.prototype.getResumen = function () {
     codigo: this.cuadrante_code,
     nombre: this.nombre,
     sectorId: this.sector_id,
+    subsectorId: this.subsector_id,
     zona: this.zona_code,
     color: this.color_mapa,
     activo: this.estado,

@@ -89,6 +89,7 @@ import vehiculosRoutes from "./vehiculos.routes.js";
 import mantenimientosRoutes from "./mantenimientos.routes.js";
 import personalRoutes from "./personal.routes.js";
 import sectoresRoutes from "./sectores.routes.js";
+import subsectoresRoutes from "./subsectores.routes.js";
 import cuadrantesRoutes from "./cuadrantes.routes.js";
 import operativosTurnoRoutes from "./operativos-turno.routes.js";
 import operativosVehiculosRoutes from "./operativos-vehiculos.routes.js";
@@ -346,6 +347,20 @@ router.use("/personal", personalRoutes);
  *   - Estadísticas por sector
  */
 router.use("/sectores", sectoresRoutes);
+
+/**
+ * @route   /subsectores
+ * @desc    Gestión de subsectores (subdivisiones de sectores)
+ * @access  Supervisor, Admin
+ * @version 1.0.0
+ * @new true
+ * @features
+ *   - Jerarquía: Sector -> Subsector -> Cuadrante
+ *   - CRUD completo
+ *   - Endpoint por sector: /subsectores/sector/:sectorId
+ *   - Asignación de supervisor
+ */
+router.use("/subsectores", subsectoresRoutes);
 
 /**
  * @route   /cuadrantes
@@ -1134,6 +1149,7 @@ router.use((req, res) => {
       "/novedades",
       "/vehiculos",
       "/sectores",
+      "/subsectores",
       "/cuadrantes",
       "/catalogos",
       "/cargos",

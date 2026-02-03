@@ -154,8 +154,16 @@ import HorariosTurnos from "./horariosTurnos.js";
 import Sector from "./Sector.js";
 
 /**
+ * Modelo Subsector
+ * Subdivisiones de sectores que agrupan cuadrantes
+ * Jerarquía: Sector -> Subsector -> Cuadrante
+ * @type {Model}
+ */
+import Subsector from "./Subsector.js";
+
+/**
  * Modelo Cuadrante
- * Subdivisiones de sectores para patrullaje
+ * Subdivisiones de subsectores para patrullaje
  * @type {Model}
  */
 import Cuadrante from "./Cuadrante.js";
@@ -954,6 +962,62 @@ Cuadrante.belongsTo(Sector, {
 });
 
 /**
+ * Relación: Sector -> Subsector (One-to-Many)
+ * Un sector puede tener varios subsectores
+ */
+Sector.hasMany(Subsector, {
+  foreignKey: "sector_id",
+  as: "subsectores",
+});
+
+Subsector.belongsTo(Sector, {
+  foreignKey: "sector_id",
+  as: "sector",
+});
+
+/**
+ * Relación: Subsector -> Cuadrante (One-to-Many)
+ * Un subsector puede tener varios cuadrantes
+ */
+Subsector.hasMany(Cuadrante, {
+  foreignKey: "subsector_id",
+  as: "cuadrantes",
+});
+
+Cuadrante.belongsTo(Subsector, {
+  foreignKey: "subsector_id",
+  as: "subsector",
+});
+
+/**
+ * Relación: Subsector -> PersonalSeguridad (Many-to-One)
+ * Un subsector tiene un supervisor
+ */
+Subsector.belongsTo(PersonalSeguridad, {
+  foreignKey: "personal_supervisor_id",
+  as: "supervisor",
+});
+
+PersonalSeguridad.hasMany(Subsector, {
+  foreignKey: "personal_supervisor_id",
+  as: "subsectoresSupervisados",
+});
+
+/**
+ * Relación: Cuadrante -> PersonalSeguridad (Many-to-One)
+ * Un cuadrante tiene un supervisor
+ */
+Cuadrante.belongsTo(PersonalSeguridad, {
+  foreignKey: "personal_supervisor_id",
+  as: "supervisor",
+});
+
+PersonalSeguridad.hasMany(Cuadrante, {
+  foreignKey: "personal_supervisor_id",
+  as: "cuadrantesSupervisados",
+});
+
+/**
  * Relación: Ubigeo -> Sector (One-to-Many)
  */
 Ubigeo.hasMany(Sector, {
@@ -1391,6 +1455,20 @@ Sector.belongsTo(Usuario, {
   as: "actualizadorSector",
 });
 Sector.belongsTo(Usuario, { foreignKey: "deleted_by", as: "eliminadorSector" });
+
+// Subsector
+Subsector.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorSubsector",
+});
+Subsector.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorSubsector",
+});
+Subsector.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorSubsector",
+});
 
 // SubtipoNovedad
 SubtipoNovedad.belongsTo(Usuario, {
@@ -1846,6 +1924,7 @@ const models = {
   OperativosVehiculosCuadrantes,
   OperativosVehiculosNovedades,
   Sector,
+  Subsector,
   Cuadrante,
   UnidadOficina,
   PersonalSeguridad,
@@ -1931,6 +2010,7 @@ export {
   OperativosVehiculosCuadrantes,
   OperativosVehiculosNovedades,
   Sector,
+  Subsector,
   Cuadrante,
   UnidadOficina,
   PersonalSeguridad,
