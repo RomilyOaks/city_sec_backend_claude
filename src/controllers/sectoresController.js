@@ -38,6 +38,7 @@
 
 import {
   Sector,
+  Subsector,
   Cuadrante,
   Ubigeo,
   Usuario,
@@ -454,7 +455,7 @@ const deleteSector = async (req, res) => {
  */
 const getAllCuadrantes = async (req, res) => {
   try {
-    const { sector_id, estado } = req.query;
+    const { sector_id, subsector_id, estado, search, page, limit } = req.query;
 
     const whereClause = {
       deleted_at: null,
@@ -464,9 +465,27 @@ const getAllCuadrantes = async (req, res) => {
       whereClause.sector_id = sector_id;
     }
 
+    if (subsector_id) {
+      whereClause.subsector_id = subsector_id;
+    }
+
     if (estado !== undefined) {
       whereClause.estado = estado;
     }
+
+    if (search && search.trim().length > 0) {
+      whereClause[Op.or] = [
+        { cuadrante_code: { [Op.like]: `%${search}%` } },
+        { nombre: { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    // Paginacion
+    const pageNumber = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 15;
+    const offset = (pageNumber - 1) * pageSize;
+
+    const totalItems = await Cuadrante.count({ where: whereClause });
 
     const cuadrantes = await Cuadrante.findAll({
       where: whereClause,
@@ -474,16 +493,43 @@ const getAllCuadrantes = async (req, res) => {
         {
           model: Sector,
           as: "sector",
-          attributes: ["id", "sector_code", "nombre"],
+          attributes: ["id", "sector_code", "nombre", "color_mapa"],
+        },
+        {
+          model: Subsector,
+          as: "subsector",
+          attributes: ["id", "subsector_code", "nombre", "color_mapa"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "supervisor",
+          attributes: [
+            "id",
+            "nombres",
+            "apellido_paterno",
+            "apellido_materno",
+            "doc_numero",
+          ],
+          required: false,
         },
         ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
+      limit: pageSize,
+      offset: offset,
       order: [["cuadrante_code", "ASC"]],
     });
 
     res.status(200).json({
       success: true,
-      data: cuadrantes,
+      data: {
+        cuadrantes,
+        pagination: {
+          current_page: pageNumber,
+          total_items: totalItems,
+          total_pages: Math.ceil(totalItems / pageSize),
+          items_per_page: pageSize,
+        },
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -509,6 +555,24 @@ const getCuadranteById = async (req, res) => {
         {
           model: Sector,
           as: "sector",
+          attributes: ["id", "sector_code", "nombre", "color_mapa"],
+        },
+        {
+          model: Subsector,
+          as: "subsector",
+          attributes: ["id", "subsector_code", "nombre", "color_mapa"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "supervisor",
+          attributes: [
+            "id",
+            "nombres",
+            "apellido_paterno",
+            "apellido_materno",
+            "doc_numero",
+          ],
+          required: false,
         },
         ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
@@ -545,7 +609,10 @@ const createCuadrante = async (req, res) => {
       cuadrante_code,
       nombre,
       sector_id,
+      subsector_id,
+      personal_supervisor_id,
       zona_code,
+      referencia,
       latitud,
       longitud,
       poligono_json,
@@ -554,10 +621,11 @@ const createCuadrante = async (req, res) => {
     } = req.body;
 
     // Validar campos requeridos
-    if (!cuadrante_code || !nombre || !sector_id) {
+    if (!cuadrante_code || !nombre || !sector_id || !subsector_id) {
       return res.status(400).json({
         success: false,
-        message: "Faltan campos requeridos: cuadrante_code, nombre, sector_id",
+        message:
+          "Faltan campos requeridos: cuadrante_code, nombre, sector_id, subsector_id",
       });
     }
 
@@ -585,12 +653,49 @@ const createCuadrante = async (req, res) => {
       });
     }
 
+    // Verificar que el subsector existe y pertenece al sector
+    const subsector = await Subsector.findOne({
+      where: { id: subsector_id, sector_id, estado: 1, deleted_at: null },
+    });
+
+    if (!subsector) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Subsector no encontrado, inactivo o no pertenece al sector indicado",
+      });
+    }
+
+    // Determinar supervisor: usar el proporcionado o heredar del subsector o sector
+    let supervisorFinal =
+      personal_supervisor_id ||
+      subsector.personal_supervisor_id ||
+      sector.supervisor_id ||
+      null;
+
+    // Verificar supervisor si hay uno definido
+    if (supervisorFinal) {
+      const supervisor = await PersonalSeguridad.findOne({
+        where: { id: supervisorFinal, estado: 1, deleted_at: null },
+      });
+
+      if (!supervisor) {
+        return res.status(404).json({
+          success: false,
+          message: "Supervisor no encontrado o inactivo",
+        });
+      }
+    }
+
     // Crear cuadrante
     const nuevoCuadrante = await Cuadrante.create({
       cuadrante_code,
       nombre,
       sector_id,
+      subsector_id,
+      personal_supervisor_id: supervisorFinal,
       zona_code,
+      referencia,
       latitud,
       longitud,
       poligono_json,
@@ -604,6 +709,19 @@ const createCuadrante = async (req, res) => {
     const cuadranteCompleto = await Cuadrante.findByPk(nuevoCuadrante.id, {
       include: [
         { model: Sector, as: "sector" },
+        { model: Subsector, as: "subsector" },
+        {
+          model: PersonalSeguridad,
+          as: "supervisor",
+          attributes: [
+            "id",
+            "nombres",
+            "apellido_paterno",
+            "apellido_materno",
+            "doc_numero",
+          ],
+          required: false,
+        },
         ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
     });
@@ -664,6 +782,52 @@ const updateCuadrante = async (req, res) => {
       }
     }
 
+    // Verificar subsector si se está cambiando
+    if (
+      datosActualizacion.subsector_id &&
+      datosActualizacion.subsector_id !== cuadrante.subsector_id
+    ) {
+      const sector_id = datosActualizacion.sector_id || cuadrante.sector_id;
+      const subsector = await Subsector.findOne({
+        where: {
+          id: datosActualizacion.subsector_id,
+          sector_id: sector_id,
+          estado: 1,
+          deleted_at: null,
+        },
+      });
+
+      if (!subsector) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Subsector no encontrado, inactivo o no pertenece al sector indicado",
+        });
+      }
+    }
+
+    // Verificar supervisor si se está cambiando
+    if (
+      datosActualizacion.personal_supervisor_id &&
+      datosActualizacion.personal_supervisor_id !==
+        cuadrante.personal_supervisor_id
+    ) {
+      const supervisor = await PersonalSeguridad.findOne({
+        where: {
+          id: datosActualizacion.personal_supervisor_id,
+          estado: 1,
+          deleted_at: null,
+        },
+      });
+
+      if (!supervisor) {
+        return res.status(404).json({
+          success: false,
+          message: "Supervisor no encontrado o inactivo",
+        });
+      }
+    }
+
     // Actualizar cuadrante
     await cuadrante.update({
       ...datosActualizacion,
@@ -674,6 +838,19 @@ const updateCuadrante = async (req, res) => {
     const cuadranteActualizado = await Cuadrante.findByPk(id, {
       include: [
         { model: Sector, as: "sector" },
+        { model: Subsector, as: "subsector" },
+        {
+          model: PersonalSeguridad,
+          as: "supervisor",
+          attributes: [
+            "id",
+            "nombres",
+            "apellido_paterno",
+            "apellido_materno",
+            "doc_numero",
+          ],
+          required: false,
+        },
         ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
     });

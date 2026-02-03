@@ -3,19 +3,28 @@
  * RUTAS: src/routes/cuadrantes.routes.js
  * ============================================
  *
+ * VERSION: 2.0.0
+ * FECHA: 2026-02-03
+ *
  * Definición de rutas para la gestión de cuadrantes de patrullaje.
  * Todas las rutas requieren autenticación y permisos específicos.
  *
+ * CAMBIOS v2.0.0:
+ * - Agregado filtro por subsector_id en GET /cuadrantes
+ * - Nuevo endpoint GET /cuadrantes/subsector/:subsectorId
+ * - Incluye relación con Subsector y supervisor en respuestas
+ *
  * Rutas disponibles:
- * - GET    /api/v1/cuadrantes                 - Listar cuadrantes
- * - GET    /api/v1/cuadrantes/:id             - Obtener cuadrante por ID
- * - GET    /api/v1/cuadrantes/sector/:sectorId - Cuadrantes de un sector
- * - GET    /api/v1/cuadrantes/codigo/:code    - Buscar por código
- * - GET    /api/v1/cuadrantes/cercanos        - Búsqueda geoespacial
- * - POST   /api/v1/cuadrantes                 - Crear cuadrante
- * - PUT    /api/v1/cuadrantes/:id             - Actualizar cuadrante
- * - DELETE /api/v1/cuadrantes/:id             - Eliminar cuadrante
- * - PATCH  /api/v1/cuadrantes/:id/estado      - Cambiar estado
+ * - GET    /api/v1/cuadrantes                      - Listar cuadrantes (soporta subsector_id)
+ * - GET    /api/v1/cuadrantes/:id                  - Obtener cuadrante por ID
+ * - GET    /api/v1/cuadrantes/sector/:sectorId     - Cuadrantes de un sector
+ * - GET    /api/v1/cuadrantes/subsector/:subsectorId - Cuadrantes de un subsector
+ * - GET    /api/v1/cuadrantes/codigo/:code         - Buscar por código
+ * - GET    /api/v1/cuadrantes/cercanos             - Búsqueda geoespacial
+ * - POST   /api/v1/cuadrantes                      - Crear cuadrante
+ * - PUT    /api/v1/cuadrantes/:id                  - Actualizar cuadrante
+ * - DELETE /api/v1/cuadrantes/:id                  - Eliminar cuadrante
+ * - PATCH  /api/v1/cuadrantes/:id/estado           - Cambiar estado
  */
 
 import express from "express";
@@ -23,6 +32,7 @@ import {
   getCuadrantes,
   getCuadranteById,
   getCuadrantesBySector,
+  getCuadrantesBySubsector,
   getCuadranteByCode,
   getCuadrantesCercanos,
   createCuadrante,
@@ -90,6 +100,18 @@ router.get(
   verificarToken,
   validateQueryCuadrantes,
   getCuadrantesBySector
+);
+
+/**
+ * @route   GET /api/v1/cuadrantes/subsector/:subsectorId
+ * @desc    Obtener cuadrantes de un subsector específico
+ * @access  Private (requiere permiso: catalogos.cuadrantes.read)
+ */
+router.get(
+  "/subsector/:subsectorId",
+  verificarToken,
+  validateQueryCuadrantes,
+  getCuadrantesBySubsector
 );
 
 /**

@@ -33,7 +33,13 @@
  * @date 2025-12-14
  */
 
-import { Cuadrante, Sector, Usuario } from "../models/index.js";
+import {
+  Cuadrante,
+  Sector,
+  Subsector,
+  Usuario,
+  PersonalSeguridad,
+} from "../models/index.js";
 import { Op } from "sequelize";
 
 /**
@@ -77,24 +83,16 @@ const cuadranteAuditInclude = [
  */
 export const getCuadrantes = async (req, res) => {
   try {
-    // DEBUG: Mostrar todos los query params recibidos
-    console.log(
-      "[DEBUG] Query params recibidos en /api/v1/cuadrantes:",
-      req.query
-    );
     // Extraer parámetros de query con valores por defecto
     const {
       page = 1,
       limit = 10,
       sector_id,
+      subsector_id,
       activos = "true",
       search,
     } = req.query;
 
-    // DEBUG: Mostrar resultado de validación (si existe)
-    if (req.validationErrors) {
-      console.log("[DEBUG] Errores de validación:", req.validationErrors);
-    }
     // Calcular offset para paginación
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -106,6 +104,11 @@ export const getCuadrantes = async (req, res) => {
     // Filtro por sector si se especifica
     if (sector_id) {
       whereConditions.sector_id = parseInt(sector_id);
+    }
+
+    // Filtro por subsector si se especifica
+    if (subsector_id) {
+      whereConditions.subsector_id = parseInt(subsector_id);
     }
 
     // Filtro por estado activo/inactivo
@@ -128,7 +131,24 @@ export const getCuadrantes = async (req, res) => {
         {
           model: Sector,
           as: "sector",
-          attributes: ["id", "nombre", "sector_code"],
+          attributes: ["id", "nombre", "sector_code", "color_mapa"],
+        },
+        {
+          model: Subsector,
+          as: "subsector",
+          attributes: ["id", "nombre", "subsector_code", "color_mapa"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "supervisor",
+          attributes: [
+            "id",
+            "nombres",
+            "apellido_paterno",
+            "apellido_materno",
+            "doc_numero",
+          ],
+          required: false,
         },
         ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
@@ -187,7 +207,24 @@ export const getCuadranteById = async (req, res) => {
         {
           model: Sector,
           as: "sector",
-          attributes: ["id", "nombre", "sector_code", "zona_code"],
+          attributes: ["id", "nombre", "sector_code", "zona_code", "color_mapa"],
+        },
+        {
+          model: Subsector,
+          as: "subsector",
+          attributes: ["id", "nombre", "subsector_code", "color_mapa"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "supervisor",
+          attributes: [
+            "id",
+            "nombres",
+            "apellido_paterno",
+            "apellido_materno",
+            "doc_numero",
+          ],
+          required: false,
         },
         ...cuadranteAuditInclude, // Incluir usuarios de auditoría
       ],
@@ -262,6 +299,115 @@ export const getCuadrantesBySector = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error al obtener cuadrantes del sector",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * GET /api/v1/cuadrantes/subsector/:subsectorId
+ * Obtener cuadrantes de un subsector específico
+ *
+ * @param {Object} req - Request de Express
+ * @param {Object} req.params - Parámetros de ruta
+ * @param {number} req.params.subsectorId - ID del subsector
+ * @param {Object} res - Response de Express
+ *
+ * @returns {Object} JSON con cuadrantes del subsector
+ */
+export const getCuadrantesBySubsector = async (req, res) => {
+  try {
+    const { subsectorId } = req.params;
+    const { page = 1, limit = 15 } = req.query;
+
+    // Verificar que el subsector existe
+    const subsector = await Subsector.findOne({
+      where: { id: subsectorId, deleted_at: null },
+      include: [
+        {
+          model: Sector,
+          as: "sector",
+          attributes: ["id", "sector_code", "nombre"],
+        },
+      ],
+    });
+
+    if (!subsector) {
+      return res.status(404).json({
+        success: false,
+        message: "Subsector no encontrado",
+      });
+    }
+
+    // Calcular paginación
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    // Obtener cuadrantes del subsector
+    const { count, rows: cuadrantes } = await Cuadrante.findAndCountAll({
+      where: {
+        subsector_id: subsectorId,
+        estado: 1,
+        deleted_at: null,
+      },
+      include: [
+        {
+          model: Sector,
+          as: "sector",
+          attributes: ["id", "sector_code", "nombre", "color_mapa"],
+        },
+        {
+          model: Subsector,
+          as: "subsector",
+          attributes: ["id", "subsector_code", "nombre", "color_mapa"],
+        },
+        {
+          model: PersonalSeguridad,
+          as: "supervisor",
+          attributes: [
+            "id",
+            "nombres",
+            "apellido_paterno",
+            "apellido_materno",
+            "doc_numero",
+          ],
+          required: false,
+        },
+        ...cuadranteAuditInclude,
+      ],
+      limit: parseInt(limit),
+      offset: offset,
+      order: [["cuadrante_code", "ASC"]],
+      distinct: true,
+    });
+
+    const totalPages = Math.ceil(count / parseInt(limit));
+
+    // Respuesta exitosa
+    res.json({
+      success: true,
+      data: {
+        subsector: {
+          id: subsector.id,
+          subsector_code: subsector.subsector_code,
+          nombre: subsector.nombre,
+          sector: subsector.sector,
+        },
+        cuadrantes,
+        pagination: {
+          total: count,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          totalPages,
+          hasNextPage: parseInt(page) < totalPages,
+          hasPrevPage: parseInt(page) > 1,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error en getCuadrantesBySubsector:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener cuadrantes del subsector",
       error: error.message,
     });
   }
@@ -699,6 +845,7 @@ export default {
   getCuadrantes,
   getCuadranteById,
   getCuadrantesBySector,
+  getCuadrantesBySubsector,
   getCuadranteByCode,
   getCuadrantesCercanos,
   createCuadrante,
