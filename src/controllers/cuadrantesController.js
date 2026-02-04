@@ -550,6 +550,7 @@ export const createCuadrante = async (req, res) => {
       poligono_json,
       radio_metros,
       color_mapa,
+      referencia,  // ✅ AGREGAR referencia
     } = req.body;
 
     const created_by = req.user.id;
@@ -608,6 +609,7 @@ export const createCuadrante = async (req, res) => {
       poligono_json,
       radio_metros,
       color_mapa,
+      referencia,  // ✅ AGREGAR referencia
       created_by,
       updated_by: created_by,
     });
@@ -671,6 +673,7 @@ export const updateCuadrante = async (req, res) => {
       poligono_json,
       radio_metros,
       color_mapa,
+      referencia,       // ✅ AGREGAR referencia
     } = req.body;
 
     const updated_by = req.user.id;
@@ -745,6 +748,7 @@ export const updateCuadrante = async (req, res) => {
       datosActualizar.poligono_json = poligono_json;
     if (radio_metros !== undefined) datosActualizar.radio_metros = radio_metros;
     if (color_mapa !== undefined) datosActualizar.color_mapa = color_mapa;
+    if (referencia !== undefined) datosActualizar.referencia = referencia;  // ✅ AGREGAR
 
     // Actualizar
     await cuadrante.update(datosActualizar);
