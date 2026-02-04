@@ -190,7 +190,14 @@ const radioTetraController = {
           {
             model: PersonalSeguridad,
             as: "personalAsignado",
-            attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+            attributes: [
+              "id",
+              "doc_tipo",
+              "doc_numero",
+              "nombres",
+              "apellido_paterno",
+              "apellido_materno",
+            ],
             required: false,
           },
         ],
