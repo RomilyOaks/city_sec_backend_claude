@@ -41,6 +41,7 @@ import {
   UnidadOficina,
   Vehiculo,
   PersonalSeguridad,
+  RadioTetra,
   HistorialEstadoNovedad,
   Usuario,
 } from "../models/index.js";
@@ -239,6 +240,7 @@ export const getNovedadById = async (req, res) => {
         { model: Cuadrante, as: "novedadCuadrante" },
         { model: UnidadOficina, as: "novedadUnidadOficina" },
         { model: Vehiculo, as: "novedadVehiculo" },
+        { model: RadioTetra, as: "radio_tetra", required: false, attributes: ["id", "codigo_radio", "issi", "estado"] },
         { model: PersonalSeguridad, as: "novedadPersonalCargo", required: false, attributes: ["id", "doc_numero", "nombres", "apellido_paterno", "apellido_materno"] },
         { model: PersonalSeguridad, as: "novedadPersonal2", required: false, attributes: ["id", "doc_numero", "nombres", "apellido_paterno", "apellido_materno"] },
         { model: PersonalSeguridad, as: "novedadPersonal3", required: false, attributes: ["id", "doc_numero", "nombres", "apellido_paterno", "apellido_materno"] },
@@ -299,6 +301,7 @@ export const createNovedad = async (req, res) => {
       sector_id,
       cuadrante_id,
       direccion_id,
+      radio_tetra_id,
       num_personas_afectadas,
     } = req.body;
 
@@ -363,6 +366,7 @@ export const createNovedad = async (req, res) => {
         longitud,
         ubigeo_code: ubigeo_code || DEFAULT_UBIGEO_CODE,
         origen_llamada: origen_llamada || "TELEFONO_107",
+        radio_tetra_id: radio_tetra_id || null,
         reportante_nombre,
         reportante_telefono,
         reportante_doc_identidad,
