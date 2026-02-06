@@ -28,6 +28,12 @@ export const DEFAULT_UBIGEO_INFO = {
 };
 
 // ==========================================
+// PAÍS POR DEFECTO (para geocodificación)
+// ==========================================
+export const DEFAULT_COUNTRY = process.env.DEFAULT_COUNTRY || "PE";
+export const DEFAULT_COUNTRY_NAME = process.env.DEFAULT_COUNTRY_NAME || "Peru";
+
+// ==========================================
 // LÍMITES DE TEXTO
 // ==========================================
 export const LIMITES_TEXTO = {
@@ -81,6 +87,8 @@ export const PRIORIDADES = {
 export default {
   DEFAULT_UBIGEO_CODE,
   DEFAULT_UBIGEO_INFO,
+  DEFAULT_COUNTRY,
+  DEFAULT_COUNTRY_NAME,
   LIMITES_TEXTO,
   ESTADOS_SISTEMA,
   TURNOS,

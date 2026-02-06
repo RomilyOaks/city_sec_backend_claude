@@ -63,6 +63,7 @@ import {
   validateDireccionId,
   validateGeocodificar,
   validateValidarDireccion,
+  validateGeocodificarTexto,
 } from "../validators/direccion.validator.js";
 
 // ============================================================================
@@ -167,6 +168,33 @@ router.post(
     // #swagger.responses[200] = { description: 'Dirección válida con cuadrante/sector asignado' }
     // #swagger.responses[400] = { description: 'Validación (calle no encontrada, falta sistema de direccionamiento)' }
     return direccionesController.validar(req, res, next);
+  }
+);
+
+/**
+ * @route   GET /api/direcciones/geocodificar-texto
+ * @desc    Geocodificar dirección a partir de texto libre
+ *          Prioridad A: Búsqueda aproximada en BD
+ *          Prioridad B: API Nominatim (OpenStreetMap)
+ * @access  Operador, Supervisor, Administrador
+ * @query   direccion (string, required) - Ej: "Ca. Santa Teresa 115"
+ */
+router.get(
+  "/geocodificar-texto",
+  requireAnyPermission([
+    "calles.direcciones.read",
+    "calles.direcciones.geocodificar",
+  ]),
+  validateGeocodificarTexto,
+  (req, res, next) => {
+    // #swagger.tags = ['Direcciones']
+    // #swagger.summary = 'Geocodificar dirección por texto libre'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['direccion'] = { in: 'query', required: true, type: 'string', example: 'Ca. Santa Teresa 115' }
+    // #swagger.responses[200] = { description: 'Coordenadas encontradas' }
+    // #swagger.responses[400] = { description: 'Dirección inválida' }
+    // #swagger.responses[404] = { description: 'No se encontraron coordenadas' }
+    return direccionesController.geocodificarTexto(req, res, next);
   }
 );
 
