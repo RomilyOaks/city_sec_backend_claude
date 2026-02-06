@@ -387,6 +387,19 @@ const Direccion = sequelize.define(
       },
     },
 
+    location_type: {
+      type: DataTypes.ENUM(
+        "ROOFTOP",
+        "RANGE_INTERPOLATED",
+        "GEOMETRIC_CENTER",
+        "APPROXIMATE"
+      ),
+      allowNull: true,
+      field: "location_type",
+      comment:
+        "Niveles de precisión al obtener Lat/Lng mediante Geocodificación",
+    },
+
     fuente_geocodificacion: {
       type: DataTypes.STRING(50),
       allowNull: true,

@@ -48,6 +48,7 @@ import Ubigeo from "../models/Ubigeo.js";
 import Usuario from "../models/Usuario.js";
 import Novedad from "../models/Novedad.js";
 import { Op } from "sequelize";
+import { geocodificarDireccion } from "../services/geocodingService.js";
 
 /**
  * ============================================================================
@@ -141,6 +142,53 @@ const autoAsignarCuadranteYSector = async (calleId, numeroMunicipal) => {
     cuadrante_id: cuadrante.id,
     sector_id: cuadrante.sector_id,
   };
+};
+
+/**
+ * Genera la dirección completa formateada a partir de sus componentes.
+ * Respaldo en código porque el trigger MySQL puede no estar activo.
+ *
+ * Ejemplos de salida:
+ *   "Ca. Santa Teresa N° 1052"
+ *   "Jr. Los Pinos Mz. B Lt. 15"
+ *   "Av. Ejército N° 450 Dpto. 201"
+ *
+ * @param {Object} calle - Objeto Calle con nombre_completo
+ * @param {Object} campos - Campos de la dirección
+ * @returns {string} Dirección completa formateada
+ */
+const generarDireccionCompleta = (calle, campos) => {
+  const partes = [];
+
+  // Nombre de la calle (ej: "Ca. Santa Teresa")
+  if (calle?.nombre_completo) {
+    partes.push(calle.nombre_completo);
+  }
+
+  // Número municipal
+  if (campos.numero_municipal) {
+    partes.push(`N° ${campos.numero_municipal}`);
+  }
+
+  // Manzana / Lote
+  if (campos.manzana) {
+    partes.push(`Mz. ${campos.manzana}`);
+    if (campos.lote) {
+      partes.push(`Lt. ${campos.lote}`);
+    }
+  }
+
+  // Complemento (Dpto, Int, Piso, etc.)
+  if (campos.tipo_complemento && campos.numero_complemento) {
+    partes.push(`${campos.tipo_complemento} ${campos.numero_complemento}`);
+  }
+
+  // Urbanización
+  if (campos.urbanizacion) {
+    partes.push(`- ${campos.urbanizacion}`);
+  }
+
+  return partes.join(" ") || null;
 };
 
 /**
@@ -573,6 +621,8 @@ const direccionesController = {
         observaciones,
         cuadrante_id: cuadranteIdFrontend, // ✅ Recibir del frontend
         sector_id: sectorIdFrontend,       // ✅ Recibir del frontend
+        fuente_geocodificacion: fuenteGeoFrontend, // ✅ Fuente real de coordenadas
+        location_type: locationTypeFrontend,        // ✅ Precisión de geocodificación
       } = req.body;
 
       const userId = req.user?.id;
@@ -614,18 +664,36 @@ const direccionesController = {
 
       // Determinar si está geocodificada
       const geocodificada = latitud && longitud ? 1 : 0;
-      const fuente_geocodificacion = geocodificada ? "Manual" : null;
+      // Usar la fuente real del frontend (Nominatim, BD, etc.) o "Manual" como fallback
+      const fuente_geocodificacion = geocodificada
+        ? (fuenteGeoFrontend || "Manual")
+        : null;
+      const location_type = geocodificada
+        ? (locationTypeFrontend || null)
+        : null;
 
-      // Crear dirección
-      const nuevaDireccion = await Direccion.create({
-        direccion_code,
-        calle_id,
+      // Generar direccion_completa (respaldo por si el trigger MySQL no está activo)
+      const camposDir = {
         numero_municipal: numero_municipal?.trim() || null,
         manzana: manzana?.trim() || null,
         lote: lote?.trim() || null,
         urbanizacion: urbanizacion?.trim() || null,
         tipo_complemento: tipo_complemento || null,
         numero_complemento: numero_complemento?.trim() || null,
+      };
+      const direccion_completa = generarDireccionCompleta(calle, camposDir);
+
+      // Crear dirección
+      const nuevaDireccion = await Direccion.create({
+        direccion_code,
+        calle_id,
+        numero_municipal: camposDir.numero_municipal,
+        manzana: camposDir.manzana,
+        lote: camposDir.lote,
+        urbanizacion: camposDir.urbanizacion,
+        tipo_complemento: camposDir.tipo_complemento,
+        numero_complemento: camposDir.numero_complemento,
+        direccion_completa,
         referencia: referencia?.trim() || null,
         cuadrante_id,
         sector_id,
@@ -634,6 +702,7 @@ const direccionesController = {
         longitud: longitud || null,
         geocodificada,
         fuente_geocodificacion,
+        location_type,
         verificada: 0,
         veces_usada: 0,
         observaciones: observaciones?.trim() || null,
@@ -1186,6 +1255,66 @@ const direccionesController = {
             error
           )
         );
+    }
+  },
+
+  /**
+   * Geocodificar una dirección a partir de un texto libre
+   * Prioridad A: Búsqueda aproximada en BD
+   * Prioridad B: API Nominatim (OpenStreetMap)
+   *
+   * @route GET /api/direcciones/geocodificar-texto
+   * @query {string} direccion - Texto de la dirección
+   */
+  geocodificarTexto: async (req, res) => {
+    try {
+      const { direccion } = req.query;
+
+      if (!direccion || direccion.trim().length < 3) {
+        return res
+          .status(400)
+          .json(
+            formatErrorResponse(
+              "Debe proporcionar una dirección con al menos 3 caracteres"
+            )
+          );
+      }
+
+      const resultado = await geocodificarDireccion(direccion.trim());
+
+      if (!resultado.success) {
+        return res
+          .status(404)
+          .json(
+            formatErrorResponse(
+              "No se encontraron coordenadas para la dirección proporcionada"
+            )
+          );
+      }
+
+      return res.status(200).json(
+        formatSuccessResponse(
+          {
+            latitud: resultado.latitud,
+            longitud: resultado.longitud,
+            geocodificada: resultado.geocodificada,
+            location_type: resultado.location_type,
+            fuente_geocodificacion: resultado.fuente_geocodificacion,
+            metodo: resultado.metodo,
+            direccion_referencia: resultado.direccion_referencia || null,
+            direccion_referencia_id: resultado.direccion_referencia_id || null,
+            display_name: resultado.display_name || null,
+            misma_cuadra: resultado.misma_cuadra || null,
+            distancia_numerica: resultado.distancia_numerica || null,
+          },
+          `Geocodificación exitosa (${resultado.metodo === "base_de_datos" ? "base de datos" : "Nominatim API"})`
+        )
+      );
+    } catch (error) {
+      console.error("Error en geocodificación de texto:", error);
+      return res
+        .status(500)
+        .json(formatErrorResponse("Error al geocodificar la dirección", error));
     }
   },
 };

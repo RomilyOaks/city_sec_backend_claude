@@ -36,7 +36,7 @@
  * ============================================================================
  */
 
-import { body, param, validationResult } from "express-validator";
+import { body, param, query, validationResult } from "express-validator";
 
 /**
  * ============================================================================
@@ -619,6 +619,23 @@ export const validateValidarDireccion = [
 ];
 
 /**
+ * Validación para geocodificar dirección por texto libre
+ * Usado en: GET /api/direcciones/geocodificar-texto?direccion=...
+ */
+export const validateGeocodificarTexto = [
+  query("direccion")
+    .notEmpty()
+    .withMessage("El parámetro 'direccion' es obligatorio")
+    .isString()
+    .withMessage("La dirección debe ser texto")
+    .trim()
+    .isLength({ min: 3, max: 500 })
+    .withMessage("La dirección debe tener entre 3 y 500 caracteres"),
+
+  handleValidationErrors,
+];
+
+/**
  * ============================================================================
  * EXPORTACIÓN POR DEFECTO
  * ============================================================================
@@ -630,6 +647,7 @@ export default {
   validateDireccionId,
   validateGeocodificar,
   validateValidarDireccion,
+  validateGeocodificarTexto,
 };
 
 /**
