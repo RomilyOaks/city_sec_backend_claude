@@ -27,62 +27,14 @@
 const DEFAULT_TIMEZONE = process.env.APP_TIMEZONE || "America/Lima";
 
 /**
- * Obtiene la fecha/hora actual en el timezone especificado
- * Retorna un objeto Date que representa la hora local de Perú
+ * Formatea un Date a string "YYYY-MM-DD HH:mm:ss" en la timezone especificada.
+ * Retornar string evita que mysql2 aplique doble conversión de timezone.
  *
- * @param {string} timezone - Timezone IANA (default: America/Lima)
- * @returns {Date} Fecha con hora local de Perú
- *
- * @example
- * // En Railway (UTC 04:50) retorna Date con hora 23:50 del día anterior
- * const ahora = getNowInTimezone();
+ * @param {Date} dateObj - Fecha a formatear
+ * @param {string} timezone - Timezone IANA
+ * @returns {string} "YYYY-MM-DD HH:mm:ss"
  */
-export const getNowInTimezone = (timezone = DEFAULT_TIMEZONE) => {
-  const now = new Date();
-
-  // Obtener la hora en la timezone especificada
-  const options = {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  };
-
-  // Formatear a string en la timezone local
-  const formatter = new Intl.DateTimeFormat("en-CA", options);
-  const parts = formatter.formatToParts(now);
-
-  // Extraer las partes
-  const getPart = (type) => parts.find((p) => p.type === type)?.value || "00";
-
-  const year = getPart("year");
-  const month = getPart("month");
-  const day = getPart("day");
-  const hour = getPart("hour");
-  const minute = getPart("minute");
-  const second = getPart("second");
-
-  // Crear string ISO sin timezone (será interpretado como hora local por MySQL)
-  const isoString = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
-
-  // Retornar como Date (MySQL lo guardará como está)
-  return new Date(isoString);
-};
-
-/**
- * Convierte una fecha UTC a la timezone especificada
- *
- * @param {Date|string} date - Fecha a convertir
- * @param {string} timezone - Timezone IANA (default: America/Lima)
- * @returns {Date} Fecha convertida
- */
-export const convertToTimezone = (date, timezone = DEFAULT_TIMEZONE) => {
-  const dateObj = typeof date === "string" ? new Date(date) : date;
-
+const formatDateTimeToString = (dateObj, timezone) => {
   const options = {
     timeZone: timezone,
     year: "numeric",
@@ -96,17 +48,38 @@ export const convertToTimezone = (date, timezone = DEFAULT_TIMEZONE) => {
 
   const formatter = new Intl.DateTimeFormat("en-CA", options);
   const parts = formatter.formatToParts(dateObj);
+  const get = (type) => parts.find((p) => p.type === type)?.value || "00";
 
-  const getPart = (type) => parts.find((p) => p.type === type)?.value || "00";
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
+};
 
-  const year = getPart("year");
-  const month = getPart("month");
-  const day = getPart("day");
-  const hour = getPart("hour");
-  const minute = getPart("minute");
-  const second = getPart("second");
+/**
+ * Obtiene la fecha/hora actual en el timezone especificado
+ * Retorna un STRING "YYYY-MM-DD HH:mm:ss" para que mysql2 lo pase
+ * directo a MySQL sin aplicar conversión de timezone.
+ *
+ * @param {string} timezone - Timezone IANA (default: America/Lima)
+ * @returns {string} Fecha en formato "YYYY-MM-DD HH:mm:ss" (hora Perú)
+ *
+ * @example
+ * // En Railway (UTC 04:50) retorna "2026-01-21 23:50:00" (hora Perú)
+ * const ahora = getNowInTimezone();
+ */
+export const getNowInTimezone = (timezone = DEFAULT_TIMEZONE) => {
+  return formatDateTimeToString(new Date(), timezone);
+};
 
-  return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`);
+/**
+ * Convierte una fecha (UTC o cualquier timezone) a string en hora Perú.
+ * Retorna STRING para evitar doble conversión de mysql2.
+ *
+ * @param {Date|string} date - Fecha a convertir
+ * @param {string} timezone - Timezone IANA (default: America/Lima)
+ * @returns {string} Fecha en formato "YYYY-MM-DD HH:mm:ss" (hora Perú)
+ */
+export const convertToTimezone = (date, timezone = DEFAULT_TIMEZONE) => {
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  return formatDateTimeToString(dateObj, timezone);
 };
 
 /**
@@ -197,6 +170,7 @@ export const getTimezoneDebugInfo = (timezone = DEFAULT_TIMEZONE) => {
 export default {
   getNowInTimezone,
   convertToTimezone,
+  formatDateTimeToString,
   getTimeInTimezone,
   getDateInTimezone,
   formatDateInTimezone,

@@ -48,7 +48,7 @@ import {
 import sequelize from "../config/database.js";
 import { Op } from "sequelize";
 import { DEFAULT_UBIGEO_CODE } from "../config/constants.js";
-import { getNowInTimezone, convertToTimezone } from "../utils/dateHelper.js";
+import { getNowInTimezone, convertToTimezone, getDateInTimezone } from "../utils/dateHelper.js";
 
 /**
  * Obtener todas las novedades con filtros
@@ -341,12 +341,13 @@ export const createNovedad = async (req, res) => {
       : 1;
     const novedad_code = String(siguienteNumero).padStart(6, "0");
 
-    // Convertir fecha_hora_ocurrencia a timezone Perú (frontend envía UTC)
+    // Convertir fecha_hora_ocurrencia a string Perú (evita doble conversión de mysql2)
     const fechaOcurrenciaLocal = fecha_hora_ocurrencia
       ? convertToTimezone(fecha_hora_ocurrencia)
       : getNowInTimezone();
 
-    const hora = fechaOcurrenciaLocal.getHours();
+    // Extraer hora del string "YYYY-MM-DD HH:mm:ss"
+    const hora = parseInt(fechaOcurrenciaLocal.split(" ")[1].split(":")[0], 10);
     let turno = "MAÑANA";
     if (hora >= 14 && hora < 22) {
       turno = "TARDE";
@@ -611,7 +612,7 @@ export const asignarRecursos = async (req, res) => {
           usuario_id: req.user.id,
           tiempo_en_estado_min: historial.tiempo_en_estado_min || null,
           observaciones: historial.observaciones || observaciones,
-          fecha_cambio: historial.fecha_cambio ? new Date(historial.fecha_cambio) : getNowInTimezone(),
+          fecha_cambio: historial.fecha_cambio ? convertToTimezone(historial.fecha_cambio) : getNowInTimezone(),
           metadata: historial.metadata || null,
           created_by: historial.created_by || req.user.id,
           updated_by: historial.updated_by || req.user.id,
@@ -739,14 +740,12 @@ export const getHistorialEstados = async (req, res) => {
  */
 export const getDashboardStats = async (req, res) => {
   try {
-    // Usar zona horaria de Perú (UTC-5) con helper
-    const ahoraPeru = getNowInTimezone();
-
-    const hoy = new Date(ahoraPeru);
-    hoy.setHours(0, 0, 0, 0);
-
-    const mañana = new Date(hoy);
-    mañana.setDate(mañana.getDate() + 1);
+    // Usar strings para evitar doble conversión de mysql2
+    const fechaHoyStr = getDateInTimezone(); // "YYYY-MM-DD" en hora Perú
+    const hoy = `${fechaHoyStr} 00:00:00`;
+    const [y, m, d] = fechaHoyStr.split("-").map(Number);
+    const nextDay = new Date(y, m - 1, d + 1);
+    const mañana = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, "0")}-${String(nextDay.getDate()).padStart(2, "0")} 00:00:00`;
 
     const totalNovedades = await Novedad.count({
       where: {
