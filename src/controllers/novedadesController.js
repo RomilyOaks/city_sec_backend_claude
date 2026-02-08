@@ -48,7 +48,7 @@ import {
 import sequelize from "../config/database.js";
 import { Op } from "sequelize";
 import { DEFAULT_UBIGEO_CODE } from "../config/constants.js";
-import { getNowInTimezone } from "../utils/dateHelper.js";
+import { getNowInTimezone, convertToTimezone } from "../utils/dateHelper.js";
 
 /**
  * Obtener todas las novedades con filtros
@@ -341,7 +341,12 @@ export const createNovedad = async (req, res) => {
       : 1;
     const novedad_code = String(siguienteNumero).padStart(6, "0");
 
-    const hora = new Date(fecha_hora_ocurrencia).getHours();
+    // Convertir fecha_hora_ocurrencia a timezone Perú (frontend envía UTC)
+    const fechaOcurrenciaLocal = fecha_hora_ocurrencia
+      ? convertToTimezone(fecha_hora_ocurrencia)
+      : getNowInTimezone();
+
+    const hora = fechaOcurrenciaLocal.getHours();
     let turno = "MAÑANA";
     if (hora >= 14 && hora < 22) {
       turno = "TARDE";
@@ -352,7 +357,7 @@ export const createNovedad = async (req, res) => {
     const nuevaNovedad = await Novedad.create(
       {
         novedad_code,
-        fecha_hora_ocurrencia,
+        fecha_hora_ocurrencia: fechaOcurrenciaLocal,
         fecha_hora_reporte: getNowInTimezone(),
         tipo_novedad_id,
         subtipo_novedad_id,
@@ -566,14 +571,10 @@ export const asignarRecursos = async (req, res) => {
       updated_by: req.user.id,
     };
 
-    console.log("🔍 DEBUG - Antes de construir datosActualizacion");
     if (unidad_oficina_id) datosActualizacion.unidad_oficina_id = unidad_oficina_id;
     if (vehiculo_id) datosActualizacion.vehiculo_id = vehiculo_id;
     if (personal_cargo_id) datosActualizacion.personal_cargo_id = personal_cargo_id;
-    if (personal_seguridad2_id) {
-      console.log("🔍 DEBUG - Agregando personal_seguridad2_id a datosActualizacion:", personal_seguridad2_id);
-      datosActualizacion.personal_seguridad2_id = personal_seguridad2_id;
-    }
+    if (personal_seguridad2_id) datosActualizacion.personal_seguridad2_id = personal_seguridad2_id;
     if (personal_seguridad3_id) datosActualizacion.personal_seguridad3_id = personal_seguridad3_id;
     if (personal_seguridad4_id) datosActualizacion.personal_seguridad4_id = personal_seguridad4_id;
     if (km_inicial) datosActualizacion.km_inicial = km_inicial;
@@ -581,16 +582,13 @@ export const asignarRecursos = async (req, res) => {
     if (turno) datosActualizacion.turno = turno;
     if (tiempo_respuesta_minutos) datosActualizacion.tiempo_respuesta_minutos = tiempo_respuesta_minutos;
     if (observaciones) datosActualizacion.observaciones = observaciones;
-    if (fecha_llegada) datosActualizacion.fecha_llegada = new Date(fecha_llegada);
-    if (fecha_cierre) datosActualizacion.fecha_cierre = new Date(fecha_cierre);
+    if (fecha_llegada) datosActualizacion.fecha_llegada = convertToTimezone(fecha_llegada);
+    if (fecha_cierre) datosActualizacion.fecha_cierre = convertToTimezone(fecha_cierre);
     if (requiere_seguimiento !== undefined) datosActualizacion.requiere_seguimiento = requiere_seguimiento;
-    if (fecha_proxima_revision) datosActualizacion.fecha_proxima_revision = new Date(fecha_proxima_revision);
+    if (fecha_proxima_revision) datosActualizacion.fecha_proxima_revision = convertToTimezone(fecha_proxima_revision);
     if (perdidas_materiales_estimadas) datosActualizacion.perdidas_materiales_estimadas = perdidas_materiales_estimadas;
-    
-    console.log("🔍 DEBUG - datosActualizacion final:", JSON.stringify(datosActualizacion, null, 2));
-    
     // Fecha de despacho: usar la proporcionada o la actual (timezone Perú)
-    datosActualizacion.fecha_despacho = fecha_despacho ? new Date(fecha_despacho) : getNowInTimezone();
+    datosActualizacion.fecha_despacho = fecha_despacho ? convertToTimezone(fecha_despacho) : getNowInTimezone();
     
     // Actualizar estado: usar el proporcionado explícitamente o el de despacho automático
     if (estado_novedad_id) {
