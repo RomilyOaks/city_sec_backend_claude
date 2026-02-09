@@ -70,16 +70,31 @@ export const getNowInTimezone = (timezone = DEFAULT_TIMEZONE) => {
 };
 
 /**
- * Convierte una fecha (UTC o cualquier timezone) a string en hora Perú.
- * Retorna STRING para evitar doble conversión de mysql2.
+ * Convierte una fecha a string "YYYY-MM-DD HH:mm:ss" en hora Perú.
+ * - Si es string SIN timezone (sin Z ni offset): ya es hora Perú, pasa directo.
+ * - Si es string CON Z o offset (+/-HH:MM): convierte de UTC a Perú.
+ * - Si es objeto Date: convierte a Perú.
  *
  * @param {Date|string} date - Fecha a convertir
  * @param {string} timezone - Timezone IANA (default: America/Lima)
  * @returns {string} Fecha en formato "YYYY-MM-DD HH:mm:ss" (hora Perú)
  */
 export const convertToTimezone = (date, timezone = DEFAULT_TIMEZONE) => {
-  const dateObj = typeof date === "string" ? new Date(date) : date;
-  return formatDateTimeToString(dateObj, timezone);
+  if (typeof date === "string") {
+    // Si NO tiene Z ni offset timezone → ya es hora local (Perú), normalizar formato
+    if (!date.endsWith("Z") && !/[+-]\d{2}:\d{2}$/.test(date)) {
+      // Normalizar a "YYYY-MM-DD HH:mm:ss" (quitar T si existe, agregar :ss si falta)
+      let normalized = date.replace("T", " ");
+      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(normalized)) {
+        normalized += ":00";
+      }
+      return normalized;
+    }
+    // Tiene Z o offset → es UTC, convertir a Perú
+    return formatDateTimeToString(new Date(date), timezone);
+  }
+  // Es objeto Date → convertir a Perú
+  return formatDateTimeToString(date, timezone);
 };
 
 /**
