@@ -98,6 +98,21 @@ export const convertToTimezone = (date, timezone = DEFAULT_TIMEZONE) => {
 };
 
 /**
+ * Envuelve un string de fecha en sequelize.literal() para que mysql2
+ * NO aplique conversión de timezone. Valida formato estricto contra SQL injection.
+ *
+ * @param {string} dateStr - Fecha en formato "YYYY-MM-DD HH:mm:ss"
+ * @param {object} sequelizeInstance - Instancia de Sequelize
+ * @returns {object} sequelize.literal() con la fecha
+ */
+export const rawDate = (dateStr, sequelizeInstance) => {
+  if (!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(dateStr)) {
+    throw new Error(`Formato de fecha inválido para rawDate: ${dateStr}`);
+  }
+  return sequelizeInstance.literal(`'${dateStr}'`);
+};
+
+/**
  * Obtiene solo la hora actual en formato HH:MM:SS
  *
  * @param {string} timezone - Timezone IANA (default: America/Lima)
@@ -185,6 +200,7 @@ export const getTimezoneDebugInfo = (timezone = DEFAULT_TIMEZONE) => {
 export default {
   getNowInTimezone,
   convertToTimezone,
+  rawDate,
   formatDateTimeToString,
   getTimeInTimezone,
   getDateInTimezone,

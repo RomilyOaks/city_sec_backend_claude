@@ -48,7 +48,7 @@ import {
 import sequelize from "../config/database.js";
 import { Op } from "sequelize";
 import { DEFAULT_UBIGEO_CODE } from "../config/constants.js";
-import { getNowInTimezone, convertToTimezone, getDateInTimezone } from "../utils/dateHelper.js";
+import { getNowInTimezone, convertToTimezone, getDateInTimezone, rawDate } from "../utils/dateHelper.js";
 
 /**
  * Obtener todas las novedades con filtros
@@ -76,15 +76,12 @@ export const getAllNovedades = async (req, res) => {
     };
 
     if (fecha_inicio && fecha_fin) {
-      // Interpretar fechas en timezone local (Perú -5)
-      const fechaInicioDate = new Date(fecha_inicio + "T00:00:00-05:00");
-      const fechaFinDate = new Date(fecha_fin + "T00:00:00-05:00");
-      
-      // Agregar 23:59:59 a la fecha fin para incluir todo el día
-      fechaFinDate.setHours(23, 59, 59, 999);
-      
+      // Usar rawDate para que mysql2 no aplique conversión timezone
       whereClause.fecha_hora_ocurrencia = {
-        [Op.between]: [fechaInicioDate, fechaFinDate],
+        [Op.between]: [
+          rawDate(`${fecha_inicio} 00:00:00`, sequelize),
+          rawDate(`${fecha_fin} 23:59:59`, sequelize),
+        ],
       };
     }
 
@@ -358,8 +355,8 @@ export const createNovedad = async (req, res) => {
     const nuevaNovedad = await Novedad.create(
       {
         novedad_code,
-        fecha_hora_ocurrencia: fechaOcurrenciaLocal,
-        fecha_hora_reporte: getNowInTimezone(),
+        fecha_hora_ocurrencia: rawDate(fechaOcurrenciaLocal, sequelize),
+        fecha_hora_reporte: rawDate(getNowInTimezone(), sequelize),
         tipo_novedad_id,
         subtipo_novedad_id,
         estado_novedad_id: estadoInicial.id,
@@ -463,9 +460,9 @@ export const updateNovedad = async (req, res) => {
     // El trigger 'trg_novedades_incidentes_after_update' se encarga automáticamente
     // de crear el registro cuando detecta cambio en estado_novedad_id
 
-    if (datosActualizacion.fecha_llegada && !novedad.fecha_llegada) {
+    if (fechaLlegadaStr && !novedad.fecha_llegada) {
       const tiempoRespuesta = Math.floor(
-        (new Date(datosActualizacion.fecha_llegada) -
+        (new Date(fechaLlegadaStr) -
           new Date(novedad.fecha_hora_ocurrencia)) /
           60000
       );
@@ -583,13 +580,15 @@ export const asignarRecursos = async (req, res) => {
     if (turno) datosActualizacion.turno = turno;
     if (tiempo_respuesta_minutos) datosActualizacion.tiempo_respuesta_minutos = tiempo_respuesta_minutos;
     if (observaciones) datosActualizacion.observaciones = observaciones;
-    if (fecha_llegada) datosActualizacion.fecha_llegada = convertToTimezone(fecha_llegada);
-    if (fecha_cierre) datosActualizacion.fecha_cierre = convertToTimezone(fecha_cierre);
+    // Guardar string para cálculo de tiempo_respuesta, luego envolver en rawDate
+    const fechaLlegadaStr = fecha_llegada ? convertToTimezone(fecha_llegada) : null;
+    if (fechaLlegadaStr) datosActualizacion.fecha_llegada = rawDate(fechaLlegadaStr, sequelize);
+    if (fecha_cierre) datosActualizacion.fecha_cierre = rawDate(convertToTimezone(fecha_cierre), sequelize);
     if (requiere_seguimiento !== undefined) datosActualizacion.requiere_seguimiento = requiere_seguimiento;
-    if (fecha_proxima_revision) datosActualizacion.fecha_proxima_revision = convertToTimezone(fecha_proxima_revision);
+    if (fecha_proxima_revision) datosActualizacion.fecha_proxima_revision = rawDate(convertToTimezone(fecha_proxima_revision), sequelize);
     if (perdidas_materiales_estimadas) datosActualizacion.perdidas_materiales_estimadas = perdidas_materiales_estimadas;
     // Fecha de despacho: usar la proporcionada o la actual (timezone Perú)
-    datosActualizacion.fecha_despacho = fecha_despacho ? convertToTimezone(fecha_despacho) : getNowInTimezone();
+    datosActualizacion.fecha_despacho = rawDate(fecha_despacho ? convertToTimezone(fecha_despacho) : getNowInTimezone(), sequelize);
     
     // Actualizar estado: usar el proporcionado explícitamente o el de despacho automático
     if (estado_novedad_id) {
@@ -612,7 +611,7 @@ export const asignarRecursos = async (req, res) => {
           usuario_id: req.user.id,
           tiempo_en_estado_min: historial.tiempo_en_estado_min || null,
           observaciones: historial.observaciones || observaciones,
-          fecha_cambio: historial.fecha_cambio ? convertToTimezone(historial.fecha_cambio) : getNowInTimezone(),
+          fecha_cambio: rawDate(historial.fecha_cambio ? convertToTimezone(historial.fecha_cambio) : getNowInTimezone(), sequelize),
           metadata: historial.metadata || null,
           created_by: historial.created_by || req.user.id,
           updated_by: historial.updated_by || req.user.id,
@@ -670,7 +669,7 @@ export const deleteNovedad = async (req, res) => {
 
     await novedad.update({
       estado: 0,
-      deleted_at: getNowInTimezone(),
+      deleted_at: rawDate(getNowInTimezone(), sequelize),
       deleted_by: req.user.id,
     });
 
@@ -740,12 +739,12 @@ export const getHistorialEstados = async (req, res) => {
  */
 export const getDashboardStats = async (req, res) => {
   try {
-    // Usar strings para evitar doble conversión de mysql2
+    // Usar rawDate para evitar doble conversión de mysql2 en WHERE
     const fechaHoyStr = getDateInTimezone(); // "YYYY-MM-DD" en hora Perú
-    const hoy = `${fechaHoyStr} 00:00:00`;
+    const hoy = rawDate(`${fechaHoyStr} 00:00:00`, sequelize);
     const [y, m, d] = fechaHoyStr.split("-").map(Number);
     const nextDay = new Date(y, m - 1, d + 1);
-    const mañana = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, "0")}-${String(nextDay.getDate()).padStart(2, "0")} 00:00:00`;
+    const mañana = rawDate(`${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, "0")}-${String(nextDay.getDate()).padStart(2, "0")} 00:00:00`, sequelize);
 
     const totalNovedades = await Novedad.count({
       where: {
