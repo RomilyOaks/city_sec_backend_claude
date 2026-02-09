@@ -460,9 +460,9 @@ export const updateNovedad = async (req, res) => {
     // El trigger 'trg_novedades_incidentes_after_update' se encarga automáticamente
     // de crear el registro cuando detecta cambio en estado_novedad_id
 
-    if (fechaLlegadaStr && !novedad.fecha_llegada) {
+    if (fecha_llegada && !novedad.fecha_llegada) {
       const tiempoRespuesta = Math.floor(
-        (new Date(fechaLlegadaStr) -
+        (new Date(convertToTimezone(fecha_llegada)) -
           new Date(novedad.fecha_hora_ocurrencia)) /
           60000
       );
@@ -580,9 +580,7 @@ export const asignarRecursos = async (req, res) => {
     if (turno) datosActualizacion.turno = turno;
     if (tiempo_respuesta_minutos) datosActualizacion.tiempo_respuesta_minutos = tiempo_respuesta_minutos;
     if (observaciones) datosActualizacion.observaciones = observaciones;
-    // Guardar string para cálculo de tiempo_respuesta, luego envolver en rawDate
-    const fechaLlegadaStr = fecha_llegada ? convertToTimezone(fecha_llegada) : null;
-    if (fechaLlegadaStr) datosActualizacion.fecha_llegada = rawDate(fechaLlegadaStr, sequelize);
+    if (fecha_llegada) datosActualizacion.fecha_llegada = rawDate(convertToTimezone(fecha_llegada), sequelize);
     if (fecha_cierre) datosActualizacion.fecha_cierre = rawDate(convertToTimezone(fecha_cierre), sequelize);
     if (requiere_seguimiento !== undefined) datosActualizacion.requiere_seguimiento = requiere_seguimiento;
     if (fecha_proxima_revision) datosActualizacion.fecha_proxima_revision = rawDate(convertToTimezone(fecha_proxima_revision), sequelize);
