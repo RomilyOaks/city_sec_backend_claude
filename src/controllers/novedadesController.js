@@ -63,6 +63,7 @@ export const getAllNovedades = async (req, res) => {
       prioridad_actual,
       sector_id,
       tipo_novedad_id,
+      origen_llamada,
       search,
       page = 1,
       limit = 50,
@@ -99,6 +100,10 @@ export const getAllNovedades = async (req, res) => {
 
     if (tipo_novedad_id) {
       whereClause.tipo_novedad_id = tipo_novedad_id;
+    }
+
+    if (origen_llamada) {
+      whereClause.origen_llamada = origen_llamada;
     }
 
     if (search) {
