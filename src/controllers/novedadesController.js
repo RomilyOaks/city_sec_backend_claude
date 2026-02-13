@@ -384,7 +384,7 @@ export const createNovedad = async (req, res) => {
         prioridad_actual: subtipo.prioridad || "MEDIA",
         turno,
         num_personas_afectadas: num_personas_afectadas || 0,
-        usuario_registro: req.user.id,
+        usuario_registro: req.user.personal_seguridad_id,
         created_by: req.user.id,
         updated_by: req.user.id,
       },
