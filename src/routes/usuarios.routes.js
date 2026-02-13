@@ -306,11 +306,11 @@ router.delete(
 );
 
 /**
- * @route   POST /api/usuarios/:id/reset-password
+ * @route   PATCH /api/usuarios/:id/reset-password
  * @desc    Resetear contraseña de un usuario
  * @access  Super Admin, Admin
  */
-router.post(
+router.patch(
   "/:id/reset-password",
   verificarToken,
   verificarRoles(["super_admin", "admin"]),

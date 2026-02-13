@@ -3,28 +3,23 @@
  * RUTAS: src/routes/cuadrantes.routes.js
  * ============================================
  *
- * VERSION: 2.0.0
- * FECHA: 2026-02-03
+ * VERSION: 2.1.0
+ * FECHA: 2026-02-12
  *
  * Definición de rutas para la gestión de cuadrantes de patrullaje.
  * Todas las rutas requieren autenticación y permisos específicos.
  *
- * CAMBIOS v2.0.0:
- * - Agregado filtro por subsector_id en GET /cuadrantes
- * - Nuevo endpoint GET /cuadrantes/subsector/:subsectorId
- * - Incluye relación con Subsector y supervisor en respuestas
- *
  * Rutas disponibles:
- * - GET    /api/v1/cuadrantes                      - Listar cuadrantes (soporta subsector_id)
- * - GET    /api/v1/cuadrantes/:id                  - Obtener cuadrante por ID
- * - GET    /api/v1/cuadrantes/sector/:sectorId     - Cuadrantes de un sector
+ * - GET    /api/v1/cuadrantes                        - Listar cuadrantes (soporta subsector_id)
+ * - GET    /api/v1/cuadrantes/cercanos               - Búsqueda geoespacial
+ * - GET    /api/v1/cuadrantes/sector/:sectorId       - Cuadrantes de un sector
  * - GET    /api/v1/cuadrantes/subsector/:subsectorId - Cuadrantes de un subsector
- * - GET    /api/v1/cuadrantes/codigo/:code         - Buscar por código
- * - GET    /api/v1/cuadrantes/cercanos             - Búsqueda geoespacial
- * - POST   /api/v1/cuadrantes                      - Crear cuadrante
- * - PUT    /api/v1/cuadrantes/:id                  - Actualizar cuadrante
- * - DELETE /api/v1/cuadrantes/:id                  - Eliminar cuadrante
- * - PATCH  /api/v1/cuadrantes/:id/estado           - Cambiar estado
+ * - GET    /api/v1/cuadrantes/codigo/:code           - Buscar por código
+ * - GET    /api/v1/cuadrantes/:id                    - Obtener cuadrante por ID
+ * - POST   /api/v1/cuadrantes                        - Crear cuadrante
+ * - PUT    /api/v1/cuadrantes/:id                    - Actualizar cuadrante
+ * - DELETE /api/v1/cuadrantes/:id                    - Eliminar cuadrante
+ * - PATCH  /api/v1/cuadrantes/:id/estado             - Cambiar estado
  */
 
 import express from "express";
@@ -43,7 +38,6 @@ import {
 
 import {
   verificarToken,
-  verificarRoles,
   requireAnyPermission,
 } from "../middlewares/authMiddleware.js";
 
@@ -58,10 +52,7 @@ import {
 // Crear router de Express
 const router = express.Router();
 
-/**
- * Middleware de autenticación para todas las rutas
- * Todas las rutas de cuadrantes requieren autenticación
- */
+// Autenticación global para todas las rutas
 router.use(verificarToken);
 
 // ============================================
@@ -71,21 +62,25 @@ router.use(verificarToken);
 /**
  * @route   GET /api/v1/cuadrantes
  * @desc    Listar cuadrantes con paginación y filtros
- * @access  Private (requiere permiso: catalogos.cuadrantes.read)
+ * @access  Private - sectores.cuadrantes.read
  */
-
-router.get("/", verificarToken, validateQueryCuadrantes, getCuadrantes);
+router.get(
+  "/",
+  requireAnyPermission(["sectores.cuadrantes.read"]),
+  validateQueryCuadrantes,
+  getCuadrantes
+);
 
 /**
  * @route   GET /api/v1/cuadrantes/cercanos
  * @desc    Buscar cuadrantes cercanos a una ubicación (geoespacial)
- * @access  Private (requiere permiso: catalogos.cuadrantes.read)
+ * @access  Private - sectores.cuadrantes.read
  *
  * IMPORTANTE: Esta ruta debe estar ANTES de /:id
  */
 router.get(
   "/cercanos",
-  verificarToken,
+  requireAnyPermission(["sectores.cuadrantes.read"]),
   validateQueryCuadrantes,
   getCuadrantesCercanos
 );
@@ -93,45 +88,47 @@ router.get(
 /**
  * @route   GET /api/v1/cuadrantes/sector/:sectorId
  * @desc    Obtener cuadrantes de un sector específico
- * @access  Private (requiere permiso: catalogos.cuadrantes.read)
+ * @access  Private - sectores.cuadrantes.read
  */
 router.get(
   "/sector/:sectorId",
-  verificarToken,
-  validateQueryCuadrantes,
+  requireAnyPermission(["sectores.cuadrantes.read"]),
   getCuadrantesBySector
 );
 
 /**
  * @route   GET /api/v1/cuadrantes/subsector/:subsectorId
  * @desc    Obtener cuadrantes de un subsector específico
- * @access  Private (requiere permiso: catalogos.cuadrantes.read)
+ * @access  Private - sectores.cuadrantes.read
  */
 router.get(
   "/subsector/:subsectorId",
-  verificarToken,
-  validateQueryCuadrantes,
+  requireAnyPermission(["sectores.cuadrantes.read"]),
   getCuadrantesBySubsector
 );
 
 /**
  * @route   GET /api/v1/cuadrantes/codigo/:code
  * @desc    Buscar cuadrante por código único
- * @access  Private (requiere permiso: catalogos.cuadrantes.read)
+ * @access  Private - sectores.cuadrantes.read
  */
 router.get(
   "/codigo/:code",
-  verificarToken,
-  validateQueryCuadrantes,
+  requireAnyPermission(["sectores.cuadrantes.read"]),
   getCuadranteByCode
 );
 
 /**
  * @route   GET /api/v1/cuadrantes/:id
  * @desc    Obtener cuadrante específico por ID
- * @access  Private (requiere permiso: catalogos.cuadrantes.read)
+ * @access  Private - sectores.cuadrantes.read
  */
-router.get("/:id", verificarToken, validateQueryCuadrantes, getCuadranteById);
+router.get(
+  "/:id",
+  requireAnyPermission(["sectores.cuadrantes.read"]),
+  validateCuadranteId,
+  getCuadranteById
+);
 
 // ============================================
 // RUTAS DE MODIFICACIÓN (CREATE, UPDATE, DELETE)
@@ -140,33 +137,50 @@ router.get("/:id", verificarToken, validateQueryCuadrantes, getCuadranteById);
 /**
  * @route   POST /api/v1/cuadrantes
  * @desc    Crear nuevo cuadrante
- * @access  Private (requiere permiso: catalogos.cuadrantes.create)
+ * @access  Private - sectores.cuadrantes.create
  */
-router.post("/", verificarToken, validateQueryCuadrantes, createCuadrante);
+router.post(
+  "/",
+  requireAnyPermission(["sectores.cuadrantes.create"]),
+  validateCreateCuadrante,
+  createCuadrante
+);
 
 /**
  * @route   PUT /api/v1/cuadrantes/:id
  * @desc    Actualizar cuadrante existente
- * @access  Private (requiere permiso: catalogos.cuadrantes.update)
+ * @access  Private - sectores.cuadrantes.update
  */
-router.put("/:id", verificarToken, validateQueryCuadrantes, updateCuadrante);
+router.put(
+  "/:id",
+  requireAnyPermission(["sectores.cuadrantes.update"]),
+  validateCuadranteId,
+  validateUpdateCuadrante,
+  updateCuadrante
+);
 
 /**
  * @route   DELETE /api/v1/cuadrantes/:id
  * @desc    Eliminar cuadrante (soft delete)
- * @access  Private (requiere permiso: catalogos.cuadrantes.delete)
+ * @access  Private - sectores.cuadrantes.delete
  */
-router.delete("/:id", verificarToken, validateQueryCuadrantes, deleteCuadrante);
+router.delete(
+  "/:id",
+  requireAnyPermission(["sectores.cuadrantes.delete"]),
+  validateCuadranteId,
+  deleteCuadrante
+);
 
 /**
  * @route   PATCH /api/v1/cuadrantes/:id/estado
  * @desc    Activar o desactivar cuadrante
- * @access  Private (requiere permiso: catalogos.cuadrantes.update)
+ * @access  Private - sectores.cuadrantes.update
  */
 router.patch(
   "/:id/estado",
-  verificarToken,
-  validateQueryCuadrantes,
+  requireAnyPermission(["sectores.cuadrantes.update"]),
+  validateCuadranteId,
+  validateCambiarEstado,
   cambiarEstado
 );
 
