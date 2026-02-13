@@ -810,16 +810,16 @@ EstadoNovedad.hasMany(Novedad, {
 });
 
 /**
- * Relación: Novedad -> Usuario (reportado por)
+ * Relación: Novedad -> PersonalSeguridad (registrado por)
  */
-Novedad.belongsTo(Usuario, {
+Novedad.belongsTo(PersonalSeguridad, {
   foreignKey: "usuario_registro",
   as: "novedadUsuarioRegistro",
 });
 
-Usuario.hasMany(Novedad, {
+PersonalSeguridad.hasMany(Novedad, {
   foreignKey: "usuario_registro",
-  as: "usuarioNovedad",
+  as: "personalNovedades",
 });
 
 /**
