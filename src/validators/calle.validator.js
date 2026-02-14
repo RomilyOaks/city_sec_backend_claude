@@ -190,25 +190,49 @@ export const validateCreateCalle = [
   // VALIDACIÓN: tipo_pavimento (OPCIONAL - ENUM)
   // ============================================
   body("tipo_pavimento")
-    .optional({ nullable: true, checkFalsy: true })
-    .isString()
-    .withMessage("El tipo de pavimento debe ser texto")
-    .isIn(TIPOS_PAVIMENTO)
-    .withMessage(
-      `El tipo de pavimento debe ser uno de: ${TIPOS_PAVIMENTO.join(", ")}`
-    ),
+    .optional({ nullable: true })
+    .customSanitizer((value) => {
+      // Convertir string vacío a null para evitar error de BD
+      if (value === "" || value === undefined || value === null) {
+        return null;
+      }
+      return value;
+    })
+    .custom((value) => {
+      // Si es null, es válido (opcional)
+      if (value === null) {
+        return true;
+      }
+      // Si no es null, debe estar en la lista de valores válidos
+      if (!TIPOS_PAVIMENTO.includes(value)) {
+        throw new Error(`El tipo de pavimento debe ser uno de: ${TIPOS_PAVIMENTO.join(", ")}`);
+      }
+      return true;
+    }),
 
   // ============================================
   // VALIDACIÓN: sentido_via (OPCIONAL - ENUM)
   // ============================================
   body("sentido_via")
-    .optional({ nullable: true, checkFalsy: true })
-    .isString()
-    .withMessage("El sentido de vía debe ser texto")
-    .isIn(SENTIDOS_VIA)
-    .withMessage(
-      `El sentido de vía debe ser uno de: ${SENTIDOS_VIA.join(", ")}`
-    ),
+    .optional({ nullable: true })
+    .customSanitizer((value) => {
+      // Convertir string vacío a null para evitar error de BD
+      if (value === "" || value === undefined || value === null) {
+        return null;
+      }
+      return value;
+    })
+    .custom((value) => {
+      // Si es null, es válido (opcional)
+      if (value === null) {
+        return true;
+      }
+      // Si no es null, debe estar en la lista de valores válidos
+      if (!SENTIDOS_VIA.includes(value)) {
+        throw new Error(`El sentido de vía debe ser uno de: ${SENTIDOS_VIA.join(", ")}`);
+      }
+      return true;
+    }),
 
   // ============================================
   // VALIDACIÓN: carriles (OPCIONAL)
@@ -349,6 +373,44 @@ export const validateUpdateCalle = [
     }),
 
   // ============================================
+  // VALIDACIÓN: tipo_pavimento (OPCIONAL - ENUM)
+  // ============================================
+  body("tipo_pavimento")
+    .optional({ nullable: true })
+    .customSanitizer((value) => {
+      // Convertir string vacío a null para evitar error de BD
+      if (value === "" || value === undefined || value === null) {
+        return null;
+      }
+      return value;
+    })
+    .custom((value) => {
+      // Si es null, es válido (opcional)
+      if (value === null) {
+        return true;
+      }
+      // Si no es null, debe estar en la lista de valores válidos
+      if (!TIPOS_PAVIMENTO.includes(value)) {
+        throw new Error(`El tipo de pavimento debe ser uno de: ${TIPOS_PAVIMENTO.join(", ")}`);
+      }
+      return true;
+    }),
+  body("nombre_via")
+    .optional()
+    .isString()
+    .withMessage("El nombre de la vía debe ser texto")
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage("El nombre de la vía debe tener entre 1 y 200 caracteres")
+    .customSanitizer((value) => {
+      return value
+        .toLowerCase()
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+    }),
+
+  // ============================================
   // VALIDACIÓN: ubigeo_code (OPCIONAL)
   // ============================================
   body("ubigeo_code")
@@ -404,21 +466,49 @@ export const validateUpdateCalle = [
   // VALIDACIÓN: tipo_pavimento (OPCIONAL - ENUM)
   // ============================================
   body("tipo_pavimento")
-    .optional({ nullable: true, checkFalsy: true })
-    .isIn(TIPOS_PAVIMENTO)
-    .withMessage(
-      `El tipo de pavimento debe ser uno de: ${TIPOS_PAVIMENTO.join(", ")}`
-    ),
+    .optional({ nullable: true })
+    .customSanitizer((value) => {
+      // Convertir string vacío a null para evitar error de BD
+      if (value === "" || value === undefined || value === null) {
+        return null;
+      }
+      return value;
+    })
+    .custom((value) => {
+      // Si es null, es válido (opcional)
+      if (value === null) {
+        return true;
+      }
+      // Si no es null, debe estar en la lista de valores válidos
+      if (!TIPOS_PAVIMENTO.includes(value)) {
+        throw new Error(`El tipo de pavimento debe ser uno de: ${TIPOS_PAVIMENTO.join(", ")}`);
+      }
+      return true;
+    }),
 
   // ============================================
   // VALIDACIÓN: sentido_via (OPCIONAL - ENUM)
   // ============================================
   body("sentido_via")
-    .optional({ nullable: true, checkFalsy: true })
-    .isIn(SENTIDOS_VIA)
-    .withMessage(
-      `El sentido de vía debe ser uno de: ${SENTIDOS_VIA.join(", ")}`
-    ),
+    .optional({ nullable: true })
+    .customSanitizer((value) => {
+      // Convertir string vacío a null para evitar error de BD
+      if (value === "" || value === undefined || value === null) {
+        return null;
+      }
+      return value;
+    })
+    .custom((value) => {
+      // Si es null, es válido (opcional)
+      if (value === null) {
+        return true;
+      }
+      // Si no es null, debe estar en la lista de valores válidos
+      if (!SENTIDOS_VIA.includes(value)) {
+        throw new Error(`El sentido de vía debe ser uno de: ${SENTIDOS_VIA.join(", ")}`);
+      }
+      return true;
+    }),
 
   // ============================================
   // VALIDACIÓN: carriles (OPCIONAL)
