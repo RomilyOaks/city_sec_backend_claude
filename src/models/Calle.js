@@ -166,7 +166,7 @@ const Calle = sequelize.define(
       comment: "Nombre de la vía (Ejército, Garcilaso, Los Pinos)",
       validate: {
         notEmpty: true,
-        len: [2, 200],
+        len: [1, 200],
       },
     },
 

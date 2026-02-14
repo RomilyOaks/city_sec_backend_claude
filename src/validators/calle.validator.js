@@ -120,8 +120,8 @@ export const validateCreateCalle = [
     .isString()
     .withMessage("El nombre de la vía debe ser texto")
     .trim()
-    .isLength({ min: 2, max: 200 })
-    .withMessage("El nombre de la vía debe tener entre 2 y 200 caracteres")
+    .isLength({ min: 1, max: 200 })
+    .withMessage("El nombre de la vía debe tener entre 1 y 200 caracteres")
     .customSanitizer((value) => {
       // Capitalizar primera letra de cada palabra
       return value
@@ -338,8 +338,8 @@ export const validateUpdateCalle = [
     .isString()
     .withMessage("El nombre de la vía debe ser texto")
     .trim()
-    .isLength({ min: 2, max: 200 })
-    .withMessage("El nombre de la vía debe tener entre 2 y 200 caracteres")
+    .isLength({ min: 1, max: 200 })
+    .withMessage("El nombre de la vía debe tener entre 1 y 200 caracteres")
     .customSanitizer((value) => {
       return value
         .toLowerCase()
