@@ -899,12 +899,30 @@ export const getEstadisticasPersonal = async (req, res) => {
  */
 export const getConductores = async (req, res) => {
   try {
-    const { page = 1, limit = 50 } = req.query;
+    const { page = 1, limit = 50, disponible } = req.query;
     const offset = (page - 1) * limit;
+
+    // Si disponible=true, excluir conductores que ya tienen vehículo asignado
+    const whereClause = {};
+    if (disponible === "true") {
+      const idsAsignados = await Vehiculo.findAll({
+        attributes: ["conductor_asignado_id"],
+        where: {
+          conductor_asignado_id: { [Op.ne]: null },
+        },
+        paranoid: true, // excluye soft-deleted
+        raw: true,
+      });
+      const idsOcupados = idsAsignados.map((v) => v.conductor_asignado_id);
+      if (idsOcupados.length > 0) {
+        whereClause.id = { [Op.notIn]: idsOcupados };
+      }
+    }
 
     const { count, rows } = await PersonalSeguridad.scope(
       "conLicenciaVigente"
     ).findAndCountAll({
+      where: whereClause,
       include: [
         {
           model: Cargo,
