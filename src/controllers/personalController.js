@@ -902,8 +902,12 @@ export const getConductores = async (req, res) => {
     const { page = 1, limit = 50, disponible } = req.query;
     const offset = (page - 1) * limit;
 
+    // Filtro base: personal activo con licencia
+    const whereClause = {
+      licencia: { [Op.ne]: null },
+    };
+
     // Si disponible=true, excluir conductores que ya tienen vehículo asignado
-    const whereClause = {};
     if (disponible === "true") {
       const idsAsignados = await Vehiculo.findAll({
         attributes: ["conductor_asignado_id"],
@@ -920,7 +924,7 @@ export const getConductores = async (req, res) => {
     }
 
     const { count, rows } = await PersonalSeguridad.scope(
-      "conLicenciaVigente"
+      "activos"
     ).findAndCountAll({
       where: whereClause,
       include: [
