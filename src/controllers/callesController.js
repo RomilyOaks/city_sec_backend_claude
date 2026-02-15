@@ -16,6 +16,7 @@
  * - GET    /api/calles                    - Listar con paginación
  * - GET    /api/calles/activas            - Listar solo activas
  * - GET    /api/calles/autocomplete       - Búsqueda para autocomplete
+ * - GET    /api/calles/urbanizaciones     - Lista única de urbanizaciones (DISTINCT)
  * - GET    /api/calles/urbanizacion/:nombre - Calles de urbanización
  * - GET    /api/calles/:id                - Obtener por ID
  * - POST   /api/calles                    - Crear calle
@@ -43,7 +44,7 @@ import Cuadrante from "../models/Cuadrante.js";
 import Sector from "../models/Sector.js";
 import Direccion from "../models/Direccion.js";
 import Usuario from "../models/Usuario.js";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 
 /**
  * ============================================================================
@@ -569,6 +570,7 @@ const callesController = {
       const {
         tipo_via_id,
         nombre_via,
+        nombre_anterior,
         ubigeo_code,
         urbanizacion,
         zona,
@@ -625,6 +627,7 @@ const callesController = {
         calle_code,
         tipo_via_id,
         nombre_via: nombre_via.trim(),
+        nombre_anterior: nombre_anterior?.trim() || null,
         ubigeo_code,
         urbanizacion: urbanizacion?.trim() || null,
         zona: zona?.trim() || null,
@@ -690,6 +693,75 @@ const callesController = {
 
   /**
    * @swagger
+   * /api/calles/urbanizaciones:
+   *   get:
+   *     summary: Obtener lista única de urbanizaciones
+   *     tags: [Calles]
+   *     description: Retorna todas las urbanizaciones únicas existentes en las calles (DISTINCT)
+   *     responses:
+   *       200:
+   *         description: Lista de urbanizaciones únicas
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: array
+   *                   items:
+   *                     type: string
+   *                     description: Nombre de urbanización
+   *                   example: ["Urb. Los Pinos", "AAHH Villa El Salvador", "Residencial San Carlos"]
+   *                 total:
+   *                   type: integer
+   *                   description: Total de urbanizaciones únicas
+   */
+  getUrbanizacionesUnicas: async (req, res) => {
+    try {
+      // Obtener urbanizaciones únicas usando DISTINCT
+      const urbanizaciones = await Calle.findAll({
+        attributes: [
+          [Sequelize.fn('DISTINCT', Sequelize.col('urbanizacion')), 'urbanizacion']
+        ],
+        where: {
+          urbanizacion: {
+            [Sequelize.Op.ne]: null, // No nulas
+            [Sequelize.Op.ne]: '',    // No vacías
+          },
+          estado: 1, // Solo calles activas
+        },
+        order: [
+          [Sequelize.fn('LOWER', Sequelize.col('urbanizacion')), 'ASC'] // Ordenar alfabéticamente ignorando mayúsculas
+        ],
+        raw: true, // Obtener resultados planos
+      });
+
+      // Extraer solo los nombres de urbanización
+      const listaUrbanizaciones = urbanizaciones
+        .map(item => item.urbanizacion)
+        .filter(urb => urb && urb.trim() !== ''); // Filtrar valores nulos o vacíos
+
+      return res.status(200).json(
+        formatSuccessResponse(
+          listaUrbanizaciones,
+          "Urbanizaciones únicas obtenidas exitosamente",
+          {
+            total: listaUrbanizaciones.length,
+          }
+        )
+      );
+    } catch (error) {
+      console.error("Error al obtener urbanizaciones únicas:", error);
+      return res.status(500).json(
+        formatErrorResponse("Error al obtener urbanizaciones únicas")
+      );
+    }
+  },
+
+  /**
+   * @swagger
    * /api/calles/{id}:
    *   put:
    *     summary: Actualizar calle
@@ -728,6 +800,7 @@ const callesController = {
       // Actualizar campos
       await calle.update({
         ...req.body,
+        nombre_anterior: req.body.nombre_anterior?.trim() || null,
         updated_by: userId,
       });
 
@@ -896,4 +969,17 @@ const callesController = {
 // ============================================================================
 // EXPORTACIÓN
 // ============================================================================
-export default callesController;
+export default {
+  listarTodas: callesController.listarTodas, // ✅ Método faltante agregado
+  listar: callesController.listar,
+  listarActivas: callesController.listarActivas,
+  autocomplete: callesController.autocomplete,
+  getUrbanizacionesUnicas: callesController.getUrbanizacionesUnicas,
+  porUrbanizacion: callesController.porUrbanizacion,
+  obtenerPorId: callesController.obtenerPorId,
+  crear: callesController.crear,
+  actualizar: callesController.actualizar,
+  eliminar: callesController.eliminar,
+  obtenerCuadrantes: callesController.obtenerCuadrantes,
+  obtenerDirecciones: callesController.obtenerDirecciones,
+};

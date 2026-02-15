@@ -19,7 +19,8 @@
  *
  * REGLAS DE VALIDACIÓN:
  * - tipo_via_id: Integer, obligatorio, >= 1
- * - nombre_via: String 2-200 caracteres, obligatorio
+ * - nombre_via: String 1-200 caracteres, obligatorio
+ * - nombre_anterior: String opcional, máximo 250 caracteres
  * - ubigeo_code: String 6 caracteres, opcional
  * - urbanizacion: String opcional, máximo 150 caracteres
  * - longitud_metros: Decimal positivo, opcional
@@ -154,6 +155,18 @@ export const validateCreateCalle = [
     .trim()
     .isLength({ max: 150 })
     .withMessage("La urbanización no puede exceder 150 caracteres")
+    .customSanitizer((value) => (value ? value.trim() : null)),
+
+  // ============================================
+  // VALIDACIÓN: nombre_anterior (OPCIONAL)
+  // ============================================
+  body("nombre_anterior")
+    .optional({ nullable: true, checkFalsy: true })
+    .isString()
+    .withMessage("El nombre anterior debe ser texto")
+    .trim()
+    .isLength({ max: 250 })
+    .withMessage("El nombre anterior no puede exceder 250 caracteres")
     .customSanitizer((value) => (value ? value.trim() : null)),
 
   // ============================================
@@ -431,6 +444,18 @@ export const validateUpdateCalle = [
     .trim()
     .isLength({ max: 150 })
     .withMessage("La urbanización no puede exceder 150 caracteres")
+    .customSanitizer((value) => (value ? value.trim() : null)),
+
+  // ============================================
+  // VALIDACIÓN: nombre_anterior (OPCIONAL)
+  // ============================================
+  body("nombre_anterior")
+    .optional({ nullable: true, checkFalsy: true })
+    .isString()
+    .withMessage("El nombre anterior debe ser texto")
+    .trim()
+    .isLength({ max: 250 })
+    .withMessage("El nombre anterior no puede exceder 250 caracteres")
     .customSanitizer((value) => (value ? value.trim() : null)),
 
   // ============================================
