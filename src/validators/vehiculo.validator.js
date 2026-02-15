@@ -305,8 +305,11 @@ export const validarUnidadOficinaId = (opcional = false) => {
 export const validarConductorAsignado = () =>
   body("conductor_asignado_id")
     .optional()
-    .isInt({ min: 1 })
-    .withMessage("El conductor debe ser un ID válido");
+    .custom((value) => {
+      if (value === null) return true;
+      if (Number.isInteger(value) && value > 0) return true;
+      throw new Error("El conductor debe ser un ID válido o null");
+    });
 
 /**
  * Validar estado operativo
