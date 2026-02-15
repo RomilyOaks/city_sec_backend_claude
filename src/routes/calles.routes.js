@@ -98,6 +98,41 @@ router.get(
 );
 
 /**
+ * @route   GET /api/calles/urbanizaciones
+ * @desc    Obtener lista única de urbanizaciones (DISTINCT)
+ * @access  Todos los usuarios autenticados
+ */
+router.get(
+  "/urbanizaciones",
+  verificarToken,
+  requireAnyPermission(["calles.calles.read"]),
+  (req, res, next) => {
+    // #swagger.tags = ['Calles']
+    // #swagger.summary = 'Obtener lista única de urbanizaciones (DISTINCT)'
+    // #swagger.description = 'Retorna todas las urbanizaciones únicas existentes en las calles, ordenadas alfabéticamente'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.responses[200] = { 
+    //   description: 'Lista de urbanizaciones únicas',
+    //   schema: {
+    //     type: 'object',
+    //     properties: {
+    //       success: { type: 'boolean' },
+    //       data: {
+    //         type: 'array',
+    //         items: { type: 'string' },
+    //         example: ["Urb. Los Pinos", "AAHH Villa El Salvador", "Residencial San Carlos"]
+    //       },
+    //       total: { type: 'integer' }
+    //     }
+    //   }
+    // }
+    // #swagger.responses[401] = { description: 'No autenticado' }
+    // #swagger.responses[403] = { description: 'Sin permisos' }
+    return callesController.getUrbanizacionesUnicas(req, res, next);
+  }
+);
+
+/**
  * @route   GET /api/calles/autocomplete
  * @desc    Búsqueda de calles para autocomplete (mínimo 2 caracteres)
  * @access  Todos los usuarios autenticados

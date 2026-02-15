@@ -111,6 +111,10 @@ import sequelize from "../config/database.js";
  *         longitud_metros:
  *           type: number
  *           description: Longitud aproximada en metros
+ *         nombre_anterior:
+ *           type: string
+ *           description: Nombre anterior de la vía - Para historial de cambios
+ *           example: "Antigua Panamericana Sur"
  *         estado:
  *           type: integer
  *           description: Estado del registro (1=Activo, 0=Inactivo)
@@ -175,6 +179,13 @@ const Calle = sequelize.define(
       allowNull: true, // Se genera automáticamente por trigger en BD
       field: "nombre_completo",
       comment: "Nombre completo (ej: \"Av. Ejército\") - Generado por trigger BD",
+    },
+
+    nombre_anterior: {
+      type: DataTypes.STRING(250),
+      allowNull: true,
+      field: "nombre_anterior",
+      comment: "Nombre anterior de la vía - Para historial de cambios de nomenclatura",
     },
 
     // ============================================================================
