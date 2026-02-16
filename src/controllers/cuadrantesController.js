@@ -553,9 +553,6 @@ export const createCuadrante = async (req, res) => {
       referencia,
     } = req.body;
 
-    console.log("📋 createCuadrante req.body:", JSON.stringify(req.body));
-    console.log("📋 referencia extraída:", referencia);
-
     const created_by = req.user.id;
 
     // Validar campos requeridos
@@ -678,9 +675,6 @@ export const updateCuadrante = async (req, res) => {
       color_mapa,
       referencia,
     } = req.body;
-
-    console.log("📋 updateCuadrante req.body:", JSON.stringify(req.body));
-    console.log("📋 referencia extraída:", referencia);
 
     const updated_by = req.user.id;
 
