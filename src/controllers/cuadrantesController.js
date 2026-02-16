@@ -550,8 +550,11 @@ export const createCuadrante = async (req, res) => {
       poligono_json,
       radio_metros,
       color_mapa,
-      referencia,  // ✅ AGREGAR referencia
+      referencia,
     } = req.body;
+
+    console.log("📋 createCuadrante req.body:", JSON.stringify(req.body));
+    console.log("📋 referencia extraída:", referencia);
 
     const created_by = req.user.id;
 
@@ -673,8 +676,11 @@ export const updateCuadrante = async (req, res) => {
       poligono_json,
       radio_metros,
       color_mapa,
-      referencia,       // ✅ AGREGAR referencia
+      referencia,
     } = req.body;
+
+    console.log("📋 updateCuadrante req.body:", JSON.stringify(req.body));
+    console.log("📋 referencia extraída:", referencia);
 
     const updated_by = req.user.id;
 
