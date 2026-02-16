@@ -466,6 +466,14 @@ export const createVehiculo = async (req, res) => {
       { transaction }
     );
 
+    // Sincronizar vehiculo_id en PersonalSeguridad
+    if (conductor_asignado_id) {
+      await PersonalSeguridad.update(
+        { vehiculo_id: nuevoVehiculo.id, updated_by: req.user.id },
+        { where: { id: conductor_asignado_id }, transaction }
+      );
+    }
+
     // 🔥 COMMIT PRIMERO
     await transaction.commit();
 
@@ -569,6 +577,12 @@ export const updateVehiculo = async (req, res) => {
       datosActualizacion.placa = datosActualizacion.placa.toUpperCase();
     }
 
+    // Detectar cambio de conductor antes de actualizar
+    const conductorAnteriorId = vehiculo.conductor_asignado_id;
+    const conductorNuevoId = datosActualizacion.hasOwnProperty("conductor_asignado_id")
+      ? datosActualizacion.conductor_asignado_id
+      : undefined;
+
     // Actualizar vehículo
     await vehiculo.update(
       {
@@ -577,6 +591,24 @@ export const updateVehiculo = async (req, res) => {
       },
       { transaction }
     );
+
+    // Sincronizar vehiculo_id en PersonalSeguridad
+    if (conductorNuevoId !== undefined && conductorNuevoId !== conductorAnteriorId) {
+      // Desasignar conductor anterior
+      if (conductorAnteriorId) {
+        await PersonalSeguridad.update(
+          { vehiculo_id: null, updated_by: req.user.id },
+          { where: { id: conductorAnteriorId }, transaction }
+        );
+      }
+      // Asignar nuevo conductor
+      if (conductorNuevoId) {
+        await PersonalSeguridad.update(
+          { vehiculo_id: vehiculo.id, updated_by: req.user.id },
+          { where: { id: conductorNuevoId }, transaction }
+        );
+      }
+    }
 
     // 🔥 COMMIT PRIMERO
     await transaction.commit();
