@@ -361,6 +361,18 @@ export const createPersonal = async (req, res) => {
       { transaction }
     );
 
+    // Sincronizar conductor_asignado_id en Vehiculo
+    if (datosPersonal.vehiculo_id) {
+      await Vehiculo.update(
+        {
+          conductor_asignado_id: nuevoPersonal.id,
+          estado_operativo: "EN_SERVICIO",
+          updated_by: req.user.id,
+        },
+        { where: { id: datosPersonal.vehiculo_id }, transaction }
+      );
+    }
+
     await transaction.commit();
 
     const personalCompleto = await PersonalSeguridad.findByPk(
@@ -559,6 +571,24 @@ export const updatePersonal = async (req, res) => {
             message:
               "No se puede asignar un vehículo con licencia de conducir vencida",
           });
+        }
+
+        // Liberar vehículo anterior si tenía uno distinto
+        if (personal.vehiculo_id && personal.vehiculo_id !== datosActualizacion.vehiculo_id) {
+          const vehiculoAnterior = await Vehiculo.findByPk(
+            personal.vehiculo_id,
+            { transaction }
+          );
+          if (vehiculoAnterior) {
+            await vehiculoAnterior.update(
+              {
+                estado_operativo: "DISPONIBLE",
+                conductor_asignado_id: null,
+                updated_by: req.user.id,
+              },
+              { transaction }
+            );
+          }
         }
 
         await vehiculo.update(
