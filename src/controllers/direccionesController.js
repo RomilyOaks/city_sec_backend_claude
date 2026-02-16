@@ -1292,11 +1292,90 @@ const direccionesController = {
           );
       }
 
+      // Enriquecer con direccion_id, sector_id, cuadrante_id
+      let direccion_id = null;
+      let sector_id = null;
+      let cuadrante_id = null;
+
+      // Estrategia 1: Buscar dirección exacta en BD por calle + número
+      if (resultado.parsed?.streetName) {
+        const calles = await Calle.findAll({
+          where: {
+            [Op.or]: [
+              { nombre_via: { [Op.like]: `%${resultado.parsed.streetName}%` } },
+              { nombre_completo: { [Op.like]: `%${resultado.parsed.streetName}%` } },
+            ],
+            estado: 1,
+          },
+          attributes: ["id"],
+          limit: 10,
+        });
+
+        if (calles.length > 0) {
+          const calleIds = calles.map((c) => c.id);
+
+          // Buscar dirección exacta por número
+          const whereDireccion = {
+            calle_id: { [Op.in]: calleIds },
+            estado: 1,
+            deleted_at: null,
+          };
+
+          if (resultado.parsed.numero) {
+            whereDireccion.numero_municipal = resultado.parsed.numero;
+          } else if (resultado.parsed.manzana) {
+            whereDireccion.manzana = resultado.parsed.manzana;
+            if (resultado.parsed.lote) {
+              whereDireccion.lote = resultado.parsed.lote;
+            }
+          }
+
+          const direccionExacta = await Direccion.findOne({
+            where: whereDireccion,
+            attributes: ["id", "sector_id", "cuadrante_id"],
+          });
+
+          if (direccionExacta) {
+            direccion_id = direccionExacta.id;
+            sector_id = direccionExacta.sector_id;
+            cuadrante_id = direccionExacta.cuadrante_id;
+          }
+
+          // Estrategia 2: Auto-asignar cuadrante por CallesCuadrantes
+          if (!cuadrante_id && resultado.parsed.numero) {
+            const autoAsignados = await autoAsignarCuadranteYSector(
+              calleIds[0],
+              resultado.parsed.numero
+            );
+            if (autoAsignados.cuadrante_id) {
+              cuadrante_id = autoAsignados.cuadrante_id;
+              sector_id = autoAsignados.sector_id;
+            }
+          }
+        }
+      }
+
+      // Estrategia 3: Buscar cuadrante más cercano por coordenadas
+      if (!cuadrante_id && resultado.latitud && resultado.longitud) {
+        const cercanos = await Cuadrante.findNearby(
+          parseFloat(resultado.latitud),
+          parseFloat(resultado.longitud),
+          1 // 1 km de radio
+        );
+        if (cercanos.length > 0) {
+          cuadrante_id = cercanos[0].id;
+          sector_id = cercanos[0].sector_id;
+        }
+      }
+
       return res.status(200).json(
         formatSuccessResponse(
           {
             latitud: resultado.latitud,
             longitud: resultado.longitud,
+            direccion_id,
+            sector_id,
+            cuadrante_id,
             geocodificada: resultado.geocodificada,
             location_type: resultado.location_type,
             fuente_geocodificacion: resultado.fuente_geocodificacion,
