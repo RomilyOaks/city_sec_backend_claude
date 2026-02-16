@@ -91,7 +91,8 @@ const Novedad = sequelize.define(
         "INTERVENCION_DIRECTA",
         "VIDEO_CCO",
         "ANALITICA",
-        "APP_PODER_JUDICIAL"
+        "APP_PODER_JUDICIAL",
+        "BOT"
       ),
       allowNull: true,
       defaultValue: "TELEFONO_107",
