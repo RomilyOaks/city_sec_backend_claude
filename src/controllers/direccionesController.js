@@ -110,24 +110,21 @@ const formatErrorResponse = (message, error = null) => {
  * @param {string} numeroMunicipal - Número municipal
  * @returns {Promise<Object>} { cuadrante_id, sector_id }
  */
-const autoAsignarCuadranteYSector = async (calleId, numeroMunicipal) => {
-  // Si no hay número municipal, no se puede auto-asignar
-  if (!numeroMunicipal) {
-    return { cuadrante_id: null, sector_id: null };
+const autoAsignarCuadranteYSector = async (calleId, numeroMunicipal, manzana = null) => {
+  let relacion = null;
+
+  // Prioridad 1: Por número municipal
+  if (numeroMunicipal) {
+    const numero = parseInt(numeroMunicipal.replace(/[^0-9]/g, ""));
+    if (!isNaN(numero)) {
+      relacion = await CallesCuadrantes.buscarCuadrantePorNumero(calleId, numero);
+    }
   }
 
-  // Extraer número (eliminar letras como A, B, etc.)
-  const numero = parseInt(numeroMunicipal.replace(/[^0-9]/g, ""));
-
-  if (isNaN(numero)) {
-    return { cuadrante_id: null, sector_id: null };
+  // Prioridad 2: Por manzana (AAHH sin numeración municipal)
+  if (!relacion && manzana) {
+    relacion = await CallesCuadrantes.buscarCuadrantePorManzana(calleId, manzana);
   }
-
-  // Buscar cuadrante correspondiente
-  const relacion = await CallesCuadrantes.buscarCuadrantePorNumero(
-    calleId,
-    numero
-  );
 
   if (!relacion) {
     return { cuadrante_id: null, sector_id: null };
@@ -653,10 +650,11 @@ const direccionesController = {
       let sector_id = sectorIdFrontend || null;
 
       // Solo auto-asignar si NO vienen del frontend
-      if (!cuadrante_id && !sector_id && numero_municipal) {
+      if (!cuadrante_id && !sector_id && (numero_municipal || manzana)) {
         const autoAsignados = await autoAsignarCuadranteYSector(
           calle_id,
-          numero_municipal
+          numero_municipal,
+          manzana
         );
         cuadrante_id = autoAsignados.cuadrante_id;
         sector_id = autoAsignados.sector_id;
@@ -791,7 +789,8 @@ const direccionesController = {
       // Auto-asignar cuadrante y sector
       const { cuadrante_id, sector_id } = await autoAsignarCuadranteYSector(
         calle_id,
-        numero_municipal
+        numero_municipal,
+        manzana
       );
 
       // Cargar cuadrante y sector
@@ -881,19 +880,21 @@ const direccionesController = {
         sector_id = req.body.sector_id;
       }
 
-      // Solo auto-asignar si se cambia calle o número Y no se envían explícitamente
+      // Solo auto-asignar si se cambia calle, número o manzana Y no se envían explícitamente
       if (
-        (req.body.calle_id || req.body.numero_municipal) &&
+        (req.body.calle_id || req.body.numero_municipal || req.body.manzana) &&
         req.body.cuadrante_id === undefined &&
         req.body.sector_id === undefined
       ) {
         const nuevaCalleId = req.body.calle_id || direccion.calle_id;
         const nuevoNumero =
           req.body.numero_municipal || direccion.numero_municipal;
+        const nuevaManzana = req.body.manzana || direccion.manzana;
 
         const asignacion = await autoAsignarCuadranteYSector(
           nuevaCalleId,
-          nuevoNumero
+          nuevoNumero,
+          nuevaManzana
         );
         cuadrante_id = asignacion.cuadrante_id;
         sector_id = asignacion.sector_id;
