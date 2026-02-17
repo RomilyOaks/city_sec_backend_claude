@@ -1339,6 +1339,59 @@ const direccionesController = {
             direccion_id = direccionExacta.id;
             sector_id = direccionExacta.sector_id;
             cuadrante_id = direccionExacta.cuadrante_id;
+          } else if (resultado.parsed.numero) {
+            // Fallback: dirección más cercana en misma cuadra
+            const inputNum = parseInt(resultado.parsed.numero.replace(/[^0-9]/g, ""), 10);
+            if (!isNaN(inputNum)) {
+              const inputCuadra = Math.floor(inputNum / 100);
+              const direccionesCalle = await Direccion.findAll({
+                where: {
+                  calle_id: { [Op.in]: calleIds },
+                  estado: 1,
+                  deleted_at: null,
+                  numero_municipal: { [Op.ne]: null },
+                },
+                attributes: ["id", "numero_municipal", "sector_id", "cuadrante_id"],
+              });
+
+              let bestMatch = null;
+              let bestDistance = Infinity;
+
+              for (const dir of direccionesCalle) {
+                const dirNum = parseInt(dir.numero_municipal.replace(/[^0-9]/g, ""), 10);
+                if (isNaN(dirNum)) continue;
+                if (Math.floor(dirNum / 100) !== inputCuadra) continue;
+                const distance = Math.abs(inputNum - dirNum);
+                if (distance < bestDistance) {
+                  bestMatch = dir;
+                  bestDistance = distance;
+                }
+              }
+
+              if (bestMatch) {
+                direccion_id = bestMatch.id;
+                sector_id = bestMatch.sector_id;
+                cuadrante_id = bestMatch.cuadrante_id;
+              }
+            }
+          } else if (resultado.parsed.manzana) {
+            // Fallback: cualquier lote de la misma manzana en esas calles
+            const direccionManzana = await Direccion.findOne({
+              where: {
+                calle_id: { [Op.in]: calleIds },
+                manzana: resultado.parsed.manzana,
+                estado: 1,
+                deleted_at: null,
+              },
+              attributes: ["id", "sector_id", "cuadrante_id"],
+              order: [["lote", "ASC"]],
+            });
+
+            if (direccionManzana) {
+              direccion_id = direccionManzana.id;
+              sector_id = direccionManzana.sector_id;
+              cuadrante_id = direccionManzana.cuadrante_id;
+            }
           }
 
           // Estrategia 2: Auto-asignar cuadrante por CallesCuadrantes
