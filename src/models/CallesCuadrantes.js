@@ -648,6 +648,54 @@ CallesCuadrantes.buscarCuadrantePorNumero = async function (calleId, numero) {
 };
 
 /**
+ * Buscar cuadrante por calle y manzana (para AAHH sin numeración municipal)
+ *
+ * @param {number} calleId - ID de la calle
+ * @param {string} manzana - Identificador de manzana (ej: "J", "A1")
+ * @returns {Object|null} Relación CallesCuadrantes con cuadrante y sector
+ */
+CallesCuadrantes.buscarCuadrantePorManzana = async function (calleId, manzana) {
+  try {
+    const Cuadrante = this.sequelize.models.Cuadrante;
+    const Sector = this.sequelize.models.Sector;
+    const Calle = this.sequelize.models.Calle;
+
+    const relacion = await this.findOne({
+      where: {
+        calle_id: calleId,
+        manzana: manzana.toUpperCase(),
+        estado: 1,
+        deleted_at: null,
+      },
+      include: [
+        {
+          model: Cuadrante,
+          as: "cuadrante",
+          required: true,
+          include: [
+            {
+              model: Sector,
+              as: "sector",
+              attributes: ["id", "sector_code", "nombre"],
+            },
+          ],
+        },
+        {
+          model: Calle,
+          as: "calle",
+          attributes: ["id", "calle_code", "nombre_completo"],
+        },
+      ],
+    });
+
+    return relacion;
+  } catch (error) {
+    console.error("Error en buscarCuadrantePorManzana:", error);
+    throw error;
+  }
+};
+
+/**
  * NOTAS DE USO:
  *
  * 1. BUSCAR CUADRANTE PARA AUTO-ASIGNACIÓN:
