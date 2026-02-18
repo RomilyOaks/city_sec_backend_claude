@@ -465,9 +465,9 @@ export const updateNovedad = async (req, res) => {
     // El trigger 'trg_novedades_incidentes_after_update' se encarga automáticamente
     // de crear el registro cuando detecta cambio en estado_novedad_id
 
-    if (fecha_llegada && !novedad.fecha_llegada) {
+    if (datosActualizacion.fecha_llegada && !novedad.fecha_llegada) {
       const tiempoRespuesta = Math.floor(
-        (new Date(convertToTimezone(fecha_llegada)) -
+        (new Date(convertToTimezone(datosActualizacion.fecha_llegada)) -
           new Date(novedad.fecha_hora_ocurrencia)) /
           60000
       );
