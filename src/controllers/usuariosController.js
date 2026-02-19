@@ -652,13 +652,15 @@ export const resetPassword = async (req, res) => {
       }
     );
 
+    await t.commit();
+
     res.json({
       success: true,
       message:
         "Contraseña reseteada exitosamente. El usuario deberá cambiarla en su próximo login.",
     });
   } catch (error) {
-    await t.rollback();
+    if (!t.finished) await t.rollback();
     console.error("Error en resetPassword:", error);
     res.status(500).json({
       success: false,
