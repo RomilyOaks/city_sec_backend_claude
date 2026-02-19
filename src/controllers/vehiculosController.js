@@ -470,7 +470,7 @@ export const createVehiculo = async (req, res) => {
     if (conductor_asignado_id) {
       await PersonalSeguridad.update(
         { vehiculo_id: nuevoVehiculo.id, updated_by: req.user.id },
-        { where: { id: conductor_asignado_id }, transaction }
+        { where: { id: conductor_asignado_id }, transaction, validate: false }
       );
     }
 
@@ -579,7 +579,7 @@ export const updateVehiculo = async (req, res) => {
 
     // Detectar cambio de conductor antes de actualizar
     const conductorAnteriorId = vehiculo.conductor_asignado_id;
-    const conductorNuevoId = datosActualizacion.hasOwnProperty("conductor_asignado_id")
+    const conductorNuevoId = Object.prototype.hasOwnProperty.call(datosActualizacion, "conductor_asignado_id")
       ? datosActualizacion.conductor_asignado_id
       : undefined;
 
@@ -598,14 +598,14 @@ export const updateVehiculo = async (req, res) => {
       if (conductorAnteriorId) {
         await PersonalSeguridad.update(
           { vehiculo_id: null, updated_by: req.user.id },
-          { where: { id: conductorAnteriorId }, transaction }
+          { where: { id: conductorAnteriorId }, transaction, validate: false }
         );
       }
       // Asignar nuevo conductor
       if (conductorNuevoId) {
         await PersonalSeguridad.update(
           { vehiculo_id: vehiculo.id, updated_by: req.user.id },
-          { where: { id: conductorNuevoId }, transaction }
+          { where: { id: conductorNuevoId }, transaction, validate: false }
         );
       }
     }
