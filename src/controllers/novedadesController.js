@@ -247,6 +247,7 @@ export const getNovedadById = async (req, res) => {
         { model: PersonalSeguridad, as: "novedadPersonal2", required: false, attributes: ["id", "doc_numero", "nombres", "apellido_paterno", "apellido_materno"] },
         { model: PersonalSeguridad, as: "novedadPersonal3", required: false, attributes: ["id", "doc_numero", "nombres", "apellido_paterno", "apellido_materno"] },
         { model: PersonalSeguridad, as: "novedadPersonal4", required: false, attributes: ["id", "doc_numero", "nombres", "apellido_paterno", "apellido_materno"] },
+        { model: Usuario, as: "usuarioDespacho", required: false, attributes: ["id", "username", "email"] },
       ],
     });
 
@@ -461,6 +462,15 @@ export const updateNovedad = async (req, res) => {
       });
     }
 
+    // Validar que novedades despachadas solo sean editadas por el usuario que despachó
+    if (novedad.usuario_despacho && novedad.usuario_despacho !== req.user.id) {
+      await transaction.rollback();
+      return res.status(403).json({
+        success: false,
+        message: "Solo el usuario que despachó esta novedad puede editarla",
+      });
+    }
+
     // NOTA: No creamos manualmente el registro en historial_estado_novedades
     // El trigger 'trg_novedades_incidentes_after_update' se encarga automáticamente
     // de crear el registro cuando detecta cambio en estado_novedad_id
@@ -557,6 +567,15 @@ export const asignarRecursos = async (req, res) => {
       });
     }
 
+    // Validar que re-despachos solo los haga el usuario que despachó originalmente
+    if (novedad.usuario_despacho && novedad.usuario_despacho !== req.user.id) {
+      await transaction.rollback();
+      return res.status(403).json({
+        success: false,
+        message: "Solo el usuario que despachó esta novedad puede modificar la asignación",
+      });
+    }
+
     const estadoDespacho = await EstadoNovedad.findOne({
       where: {
         nombre: { [Op.in]: ["EN RUTA", "DESPACHADO", "Asignado"] },
@@ -588,6 +607,10 @@ export const asignarRecursos = async (req, res) => {
     if (perdidas_materiales_estimadas) datosActualizacion.perdidas_materiales_estimadas = perdidas_materiales_estimadas;
     // Fecha de despacho: usar la proporcionada o la actual (timezone Perú)
     datosActualizacion.fecha_despacho = rawDate(fecha_despacho ? convertToTimezone(fecha_despacho) : getNowInTimezone(), sequelize);
+    // Registrar quién despacha (solo si aún no tiene usuario_despacho asignado)
+    if (!novedad.usuario_despacho) {
+      datosActualizacion.usuario_despacho = req.user.id;
+    }
     
     // Actualizar estado: usar el proporcionado explícitamente o el de despacho automático
     if (estado_novedad_id) {

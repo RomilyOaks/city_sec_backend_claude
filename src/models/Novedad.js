@@ -164,6 +164,10 @@ const Novedad = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    usuario_despacho: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     fecha_llegada: {
       type: DataTypes.DATE,
       allowNull: true,
