@@ -32,10 +32,6 @@ const Novedad = sequelize.define(
       allowNull: true,
       defaultValue: DataTypes.NOW,
     },
-    fecha_hora_cierre: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
     tipo_novedad_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -186,14 +182,6 @@ const Novedad = sequelize.define(
     },
     tiempo_respuesta_min: {
       type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    tiempo_respuesta_minutos: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    tiempo_resolucion_horas: {
-      type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
     },
     turno: {

@@ -534,9 +534,7 @@ export const asignarRecursos = async (req, res) => {
       km_final,
       fecha_despacho,
       fecha_llegada,
-      fecha_cierre,
       turno,
-      tiempo_respuesta_minutos,
       observaciones,
       estado_novedad_id,
       requiere_seguimiento,
@@ -583,10 +581,8 @@ export const asignarRecursos = async (req, res) => {
     if (km_inicial) datosActualizacion.km_inicial = km_inicial;
     if (km_final) datosActualizacion.km_final = km_final;
     if (turno) datosActualizacion.turno = turno;
-    if (tiempo_respuesta_minutos) datosActualizacion.tiempo_respuesta_minutos = tiempo_respuesta_minutos;
     if (observaciones) datosActualizacion.observaciones = observaciones;
     if (fecha_llegada) datosActualizacion.fecha_llegada = rawDate(convertToTimezone(fecha_llegada), sequelize);
-    if (fecha_cierre) datosActualizacion.fecha_cierre = rawDate(convertToTimezone(fecha_cierre), sequelize);
     if (requiere_seguimiento !== undefined) datosActualizacion.requiere_seguimiento = requiere_seguimiento;
     if (fecha_proxima_revision) datosActualizacion.fecha_proxima_revision = rawDate(convertToTimezone(fecha_proxima_revision), sequelize);
     if (perdidas_materiales_estimadas) datosActualizacion.perdidas_materiales_estimadas = perdidas_materiales_estimadas;
