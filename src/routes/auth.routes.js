@@ -12,6 +12,7 @@ import {
   refreshToken,
   logout,
   changePassword,
+  changePasswordRequired,
   getMe,
   forgotPassword,
 } from "../controllers/authController.js";
@@ -122,6 +123,24 @@ router.post("/change-password", authenticate, (req, res, next) => {
   // #swagger.responses[200] = { description: 'OK' }
   // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
   return changePassword(req, res, next);
+});
+
+/**
+ * @route   POST /api/auth/change-password-required
+ * @desc    Cambio obligatorio de contraseña tras reset de admin (sin token).
+ *          Valida userId + currentPassword, cambia password y retorna tokens JWT.
+ * @access  Public
+ * @body    { userId, currentPassword, newPassword }
+ * @returns { accessToken, refreshToken, usuario }
+ */
+router.post("/change-password-required", (req, res, next) => {
+  // #swagger.tags = ['Auth']
+  // #swagger.summary = 'Cambio obligatorio de password (sin token)'
+  // #swagger.requestBody = { required: true, content: { "application/json": { schema: { type: "object", required: ["userId", "currentPassword", "newPassword"], properties: { userId: { type: "integer" }, currentPassword: { type: "string" }, newPassword: { type: "string" } } } } } }
+  // #swagger.responses[200] = { description: 'OK - Contraseña cambiada y sesión iniciada' }
+  // #swagger.responses[401] = { description: 'Contraseña actual incorrecta' }
+  // #swagger.responses[403] = { description: 'Operación no permitida' }
+  return changePasswordRequired(req, res, next);
 });
 
 /**

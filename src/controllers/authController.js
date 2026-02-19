@@ -1034,6 +1034,137 @@ export const getMe = async (req, res) => {
 };
 
 // ==========================================
+// ENDPOINT: CAMBIO OBLIGATORIO DE CONTRASEÑA (sin token)
+// ==========================================
+
+/**
+ * POST /api/v1/auth/change-password-required
+ * Cambia la contraseña cuando el backend exige cambio obligatorio.
+ * El usuario aún NO tiene token JWT (login incompleto).
+ * Valida userId + currentPassword, cambia la contraseña y devuelve tokens
+ * para completar el login automáticamente.
+ *
+ * @body { userId, currentPassword, newPassword }
+ * @returns { accessToken, refreshToken, usuario }
+ */
+export const changePasswordRequired = async (req, res) => {
+  try {
+    const { userId, currentPassword, newPassword } = req.body;
+
+    if (!userId || !currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "userId, currentPassword y newPassword son requeridos",
+      });
+    }
+
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      return res.status(400).json({
+        success: false,
+        message: `La nueva contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`,
+      });
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "La nueva contraseña debe ser diferente a la actual",
+      });
+    }
+
+    const usuario = await Usuario.findByPk(userId, {
+      include: [
+        {
+          model: Rol,
+          as: "roles",
+          through: { attributes: [], where: { estado: 1 } },
+          include: [{ model: Permiso, as: "permisos", through: { attributes: [] } }],
+        },
+      ],
+    });
+
+    if (!usuario || usuario.estado !== "ACTIVO" || !usuario.require_password_change) {
+      return res.status(403).json({
+        success: false,
+        message: "Operación no permitida",
+      });
+    }
+
+    const passwordValido = await bcrypt.compare(currentPassword, usuario.password_hash);
+    if (!passwordValido) {
+      return res.status(401).json({
+        success: false,
+        message: "La contraseña actual es incorrecta",
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const newHash = await bcrypt.hash(newPassword, salt);
+
+    await usuario.update({
+      password_hash: newHash,
+      password_changed_at: new Date(),
+      require_password_change: false,
+      failed_login_attempts: 0,
+      locked_until: null,
+      last_login_at: new Date(),
+    });
+
+    validarConfiguracionJWT();
+
+    const permisos = extraerPermisos(usuario.roles);
+    const payload = {
+      userId: usuario.id,
+      username: usuario.username,
+      email: usuario.email,
+      roles: usuario.roles.map((r) => r.slug),
+      permisos,
+    };
+
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: JWT_ACCESS_EXPIRATION,
+    });
+    const refreshToken = jwt.sign(
+      { userId: usuario.id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: JWT_REFRESH_EXPIRATION }
+    );
+
+    res.json({
+      success: true,
+      message: "Contraseña actualizada. Sesión iniciada exitosamente.",
+      data: {
+        accessToken,
+        refreshToken,
+        usuario: {
+          id: usuario.id,
+          username: usuario.username,
+          email: usuario.email,
+          personal_seguridad_id: usuario.personal_seguridad_id,
+          nombres: usuario.nombres,
+          apellidos: usuario.apellidos,
+          foto_perfil: usuario.foto_perfil,
+          roles: usuario.roles.map((r) => ({
+            id: r.id,
+            nombre: r.nombre,
+            slug: r.slug,
+            color: r.color,
+          })),
+          permisos,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error en changePasswordRequired:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al cambiar contraseña",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+// ==========================================
 // ENDPOINT: RECUPERAR CONTRASEÑA
 // ==========================================
 
