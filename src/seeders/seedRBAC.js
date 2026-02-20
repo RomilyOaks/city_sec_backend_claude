@@ -578,6 +578,27 @@ async function seedRBAC() {
         descripcion: "Ver unidades/oficinas",
         es_sistema: true,
       },
+      {
+        modulo: "catalogos",
+        recurso: "unidades",
+        accion: "create",
+        descripcion: "Crear unidades/oficinas",
+        es_sistema: true,
+      },
+      {
+        modulo: "catalogos",
+        recurso: "unidades",
+        accion: "update",
+        descripcion: "Actualizar unidades/oficinas",
+        es_sistema: true,
+      },
+      {
+        modulo: "catalogos",
+        recurso: "unidades",
+        accion: "delete",
+        descripcion: "Eliminar unidades/oficinas",
+        es_sistema: true,
+      },
 
       // ============================================
       // MÓDULO: REPORTES
