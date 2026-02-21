@@ -723,17 +723,17 @@ const callesController = {
       // Obtener urbanizaciones únicas usando DISTINCT
       const urbanizaciones = await Calle.findAll({
         attributes: [
-          [Sequelize.fn('DISTINCT', Sequelize.col('urbanizacion')), 'urbanizacion']
+          [Sequelize.fn("DISTINCT", Sequelize.col("urbanizacion")), "urbanizacion"]
         ],
         where: {
           urbanizacion: {
             [Sequelize.Op.ne]: null, // No nulas
-            [Sequelize.Op.ne]: '',    // No vacías
+            [Sequelize.Op.ne]: "",    // No vacías
           },
           estado: 1, // Solo calles activas
         },
         order: [
-          [Sequelize.fn('LOWER', Sequelize.col('urbanizacion')), 'ASC'] // Ordenar alfabéticamente ignorando mayúsculas
+          [Sequelize.fn("LOWER", Sequelize.col("urbanizacion")), "ASC"] // Ordenar alfabéticamente ignorando mayúsculas
         ],
         raw: true, // Obtener resultados planos
       });
@@ -741,7 +741,7 @@ const callesController = {
       // Extraer solo los nombres de urbanización
       const listaUrbanizaciones = urbanizaciones
         .map(item => item.urbanizacion)
-        .filter(urb => urb && urb.trim() !== ''); // Filtrar valores nulos o vacíos
+        .filter(urb => urb && urb.trim() !== ""); // Filtrar valores nulos o vacíos
 
       return res.status(200).json(
         formatSuccessResponse(

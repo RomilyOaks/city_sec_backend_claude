@@ -24,15 +24,20 @@ const { Usuario, Rol, Permiso, UsuarioRol } = models;
  * Función principal del seed
  */
 async function seedRBAC() {
-  const transaction = await sequelize.transaction();
+  console.log("🔄 Iniciando seed de RBAC...");
+  console.log(`📊 Entorno: ${process.env.NODE_ENV || "development"}`);
 
   try {
-    console.log("🔄 Iniciando seed de RBAC...");
-    console.log(`📊 Entorno: ${process.env.NODE_ENV || "development"}`);
-
-    // Verificar conexión a la base de datos
     await sequelize.authenticate();
-    console.log("✅ Conexión a base de datos establecida");
+
+    // Iniciar transacción
+    console.log("🔒 Iniciando transacción...");
+    const transaction = await sequelize.transaction();
+    console.log("✅ Transacción iniciada");
+
+    // Confirmar transacción
+    await transaction.commit();
+    console.log("✅ Transacción confirmada");
 
     // ========================================
     // 1. CREAR ROLES DEL SISTEMA
@@ -104,7 +109,12 @@ async function seedRBAC() {
         defaults: rolData,
         transaction,
       });
-      if (created) rolesCreados++;
+      if (created) {
+        rolesCreados++;
+        console.log(`   ✅ Rol creado: ${rolData.slug}`);
+      } else {
+        console.log(`   ℹ️  Rol existente: ${rolData.slug}`);
+      }
     }
 
     console.log(
@@ -599,6 +609,20 @@ async function seedRBAC() {
         descripcion: "Eliminar unidades/oficinas",
         es_sistema: true,
       },
+      {
+        modulo: "catalogos",
+        recurso: "tipos_novedad",
+        accion: "read",
+        descripcion: "Ver tipos de novedad",
+        es_sistema: true,
+      },
+      {
+        modulo: "catalogos",
+        recurso: "subtipos_novedad",
+        accion: "read",
+        descripcion: "Ver subtipos de novedad",
+        es_sistema: true,
+      },
 
       // ============================================
       // MÓDULO: REPORTES
@@ -943,6 +967,8 @@ async function seedRBAC() {
 
     // Crear permisos uno por uno
     let permisosCreados = 0;
+    console.log(`   📝 Procesando ${permisosData.length} permisos...`);
+    
     for (const permisoData of permisosData) {
       // Generamos el slug con puntos para el registro
       const slug = `${permisoData.modulo}.${permisoData.recurso}.${permisoData.accion}`;
@@ -957,7 +983,12 @@ async function seedRBAC() {
         transaction,
       });
 
-      if (created) permisosCreados++;
+      if (created) {
+        permisosCreados++;
+        if (permisosCreados % 50 === 0) {
+          console.log(`   📊 Progreso: ${permisosCreados} permisos creados...`);
+        }
+      }
     }
 
     console.log(
@@ -1109,6 +1140,83 @@ async function seedRBAC() {
       }
     }
 
+    // ========================================
+    // 5. ASIGNAR PERMISOS DE LECTURA AL ROL CONSULTA
+    // ========================================
+    console.log("\n🔗 Asignando permisos de lectura al rol consulta...");
+
+    // Obtener el rol Consulta
+    const consultaRole = await Rol.findOne({
+      where: { slug: "consulta" },
+      transaction,
+    });
+
+    if (consultaRole) {
+      // Permisos de lectura para el rol consulta
+      const permisosConsulta = await Permiso.findAll({
+        where: {
+          [sequelize.Op.or]: [
+            // Permisos de novedades (lectura)
+            {
+              modulo: "novedades",
+              accion: "read",
+            },
+            // Permisos de catálogos (lectura)
+            {
+              modulo: "catalogos",
+              accion: "read",
+            },
+            // Permisos de calles (lectura)
+            {
+              modulo: "calles",
+              accion: "read",
+            },
+            // Permisos de operativos (lectura)
+            {
+              modulo: "operativos",
+              accion: "read",
+            },
+            // Permisos de reportes (lectura)
+            {
+              modulo: "reportes",
+              accion: "read",
+            },
+          ],
+        },
+        transaction,
+      });
+
+      if (permisosConsulta.length > 0) {
+        const { RolPermiso } = await import("../models/index.js");
+        const asignacionesConsulta = [];
+
+        // Eliminar permisos existentes del rol consulta
+        await RolPermiso.destroy({
+          where: { rol_id: consultaRole.id },
+          transaction,
+        });
+
+        // Crear nuevas asignaciones
+        for (const permiso of permisosConsulta) {
+          asignacionesConsulta.push({
+            rol_id: consultaRole.id,
+            permiso_id: permiso.id,
+            created_by: 13, // Sistema/seeder
+            updated_by: 13,
+          });
+        }
+
+        await RolPermiso.bulkCreate(asignacionesConsulta, {
+          transaction,
+          ignoreDuplicates: true,
+        });
+
+        console.log(
+          `   ✓ ${permisosConsulta.length} permisos de lectura asignados al rol Consulta`
+        );
+      }
+    }
+
     // Commit de la transacción
     await transaction.commit();
 
@@ -1151,15 +1259,6 @@ async function seedRBAC() {
     );
     console.log("\n" + "=".repeat(60) + "\n");
   } catch (error) {
-    // Solo hacemos rollback si la transacción NO ha finalizado todavía
-    if (
-      transaction &&
-      transaction.finished !== "commit" &&
-      transaction.finished !== "rollback"
-    ) {
-      await transaction.rollback();
-    }
-
     console.error("\n❌ ERROR DURANTE EL SEED:", error);
     console.error("\n📋 Detalles del error:");
     console.error(`   Mensaje: ${error.message}`);
@@ -1181,4 +1280,8 @@ async function seedRBAC() {
 // ========================================
 // EJECUTAR EL SEED
 // ========================================
-seedRBAC();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  seedRBAC();
+}
+
+export default seedRBAC;
