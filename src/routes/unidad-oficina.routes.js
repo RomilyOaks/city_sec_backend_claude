@@ -17,6 +17,7 @@ import unidadOficinaController from "../controllers/unidadOficinaController.js";
 import {
   verificarToken,
   verificarRoles,
+  requireAnyPermission,
 } from "../middlewares/authMiddleware.js";
 import {
   validateCreate,
@@ -34,6 +35,17 @@ const router = express.Router();
 router.use(verificarToken);
 
 // ==========================================
+// RBAC: PERMISOS PARA CRUD Y ACCIONES
+// ==========================================
+
+const permisos = {
+  read: "catalogos.unidades.read",
+  create: "catalogos.unidades.create",
+  update: "catalogos.unidades.update",
+  delete: "catalogos.unidades.delete",
+};
+
+// ==========================================
 // ENDPOINTS
 // ==========================================
 
@@ -43,14 +55,24 @@ router.use(verificarToken);
  * @access  Private (todos autenticados)
  * @query   tipo, estado, ubigeo, search
  */
-router.get("/", validateQuery, unidadOficinaController.getAll);
+router.get(
+  "/",
+  requireAnyPermission([permisos.read]),
+  validateQuery,
+  unidadOficinaController.getAll,
+);
 
 /**
  * @route   GET /api/v1/unidades-oficina/:id
  * @desc    Obtener unidad/oficina por ID
  * @access  Private (todos autenticados)
  */
-router.get("/:id", validateId, unidadOficinaController.getById);
+router.get(
+  "/:id",
+  validateId,
+  requireAnyPermission([permisos.read]),
+  unidadOficinaController.getById,
+);
 
 /**
  * @route   POST /api/v1/unidades-oficina
@@ -60,8 +82,9 @@ router.get("/:id", validateId, unidadOficinaController.getById);
 router.post(
   "/",
   verificarRoles(["super_admin", "admin", "supervisor"]),
+  requireAnyPermission([permisos.create]),
   validateCreate,
-  unidadOficinaController.create
+  unidadOficinaController.create,
 );
 
 /**
@@ -72,8 +95,9 @@ router.post(
 router.put(
   "/:id",
   verificarRoles(["super_admin", "admin", "supervisor"]),
+  requireAnyPermission([permisos.update]),
   validateUpdate,
-  unidadOficinaController.update
+  unidadOficinaController.update,
 );
 
 /**
@@ -84,8 +108,9 @@ router.put(
 router.delete(
   "/:id",
   verificarRoles(["super_admin", "admin"]),
+  requireAnyPermission([permisos.delete]),
   validateId,
-  unidadOficinaController.remove
+  unidadOficinaController.remove,
 );
 
 // ==========================================

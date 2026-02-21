@@ -951,7 +951,7 @@ export const changePassword = async (req, res) => {
  */
 export const getMe = async (req, res) => {
   try {
-    const userId = req.usuario.userId;
+    const userId = req.user.id;
 
     // ==========================================
     // BUSCAR USUARIO CON RELACIONES

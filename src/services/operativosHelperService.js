@@ -36,8 +36,6 @@ export const findOrCreateOperativoTurno = async (params, created_by) => {
     // Usar fecha actual si no se proporciona
     const fechaFinal = fecha || getDateInTimezone();
     
-    console.log(`🔍 Buscando turno operativo: fecha=${fechaFinal}, turno=${turno}, sector=${sector_id}`);
-    
     // Primero intentar encontrar un turno existente
     let operativoExistente = await OperativosTurno.findOne({
       where: {

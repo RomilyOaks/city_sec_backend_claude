@@ -33,14 +33,9 @@ import { getTimeInTimezone, getDateInTimezone } from "../utils/dateHelper.js";
  */
 export const getAllTurnos = async (req, res) => {
   try {
-    console.log("🐛 DEBUG: Iniciando getAllTurnos");
-    console.log("🐛 DEBUG: URL:", req.originalUrl);
-    console.log("🐛 DEBUG: Method:", req.method);
-    console.log("🐛 DEBUG: Query params:", req.query);
-    
     const {
       page = 1,
-      limit = 20,
+      limit = 10,
       search,
       personal_id,
       operador_id,
@@ -115,9 +110,6 @@ export const getAllTurnos = async (req, res) => {
     const orderField = sort;
     const orderDir = order.toUpperCase() === "ASC" ? "ASC" : "DESC";
 
-    console.log("🐛 DEBUG: Configurando includes");
-
-    // Configurar includes - La búsqueda ya está en whereClause principal
     const includeOptions = [
       {
         model: PersonalSeguridad,
@@ -147,9 +139,6 @@ export const getAllTurnos = async (req, res) => {
       },
     ];
 
-    console.log("🐛 DEBUG: Include options configurados:", includeOptions.map(i => ({ model: i.model.name, as: i.as })));
-    console.log("🐛 DEBUG: Ejecutando OperativosTurno.findAndCountAll...");
-
     const { count, rows } = await OperativosTurno.findAndCountAll({
       where: whereClause,
       include: includeOptions,
@@ -158,8 +147,6 @@ export const getAllTurnos = async (req, res) => {
       offset: parseInt(offset),
       distinct: true,
     });
-
-    console.log("🐛 DEBUG: Consulta ejecutada exitosamente. Count:", count, "Rows:", rows.length);
 
     res.status(200).json({
       success: true,
@@ -222,13 +209,7 @@ export const getAllTurnos = async (req, res) => {
  */
 export const getTurnoById = async (req, res) => {
   try {
-    console.log("🐛 DEBUG: Iniciando getTurnoById");
-    console.log("🐛 DEBUG: URL:", req.originalUrl);
-    console.log("🐛 DEBUG: Params:", req.params);
-    
     const { id } = req.params;
-
-    console.log("🐛 DEBUG: Ejecutando OperativosTurno.findByPk...");
 
     const turno = await OperativosTurno.findOne({
       where: {
@@ -258,8 +239,6 @@ export const getTurnoById = async (req, res) => {
         },
       ],
     });
-
-    console.log("🐛 DEBUG: Turno consultado. Encontrado:", !!turno);
 
     if (!turno) {
       return res.status(404).json({

@@ -58,6 +58,16 @@ import {
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 
 // ==========================================
+// RBAC: Control de Accesos y Permisos
+// ==========================================
+const permisos = {
+  leer: "novedades.incidentes.read",
+  crear: "novedades.incidentes.create",
+  actualizar: "novedades.incidentes.update",
+  eliminar: "novedades.incidentes.delete",
+};
+
+// ==========================================
 // RUTAS ESPECIALES (ANTES DE /:id)
 // ==========================================
 
@@ -109,7 +119,7 @@ router.get(
 router.get(
   "/:id/historial",
   verificarToken,
-  verificarRoles(["operador", "supervisor", "super_admin"]),
+  verificarRoles(["operador", "supervisor", "super_admin", "consulta"]),
   validateNovedadId,
   (req, res, next) => {
     // #swagger.tags = ['Novedades']
@@ -135,7 +145,8 @@ router.get(
 router.get(
   "/",
   verificarToken,
-  verificarRoles(["operador", "supervisor", "super_admin"]),
+  verificarRoles(["operador", "supervisor", "super_admin", "consulta"]),
+  requireAnyPermission([permisos.leer]),
   validateQueryNovedades,
   (req, res, next) => {
     // #swagger.tags = ['Novedades']
@@ -163,7 +174,8 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  verificarRoles(["operador", "supervisor", "super_admin"]),
+  verificarRoles(["operador", "supervisor", "super_admin", "consulta"]),
+  requireAnyPermission([permisos.leer]),
   validateNovedadId,
   (req, res, next) => {
     // #swagger.tags = ['Novedades']
@@ -186,10 +198,11 @@ router.post(
   "/",
   verificarToken,
   verificarRoles(["operador", "supervisor", "super_admin"]),
-  requireAnyPermission([
-    "novedades.incidentes.create",
-    "novedades.novedades.create",
-  ]),
+  requireAnyPermission([permisos.crear]),
+  // requireAnyPermission([
+  //   "novedades.incidentes.create",
+  //   "novedades.novedades.create",
+  // ]),
   validateCreateNovedad,
   registrarAuditoria({
     entidad: "Novedad",
@@ -216,7 +229,8 @@ router.put(
   "/:id",
   verificarToken,
   verificarRoles(["supervisor", "super_admin"]),
-  requireAnyPermission(["novedades.incidentes.update"]),
+  requireAnyPermission([permisos.actualizar]),
+  //requireAnyPermission(["novedades.incidentes.update"]),
   validateUpdateNovedad,
   registrarAuditoria({
     entidad: "Novedad",
@@ -277,7 +291,8 @@ router.delete(
   "/:id",
   verificarToken,
   verificarRoles(["super_admin"]),
-  requireAnyPermission(["novedades.incidentes.delete"]),
+  requireAnyPermission([permisos.eliminar]),
+  //requireAnyPermission(["novedades.incidentes.delete"]),
   validateNovedadId,
   registrarAuditoria({
     entidad: "Novedad",
@@ -307,6 +322,7 @@ router.delete(
 router.get(
   "/:novedadId/historial",
   verificarToken,
+  requireAnyPermission([permisos.leer]),
   (req, res, next) => {
     // #swagger.tags = ['Novedades']
     // #swagger.summary = 'Obtener historial de estados de una novedad'
@@ -327,7 +343,8 @@ router.post(
   "/:novedadId/historial",
   verificarToken,
   verificarRoles(["operador", "supervisor", "super_admin"]),
-  requireAnyPermission(["novedades.incidentes.update"]),
+  requireAnyPermission([permisos.actualizar]),
+  //requireAnyPermission(["novedades.incidentes.update"]),
   registrarAuditoria({
     entidad: "HistorialEstadoNovedad",
     severidad: "MEDIA",

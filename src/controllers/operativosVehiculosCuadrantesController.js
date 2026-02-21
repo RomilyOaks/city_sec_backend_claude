@@ -31,8 +31,6 @@ export const getAllCuadrantesByVehiculo = async (req, res) => {
   const { vehiculoId } = req.params;
 
   try {
-    console.log("🐛 DEBUG: Iniciando getAllCuadrantesByVehiculo para vehiculoId:", vehiculoId);
-
     const operativoVehiculo = await OperativosVehiculos.findByPk(
       vehiculoId
     );
