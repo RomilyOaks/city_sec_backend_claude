@@ -1,8 +1,4 @@
-[build]
-buildCommand = "npm ci --omit=dev"
-
 [deploy]
-startCommand = "node src/app.js"
 healthcheckPath = "/api/v1/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
