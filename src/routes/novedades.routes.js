@@ -145,7 +145,6 @@ router.get(
 router.get(
   "/",
   verificarToken,
-  verificarRoles(["operador", "supervisor", "super_admin", "consulta"]),
   requireAnyPermission([permisos.leer]),
   validateQueryNovedades,
   (req, res, next) => {

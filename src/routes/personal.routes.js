@@ -577,7 +577,6 @@ router.get(
 router.get(
   "/disponibles",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor", "operador", "consulta"]),
   requireAnyPermission(["personal.personal.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Personal']
