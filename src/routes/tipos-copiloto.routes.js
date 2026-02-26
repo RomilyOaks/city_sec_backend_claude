@@ -29,7 +29,7 @@ import {
 } from "../controllers/tipoCopilotoController.js";
 import {
   verificarToken,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 import { catalogRateLimit } from "../middlewares/rateLimitMiddleware.js";
@@ -71,7 +71,7 @@ router.get(
   "/activos",
   verificarToken,
   catalogRateLimit, // 🔥 ANTI-BUCLE: Máximo 5 solicitudes/minuto
-  requireAnyPermission([permisos.leer]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.leer]),
   getTiposActivos
 );
 
@@ -82,7 +82,7 @@ router.get(
 router.get(
   "/",
   verificarToken,
-  requireAnyPermission([permisos.leer]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.leer]),
   getAllTipos
 );
 
@@ -93,7 +93,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisos.leer]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.leer]),
   param("id").isInt({ min: 1 }).withMessage("ID inválido"),
   handleValidationErrors,
   getTipoById
@@ -106,7 +106,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  requireAnyPermission([permisos.crear]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [permisos.crear]),
   validateTipoData,
   handleValidationErrors,
   registrarAuditoria(permisos.crear),
@@ -120,7 +120,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisos.actualizar]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [permisos.actualizar]),
   param("id").isInt({ min: 1 }).withMessage("ID inválido"),
   validateTipoData,
   handleValidationErrors,
@@ -135,7 +135,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisos.eliminar]),
+  verificarRolesOPermisos(["super_admin", "admin"], [permisos.eliminar]),
   param("id").isInt({ min: 1 }).withMessage("ID inválido"),
   handleValidationErrors,
   registrarAuditoria(permisos.eliminar),

@@ -46,8 +46,7 @@ import tiposViaController from "../controllers/tiposViaController.js";
 // ============================================================================
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 // ============================================================================
@@ -107,7 +106,8 @@ router.use(verificarToken);
  */
 router.get(
   "/",
-  requireAnyPermission(["calles.tipos_via.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.tipos_via.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Tipos de Vía']
     // #swagger.summary = 'Listar tipos de vía con filtros'
@@ -129,7 +129,8 @@ router.get(
  */
 router.get(
   "/:id",
-  requireAnyPermission(["calles.tipos_via.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.tipos_via.read"]),
   validateTipoViaId,
   (req, res, next) => {
     // #swagger.tags = ['Tipos de Vía']
@@ -150,8 +151,7 @@ router.get(
  */
 router.post(
   "/",
-  verificarRoles(["supervisor", "super_admin"]),
-  requireAnyPermission(["calles.tipos_via.create"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.tipos_via.create"]),
   validateCreateTipoVia,
   registrarAuditoria({
     entidad: "TipoVia",
@@ -178,8 +178,7 @@ router.post(
  */
 router.put(
   "/:id",
-  verificarRoles(["supervisor", "super_admin"]),
-  requireAnyPermission(["calles.tipos_via.update"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.tipos_via.update"]),
   validateUpdateTipoVia,
   registrarAuditoria({
     entidad: "TipoVia",
@@ -206,8 +205,7 @@ router.put(
  */
 router.delete(
   "/:id",
-  verificarRoles(["super_admin"]),
-  requireAnyPermission(["calles.tipos_via.delete"]),
+  verificarRolesOPermisos(["super_admin"], ["calles.tipos_via.delete"]),
   validateTipoViaId,
   registrarAuditoria({
     entidad: "TipoVia",
@@ -237,8 +235,7 @@ router.delete(
  */
 router.patch(
   "/:id/activar",
-  verificarRoles(["supervisor", "super_admin"]),
-  requireAnyPermission(["calles.tipos_via.update"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.tipos_via.update"]),
   validateTipoViaId,
   registrarAuditoria({
     entidad: "TipoVia",
@@ -263,8 +260,7 @@ router.patch(
  */
 router.patch(
   "/:id/desactivar",
-  verificarRoles(["supervisor", "super_admin"]),
-  requireAnyPermission(["calles.tipos_via.update"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.tipos_via.update"]),
   validateTipoViaId,
   registrarAuditoria({
     entidad: "TipoVia",

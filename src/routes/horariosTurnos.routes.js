@@ -37,7 +37,7 @@ const router = express.Router();
 import horariosTurnosController from "../controllers/horariosTurnosController.js";
 import {
   verificarToken,
-  verificarRoles,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 import {
@@ -69,7 +69,7 @@ import {
 router.get(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["operativos.horarios.read"]),
   validateGetHorariosTurnos,
   horariosTurnosController.getAllHorariosTurnos
 );
@@ -86,7 +86,7 @@ router.get(
 router.get(
   "/activo",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor", "operador", "usuario_basico"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["operativos.horarios.read"]),
   validateGetHorarioActivo,
   horariosTurnosController.getHorarioActivo
 );
@@ -103,7 +103,7 @@ router.get(
 router.get(
   "/:turno",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["operativos.horarios.read"]),
   validateGetHorarioTurnoById,
   horariosTurnosController.getHorarioTurnoById
 );
@@ -123,7 +123,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["operativos.horarios.create"]),
   validateCreateHorarioTurno,
   horariosTurnosController.createHorarioTurno
 );
@@ -144,7 +144,7 @@ router.post(
 router.put(
   "/:turno",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["operativos.horarios.update"]),
   validateUpdateHorarioTurno,
   horariosTurnosController.updateHorarioTurno
 );
@@ -161,7 +161,7 @@ router.put(
 router.delete(
   "/:turno",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["operativos.horarios.delete"]),
   validateDeleteHorarioTurno,
   horariosTurnosController.deleteHorarioTurno
 );
@@ -182,7 +182,7 @@ router.delete(
 router.post(
   "/:turno/reactivar",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["operativos.horarios.update"]),
   validateReactivarHorarioTurno,
   horariosTurnosController.reactivarHorarioTurno
 );

@@ -22,7 +22,7 @@ import { query } from "express-validator";
 import tipoNovedadController from "../controllers/tipoNovedadController.js";
 import {
   verificarToken,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 import { handleValidationErrors } from "../middlewares/handleValidationErrors.js";
@@ -50,7 +50,7 @@ const permisos = {
 router.get(
   "/",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.read]),
   validateQuery,
   (req, res, next) => {
     // #swagger.tags = ['Tipos Novedad']
@@ -72,7 +72,7 @@ router.get(
 router.get(
   "/eliminadas",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.read]),
   [
     query("search")
       .optional()
@@ -98,7 +98,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.read]),
   validateId,
   (req, res, next) => {
     // #swagger.tags = ['Tipos Novedad']
@@ -119,7 +119,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.create])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin"], [permisos.create]),
   validateCreate,
   handleValidationErrors,
   registrarAuditoria("Creación de tipo de novedad"),
@@ -142,7 +142,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.update])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin"], [permisos.update]),
   validateId,
   validateUpdate,
   handleValidationErrors,
@@ -168,7 +168,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.delete])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin"], [permisos.delete]),
   validateId,
   handleValidationErrors,
   registrarAuditoria("Eliminación de tipo de novedad"),
@@ -192,7 +192,7 @@ router.delete(
 router.patch(
   "/:id/reactivar",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.update])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin"], [permisos.update]),
   validateId,
   handleValidationErrors,
   registrarAuditoria("Reactivación de tipo de novedad"),

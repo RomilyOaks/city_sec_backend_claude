@@ -22,8 +22,7 @@ import * as personalController from "../controllers/personalController.js";
 // Importar middlewares de autenticación y autorización
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 // Importar middleware de auditoría
@@ -520,7 +519,7 @@ const validateActualizarLicencia = [
 router.get(
   "/selector",
   verificarToken,
-  requireAnyPermission(["personal.personal.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Personal']
     // #swagger.summary = 'Obtener personal para selectores/dropdowns'
@@ -535,6 +534,7 @@ router.get(
 router.get(
   "/stats",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Personal']
     // #swagger.summary = 'Estadísticas de personal'
@@ -548,8 +548,7 @@ router.get(
 router.get(
   "/conductores",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
-  requireAnyPermission(["personal.personal.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], ["personal.personal.read"]),
   [
     query("page")
       .optional()
@@ -577,7 +576,7 @@ router.get(
 router.get(
   "/disponibles",
   verificarToken,
-  requireAnyPermission(["personal.personal.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Personal']
     // #swagger.summary = 'Listar personal disponible'
@@ -592,7 +591,7 @@ router.get(
 router.get(
   "/cargo/:cargoId",
   verificarToken,
-  requireAnyPermission(["personal.personal.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
   validateCargoId,
   (req, res, next) => {
     // #swagger.tags = ['Personal']
@@ -607,7 +606,7 @@ router.get(
 router.get(
   "/documento/:doc",
   verificarToken,
-  requireAnyPermission(["personal.personal.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
   [
     param("doc")
       .matches(/^(DNI|CE|PASAPORTE|PTP)-[A-Z0-9]+$/i)
@@ -628,7 +627,7 @@ router.get(
 router.get(
   "/status/:status",
   verificarToken,
-  requireAnyPermission(["personal.personal.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
   validateStatusParam,
   [
     query("page")
@@ -657,7 +656,7 @@ router.get(
   "/",
   verificarToken,
   catalogRateLimit, // 🔥 ANTI-BUCLE: Máximo 5 solicitudes/minuto
-  requireAnyPermission(["personal.personal.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
   [
     query("page")
       .optional()
@@ -721,7 +720,7 @@ router.get(
   "/buscar-para-dropdown",
   verificarToken,
   catalogRateLimit, // 🔥 ANTI-BUCLE: Máximo 10 solicitudes/minuto
-  requireAnyPermission(["personal.personal.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
   [
     query("q")
       .notEmpty()
@@ -751,8 +750,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["personal.personal.create"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["personal.personal.create"]),
   validateCreatePersonal,
   registrarAuditoria({
     entidad: "PersonalSeguridad",
@@ -773,8 +771,7 @@ router.post(
 router.post(
   "/:id/restore",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission(["personal.personal.restore"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["personal.personal.restore"]),
   validateId,
   registrarAuditoria({
     entidad: "PersonalSeguridad",
@@ -795,8 +792,7 @@ router.post(
 router.patch(
   "/:id/status",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["personal.status.update", "personal.personal.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["personal.status.update", "personal.personal.update"]),
   validateCambiarStatus,
   registrarAuditoria({
     entidad: "PersonalSeguridad",
@@ -818,8 +814,7 @@ router.patch(
 router.patch(
   "/:id/asignar-vehiculo",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [
     "personal.vehiculo.assign",
     "personal.personal.update",
   ]),
@@ -843,8 +838,7 @@ router.patch(
 router.delete(
   "/:id/desasignar-vehiculo",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [
     "personal.vehiculo.assign",
     "personal.personal.update",
   ]),
@@ -867,8 +861,7 @@ router.delete(
 router.patch(
   "/:id/licencia",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["personal.personal.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["personal.personal.update"]),
   validateActualizarLicencia,
   registrarAuditoria({
     entidad: "PersonalSeguridad",
@@ -889,8 +882,7 @@ router.patch(
 router.post(
   "/:id/generar-codigo",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["personal.personal.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["personal.personal.update"]),
   validateId,
   (req, res, next) => {
     // #swagger.tags = ['Personal']
@@ -905,7 +897,7 @@ router.post(
 router.get(
   "/:id/verificar-licencia",
   verificarToken,
-  requireAnyPermission(["personal.personal.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
   validateId,
   (req, res, next) => {
     // #swagger.tags = ['Personal']
@@ -920,7 +912,7 @@ router.get(
 router.get(
   "/:id/historial-novedades",
   verificarToken,
-  requireAnyPermission(["personal.personal.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
   validateId,
   [
     query("limit")
@@ -943,7 +935,7 @@ router.get(
 router.get(
   "/licencias-por-vencer",
   verificarToken,
-  requireAnyPermission(["personal.personal.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
   [
     query("dias")
       .optional()
@@ -964,7 +956,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  requireAnyPermission(["personal.personal.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
   validateId,
   (req, res, next) => {
     // #swagger.tags = ['Personal']
@@ -980,8 +972,7 @@ router.get(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["personal.personal.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["personal.personal.update"]),
   validateId,
   validateUpdatePersonal,
   registrarAuditoria({
@@ -1004,8 +995,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission(["personal.personal.delete"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["personal.personal.delete"]),
   validateId,
   registrarAuditoria({
     entidad: "PersonalSeguridad",

@@ -46,8 +46,7 @@ import callesCuadrantesController from "../controllers/callesCuadrantesControlle
 // ============================================================================
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 // ============================================================================
@@ -90,10 +89,8 @@ router.use(verificarToken);
  */
 router.post(
   "/buscar-cuadrante",
-  requireAnyPermission([
-    "calles.calles_cuadrantes.read",
-    "calles.direcciones.create",
-  ]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles_cuadrantes.read"]),
   validateBuscarCuadrante,
   (req, res, next) => {
     // #swagger.tags = ['Calles-Cuadrantes']
@@ -114,7 +111,8 @@ router.post(
  */
 router.get(
   "/calle/:id",
-  requireAnyPermission(["calles.calles_cuadrantes.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles_cuadrantes.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Calles-Cuadrantes']
     // #swagger.summary = 'Relaciones de una calle'
@@ -132,7 +130,8 @@ router.get(
  */
 router.get(
   "/cuadrante/:id",
-  requireAnyPermission(["calles.calles_cuadrantes.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles_cuadrantes.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Calles-Cuadrantes']
     // #swagger.summary = 'Relaciones de un cuadrante'
@@ -155,7 +154,8 @@ router.get(
  */
 router.get(
   "/",
-  requireAnyPermission(["calles.calles_cuadrantes.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles_cuadrantes.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Calles-Cuadrantes']
     // #swagger.summary = 'Listar relaciones calle-cuadrante'
@@ -176,7 +176,8 @@ router.get(
  */
 router.get(
   "/:id",
-  requireAnyPermission(["calles.calles_cuadrantes.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles_cuadrantes.read"]),
   validateCallesCuadrantesId,
   (req, res, next) => {
     // #swagger.tags = ['Calles-Cuadrantes']
@@ -197,8 +198,7 @@ router.get(
  */
 router.post(
   "/",
-  verificarRoles(["operador", "supervisor", "super_admin"]),
-  requireAnyPermission(["calles.calles_cuadrantes.create"]),
+  verificarRolesOPermisos(["operador", "supervisor", "super_admin"], ["calles.calles_cuadrantes.create"]),
   validateCreateCallesCuadrantes,
   registrarAuditoria({
     entidad: "CallesCuadrantes",
@@ -225,8 +225,7 @@ router.post(
  */
 router.put(
   "/:id",
-  verificarRoles(["supervisor", "super_admin"]),
-  requireAnyPermission(["calles.calles_cuadrantes.update"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.calles_cuadrantes.update"]),
   validateUpdateCallesCuadrantes,
   registrarAuditoria({
     entidad: "CallesCuadrantes",
@@ -253,8 +252,7 @@ router.put(
  */
 router.delete(
   "/:id",
-  verificarRoles(["super_admin"]),
-  requireAnyPermission(["calles.calles_cuadrantes.delete"]),
+  verificarRolesOPermisos(["super_admin"], ["calles.calles_cuadrantes.delete"]),
   validateCallesCuadrantesId,
   registrarAuditoria({
     entidad: "CallesCuadrantes",

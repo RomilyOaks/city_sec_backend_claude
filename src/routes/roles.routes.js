@@ -36,8 +36,7 @@ import {
 
 import {
   verificarToken,
-  requireAnyPermission,
-  verificarRoles,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -47,7 +46,6 @@ const router = express.Router();
  * Todas las rutas requieren ser super_admin o admin
  */
 router.use(verificarToken);
-router.use(verificarRoles(["super_admin", "admin"]));
 
 // ============================================
 // RUTAS DE CONSULTA (READ)
@@ -74,7 +72,7 @@ router.use(verificarRoles(["super_admin", "admin"]));
 // #swagger.responses[200] = { description: 'OK' }
 // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 // #swagger.responses[403] = { description: 'No autorizado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
-router.get("/", requireAnyPermission("usuarios.roles.read"), (req, res, next) => {
+router.get("/", verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles.read"]), (req, res, next) => {
   // #swagger.tags = ['Roles']
   // #swagger.summary = 'Listar roles'
   // #swagger.security = [{ bearerAuth: [] }]
@@ -103,7 +101,7 @@ router.get("/", requireAnyPermission("usuarios.roles.read"), (req, res, next) =>
 // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.get(
   "/slug/:slug",
-  requireAnyPermission("usuarios.roles.read"),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Roles']
     // #swagger.summary = 'Obtener rol por slug'
@@ -127,7 +125,7 @@ router.get(
 // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer', example: 1 }
 // #swagger.responses[200] = { description: 'OK' }
 // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
-router.get("/:id", requireAnyPermission("usuarios.roles.read"), (req, res, next) => {
+router.get("/:id", verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles.read"]), (req, res, next) => {
   // #swagger.tags = ['Roles']
   // #swagger.summary = 'Obtener rol por ID'
   // #swagger.security = [{ bearerAuth: [] }]
@@ -151,7 +149,7 @@ router.get("/:id", requireAnyPermission("usuarios.roles.read"), (req, res, next)
 // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.get(
   "/:id/permisos",
-  requireAnyPermission("usuarios.roles.read"),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Roles']
     // #swagger.summary = 'Listar permisos de un rol'
@@ -171,7 +169,7 @@ router.get(
  */
 router.get(
   "/:id/usuarios",
-  requireAnyPermission("usuarios.roles.read"),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Roles']
     // #swagger.summary = 'Listar usuarios de un rol'
@@ -205,7 +203,7 @@ router.get(
 // #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/RolCreateRequest" } } } }
 // #swagger.responses[201] = { description: 'Creado' }
 // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
-router.post("/", requireAnyPermission("usuarios.roles.create"), (req, res, next) => {
+router.post("/", verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles.create"]), (req, res, next) => {
   // #swagger.tags = ['Roles']
   // #swagger.summary = 'Crear rol'
   // #swagger.security = [{ bearerAuth: [] }]
@@ -236,7 +234,7 @@ router.post("/", requireAnyPermission("usuarios.roles.create"), (req, res, next)
 // #swagger.responses[200] = { description: 'OK' }
 // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
-router.put("/:id", requireAnyPermission("usuarios.roles.update"), (req, res, next) => {
+router.put("/:id", verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles.update"]), (req, res, next) => {
   // #swagger.tags = ['Roles']
   // #swagger.summary = 'Actualizar rol'
   // #swagger.security = [{ bearerAuth: [] }]
@@ -265,7 +263,7 @@ router.put("/:id", requireAnyPermission("usuarios.roles.update"), (req, res, nex
 // #swagger.responses[200] = { description: 'OK' }
 // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
-router.delete("/:id", requireAnyPermission("usuarios.roles.delete"), (req, res, next) => {
+router.delete("/:id", verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles.delete"]), (req, res, next) => {
   // #swagger.tags = ['Roles']
   // #swagger.summary = 'Eliminar rol (soft delete)'
   // #swagger.security = [{ bearerAuth: [] }]
@@ -298,7 +296,7 @@ router.delete("/:id", requireAnyPermission("usuarios.roles.delete"), (req, res, 
 // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.post(
   "/:id/permisos",
-  requireAnyPermission("usuarios.roles_permisos.assign"),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles_permisos.assign"]),
   (req, res, next) => {
     // #swagger.tags = ['Roles']
     // #swagger.summary = 'Asignar permisos a rol (reemplaza actuales)'
@@ -327,7 +325,7 @@ router.post(
 // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.delete(
   "/:id/permisos/:permisoId",
-  requireAnyPermission("usuarios.roles_permisos.assign"),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles_permisos.assign"]),
   (req, res, next) => {
     // #swagger.tags = ['Roles']
     // #swagger.summary = 'Quitar permiso de un rol'

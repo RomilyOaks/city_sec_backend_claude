@@ -17,8 +17,7 @@ import reportesController from "../controllers/reportesController.js";
 
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 import {
@@ -30,16 +29,14 @@ router.use(verificarToken);
 
 router.get(
   "/vehiculos-en-mantenimiento",
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["reportes.vehiculos.read", "reportes.mantenimientos.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["reportes.vehiculos.read", "reportes.mantenimientos.read"]),
   validateQueryVehiculosEnMantenimiento,
   reportesController.getVehiculosEnMantenimiento
 );
 
 router.get(
   "/costos-mantenimiento",
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["reportes.vehiculos.read", "reportes.mantenimientos.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["reportes.vehiculos.read", "reportes.mantenimientos.read"]),
   validateQueryCostosMantenimiento,
   reportesController.getCostosMantenimiento
 );

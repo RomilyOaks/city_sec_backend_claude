@@ -28,8 +28,7 @@ import {
 
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 import {
@@ -45,8 +44,7 @@ import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js"
 router.get(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], [
     "vehiculos.mantenimientos.read",
     "vehiculos.mantenimientos.create",
   ]),
@@ -57,8 +55,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], [
     "vehiculos.mantenimientos.read",
     "vehiculos.mantenimientos.create",
   ]),
@@ -69,8 +66,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
-  requireAnyPermission(["vehiculos.mantenimientos.create"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], ["vehiculos.mantenimientos.create"]),
   validateCreateMantenimiento,
   registrarAuditoria({
     entidad: "MantenimientoVehiculo",
@@ -83,8 +79,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["vehiculos.mantenimientos.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["vehiculos.mantenimientos.update"]),
   validateUpdateMantenimiento,
   registrarAuditoria({
     entidad: "MantenimientoVehiculo",
@@ -97,8 +92,7 @@ router.put(
 router.patch(
   "/:id/estado",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
-  requireAnyPermission(["vehiculos.mantenimientos.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], ["vehiculos.mantenimientos.update"]),
   validateCambiarEstadoMantenimiento,
   registrarAuditoria({
     entidad: "MantenimientoVehiculo",
@@ -111,8 +105,7 @@ router.patch(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission(["vehiculos.mantenimientos.delete"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["vehiculos.mantenimientos.delete"]),
   validateMantenimientoId,
   registrarAuditoria({
     entidad: "MantenimientoVehiculo",

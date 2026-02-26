@@ -22,7 +22,7 @@ import { Router } from "express";
 import { getAllPersonal } from "../controllers/operativosPersonalController.js";
 import {
   verificarToken,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 const router = Router();
@@ -38,7 +38,7 @@ const permisos = {
 router.get(
   "/",
   verificarToken,
-  requireAnyPermission([permisos.leer]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.leer]),
   getAllPersonal
 );
 

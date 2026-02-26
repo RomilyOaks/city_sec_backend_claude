@@ -9,12 +9,12 @@ import {
   getUbigeoByCode,
 } from "../controllers/ubigeoController.js";
 ////import { authenticateToken } from "../middlewares/authMiddleware.js";
-import { verificarToken } from "../middlewares/authMiddleware.js";
+import { verificarToken, verificarRolesOPermisos } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 // Rutas protegidas
-router.get("/", verificarToken, getUbigeos);
-router.get("/:code", verificarToken, getUbigeoByCode);
+router.get("/", verificarToken, verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.ubigeo.read"]), getUbigeos);
+router.get("/:code", verificarToken, verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.ubigeo.read"]), getUbigeoByCode);
 
 export default router;

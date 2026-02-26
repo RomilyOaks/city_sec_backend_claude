@@ -11,7 +11,7 @@ const router = express.Router();
 import catalogosController from "../controllers/catalogosController.js";
 import {
   verificarToken,
-  verificarRoles,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 // ==================== TIPOS DE NOVEDAD ====================
@@ -24,6 +24,7 @@ import {
 router.get(
   "/tipos-novedad",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.tipos_novedad.read"]),
   catalogosController.getTiposNovedad
 );
 
@@ -35,7 +36,7 @@ router.get(
 router.post(
   "/tipos-novedad",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.tipos_novedad.create"]),
   catalogosController.createTipoNovedad
 );
 
@@ -50,6 +51,7 @@ router.post(
 router.get(
   "/subtipos-novedad",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.subtipos_novedad.read"]),
   catalogosController.getSubtiposNovedad
 );
 
@@ -61,7 +63,7 @@ router.get(
 router.post(
   "/subtipos-novedad",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.subtipos_novedad.create"]),
   catalogosController.createSubtipoNovedad
 );
 
@@ -75,6 +77,7 @@ router.post(
 router.get(
   "/estados-novedad",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.estados_novedad.read"]),
   catalogosController.getEstadosNovedad
 );
 
@@ -86,7 +89,7 @@ router.get(
 router.post(
   "/estados-novedad",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.estados_novedad.create"]),
   catalogosController.createEstadoNovedad
 );
 
@@ -100,6 +103,7 @@ router.post(
 router.get(
   "/tipos-vehiculo",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["vehiculos.vehiculos.read"]),
   catalogosController.getTiposVehiculo
 );
 
@@ -111,7 +115,7 @@ router.get(
 router.post(
   "/tipos-vehiculo",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["vehiculos.vehiculos.create"]),
   catalogosController.createTipoVehiculo
 );
 
@@ -122,7 +126,7 @@ router.post(
  * @desc    Obtener cargos de personal
  * @access  Privado
  */
-router.get("/cargos", verificarToken, catalogosController.getCargos);
+router.get("/cargos", verificarToken, verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.cargos.read"]), catalogosController.getCargos);
 
 /**
  * @route   POST /api/catalogos/cargos
@@ -132,7 +136,7 @@ router.get("/cargos", verificarToken, catalogosController.getCargos);
 router.post(
   "/cargos",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.cargos.create"]),
   catalogosController.createCargo
 );
 
@@ -144,7 +148,7 @@ router.post(
  * @access  Privado
  * @query   tipo_unidad
  */
-router.get("/unidades", verificarToken, catalogosController.getUnidades);
+router.get("/unidades", verificarToken, verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.unidades.read"]), catalogosController.getUnidades);
 
 /**
  * @route   POST /api/catalogos/unidades
@@ -154,7 +158,7 @@ router.get("/unidades", verificarToken, catalogosController.getUnidades);
 router.post(
   "/unidades",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.unidades.create"]),
   catalogosController.createUnidad
 );
 
@@ -166,7 +170,7 @@ router.post(
  * @access  Privado
  * @query   search, departamento, provincia
  */
-router.get("/ubigeo", verificarToken, catalogosController.buscarUbigeo);
+router.get("/ubigeo", verificarToken, verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.ubigeo.read"]), catalogosController.buscarUbigeo);
 
 /**
  * @route   GET /api/catalogos/departamentos
@@ -176,6 +180,7 @@ router.get("/ubigeo", verificarToken, catalogosController.buscarUbigeo);
 router.get(
   "/departamentos",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.ubigeo.read"]),
   catalogosController.getDepartamentos
 );
 

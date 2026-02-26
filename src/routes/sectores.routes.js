@@ -33,7 +33,7 @@ const router = express.Router();
 import sectoresController from "../controllers/sectoresController.js";
 import {
   verificarToken,
-  verificarRoles,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 import {
@@ -47,6 +47,7 @@ import {
 router.get(
   "/",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["sectores.sectores.read"]),
   validateQuerySectores,
   sectoresController.getAllSectores
 );
@@ -55,6 +56,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["sectores.sectores.read"]),
   validateSectorId,
   sectoresController.getSectorById
 );
@@ -63,7 +65,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["sectores.sectores.create"]),
   validateCreateSector,
   sectoresController.createSector
 );
@@ -72,7 +74,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["sectores.sectores.update"]),
   validateUpdateSector,
   sectoresController.updateSector
 );
@@ -81,7 +83,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["sectores.sectores.delete"]),
   validateSectorId,
   sectoresController.deleteSector
 );

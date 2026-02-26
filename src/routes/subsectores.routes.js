@@ -30,7 +30,7 @@ const router = express.Router();
 import subsectoresController from "../controllers/subsectoresController.js";
 import {
   verificarToken,
-  verificarRoles,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 // ==========================================
@@ -46,6 +46,7 @@ import {
 router.get(
   "/sector/:sectorId",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.subsectores.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Subsectores']
     // #swagger.summary = 'Obtener subsectores por sector'
@@ -72,6 +73,7 @@ router.get(
 router.get(
   "/",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.subsectores.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Subsectores']
     // #swagger.summary = 'Listar subsectores'
@@ -95,6 +97,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.subsectores.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Subsectores']
     // #swagger.summary = 'Obtener subsector por ID'
@@ -114,7 +117,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.subsectores.create"]),
   (req, res, next) => {
     // #swagger.tags = ['Subsectores']
     // #swagger.summary = 'Crear subsector'
@@ -155,7 +158,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.subsectores.update"]),
   (req, res, next) => {
     // #swagger.tags = ['Subsectores']
     // #swagger.summary = 'Actualizar subsector'
@@ -197,7 +200,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["catalogos.subsectores.delete"]),
   (req, res, next) => {
     // #swagger.tags = ['Subsectores']
     // #swagger.summary = 'Eliminar subsector'

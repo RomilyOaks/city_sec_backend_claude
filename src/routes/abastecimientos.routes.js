@@ -39,8 +39,7 @@ import {
 
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 import {
@@ -58,8 +57,7 @@ import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js"
 router.get(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], [
     "vehiculos.abastecimiento.read",
     "vehiculos.abastecimiento.create",
   ]),
@@ -70,8 +68,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], [
     "vehiculos.abastecimiento.read",
     "vehiculos.abastecimiento.create",
   ]),
@@ -86,8 +83,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
-  requireAnyPermission(["vehiculos.abastecimiento.create"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], ["vehiculos.abastecimiento.create"]),
   validateCreateAbastecimiento,
   registrarAuditoria({
     entidad: "AbastecimientoCombustible",
@@ -104,8 +100,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["vehiculos.abastecimiento.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["vehiculos.abastecimiento.update"]),
   validateAbastecimientoId,
   registrarAuditoria({
     entidad: "AbastecimientoCombustible",
@@ -122,8 +117,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission(["vehiculos.abastecimiento.delete"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["vehiculos.abastecimiento.delete"]),
   validateAbastecimientoId,
   registrarAuditoria({
     entidad: "AbastecimientoCombustible",

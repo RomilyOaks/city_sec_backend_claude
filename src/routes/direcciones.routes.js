@@ -50,8 +50,7 @@ import direccionesController from "../controllers/direccionesController.js";
 // ============================================================================
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 // ============================================================================
@@ -96,7 +95,8 @@ router.use(verificarToken);
  */
 router.get(
   "/activas",
-  requireAnyPermission(["calles.direcciones.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.direcciones.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Direcciones']
     // #swagger.summary = 'Listar direcciones activas (para selects)'
@@ -114,7 +114,8 @@ router.get(
  */
 router.get(
   "/search",
-  requireAnyPermission(["calles.direcciones.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.direcciones.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Direcciones']
     // #swagger.summary = 'Búsqueda avanzada de direcciones'
@@ -135,8 +136,7 @@ router.get(
  */
 router.get(
   "/stats/mas-usadas",
-  verificarRoles(["supervisor", "super_admin"]),
-  requireAnyPermission(["calles.direcciones.read", "novedades.novedades.read"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.direcciones.read", "novedades.novedades.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Direcciones']
     // #swagger.summary = 'Direcciones más usadas (estadísticas)'
@@ -155,10 +155,8 @@ router.get(
  */
 router.post(
   "/validar",
-  requireAnyPermission([
-    "calles.direcciones.create",
-    "calles.direcciones.read",
-  ]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.direcciones.read"]),
   validateValidarDireccion,
   (req, res, next) => {
     // #swagger.tags = ['Direcciones']
@@ -181,10 +179,8 @@ router.post(
  */
 router.get(
   "/geocodificar-texto",
-  requireAnyPermission([
-    "calles.direcciones.read",
-    "calles.direcciones.geocodificar",
-  ]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.direcciones.read"]),
   validateGeocodificarTexto,
   (req, res, next) => {
     // #swagger.tags = ['Direcciones']
@@ -210,7 +206,8 @@ router.get(
  */
 router.get(
   "/",
-  requireAnyPermission(["calles.direcciones.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.direcciones.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Direcciones']
     // #swagger.summary = 'Listar direcciones con filtros'
@@ -235,7 +232,8 @@ router.get(
  */
 router.get(
   "/:id/can-delete",
-  requireAnyPermission(["calles.direcciones.delete", "calles.direcciones.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.direcciones.read"]),
   validateDireccionId,
   (req, res, next) => {
     // #swagger.tags = ['Direcciones']
@@ -255,7 +253,8 @@ router.get(
  */
 router.get(
   "/:id",
-  requireAnyPermission(["calles.direcciones.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.direcciones.read"]),
   validateDireccionId,
   (req, res, next) => {
     // #swagger.tags = ['Direcciones']
@@ -276,8 +275,7 @@ router.get(
  */
 router.post(
   "/",
-  verificarRoles(["operador", "supervisor", "super_admin"]),
-  requireAnyPermission(["calles.direcciones.create"]),
+  verificarRolesOPermisos(["operador", "supervisor", "super_admin"], ["calles.direcciones.create"]),
   validateCreateDireccion,
   registrarAuditoria({
     entidad: "Direccion",
@@ -302,8 +300,7 @@ router.post(
  */
 router.put(
   "/:id",
-  verificarRoles(["supervisor", "super_admin"]),
-  requireAnyPermission(["calles.direcciones.update"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.direcciones.update"]),
   validateUpdateDireccion,
   registrarAuditoria({
     entidad: "Direccion",
@@ -331,8 +328,7 @@ router.put(
  */
 router.patch(
   "/:id/geocodificar",
-  verificarRoles(["operador", "supervisor", "super_admin"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["operador", "supervisor", "super_admin"], [
     "calles.direcciones.geocodificar",
     "calles.direcciones.update",
   ]),
@@ -362,8 +358,7 @@ router.patch(
  */
 router.delete(
   "/:id",
-  verificarRoles(["super_admin"]),
-  requireAnyPermission(["calles.direcciones.delete"]),
+  verificarRolesOPermisos(["super_admin"], ["calles.direcciones.delete"]),
   validateDireccionId,
   registrarAuditoria({
     entidad: "Direccion",
@@ -389,8 +384,7 @@ router.delete(
  */
 router.patch(
   "/:id/reactivar",
-  verificarRoles(["super_admin"]),
-  requireAnyPermission(["calles.direcciones.delete", "calles.direcciones.update"]),
+  verificarRolesOPermisos(["super_admin"], ["calles.direcciones.delete", "calles.direcciones.update"]),
   validateDireccionId,
   registrarAuditoria({
     entidad: "Direccion",

@@ -17,11 +17,10 @@ const router = express.Router();
 import * as turnosController from "../controllers/operativosTurnoController.js";
 import {
   verificarToken,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 import { body, param, validationResult } from "express-validator";
-import { Op } from "sequelize";
 import { Sector, PersonalSeguridad } from "../models/index.js";
 
 const handleValidationErrors = (req, res, next) => {
@@ -49,7 +48,7 @@ const validateTurno = [
     .optional()
     .isInt()
     .withMessage("El ID del supervisor debe ser un número entero."),
-  body("supervisor_id").custom(async (supervisor_id, { req }) => {
+  body("supervisor_id").custom(async (supervisor_id) => {
     if (supervisor_id) {
       const supervisor = await PersonalSeguridad.findByPk(supervisor_id);
       if (!supervisor) {
@@ -131,14 +130,14 @@ const validateUpdateTurno = [
 router.get(
   "/",
   verificarToken,
-  requireAnyPermission(["operativos.turnos.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["operativos.turnos.read"]),
   turnosController.getAllTurnos
 );
 
 router.get(
   "/:id",
   verificarToken,
-  requireAnyPermission(["operativos.turnos.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["operativos.turnos.read"]),
   param("id").isInt().withMessage("El ID debe ser un número entero."),
   handleValidationErrors,
   turnosController.getTurnoById
@@ -147,7 +146,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  requireAnyPermission(["operativos.turnos.create"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], ["operativos.turnos.create"]),
   validateTurno,
   handleValidationErrors,
   registrarAuditoria("Creación de turno"),
@@ -157,7 +156,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  requireAnyPermission(["operativos.turnos.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], ["operativos.turnos.update"]),
   param("id").isInt().withMessage("El ID debe ser un número entero."),
   validateUpdateTurno,
   handleValidationErrors,
@@ -168,7 +167,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  requireAnyPermission(["operativos.turnos.delete"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["operativos.turnos.delete"]),
   param("id").isInt().withMessage("El ID debe ser un número entero."),
   handleValidationErrors,
   registrarAuditoria("Eliminación de turno"),

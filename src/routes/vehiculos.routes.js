@@ -64,8 +64,7 @@ import * as vehiculosController from "../controllers/vehiculosController.js";
 // ==========================================
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 // ==========================================
@@ -104,6 +103,7 @@ import { catalogRateLimit } from "../middlewares/rateLimitMiddleware.js";
 router.get(
   "/stats",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["vehiculos.vehiculos.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Vehiculos']
     // #swagger.summary = 'Estadísticas de vehículos'
@@ -124,7 +124,7 @@ router.get(
   "/disponibles",
   verificarToken,
   catalogRateLimit, // 🔥 ANTI-BUCLE: Máximo 5 solicitudes/minuto
-  verificarRoles(["super_admin", "admin", "supervisor", "operador"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["vehiculos.vehiculos.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Vehiculos']
     // #swagger.summary = 'Listar vehículos disponibles'
@@ -151,6 +151,7 @@ router.get(
 router.get(
   "/",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["vehiculos.vehiculos.read"]),
   validateQueryParams,
   (req, res, next) => {
     // #swagger.tags = ['Vehiculos']
@@ -177,6 +178,7 @@ router.get(
 router.get(
   "/:id/historial",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["vehiculos.vehiculos.read"]),
   validateVehiculoId,
   (req, res, next) => {
     // #swagger.tags = ['Vehiculos']
@@ -200,6 +202,7 @@ router.get(
 router.get(
   "/:id/abastecimientos",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["vehiculos.vehiculos.read"]),
   validateVehiculoId,
   (req, res, next) => {
     // #swagger.tags = ['Vehiculos']
@@ -224,6 +227,7 @@ router.get(
 router.get(
   "/:id/mantenimientos",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["vehiculos.vehiculos.read"]),
   validateVehiculoId,
   (req, res, next) => {
     // #swagger.tags = ['Vehiculos']
@@ -246,6 +250,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["vehiculos.vehiculos.read"]),
   validateVehiculoId,
   (req, res, next) => {
     // #swagger.tags = ['Vehiculos']
@@ -268,8 +273,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission(["vehiculos.vehiculos.create"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["vehiculos.vehiculos.create"]),
   validateCreateVehiculo,
   registrarAuditoria({
     entidad: "Vehiculo",
@@ -295,8 +299,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["vehiculos.vehiculos.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["vehiculos.vehiculos.update"]),
   validateUpdateVehiculo,
   registrarAuditoria({
     entidad: "Vehiculo",
@@ -328,8 +331,7 @@ router.put(
 router.patch(
   "/:id/kilometraje",
   verificarToken,
-  verificarRoles(["operador", "supervisor", "admin", "super_admin"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["operador", "supervisor", "admin", "super_admin"], [
     "vehiculos.kilometraje.update",
     "vehiculos.vehiculos.update",
   ]),
@@ -359,8 +361,7 @@ router.patch(
 router.patch(
   "/:id/estado",
   verificarToken,
-  verificarRoles(["operador", "supervisor", "admin", "super_admin"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["operador", "supervisor", "admin", "super_admin"], [
     "vehiculos.estado.update",
     "vehiculos.vehiculos.update",
   ]),
@@ -391,8 +392,7 @@ router.patch(
 router.post(
   "/:id/abastecimiento",
   verificarToken,
-  verificarRoles(["operador", "supervisor", "admin", "super_admin"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["operador", "supervisor", "admin", "super_admin"], [
     "vehiculos.abastecimiento.create",
     "vehiculos.vehiculos.update",
   ]),
@@ -421,8 +421,7 @@ router.post(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission(["vehiculos.vehiculos.delete"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["vehiculos.vehiculos.delete"]),
   validateVehiculoId,
   registrarAuditoria({
     entidad: "Vehiculo",

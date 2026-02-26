@@ -47,8 +47,7 @@ import {
 
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 // Importar rate limiting (TEMPORAL ANTI-BUCLE)
@@ -74,7 +73,7 @@ router.get(
   "/disponibles",
   verificarToken,
   catalogRateLimit, // 🔥 ANTI-BUCLE: Máximo 5 solicitudes/minuto
-  requireAnyPermission(["catalogos.radios_tetra.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.radios_tetra.read"]),
   (req, res, next) => {
     return radioTetraController.getRadiosDisponibles(req, res, next);
   }
@@ -101,7 +100,7 @@ router.get(
 router.get(
   "/para-dropdown",
   verificarToken,
-  requireAnyPermission(["catalogos.radios_tetra.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.radios_tetra.read"]),
   (req, res, next) => {
     return radioTetraController.getRadiosParaDropdown(req, res, next);
   }
@@ -126,7 +125,7 @@ router.get(
 router.get(
   "/",
   verificarToken,
-  requireAnyPermission(["catalogos.radios_tetra.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.radios_tetra.read"]),
   validateQueryRadios,
   (req, res, next) => {
     return radioTetraController.getAllRadios(req, res, next);
@@ -144,7 +143,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  requireAnyPermission(["catalogos.radios_tetra.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.radios_tetra.read"]),
   validateRadioId,
   (req, res, next) => {
     return radioTetraController.getRadioById(req, res, next);
@@ -169,8 +168,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["catalogos.radios_tetra.create"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.radios_tetra.create"]),
   validateCreateRadio,
   (req, res, next) => {
     return radioTetraController.createRadio(req, res, next);
@@ -188,8 +186,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["catalogos.radios_tetra.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.radios_tetra.update"]),
   validateRadioId,
   validateUpdateRadio,
   (req, res, next) => {
@@ -208,8 +205,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["catalogos.radios_tetra.delete"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.radios_tetra.delete"]),
   validateRadioId,
   (req, res, next) => {
     return radioTetraController.deleteRadio(req, res, next);
@@ -230,8 +226,7 @@ router.delete(
 router.patch(
   "/:id/asignar",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [
     "catalogos.radios_tetra.update",
     "catalogos.radios_tetra.asignar",
   ]),
@@ -253,8 +248,7 @@ router.patch(
 router.patch(
   "/:id/desasignar",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [
     "catalogos.radios_tetra.update",
     "catalogos.radios_tetra.asignar",
   ]),
@@ -275,8 +269,7 @@ router.patch(
 router.patch(
   "/:id/activar",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["catalogos.radios_tetra.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.radios_tetra.update"]),
   validateRadioId,
   (req, res, next) => {
     return radioTetraController.activarRadio(req, res, next);
@@ -294,8 +287,7 @@ router.patch(
 router.patch(
   "/:id/desactivar",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["catalogos.radios_tetra.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.radios_tetra.update"]),
   validateRadioId,
   (req, res, next) => {
     return radioTetraController.desactivarRadio(req, res, next);

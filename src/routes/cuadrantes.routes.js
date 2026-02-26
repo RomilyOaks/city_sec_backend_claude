@@ -38,7 +38,7 @@ import {
 
 import {
   verificarToken,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 import {
@@ -66,7 +66,7 @@ router.use(verificarToken);
  */
 router.get(
   "/",
-  requireAnyPermission(["sectores.cuadrantes.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["sectores.cuadrantes.read"]),
   validateQueryCuadrantes,
   getCuadrantes
 );
@@ -80,7 +80,7 @@ router.get(
  */
 router.get(
   "/cercanos",
-  requireAnyPermission(["sectores.cuadrantes.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["sectores.cuadrantes.read"]),
   validateQueryCuadrantes,
   getCuadrantesCercanos
 );
@@ -92,7 +92,7 @@ router.get(
  */
 router.get(
   "/sector/:sectorId",
-  requireAnyPermission(["sectores.cuadrantes.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["sectores.cuadrantes.read"]),
   getCuadrantesBySector
 );
 
@@ -103,7 +103,7 @@ router.get(
  */
 router.get(
   "/subsector/:subsectorId",
-  requireAnyPermission(["sectores.cuadrantes.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["sectores.cuadrantes.read"]),
   getCuadrantesBySubsector
 );
 
@@ -114,7 +114,7 @@ router.get(
  */
 router.get(
   "/codigo/:code",
-  requireAnyPermission(["sectores.cuadrantes.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["sectores.cuadrantes.read"]),
   getCuadranteByCode
 );
 
@@ -125,7 +125,7 @@ router.get(
  */
 router.get(
   "/:id",
-  requireAnyPermission(["sectores.cuadrantes.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["sectores.cuadrantes.read"]),
   validateCuadranteId,
   getCuadranteById
 );
@@ -141,7 +141,7 @@ router.get(
  */
 router.post(
   "/",
-  requireAnyPermission(["sectores.cuadrantes.create"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["sectores.cuadrantes.create"]),
   validateCreateCuadrante,
   createCuadrante
 );
@@ -153,7 +153,7 @@ router.post(
  */
 router.put(
   "/:id",
-  requireAnyPermission(["sectores.cuadrantes.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["sectores.cuadrantes.update"]),
   validateCuadranteId,
   validateUpdateCuadrante,
   updateCuadrante
@@ -166,7 +166,7 @@ router.put(
  */
 router.delete(
   "/:id",
-  requireAnyPermission(["sectores.cuadrantes.delete"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["sectores.cuadrantes.delete"]),
   validateCuadranteId,
   deleteCuadrante
 );
@@ -178,7 +178,7 @@ router.delete(
  */
 router.patch(
   "/:id/estado",
-  requireAnyPermission(["sectores.cuadrantes.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["sectores.cuadrantes.update"]),
   validateCuadranteId,
   validateCambiarEstado,
   cambiarEstado
