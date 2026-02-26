@@ -143,6 +143,14 @@ const validateCuadranteData = [
     .optional()
     .matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)
     .withMessage("Formato de hora de ingreso inválido. Use formato HH:MM (24 horas)"),
+  body("observaciones")
+    .optional({ nullable: true })
+    .isString()
+    .withMessage("Las observaciones deben ser texto"),
+  body("incidentes_reportados")
+    .optional({ nullable: true })
+    .isString()
+    .withMessage("Los incidentes reportados deben ser texto"),
 ];
 
 router.post(
@@ -161,6 +169,14 @@ const validateUpdateCuadranteData = [
   body("hora_salida")
     .isISO8601()
     .withMessage("Formato de hora de salida inválido"),
+  body("observaciones")
+    .optional({ nullable: true })
+    .isString()
+    .withMessage("Las observaciones deben ser texto"),
+  body("incidentes_reportados")
+    .optional({ nullable: true })
+    .isString()
+    .withMessage("Los incidentes reportados deben ser texto"),
 ];
 
 router.put(
