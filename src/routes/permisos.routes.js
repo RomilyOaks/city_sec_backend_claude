@@ -26,6 +26,10 @@ import {
   getPermisoById,
   getPermisoBySlug,
   getPermisosByModulo,
+  createPermiso,
+  updatePermiso,
+  deletePermiso,
+  cambiarEstado,
 } from "../controllers/permisosController.js";
 
 import {
@@ -163,6 +167,83 @@ router.get(
     // #swagger.responses[200] = { description: 'OK' }
     // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     return getPermisoById(req, res, next);
+  }
+);
+
+// ============================================
+// RUTAS DE ESCRITURA (WRITE)
+// ============================================
+
+/**
+ * @route   POST /api/v1/permisos
+ * @desc    Crear nuevo permiso
+ * @access  Private (super_admin, admin)
+ * @body    {string} modulo   - Módulo (ej: "usuarios")
+ * @body    {string} recurso  - Recurso (ej: "reportes")
+ * @body    {string} accion   - Acción (ej: "export")
+ * @body    {string} descripcion - Descripción opcional
+ */
+router.post(
+  "/",
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.permisos.create"]),
+  (req, res, next) => {
+    // #swagger.tags = ['Permisos']
+    // #swagger.summary = 'Crear nuevo permiso'
+    // #swagger.security = [{ bearerAuth: [] }]
+    return createPermiso(req, res, next);
+  }
+);
+
+/**
+ * @route   PUT /api/v1/permisos/:id
+ * @desc    Actualizar permiso (solo descripción; no aplica a permisos de sistema)
+ * @access  Private (super_admin, admin)
+ * @params  {number} id - ID del permiso
+ * @body    {string} descripcion - Nueva descripción
+ */
+router.put(
+  "/:id",
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.permisos.update"]),
+  (req, res, next) => {
+    // #swagger.tags = ['Permisos']
+    // #swagger.summary = 'Actualizar permiso'
+    // #swagger.security = [{ bearerAuth: [] }]
+    return updatePermiso(req, res, next);
+  }
+);
+
+/**
+ * @route   PATCH /api/v1/permisos/:id/estado
+ * @desc    Activar o desactivar un permiso (no aplica a permisos de sistema)
+ * @access  Private (super_admin, admin)
+ * @params  {number} id - ID del permiso
+ * @body    {boolean} estado - true = activo, false = inactivo
+ */
+router.patch(
+  "/:id/estado",
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.permisos.update"]),
+  (req, res, next) => {
+    // #swagger.tags = ['Permisos']
+    // #swagger.summary = 'Cambiar estado del permiso'
+    // #swagger.security = [{ bearerAuth: [] }]
+    return cambiarEstado(req, res, next);
+  }
+);
+
+/**
+ * @route   DELETE /api/v1/permisos/:id
+ * @desc    Eliminar permiso (no aplica a permisos de sistema)
+ * @access  Private (super_admin, admin)
+ * @params  {number} id - ID del permiso
+ */
+router.delete(
+  "/:id",
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.permisos.delete"]),
+  (req, res, next) => {
+    // #swagger.tags = ['Permisos']
+    // #swagger.summary = 'Eliminar permiso'
+    // #swagger.security = [{ bearerAuth: [] }]
+    return deletePermiso(req, res, next);
   }
 );
 
