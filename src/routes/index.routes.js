@@ -393,13 +393,6 @@ router.use(
 );
 router.use(
   "/operativos/:turnoId/vehiculos/:vehiculoId/cuadrantes",
-  (req, res, next) => {
-    console.log("🌟🌟🌟 INDEX.ROUTES - ENTRANDO A RUTA CUADRANTES 🌟🌟🌟");
-    console.log("🌟 req.body en index.routes:", JSON.stringify(req.body, null, 2));
-    console.log("🌟 req.params:", req.params);
-    console.log("🌟🌟🌟 PASANDO A operativosVehiculosCuadrantesRoutes 🌟🌟🌟");
-    next();  // ← ¡FORZAR QUE FUNCIONE!
-  },
   operativosVehiculosCuadrantesRoutes
 );
 router.use("/operativos/:turnoId/vehiculos", operativosVehiculosRoutes);

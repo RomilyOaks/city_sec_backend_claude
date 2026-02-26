@@ -954,7 +954,7 @@ export const getCuadrantesByVehiculoAsignado = async (req, res) => {
  */
 export const createCuadranteForVehiculo = async (req, res) => {
   const { id } = req.params; // id de OperativosVehiculos
-  const { cuadrante_id, hora_ingreso } = req.body;
+  const { cuadrante_id, hora_ingreso, observaciones, incidentes_reportados } = req.body;
   const { id: created_by } = req.user;
 
   try {
@@ -981,6 +981,8 @@ export const createCuadranteForVehiculo = async (req, res) => {
       operativo_vehiculo_id: id,
       cuadrante_id,
       hora_ingreso: horaIngresoCompleta,
+      observaciones: observaciones || null,
+      incidentes_reportados: incidentes_reportados || null,
       created_by,
     });
 
@@ -1005,7 +1007,7 @@ export const createCuadranteForVehiculo = async (req, res) => {
  */
 export const updateCuadranteForVehiculo = async (req, res) => {
   const { id, cuadranteId } = req.params;
-  const { hora_salida } = req.body;
+  const { hora_salida, observaciones, incidentes_reportados } = req.body;
   const { id: updated_by } = req.user;
 
   try {
@@ -1040,10 +1042,15 @@ export const updateCuadranteForVehiculo = async (req, res) => {
       });
     }
 
-    await asignacion.update({
-      hora_salida,
-      updated_by,
-    });
+    const updateData = { hora_salida, updated_by };
+    if ("observaciones" in req.body) {
+      updateData.observaciones = observaciones === "" ? null : observaciones;
+    }
+    if ("incidentes_reportados" in req.body) {
+      updateData.incidentes_reportados = incidentes_reportados === "" ? null : incidentes_reportados;
+    }
+
+    await asignacion.update(updateData);
 
     res.status(200).json({
       success: true,
