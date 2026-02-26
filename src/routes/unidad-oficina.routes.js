@@ -16,8 +16,7 @@ import express from "express";
 import unidadOficinaController from "../controllers/unidadOficinaController.js";
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 import {
   validateCreate,
@@ -57,7 +56,8 @@ const permisos = {
  */
 router.get(
   "/",
-  requireAnyPermission([permisos.read]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.read]),
   validateQuery,
   unidadOficinaController.getAll,
 );
@@ -69,8 +69,9 @@ router.get(
  */
 router.get(
   "/:id",
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.read]),
   validateId,
-  requireAnyPermission([permisos.read]),
   unidadOficinaController.getById,
 );
 
@@ -81,8 +82,7 @@ router.get(
  */
 router.post(
   "/",
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission([permisos.create]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [permisos.create]),
   validateCreate,
   unidadOficinaController.create,
 );
@@ -94,8 +94,7 @@ router.post(
  */
 router.put(
   "/:id",
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission([permisos.update]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [permisos.update]),
   validateUpdate,
   unidadOficinaController.update,
 );
@@ -107,8 +106,7 @@ router.put(
  */
 router.delete(
   "/:id",
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission([permisos.delete]),
+  verificarRolesOPermisos(["super_admin", "admin"], [permisos.delete]),
   validateId,
   unidadOficinaController.remove,
 );

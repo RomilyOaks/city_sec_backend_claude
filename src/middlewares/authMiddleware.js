@@ -272,6 +272,57 @@ export const requireAllPermissions = (permisosRequeridos) => {
 };
 
 /**
+ * Verificar roles del sistema O permisos por slug (lógica OR).
+ * Permite acceso si el usuario tiene alguno de los roles del sistema
+ * especificados O si tiene alguno de los permisos requeridos.
+ * Super Admin y Admin siempre pasan.
+ *
+ * @param {Array} rolesPermitidos - Slugs de roles del sistema (ej: ['operador', 'supervisor'])
+ * @param {Array} permisosRequeridos - Slugs de permisos (ej: ['novedades.incidentes.create'])
+ */
+export const verificarRolesOPermisos = (rolesPermitidos, permisosRequeridos = []) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Usuario no autenticado",
+      });
+    }
+
+    const rolesUsuario = req.user.rolSlugs || [];
+
+    // Super Admin y Admin siempre pasan
+    const rolesAdmin = ["super_admin", "admin"];
+    if (rolesUsuario.some((slug) => rolesAdmin.includes(slug))) {
+      return next();
+    }
+
+    // Tiene algún rol del sistema permitido?
+    const tieneRolSistema = rolesUsuario.some((slug) =>
+      rolesPermitidos.includes(slug)
+    );
+    if (tieneRolSistema) return next();
+
+    // Tiene alguno de los permisos requeridos?
+    if (permisosRequeridos.length > 0) {
+      const tienePermiso = permisosRequeridos.some((p) =>
+        req.user.permisos.includes(p)
+      );
+      if (tienePermiso) return next();
+    }
+
+    return res.status(403).json({
+      success: false,
+      message: "No tienes permisos para realizar esta acción",
+      requiredRoles: rolesPermitidos,
+      requiredPermissions: permisosRequeridos,
+      userRoles: req.user.roles,
+      userRoleSlugs: rolesUsuario,
+    });
+  };
+};
+
+/**
  * Verificar permiso por módulo (cualquier acción en el módulo)
  * @param {String} modulo - Nombre del módulo (ej: 'vehiculos')
  */
@@ -380,6 +431,7 @@ export const autenticacionOpcional = async (req, res, next) => {
 export default {
   verificarToken,
   verificarRoles,
+  verificarRolesOPermisos,
   requireAnyPermission,
   requireAllPermissions,
   requireModuleAccess,

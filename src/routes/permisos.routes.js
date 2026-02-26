@@ -30,8 +30,7 @@ import {
 
 import {
   verificarToken,
-  verificarRoles as requireRole,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -41,7 +40,6 @@ const router = express.Router();
  * Todas las rutas requieren ser super_admin o admin
  */
 router.use(verificarToken);
-router.use(requireRole(["super_admin", "admin"]));
 
 // ============================================
 // RUTAS DE CONSULTA (READ)
@@ -72,7 +70,7 @@ router.use(requireRole(["super_admin", "admin"]));
 // #swagger.responses[403] = { description: 'No autorizado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.get(
   "/",
-  requireAnyPermission("usuarios.permisos.read"),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.permisos.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Permisos']
     // #swagger.summary = 'Listar permisos (read-only)'
@@ -104,7 +102,7 @@ router.get(
 // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.get(
   "/modulo/:modulo",
-  requireAnyPermission("usuarios.permisos.read"),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.permisos.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Permisos']
     // #swagger.summary = 'Listar permisos por módulo'
@@ -130,7 +128,7 @@ router.get(
 // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.get(
   "/slug/:slug",
-  requireAnyPermission("usuarios.permisos.read"),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.permisos.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Permisos']
     // #swagger.summary = 'Obtener permiso por slug'
@@ -156,7 +154,7 @@ router.get(
 // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.get(
   "/:id",
-  requireAnyPermission("usuarios.permisos.read"),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.permisos.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Permisos']
     // #swagger.summary = 'Obtener permiso por ID'

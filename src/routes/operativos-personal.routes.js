@@ -42,7 +42,7 @@ import {
 } from "../controllers/operativosPersonalController.js";
 import {
   verificarToken,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 import { body, param } from "express-validator";
@@ -134,7 +134,7 @@ const validateUpdatePersonalData = [
 router.get(
   "/",
   verificarToken,
-  requireAnyPermission([permisosPersonal.leer]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisosPersonal.leer]),
   getAllPersonalByTurno
 );
 
@@ -142,7 +142,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisosPersonal.leer]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisosPersonal.leer]),
   param("id").isInt({ min: 1 }).withMessage("ID de personal inválido"),
   handleValidationErrors,
   getPersonalById
@@ -152,7 +152,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  requireAnyPermission([permisosPersonal.crear]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], [permisosPersonal.crear]),
   validatePersonalData,
   handleValidationErrors,
   registrarAuditoria(permisosPersonal.crear),
@@ -163,7 +163,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisosPersonal.actualizar]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], [permisosPersonal.actualizar]),
   param("id").isInt({ min: 1 }).withMessage("ID de asignación inválido"),
   validateUpdatePersonalData,
   handleValidationErrors,
@@ -175,7 +175,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisosPersonal.eliminar]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [permisosPersonal.eliminar]),
   param("id").isInt({ min: 1 }).withMessage("ID de asignación inválido"),
   handleValidationErrors,
   registrarAuditoria(permisosPersonal.eliminar),
@@ -190,7 +190,7 @@ router.delete(
 router.get(
   "/:id/cuadrantes",
   verificarToken,
-  requireAnyPermission([permisosCuadrantes.leer]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisosCuadrantes.leer]),
   param("id").isInt({ min: 1 }).withMessage("ID de asignación inválido"),
   handleValidationErrors,
   getCuadrantesByPersonalAsignado
@@ -210,7 +210,7 @@ const validateCuadranteData = [
 router.post(
   "/:id/cuadrantes",
   verificarToken,
-  requireAnyPermission([permisosCuadrantes.crear]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], [permisosCuadrantes.crear]),
   param("id").isInt({ min: 1 }).withMessage("ID de asignación inválido"),
   validateCuadranteData,
   handleValidationErrors,
@@ -239,7 +239,7 @@ const validateUpdateCuadranteData = [
 router.put(
   "/:id/cuadrantes/:cuadranteId",
   verificarToken,
-  requireAnyPermission([permisosCuadrantes.actualizar]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], [permisosCuadrantes.actualizar]),
   param("id").isInt({ min: 1 }).withMessage("ID de asignación inválido"),
   param("cuadranteId")
     .isInt({ min: 1 })
@@ -254,7 +254,7 @@ router.put(
 router.delete(
   "/:id/cuadrantes/:cuadranteId",
   verificarToken,
-  requireAnyPermission([permisosCuadrantes.eliminar]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [permisosCuadrantes.eliminar]),
   param("id").isInt({ min: 1 }).withMessage("ID de asignación inválido"),
   param("cuadranteId")
     .isInt({ min: 1 })

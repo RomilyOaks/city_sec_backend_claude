@@ -21,8 +21,7 @@ import {
 } from "../controllers/usuariosController.js";
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 import { body, param, query, validationResult } from "express-validator";
@@ -49,8 +48,7 @@ const handleValidationErrors = (req, res, next) => {
 router.get(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["usuarios.usuarios.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["usuarios.usuarios.read"]),
   [
     query("page")
       .optional()
@@ -103,8 +101,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["usuarios.usuarios.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["usuarios.usuarios.read"]),
   [
     param("id").isInt({ min: 1 }).withMessage("ID de usuario inválido"),
     handleValidationErrors,
@@ -129,8 +126,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission(["usuarios.usuarios.create"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.usuarios.create"]),
   [
     body("username")
       .notEmpty()
@@ -211,8 +207,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission(["usuarios.usuarios.update"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.usuarios.update"]),
   [
     param("id").isInt({ min: 1 }).withMessage("ID de usuario inválido"),
 
@@ -283,8 +278,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin"]),
-  requireAnyPermission(["usuarios.usuarios.delete"]),
+  verificarRolesOPermisos(["super_admin"], ["usuarios.usuarios.delete"]),
   [
     param("id").isInt({ min: 1 }).withMessage("ID de usuario inválido"),
     handleValidationErrors,
@@ -313,8 +307,7 @@ router.delete(
 router.patch(
   "/:id/reset-password",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["super_admin", "admin"], [
     "usuarios.usuarios.reset_password",
     "usuarios.usuarios.update",
   ]),
@@ -359,8 +352,7 @@ router.patch(
 router.patch(
   "/:id/estado",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["super_admin", "admin"], [
     "usuarios.usuarios.update_estado",
     "usuarios.usuarios.update",
   ]),
@@ -408,8 +400,7 @@ router.patch(
 router.patch(
   "/:id/restore",
   verificarToken,
-  verificarRoles(["super_admin"]),
-  requireAnyPermission(["usuarios.usuarios.update", "usuarios.usuarios.restore"]),
+  verificarRolesOPermisos(["super_admin"], ["usuarios.usuarios.update", "usuarios.usuarios.restore"]),
   [
     param("id").isInt({ min: 1 }).withMessage("ID de usuario inválido"),
     handleValidationErrors,
@@ -432,8 +423,7 @@ router.patch(
 router.get(
   "/:id/roles",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["usuarios.usuarios.read", "usuarios.roles.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["usuarios.usuarios.read", "usuarios.roles.read"]),
   [
     param("id").isInt({ min: 1 }).withMessage("ID de usuario inválido"),
     handleValidationErrors,
@@ -446,7 +436,7 @@ router.get(
     // #swagger.responses[200] = { description: 'OK' }
     // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     try {
-      const { Usuario, Rol, UsuarioRol } = await import("../models/index.js");
+      const { Usuario, Rol } = await import("../models/index.js");
 
       const usuario = await Usuario.findByPk(req.params.id, {
         include: [
@@ -494,8 +484,7 @@ router.get(
 router.post(
   "/:id/roles",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission(["usuarios.roles.assign"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles.assign"]),
   [
     param("id").isInt({ min: 1 }).withMessage("ID de usuario inválido"),
 
@@ -529,7 +518,7 @@ router.post(
     // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     try {
-      const { Usuario, Rol, UsuarioRol } = await import("../models/index.js");
+      const { Usuario, UsuarioRol } = await import("../models/index.js");
       const { roles, es_principal } = req.body;
       const { id } = req.params;
 
@@ -582,8 +571,7 @@ router.post(
 router.delete(
   "/:id/roles/:rolId",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission(["usuarios.roles.remove"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles.remove"]),
   [
     param("id").isInt({ min: 1 }).withMessage("ID de usuario inválido"),
     param("rolId").isInt({ min: 1 }).withMessage("ID de rol inválido"),
@@ -643,8 +631,7 @@ router.delete(
 router.get(
   "/:id/permisos",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["usuarios.permisos.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["usuarios.permisos.read"]),
   [
     param("id").isInt({ min: 1 }).withMessage("ID de usuario inválido"),
     handleValidationErrors,
@@ -657,7 +644,7 @@ router.get(
     // #swagger.responses[200] = { description: 'OK', schema: { $ref: "#/components/schemas/UsuarioPermisosConsolidadosResponse" } }
     // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     try {
-      const { Usuario, Rol, Permiso, UsuarioRol } = await import(
+      const { Usuario, Rol, Permiso } = await import(
         "../models/index.js"
       );
 

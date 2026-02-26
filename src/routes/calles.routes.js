@@ -48,8 +48,7 @@ import callesController from "../controllers/callesController.js";
 // ============================================================================
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 // ============================================================================
@@ -86,7 +85,7 @@ import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js"
 router.get(
   "/activas",
   verificarToken,
-  requireAnyPermission(["calles.calles.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Calles']
     // #swagger.summary = 'Listar calles activas (para selects)'
@@ -105,7 +104,7 @@ router.get(
 router.get(
   "/urbanizaciones",
   verificarToken,
-  requireAnyPermission(["calles.calles.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Calles']
     // #swagger.summary = 'Obtener lista única de urbanizaciones (DISTINCT)'
@@ -141,7 +140,7 @@ router.get(
 router.get(
   "/autocomplete",
   verificarToken,
-  requireAnyPermission(["calles.calles.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Calles']
     // #swagger.summary = 'Búsqueda autocomplete de calles'
@@ -162,7 +161,7 @@ router.get(
 router.get(
   "/urbanizacion/:nombre",
   verificarToken,
-  requireAnyPermission(["calles.calles.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Calles']
     // #swagger.summary = 'Calles por urbanización'
@@ -181,7 +180,7 @@ router.get(
 router.get(
   "/:id/cuadrantes",
   verificarToken,
-  requireAnyPermission(["calles.calles.read", "ubicacion.cuadrantes.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.read"]),
   validateCalleId,
   (req, res, next) => {
     // #swagger.tags = ['Calles']
@@ -202,7 +201,7 @@ router.get(
 router.get(
   "/:id/direcciones",
   verificarToken,
-  requireAnyPermission(["calles.calles.read", "calles.direcciones.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.read"]),
   validateCalleId,
   (req, res, next) => {
     // #swagger.tags = ['Calles']
@@ -233,7 +232,8 @@ router.use(verificarToken);
  */
 router.get(
   "/",
-  requireAnyPermission(["calles.calles.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Calles']
     // #swagger.summary = 'Listar calles con filtros'
@@ -256,7 +256,8 @@ router.get(
  */
 router.get(
   "/:id",
-  requireAnyPermission(["calles.calles.read"]),
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.read"]),
   validateCalleId,
   (req, res, next) => {
     // #swagger.tags = ['Calles']
@@ -277,8 +278,7 @@ router.get(
  */
 router.post(
   "/",
-  verificarRoles(["operador", "supervisor", "super_admin"]),
-  requireAnyPermission(["calles.calles.create"]),
+  verificarRolesOPermisos(["operador", "supervisor", "super_admin"], ["calles.calles.create"]),
   validateCreateCalle,
   registrarAuditoria({
     entidad: "Calle",
@@ -305,8 +305,7 @@ router.post(
  */
 router.put(
   "/:id",
-  verificarRoles(["supervisor", "super_admin"]),
-  requireAnyPermission(["calles.calles.update"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.calles.update"]),
   validateUpdateCalle,
   registrarAuditoria({
     entidad: "Calle",
@@ -333,8 +332,7 @@ router.put(
  */
 router.delete(
   "/:id",
-  verificarRoles(["super_admin"]),
-  requireAnyPermission(["calles.calles.delete"]),
+  verificarRolesOPermisos(["super_admin"], ["calles.calles.delete"]),
   validateCalleId,
   registrarAuditoria({
     entidad: "Calle",

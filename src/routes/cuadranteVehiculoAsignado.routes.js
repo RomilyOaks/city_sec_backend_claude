@@ -36,7 +36,7 @@ import {
 } from "../controllers/cuadranteVehiculoAsignadoController.js";
 import {
   verificarToken,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 
@@ -150,7 +150,7 @@ const handleValidationErrors = (req, res, next) => {
 router.get(
   "/",
   verificarToken,
-  requireAnyPermission([permisos.read]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.read]),
   validacionesQuery,
   handleValidationErrors,
   (req, res, next) => {
@@ -179,7 +179,7 @@ router.get(
 router.get(
   "/eliminadas",
   verificarToken,
-  requireAnyPermission([permisos.read]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [permisos.read]),
   [
     query("page").optional().isInt({ min: 1 }),
     query("limit").optional().isInt({ min: 1, max: 100 }),
@@ -203,7 +203,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisos.read]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.read]),
   validacionesParamId,
   handleValidationErrors,
   (req, res, next) => {
@@ -224,7 +224,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  requireAnyPermission([permisos.create]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [permisos.create]),
   validacionesAsignacion,
   handleValidationErrors,
   registrarAuditoria({
@@ -251,7 +251,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisos.update]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [permisos.update]),
   [...validacionesParamId, ...validacionesAsignacion],
   handleValidationErrors,
   registrarAuditoria({
@@ -278,7 +278,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisos.delete]),
+  verificarRolesOPermisos(["super_admin", "admin"], [permisos.delete]),
   validacionesParamId,
   handleValidationErrors,
   registrarAuditoria({
@@ -305,7 +305,7 @@ router.delete(
 router.patch(
   "/:id/reactivar",
   verificarToken,
-  requireAnyPermission([permisos.create]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [permisos.create]),
   validacionesParamId,
   handleValidationErrors,
   registrarAuditoria({
@@ -332,7 +332,7 @@ router.patch(
 router.patch(
   "/:id/estado",
   verificarToken,
-  requireAnyPermission([permisos.update]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [permisos.update]),
   [
     ...validacionesParamId,
     body("estado")
@@ -367,7 +367,7 @@ router.patch(
 router.get(
   "/vehiculo/:vehiculo_id",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.read]),
   [
     param("vehiculo_id")
       .isInt({ min: 1 })

@@ -29,7 +29,7 @@ import {
 } from "../controllers/operativosVehiculosNovedadesController.js";
 import {
   verificarToken,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js";
 import { handleValidationErrors } from "../middlewares/handleValidationErrors.js";
@@ -47,7 +47,7 @@ const permisos = {
 router.get(
   "/disponibles",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.read]),
   getNovedadesDisponiblesByCuadrante
 );
 
@@ -55,7 +55,7 @@ router.get(
 router.get(
   "/",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.read])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.read]),
   getAllNovedadesByCuadrante
 );
 
@@ -63,7 +63,7 @@ router.get(
 router.post(
   "/",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.create])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], [permisos.create]),
   [
     body("novedad_id")
       .isInt({ min: 1 })
@@ -108,7 +108,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.update])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], [permisos.update]),
   [
     param("id")
       .isInt({ min: 1 })
@@ -157,7 +157,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  (req, res, next) => requireAnyPermission([permisos.delete])(req, res, next),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], [permisos.delete]),
   [
     param("id")
       .isInt({ min: 1 })

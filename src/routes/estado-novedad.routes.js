@@ -7,7 +7,7 @@ import express from "express";
 import estadoNovedadController from "../controllers/estadoNovedadController.js";
 import {
   verificarToken,
-  verificarRoles,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 import {
   validateCreate,
@@ -57,7 +57,7 @@ router.get("/:id", validateId, estadoNovedadController.getById);
  */
 router.post(
   "/",
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], []),
   validateCreate,
   estadoNovedadController.create
 );
@@ -69,7 +69,7 @@ router.post(
  */
 router.put(
   "/:id",
-  verificarRoles(["super_admin", "admin", "supervisor"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], []),
   validateUpdate,
   estadoNovedadController.update
 );
@@ -81,7 +81,7 @@ router.put(
  */
 router.delete(
   "/:id",
-  verificarRoles(["super_admin", "admin"]),
+  verificarRolesOPermisos(["super_admin", "admin"], []),
   validateId,
   estadoNovedadController.remove
 );

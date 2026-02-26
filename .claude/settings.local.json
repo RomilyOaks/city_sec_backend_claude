@@ -19,7 +19,11 @@
       "Bash(npm run build:*)",
       "Bash(npm run:*)",
       "Bash(find:*)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "mcp__supabase__list_organizations",
+      "mcp__supabase__list_projects",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

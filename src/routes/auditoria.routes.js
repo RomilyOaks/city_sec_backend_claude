@@ -12,8 +12,7 @@ const router = express.Router();
 import auditoriaController from "../controllers/auditoriaController.js";
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 import { auditarExportacion } from "../middlewares/auditoriaMiddleware.js";
 import { query, param, validationResult } from "express-validator";
@@ -39,8 +38,7 @@ const handleValidationErrors = (req, res, next) => {
 router.get(
   "/stats",
   verificarToken,
-  verificarRoles(["supervisor", "admin"]),
-  requireAnyPermission([
+  verificarRolesOPermisos(["supervisor", "admin"], [
     "auditoria.registros.read",
     "auditoria.estadisticas.read",
   ]),
@@ -81,8 +79,7 @@ router.get(
 router.get(
   "/export/csv",
   verificarToken,
-  verificarRoles(["supervisor", "admin"]),
-  requireAnyPermission(["auditoria.registros.export"]),
+  verificarRolesOPermisos(["supervisor", "admin"], ["auditoria.registros.export"]),
   [
     query("fecha_inicio")
       .optional()
@@ -103,8 +100,7 @@ router.get(
 router.get(
   "/entidad/:entidad/:id",
   verificarToken,
-  verificarRoles(["supervisor", "admin"]),
-  requireAnyPermission(["auditoria.registros.read"]),
+  verificarRolesOPermisos(["supervisor", "admin"], ["auditoria.registros.read"]),
   [
     param("entidad").notEmpty().withMessage("Entidad es requerida"),
     param("id").isInt({ min: 1 }).withMessage("ID inválido"),
@@ -121,8 +117,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  verificarRoles(["supervisor", "admin"]),
-  requireAnyPermission(["auditoria.registros.read"]),
+  verificarRolesOPermisos(["supervisor", "admin"], ["auditoria.registros.read"]),
   [
     param("id").isInt({ min: 1 }).withMessage("ID inválido"),
     handleValidationErrors,
@@ -138,8 +133,7 @@ router.get(
 router.get(
   "/",
   verificarToken,
-  verificarRoles(["supervisor", "admin"]),
-  requireAnyPermission(["auditoria.registros.read"]),
+  verificarRolesOPermisos(["supervisor", "admin"], ["auditoria.registros.read"]),
   [
     query("fecha_inicio")
       .optional()

@@ -19,7 +19,7 @@ import { Router } from "express";
 import { getAllVehiculos, getVehiculoByIdGeneral } from "../controllers/operativosVehiculosController.js";
 import {
   verificarToken,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 import { param } from "express-validator";
 import { handleValidationErrors } from "../middlewares/handleValidationErrors.js";
@@ -37,7 +37,7 @@ const permisos = {
 router.get(
   "/",
   verificarToken,
-  requireAnyPermission([permisos.leer]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.leer]),
   getAllVehiculos
 );
 
@@ -48,7 +48,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  requireAnyPermission([permisos.leer]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.leer]),
   param("id").isInt({ min: 1 }).withMessage("ID de vehículo inválido"),
   handleValidationErrors,
   getVehiculoByIdGeneral

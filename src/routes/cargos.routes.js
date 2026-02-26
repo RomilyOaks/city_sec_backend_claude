@@ -26,8 +26,7 @@ const router = express.Router();
 import cargosController from "../controllers/cargosController.js";
 import {
   verificarToken,
-  verificarRoles,
-  requireAnyPermission,
+  verificarRolesOPermisos,
 } from "../middlewares/authMiddleware.js";
 
 // ==========================================
@@ -39,7 +38,7 @@ import {
  * @desc    Obtener estadísticas de cargos
  * @access  Todos los usuarios autenticados
  */
-router.get("/stats", verificarToken, cargosController.getEstadisticas);
+router.get("/stats", verificarToken, verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.cargos.read"]), cargosController.getEstadisticas);
 
 /**
  * @route   GET /api/v1/cargos/con-licencia
@@ -49,6 +48,7 @@ router.get("/stats", verificarToken, cargosController.getEstadisticas);
 router.get(
   "/con-licencia",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.cargos.read"]),
   cargosController.getCargosConLicencia
 );
 
@@ -60,6 +60,7 @@ router.get(
 router.get(
   "/categoria/:categoria",
   verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.cargos.read"]),
   cargosController.getCargosByCategoria
 );
 
@@ -69,14 +70,14 @@ router.get(
  * @access  Todos los usuarios autenticados
  * @query   categoria, requiere_licencia, activos, page, limit
  */
-router.get("/", verificarToken, cargosController.getAllCargos);
+router.get("/", verificarToken, verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.cargos.read"]), cargosController.getAllCargos);
 
 /**
  * @route   GET /api/v1/cargos/:id
  * @desc    Obtener un cargo específico por ID
  * @access  Todos los usuarios autenticados
  */
-router.get("/:id", verificarToken, cargosController.getCargoById);
+router.get("/:id", verificarToken, verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.cargos.read"]), cargosController.getCargoById);
 
 // ==========================================
 // RUTAS PROTEGIDAS (Admin y Supervisor)
@@ -91,8 +92,7 @@ router.get("/:id", verificarToken, cargosController.getCargoById);
 router.post(
   "/",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["catalogos.cargos.create"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.cargos.create"]),
   cargosController.createCargo
 );
 
@@ -104,8 +104,7 @@ router.post(
 router.put(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin", "supervisor"]),
-  requireAnyPermission(["catalogos.cargos.update"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.cargos.update"]),
   cargosController.updateCargo
 );
 
@@ -117,8 +116,7 @@ router.put(
 router.delete(
   "/:id",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission(["catalogos.cargos.delete"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["catalogos.cargos.delete"]),
   cargosController.deleteCargo
 );
 
@@ -130,8 +128,7 @@ router.delete(
 router.post(
   "/:id/restore",
   verificarToken,
-  verificarRoles(["super_admin", "admin"]),
-  requireAnyPermission(["catalogos.cargos.create"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["catalogos.cargos.create"]),
   cargosController.restoreCargo
 );
 
