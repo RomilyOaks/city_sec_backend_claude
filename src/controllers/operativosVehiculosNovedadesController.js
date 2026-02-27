@@ -457,6 +457,17 @@ export const updateNovedadInCuadrante = async (req, res) => {
 
     await novedadAsignada.update(updateData);
 
+    // Si se envió personas_afectadas, actualizar también en la tabla Novedades principal
+    if (req.body.personas_afectadas !== undefined && novedadAsignada.novedad_id) {
+      await Novedad.update(
+        { 
+          personas_afectadas: req.body.personas_afectadas,
+          updated_by 
+        },
+        { where: { id: novedadAsignada.novedad_id } }
+      );
+    }
+
     // Obtener la novedad actualizada con información completa
     const novedadActualizada = await OperativosVehiculosNovedades.findByPk(
       id,
