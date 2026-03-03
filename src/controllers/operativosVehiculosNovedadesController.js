@@ -457,25 +457,25 @@ export const updateNovedadInCuadrante = async (req, res) => {
 
     await novedadAsignada.update(updateData);
 
-    // Si se envió personas_afectadas, actualizar también en la tabla Novedades principal
-    console.log("🔍 Backend - personas_afectadas recibido:", req.body.personas_afectadas);
-    console.log("🔍 Backend - novedad_id:", novedadAsignada.novedad_id);
-    
-    if (req.body.personas_afectadas !== undefined && novedadAsignada.novedad_id) {
-      console.log("✅ Actualizando personas_afectadas en tabla Novedades...");
-      const [affectedRows] = await Novedad.update(
-        { 
-          personas_afectadas: req.body.personas_afectadas,
-          updated_by 
-        },
-        { where: { id: novedadAsignada.novedad_id } }
-      );
-      console.log("✅ Filas afectadas en tabla Novedades:", affectedRows);
-    } else {
-      console.log("❌ No se actualizó personas_afectadas:", {
-        personas_afectadas_undefined: req.body.personas_afectadas === undefined,
-        novedad_id_missing: !novedadAsignada.novedad_id
-      });
+    // Si se envió num_personas_afectadas o perdidas_materiales_estimadas, actualizar también en la tabla Novedades principal
+    if (novedadAsignada.novedad_id) {
+      const updateNovedadData = {};
+      
+      if (req.body.num_personas_afectadas !== undefined) {
+        updateNovedadData.num_personas_afectadas = req.body.num_personas_afectadas;
+      }
+      
+      if (req.body.perdidas_materiales_estimadas !== undefined) {
+        updateNovedadData.perdidas_materiales_estimadas = req.body.perdidas_materiales_estimadas;
+      }
+      
+      if (Object.keys(updateNovedadData).length > 0) {
+        updateNovedadData.updated_by = updated_by;
+        await Novedad.update(
+          updateNovedadData,
+          { where: { id: novedadAsignada.novedad_id } }
+        );
+      }
     }
 
     // Obtener la novedad actualizada con información completa
