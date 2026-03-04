@@ -248,6 +248,8 @@ export const getNovedadById = async (req, res) => {
         { model: PersonalSeguridad, as: "novedadPersonal3", required: false, attributes: ["id", "doc_numero", "nombres", "apellido_paterno", "apellido_materno"] },
         { model: PersonalSeguridad, as: "novedadPersonal4", required: false, attributes: ["id", "doc_numero", "nombres", "apellido_paterno", "apellido_materno"] },
         { model: Usuario, as: "usuarioDespacho", required: false, attributes: ["id", "username", "email"] },
+        { model: Usuario, as: "creadorNovedad", required: false, attributes: ["id", "username", "nombres", "apellidos"] },
+        { model: Usuario, as: "actualizadorNovedad", required: false, attributes: ["id", "username", "nombres", "apellidos"] },
       ],
     });
 
