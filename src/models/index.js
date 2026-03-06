@@ -310,6 +310,13 @@ import Novedad from "./Novedad.js";
  */
 import HistorialEstadoNovedad from "./HistorialEstadoNovedad.js";
 
+/**
+ * Modelo RolEstadoNovedad
+ * Control de accesos a estados de novedades por roles
+ * @type {Model}
+ */
+import RolEstadoNovedad from "./RolEstadoNovedad.js";
+
 //=============================================
 // IMPORTAR MODELOS - AUTENTICACIÓN Y RBAC
 //=============================================
@@ -1816,6 +1823,36 @@ HistorialEstadoNovedad.belongsTo(Usuario, {
   as: "actualizadorHistorialEstado",
 });
 
+// RolEstadoNovedad
+RolEstadoNovedad.belongsTo(Rol, {
+  foreignKey: "rol_id",
+  as: "rolRolEstadoNovedad",
+});
+RolEstadoNovedad.belongsTo(EstadoNovedad, {
+  foreignKey: "estado_novedad_id",
+  as: "estadoNovedadRolEstadoNovedad",
+});
+RolEstadoNovedad.belongsTo(Usuario, {
+  foreignKey: "created_by",
+  as: "creadorRolEstadoNovedad",
+});
+RolEstadoNovedad.belongsTo(Usuario, {
+  foreignKey: "updated_by",
+  as: "actualizadorRolEstadoNovedad",
+});
+RolEstadoNovedad.belongsTo(Usuario, {
+  foreignKey: "deleted_by",
+  as: "eliminadorRolEstadoNovedad",
+});
+Rol.hasMany(RolEstadoNovedad, {
+  foreignKey: "rol_id",
+  as: "rolEstadosNovedad",
+});
+EstadoNovedad.hasMany(RolEstadoNovedad, {
+  foreignKey: "estado_novedad_id",
+  as: "rolesEstadoNovedad",
+});
+
 // NOTA: SubtipoNovedad, TipoVehiculo y UnidadOficina ya tienen sus relaciones
 // de auditoría definidas anteriormente en este archivo (líneas 1030-1080)
 
@@ -1942,6 +1979,7 @@ const models = {
   // Novedades
   Novedad,
   HistorialEstadoNovedad,
+  RolEstadoNovedad,
 
   // RBAC
   Usuario,
@@ -2020,6 +2058,7 @@ export {
   // Novedades
   Novedad,
   HistorialEstadoNovedad,
+  RolEstadoNovedad,
   // RBAC
   Usuario,
   Rol,

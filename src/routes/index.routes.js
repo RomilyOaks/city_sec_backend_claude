@@ -108,6 +108,7 @@ import cargosRoutes from "./cargos.routes.js";
 import tipoNovedadRoutes from "./tipo-novedad.routes.js";
 import subtipoNovedadRoutes from "./subtipo-novedad.routes.js";
 import estadoNovedadRoutes from "./estado-novedad.routes.js";
+import rolEstadosNovedadRoutes from "./rol-estados-novedad.routes.js";
 import ubigeoRoutes from "./ubigeo.routes.js";
 import configRoutes from "./config.routes.js";
 import unidadOficinaRoutes from "./unidad-oficina.routes.js";
@@ -461,6 +462,13 @@ router.use("/subtipos-novedad", subtipoNovedadRoutes);
  * @new true
  */
 router.use("/estados-novedad", estadoNovedadRoutes);
+
+/**
+ * @route   /rol-estados-novedad
+ * @desc    Control de accesos a estados de novedades por roles
+ * @access  super_admin, admin (CRUD) / todos autenticados (endpoint especial por rol)
+ */
+router.use("/rol-estados-novedad", rolEstadosNovedadRoutes);
 
 /**
  * @route   /tipos-copiloto
