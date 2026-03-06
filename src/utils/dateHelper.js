@@ -50,7 +50,24 @@ const formatDateTimeToString = (dateObj, timezone) => {
   const parts = formatter.formatToParts(dateObj);
   const get = (type) => parts.find((p) => p.type === type)?.value || "00";
 
-  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
+  let hour = get("hour");
+  let year = get("year");
+  let month = get("month");
+  let day = get("day");
+
+  // Intl.DateTimeFormat con hour12:false puede retornar "24" en medianoche
+  // MySQL rechaza hora 24 — normalizar a "00" del día siguiente
+  if (hour === "24") {
+    hour = "00";
+    const nextDay = new Date(
+      Date.UTC(Number(year), Number(month) - 1, Number(day) + 1)
+    );
+    year = String(nextDay.getUTCFullYear());
+    month = String(nextDay.getUTCMonth() + 1).padStart(2, "0");
+    day = String(nextDay.getUTCDate()).padStart(2, "0");
+  }
+
+  return `${year}-${month}-${day} ${hour}:${get("minute")}:${get("second")}`;
 };
 
 /**
