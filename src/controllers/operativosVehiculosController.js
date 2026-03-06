@@ -78,7 +78,7 @@ export const getVehiculoByIdGeneral = async (req, res) => {
           include: [
             {
               model: TipoVehiculo,
-              as: "tipo",
+              as: "tipoVehiculo",
               attributes: ["id", "nombre"],
             },
             {
@@ -227,7 +227,7 @@ export const getAllVehiculos = async (req, res) => {
         include: [
           {
             model: TipoVehiculo,
-            as: "tipo",
+            as: "tipoVehiculo",
             attributes: ["id", "nombre"],
             required: false,
           },
@@ -360,7 +360,7 @@ export const getAllVehiculosByTurno = async (req, res) => {
           include: [
             {
               model: TipoVehiculo,
-              as: "tipo",
+              as: "tipoVehiculo",
               attributes: ["id", "nombre"],
             },
             {
@@ -464,7 +464,7 @@ export const getVehiculoById = async (req, res) => {
           include: [
             {
               model: TipoVehiculo,
-              as: "tipo",
+              as: "tipoVehiculo",
               attributes: ["id", "nombre"],
             },
             {
