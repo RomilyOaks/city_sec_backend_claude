@@ -48,7 +48,7 @@ class Vehiculo extends Model {
     // Relación con TipoVehiculo (Muchos a Uno)
     Vehiculo.belongsTo(models.TipoVehiculo, {
       foreignKey: "tipo_id",
-      as: "tipo",
+      as: "tipoVehiculo",
     });
 
     // Relación con UnidadOficina (Muchos a Uno)
