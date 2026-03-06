@@ -78,9 +78,9 @@ GET /api/v1/rol-estados-novedad
       "estadoNovedadRolEstadoNovedad": {
         "id": 2,
         "nombre": "DESPACHADA",
-        "color": "#FF9800",
-        "es_estado_final": false,
-        "permite_edicion": true
+        "color_hex": "#FF9800",
+        "es_final": false,
+        "es_inicial": false
       },
       "creadorRolEstadoNovedad": {
         "id": 1,
@@ -156,18 +156,18 @@ GET /api/v1/rol-estados-novedad/rol/:rolId/estados
     {
       "id": 1,
       "nombre": "PENDIENTE",
-      "color": "#9E9E9E",
-      "es_estado_final": false,
-      "permite_edicion": true,
+      "color_hex": "#9E9E9E",
+      "es_final": false,
+      "es_inicial": true,
       "requiere_unidad": false,
       "descripcion_acceso": "El supervisor puede ver novedades pendientes"
     },
     {
       "id": 2,
       "nombre": "DESPACHADA",
-      "color": "#FF9800",
-      "es_estado_final": false,
-      "permite_edicion": true,
+      "color_hex": "#FF9800",
+      "es_final": false,
+      "es_inicial": false,
       "requiere_unidad": true,
       "descripcion_acceso": "El supervisor puede marcar novedades como despachadas"
     }

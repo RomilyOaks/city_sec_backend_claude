@@ -32,7 +32,7 @@ const baseIncludes = [
   {
     model: EstadoNovedad,
     as: "estadoNovedadRolEstadoNovedad",
-    attributes: ["id", "nombre", "color", "es_estado_final", "permite_edicion"],
+    attributes: ["id", "nombre", "color_hex", "es_final", "es_inicial", "requiere_unidad"],
   },
   ...auditoriaIncludes,
 ];
@@ -131,7 +131,7 @@ export const getEstadosByRol = async (req, res) => {
         {
           model: EstadoNovedad,
           as: "estadoNovedadRolEstadoNovedad",
-          attributes: ["id", "nombre", "color", "es_estado_final", "permite_edicion", "requiere_unidad"],
+          attributes: ["id", "nombre", "color_hex", "es_final", "es_inicial", "requiere_unidad"],
           where: { estado: 1 },
         },
       ],
