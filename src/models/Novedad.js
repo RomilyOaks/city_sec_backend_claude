@@ -243,6 +243,15 @@ const Novedad = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    usuario_cierre: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "usuarios",
+        key: "id",
+      },
+      comment: "Usuario que cerró/resolvió la novedad",
+    },
   },
   {
     tableName: "novedades_incidentes",
@@ -259,6 +268,7 @@ const Novedad = sequelize.define(
         fields: ["tipo_novedad_id", "subtipo_novedad_id"],
       },
       { name: "idx_novedad_usuario", fields: ["usuario_registro"] },
+      { name: "idx_novedad_usuario_cierre", fields: ["usuario_cierre"] },
     ],
   }
 );

@@ -1371,6 +1371,10 @@ Novedad.belongsTo(Usuario, {
   foreignKey: "usuario_despacho",
   as: "usuarioDespacho",
 });
+Novedad.belongsTo(Usuario, {
+  foreignKey: "usuario_cierre",
+  as: "usuarioCierre",
+});
 
 // Vehiculo
 Vehiculo.belongsTo(Usuario, {
