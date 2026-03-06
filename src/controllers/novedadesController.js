@@ -250,6 +250,7 @@ export const getNovedadById = async (req, res) => {
         { model: Usuario, as: "usuarioDespacho", required: false, attributes: ["id", "username", "email"] },
         { model: Usuario, as: "creadorNovedad", required: false, attributes: ["id", "username", "nombres", "apellidos"] },
         { model: Usuario, as: "actualizadorNovedad", required: false, attributes: ["id", "username", "nombres", "apellidos"] },
+        { model: Usuario, as: "usuarioCierre", required: false, attributes: ["id", "username", "nombres", "apellidos"] },
       ],
     });
 
