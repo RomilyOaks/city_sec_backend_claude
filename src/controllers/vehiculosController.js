@@ -122,7 +122,7 @@ export const getAllVehiculos = async (req, res) => {
       include: [
         {
           model: TipoVehiculo,
-          as: "tipo",
+          as: "tipoVehiculo",
           attributes: ["id", "nombre", "descripcion", "prefijo"],
         },
         {
@@ -303,7 +303,7 @@ export const getVehiculoById = async (req, res) => {
       include: [
         {
           model: TipoVehiculo,
-          as: "tipo",
+          as: "tipoVehiculo",
         },
         {
           model: UnidadOficina,
@@ -482,7 +482,7 @@ export const createVehiculo = async (req, res) => {
       include: [
         {
           model: TipoVehiculo,
-          as: "tipo",
+          as: "tipoVehiculo",
           attributes: ["id", "nombre", "descripcion", "prefijo"],
         },
         {
@@ -618,7 +618,7 @@ export const updateVehiculo = async (req, res) => {
       include: [
         {
           model: TipoVehiculo,
-          as: "tipo",
+          as: "tipoVehiculo",
           attributes: ["id", "nombre", "descripcion", "prefijo"],
         },
         {
@@ -933,11 +933,11 @@ export const getEstadisticasVehiculos = async (req, res) => {
       include: [
         {
           model: TipoVehiculo,
-          as: "tipo",
+          as: "tipoVehiculo",
           attributes: ["id", "nombre"],
         },
       ],
-      group: ["tipo.id"],
+      group: ["tipoVehiculo.id"],
       raw: false,
     });
 
