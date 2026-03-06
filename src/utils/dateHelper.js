@@ -34,40 +34,35 @@ const DEFAULT_TIMEZONE = process.env.APP_TIMEZONE || "America/Lima";
  * @param {string} timezone - Timezone IANA
  * @returns {string} "YYYY-MM-DD HH:mm:ss"
  */
-const formatDateTimeToString = (dateObj, timezone) => {
-  const options = {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  };
+/**
+ * Parsea DB_TIMEZONE (formato "+HH:MM" o "-HH:MM") a milisegundos de offset.
+ * Fallback a -5h (Perú/UTC-5) si la variable no está definida o tiene formato inválido.
+ */
+const parseDbTimezoneOffset = () => {
+  const tz = process.env.DB_TIMEZONE || "-05:00";
+  const match = tz.match(/^([+-])(\d{2}):(\d{2})$/);
+  if (!match) return -5 * 60 * 60 * 1000;
+  const sign = match[1] === "+" ? 1 : -1;
+  const hours = parseInt(match[2], 10);
+  const minutes = parseInt(match[3], 10);
+  return sign * (hours * 60 + minutes) * 60 * 1000;
+};
 
-  const formatter = new Intl.DateTimeFormat("en-CA", options);
-  const parts = formatter.formatToParts(dateObj);
-  const get = (type) => parts.find((p) => p.type === type)?.value || "00";
+const DB_TIMEZONE_OFFSET_MS = parseDbTimezoneOffset();
 
-  let hour = get("hour");
-  let year = get("year");
-  let month = get("month");
-  let day = get("day");
+const formatDateTimeToString = (dateObj) => {
+  // Aplicar offset desde DB_TIMEZONE para evitar dependencia de ICU en Alpine (Railway)
+  const localMs = dateObj.getTime() + DB_TIMEZONE_OFFSET_MS;
+  const local = new Date(localMs);
 
-  // Intl.DateTimeFormat con hour12:false puede retornar "24" en medianoche
-  // MySQL rechaza hora 24 — normalizar a "00" del día siguiente
-  if (hour === "24") {
-    hour = "00";
-    const nextDay = new Date(
-      Date.UTC(Number(year), Number(month) - 1, Number(day) + 1)
-    );
-    year = String(nextDay.getUTCFullYear());
-    month = String(nextDay.getUTCMonth() + 1).padStart(2, "0");
-    day = String(nextDay.getUTCDate()).padStart(2, "0");
-  }
+  const year = local.getUTCFullYear();
+  const month = String(local.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(local.getUTCDate()).padStart(2, "0");
+  const hour = String(local.getUTCHours()).padStart(2, "0");
+  const minute = String(local.getUTCMinutes()).padStart(2, "0");
+  const second = String(local.getUTCSeconds()).padStart(2, "0");
 
-  return `${year}-${month}-${day} ${hour}:${get("minute")}:${get("second")}`;
+  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 };
 
 /**
@@ -82,8 +77,8 @@ const formatDateTimeToString = (dateObj, timezone) => {
  * // En Railway (UTC 04:50) retorna "2026-01-21 23:50:00" (hora Perú)
  * const ahora = getNowInTimezone();
  */
-export const getNowInTimezone = (timezone = DEFAULT_TIMEZONE) => {
-  return formatDateTimeToString(new Date(), timezone);
+export const getNowInTimezone = () => {
+  return formatDateTimeToString(new Date());
 };
 
 /**
@@ -96,7 +91,7 @@ export const getNowInTimezone = (timezone = DEFAULT_TIMEZONE) => {
  * @param {string} timezone - Timezone IANA (default: America/Lima)
  * @returns {string} Fecha en formato "YYYY-MM-DD HH:mm:ss" (hora Perú)
  */
-export const convertToTimezone = (date, timezone = DEFAULT_TIMEZONE) => {
+export const convertToTimezone = (date) => {
   if (typeof date === "string") {
     // Si NO tiene Z ni offset timezone → ya es hora local (Perú), normalizar formato
     if (!date.endsWith("Z") && !/[+-]\d{2}:\d{2}$/.test(date)) {
@@ -107,11 +102,11 @@ export const convertToTimezone = (date, timezone = DEFAULT_TIMEZONE) => {
       }
       return normalized;
     }
-    // Tiene Z o offset → es UTC, convertir a Perú
-    return formatDateTimeToString(new Date(date), timezone);
+    // Tiene Z o offset → es UTC, aplicar offset de DB_TIMEZONE
+    return formatDateTimeToString(new Date(date));
   }
-  // Es objeto Date → convertir a Perú
-  return formatDateTimeToString(date, timezone);
+  // Es objeto Date → aplicar offset de DB_TIMEZONE
+  return formatDateTimeToString(date);
 };
 
 /**
@@ -135,19 +130,9 @@ export const rawDate = (dateStr, sequelizeInstance) => {
  * @param {string} timezone - Timezone IANA (default: America/Lima)
  * @returns {string} Hora en formato HH:MM:SS
  */
-export const getTimeInTimezone = (timezone = DEFAULT_TIMEZONE) => {
-  const now = new Date();
-
-  const options = {
-    timeZone: timezone,
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  };
-
-  const formatter = new Intl.DateTimeFormat("en-GB", options);
-  return formatter.format(now);
+export const getTimeInTimezone = () => {
+  const str = formatDateTimeToString(new Date());
+  return str.split(" ")[1];
 };
 
 /**
@@ -156,18 +141,9 @@ export const getTimeInTimezone = (timezone = DEFAULT_TIMEZONE) => {
  * @param {string} timezone - Timezone IANA (default: America/Lima)
  * @returns {string} Fecha en formato YYYY-MM-DD
  */
-export const getDateInTimezone = (timezone = DEFAULT_TIMEZONE) => {
-  const now = new Date();
-
-  const options = {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  };
-
-  const formatter = new Intl.DateTimeFormat("en-CA", options);
-  return formatter.format(now);
+export const getDateInTimezone = () => {
+  const str = formatDateTimeToString(new Date());
+  return str.split(" ")[0];
 };
 
 /**
@@ -177,22 +153,13 @@ export const getDateInTimezone = (timezone = DEFAULT_TIMEZONE) => {
  * @param {string} timezone - Timezone IANA (default: America/Lima)
  * @returns {string} Fecha formateada "DD/MM/YYYY HH:MM:SS"
  */
-export const formatDateInTimezone = (date, timezone = DEFAULT_TIMEZONE) => {
+export const formatDateInTimezone = (date) => {
   const dateObj = typeof date === "string" ? new Date(date) : date;
-
-  const options = {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  };
-
-  const formatter = new Intl.DateTimeFormat("es-PE", options);
-  return formatter.format(dateObj);
+  const str = formatDateTimeToString(dateObj);
+  // Convertir de YYYY-MM-DD HH:mm:ss a DD/MM/YYYY HH:MM:SS
+  const [datePart, timePart] = str.split(" ");
+  const [y, m, d] = datePart.split("-");
+  return `${d}/${m}/${y} ${timePart}`;
 };
 
 /**
@@ -201,15 +168,16 @@ export const formatDateInTimezone = (date, timezone = DEFAULT_TIMEZONE) => {
  * @param {string} timezone - Timezone IANA (default: America/Lima)
  * @returns {Object} Información de debug
  */
-export const getTimezoneDebugInfo = (timezone = DEFAULT_TIMEZONE) => {
+export const getTimezoneDebugInfo = () => {
   const now = new Date();
 
   return {
     servidor_utc: now.toISOString(),
-    timezone_configurada: timezone,
-    hora_local_calculada: getTimeInTimezone(timezone),
-    fecha_local_calculada: getDateInTimezone(timezone),
-    fecha_completa_local: formatDateInTimezone(now, timezone),
+    db_timezone_env: process.env.DB_TIMEZONE || "-05:00",
+    offset_ms_aplicado: DB_TIMEZONE_OFFSET_MS,
+    hora_local_calculada: getTimeInTimezone(),
+    fecha_local_calculada: getDateInTimezone(),
+    fecha_completa_local: formatDateInTimezone(now),
   };
 };
 
