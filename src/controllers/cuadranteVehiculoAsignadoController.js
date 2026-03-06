@@ -220,7 +220,7 @@ export const createAsignacion = async (req, res) => {
       include: [
         {
           model: TipoVehiculo,
-          as: "tipo",
+          as: "tipoVehiculo",
           attributes: ["id", "nombre"],
         },
       ],
@@ -388,7 +388,7 @@ export const updateAsignacion = async (req, res) => {
         include: [
           {
             model: TipoVehiculo,
-            as: "tipo",
+            as: "tipoVehiculo",
             attributes: ["id", "nombre"],
           },
         ],
@@ -411,14 +411,14 @@ export const updateAsignacion = async (req, res) => {
         include: [
           {
             model: TipoVehiculo,
-            as: "tipo",
+            as: "tipoVehiculo",
             attributes: ["id", "nombre"],
           },
         ],
       });
       
       if (cuadranteFinal && vehiculoFinal) {
-        const tipoVehiculoNombre = vehiculoFinal.tipo?.nombre || "vehículo";
+        const tipoVehiculoNombre = vehiculoFinal.tipoVehiculo?.nombre || "vehículo";
         observacionesFinales = `Se ha asignado el ${tipoVehiculoNombre} con placa ${vehiculoFinal.placa} al cuadrante ${cuadranteFinal.nombre} satisfactoriamente`;
       }
     }
@@ -670,7 +670,7 @@ export const getCuadrantesByVehiculoId = async (req, res) => {
           include: [
             {
               model: TipoVehiculo,
-              as: "tipo",
+              as: "tipoVehiculo",
               attributes: ["id", "nombre"],
             },
           ],
