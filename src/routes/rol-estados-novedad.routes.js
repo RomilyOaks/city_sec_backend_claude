@@ -49,7 +49,7 @@ router.use(verificarToken);
 router.get(
   "/rol/:rolId/estados",
   verificarRolesOPermisos(
-    ["super_admin", "admin", "supervisor", "operador", "consulta"],
+    ["super_admin", "admin", "supervisor", "operador", "consulta", "radio_operador"],
     []
   ),
   validarRolId,
