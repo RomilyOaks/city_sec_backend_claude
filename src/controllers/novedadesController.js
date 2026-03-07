@@ -65,6 +65,8 @@ export const getAllNovedades = async (req, res) => {
       tipo_novedad_id,
       origen_llamada,
       search,
+      created_by_username,
+      usuario_despacho_username,
       page = 1,
       limit = 50,
       sort,
@@ -116,6 +118,14 @@ export const getAllNovedades = async (req, res) => {
         { reportante_doc_identidad: { [Op.like]: `%${search}%` } },
       ];
     }
+
+    const creadorFilter = created_by_username
+      ? { username: { [Op.like]: `%${created_by_username}%` } }
+      : null;
+
+    const despachoFilter = usuario_despacho_username
+      ? { username: { [Op.like]: `%${usuario_despacho_username}%` } }
+      : null;
 
     const offset = (page - 1) * limit;
 
@@ -192,6 +202,18 @@ export const getAllNovedades = async (req, res) => {
           model: Vehiculo,
           as: "novedadVehiculo",
           attributes: ["id", "codigo_vehiculo", "placa"],
+        },
+        {
+          model: Usuario,
+          as: "creadorNovedad",
+          attributes: ["id", "username", "nombres", "apellidos"],
+          ...(creadorFilter ? { where: creadorFilter, required: true } : { required: false }),
+        },
+        {
+          model: Usuario,
+          as: "usuarioDespachoNovedad",
+          attributes: ["id", "username", "nombres", "apellidos"],
+          ...(despachoFilter ? { where: despachoFilter, required: true } : { required: false }),
         },
       ],
       order: orderClause,
