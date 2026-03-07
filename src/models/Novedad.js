@@ -269,6 +269,7 @@ const Novedad = sequelize.define(
       },
       { name: "idx_novedad_usuario", fields: ["usuario_registro"] },
       { name: "idx_novedad_usuario_cierre", fields: ["usuario_cierre"] },
+      { name: "idx_novedad_usuario_creacion", fields: ["created_by"] },
     ],
   }
 );
