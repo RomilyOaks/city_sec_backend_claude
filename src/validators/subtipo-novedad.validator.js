@@ -135,6 +135,30 @@ export const validarOrden = () =>
     .isInt({ min: 0, max: 999 })
     .withMessage("El orden debe ser un número entre 0 y 999");
 
+export const validarTiempoRespuesta = () =>
+  body("tiempo_respuesta_min")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("El tiempo de respuesta debe ser un número entero mayor a 0");
+
+export const validarRequiereAmbulancia = () =>
+  body("requiere_ambulancia")
+    .optional()
+    .isBoolean()
+    .withMessage("requiere_ambulancia debe ser true o false");
+
+export const validarRequiereBomberos = () =>
+  body("requiere_bomberos")
+    .optional()
+    .isBoolean()
+    .withMessage("requiere_bomberos debe ser true o false");
+
+export const validarRequierePNP = () =>
+  body("requiere_pnp")
+    .optional()
+    .isBoolean()
+    .withMessage("requiere_pnp debe ser true o false");
+
 // ==========================================
 // VALIDADORES DE QUERY
 // ==========================================
@@ -173,6 +197,10 @@ export const validateCreate = [
   validarColorHex(),
   validarIcono(),
   validarOrden(),
+  validarTiempoRespuesta(),
+  validarRequiereAmbulancia(),
+  validarRequiereBomberos(),
+  validarRequierePNP(),
   handleValidationErrors,
 ];
 
@@ -189,6 +217,10 @@ export const validateUpdate = [
   validarIcono(),
   validarOrden(),
   validarEstado(),
+  validarTiempoRespuesta(),
+  validarRequiereAmbulancia(),
+  validarRequiereBomberos(),
+  validarRequierePNP(),
   handleValidationErrors,
 ];
 
