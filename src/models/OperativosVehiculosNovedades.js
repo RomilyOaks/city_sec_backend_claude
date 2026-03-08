@@ -26,16 +26,6 @@ const OperativosVehiculosNovedades = sequelize.define(
         key: "id",
       },
     },
-    estado_novedad_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      defaultValue: 1,
-      references: {
-        model: "estados_novedad",
-        key: "id",
-      },
-      comment: "Estado actual de la novedad en este registro de atención",
-    },
     reportado: {
       type: DataTypes.DATE,
       allowNull: false,

@@ -376,7 +376,6 @@ export const createNovedadInCuadrante = async (req, res) => {
     if (existingAsignacion) {
       // Actualizar registro existente con nuevos datos del despacho
       novedadAsignada = await existingAsignacion.update({
-        estado_novedad_id: req.body.estado_novedad_id || 2,
         reportado: req.body.reportado || existingAsignacion.reportado,
         atendido: req.body.atendido,
         prioridad: req.body.prioridad || existingAsignacion.prioridad,
@@ -389,7 +388,6 @@ export const createNovedadInCuadrante = async (req, res) => {
       // Crear nuevo registro
       novedadAsignada = await OperativosVehiculosNovedades.create({
         novedad_id: req.body.novedad_id,
-        estado_novedad_id: req.body.estado_novedad_id || 2,
         reportado: req.body.reportado || new Date(),
         atendido: req.body.atendido,
         estado: req.body.estado || 1,
