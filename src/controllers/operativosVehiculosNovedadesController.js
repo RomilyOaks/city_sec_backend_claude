@@ -457,18 +457,22 @@ export const updateNovedadInCuadrante = async (req, res) => {
 
     await novedadAsignada.update(updateData);
 
-    // Si se envió num_personas_afectadas o perdidas_materiales_estimadas, actualizar también en la tabla Novedades principal
+    // Actualizar campos que pertenecen a la tabla novedades_incidentes (no a la pivot)
     if (novedadAsignada.novedad_id) {
       const updateNovedadData = {};
-      
+
       if (req.body.num_personas_afectadas !== undefined) {
         updateNovedadData.num_personas_afectadas = req.body.num_personas_afectadas;
       }
-      
+
       if (req.body.perdidas_materiales_estimadas !== undefined) {
         updateNovedadData.perdidas_materiales_estimadas = req.body.perdidas_materiales_estimadas;
       }
-      
+
+      if (req.body.fecha_llegada !== undefined) {
+        updateNovedadData.fecha_llegada = req.body.fecha_llegada;
+      }
+
       if (Object.keys(updateNovedadData).length > 0) {
         updateNovedadData.updated_by = updated_by;
         await Novedad.update(
