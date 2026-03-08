@@ -344,6 +344,23 @@ export const createNovedadInCuadrante = async (req, res) => {
       });
     }
 
+    // Verificar si ya existe esta asignación (evitar duplicados por índice único)
+    const existingAsignacion = await OperativosPersonalNovedades.findOne({
+      where: {
+        operativo_personal_cuadrante_id: cuadranteId,
+        novedad_id: req.body.novedad_id,
+        estado_registro: 1
+      }
+    });
+
+    if (existingAsignacion) {
+      return res.status(409).json({
+        status: "error",
+        message: "Esta novedad ya está asignada a este cuadrante",
+        data: existingAsignacion
+      });
+    }
+
     const newNovedadAsignada = await OperativosPersonalNovedades.create({
       novedad_id: req.body.novedad_id,
       estado_novedad_id: req.body.estado_novedad_id || 2,
