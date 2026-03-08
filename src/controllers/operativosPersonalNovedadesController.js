@@ -362,7 +362,7 @@ export const createNovedadInCuadrante = async (req, res) => {
         atendido: req.body.atendido,
         prioridad: req.body.prioridad || existingAsignacion.prioridad,
         observaciones: req.body.observaciones || existingAsignacion.observaciones,
-        acciones_tomadas: req.body.acciones_tomadas || existingAsignacion.acciones_tomadas,
+        acciones_tomadas: req.body.acciones_tomadas || existingAsignacion.acciones_tomadas || "",
         resultado: req.body.resultado || "PENDIENTE",
         updated_by: req.user?.id || req.user?.usuario_id,
       });
@@ -374,7 +374,7 @@ export const createNovedadInCuadrante = async (req, res) => {
         atendido: req.body.atendido,
         prioridad: req.body.prioridad || "MEDIA",
         observaciones: req.body.observaciones,
-        acciones_tomadas: req.body.acciones_tomadas,
+        acciones_tomadas: req.body.acciones_tomadas || "",
         resultado: req.body.resultado || "PENDIENTE",
         operativo_personal_cuadrante_id: cuadranteId,
         created_by,
