@@ -346,7 +346,7 @@ export const createNovedadInCuadrante = async (req, res) => {
 
     const newNovedadAsignada = await OperativosPersonalNovedades.create({
       novedad_id: req.body.novedad_id,
-      estado_novedad_id: req.body.estado_novedad_id || 1,
+      estado_novedad_id: req.body.estado_novedad_id || 2,
       reportado: req.body.reportado || new Date(),
       atendido: req.body.atendido,
       prioridad: req.body.prioridad || "MEDIA",
