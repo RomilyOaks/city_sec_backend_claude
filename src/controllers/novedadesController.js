@@ -43,12 +43,29 @@ import {
   PersonalSeguridad,
   RadioTetra,
   HistorialEstadoNovedad,
+  OperativosVehiculosNovedades,
+  OperativosPersonalNovedades,
   Usuario,
 } from "../models/index.js";
 import sequelize from "../config/database.js";
 import { Op } from "sequelize";
 import { DEFAULT_UBIGEO_CODE } from "../config/constants.js";
 import { getNowInTimezone, convertToTimezone, getDateInTimezone, rawDate } from "../utils/dateHelper.js";
+
+/**
+ * Mapear estado_id a resultado para tablas pivots
+ */
+const getResultadoFromEstadoId = (estadoId) => {
+  const mapa = {
+    1: "PENDIENTE",
+    2: "DESPACHADA", 
+    3: "EN_CURSO",
+    4: "ESCALADO",
+    5: "CANCELADO",
+    6: "RESUELTO"
+  };
+  return mapa[estadoId] || "PENDIENTE";
+};
 
 /**
  * Obtener todas las novedades con filtros
@@ -645,6 +662,33 @@ export const asignarRecursos = async (req, res) => {
     }
 
     await novedad.update(datosActualizacion, { transaction });
+
+    // Sincronizar estado en tablas pivots (operativos) si cambió el estado
+    if (datosActualizacion.estado_novedad_id && datosActualizacion.estado_novedad_id !== estadoAnteriorId) {
+      // Actualizar en operativos de vehículos
+      await OperativosVehiculosNovedades.update(
+        { 
+          estado_novedad_id: datosActualizacion.estado_novedad_id,
+          resultado: getResultadoFromEstadoId(datosActualizacion.estado_novedad_id)
+        },
+        { 
+          where: { novedad_id: id }, 
+          transaction 
+        }
+      );
+      
+      // Actualizar en operativos de personal
+      await OperativosPersonalNovedades.update(
+        { 
+          estado_novedad_id: datosActualizacion.estado_novedad_id,
+          resultado: getResultadoFromEstadoId(datosActualizacion.estado_novedad_id)
+        },
+        { 
+          where: { novedad_id: id }, 
+          transaction 
+        }
+      );
+    }
 
     // Crear registro en historial manualmente con datos del frontend
     // IMPORTANTE: Esto evita que el trigger cree un registro sin observaciones
