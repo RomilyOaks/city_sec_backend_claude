@@ -33,8 +33,7 @@ const {
   Cuadrante,
   PersonalSeguridad,
   Usuario,
-  Sector,
-  EstadoNovedad
+  Sector
 } = models;
 
 /**
@@ -215,11 +214,6 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
               attributes: ["id", "nombre"],
             },
           ],
-        },
-        {
-          model: EstadoNovedad,
-          as: "estadoNovedadVehiculo",
-          attributes: ["id", "nombre", "color_hex", "icono", "orden"]
         },
         {
           model: Usuario,
@@ -422,11 +416,6 @@ export const createNovedadInCuadrante = async (req, res) => {
             ],
           },
           {
-            model: EstadoNovedad,
-            as: "estadoNovedadVehiculo",
-            attributes: ["id", "nombre", "color_hex", "icono", "orden"]
-          },
-          {
             model: Usuario,
             as: "creadorOperativosVehiculosNovedades",
             attributes: ["id", "username", "nombres", "apellidos"]
@@ -552,11 +541,6 @@ export const updateNovedadInCuadrante = async (req, res) => {
                 attributes: ["id", "nombre"],
               },
             ],
-          },
-          {
-            model: EstadoNovedad,
-            as: "estadoNovedadVehiculo",
-            attributes: ["id", "nombre", "color_hex", "icono", "orden"]
           },
           {
             model: Usuario,
