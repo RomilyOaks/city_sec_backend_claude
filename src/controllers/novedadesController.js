@@ -176,7 +176,7 @@ export const getAllNovedades = async (req, res) => {
         {
           model: SubtipoNovedad,
           as: "novedadSubtipoNovedad",
-          attributes: ["id", "nombre", "prioridad"],
+          attributes: ["id", "nombre", "prioridad", "tiempo_respuesta_min"],
         },
         {
           model: EstadoNovedad,
@@ -258,7 +258,7 @@ export const getNovedadById = async (req, res) => {
       },
       include: [
         { model: TipoNovedad, as: "novedadTipoNovedad" },
-        { model: SubtipoNovedad, as: "novedadSubtipoNovedad" },
+        { model: SubtipoNovedad, as: "novedadSubtipoNovedad", attributes: ["id", "nombre", "tiempo_respuesta_min"] },
         { model: EstadoNovedad, as: "novedadEstado" },
         { model: Sector, as: "novedadSector" },
         { model: Cuadrante, as: "novedadCuadrante" },
@@ -436,7 +436,7 @@ export const createNovedad = async (req, res) => {
     const novedadCompleta = await Novedad.findByPk(nuevaNovedad.id, {
       include: [
         { model: TipoNovedad, as: "novedadTipoNovedad" },
-        { model: SubtipoNovedad, as: "novedadSubtipoNovedad" },
+        { model: SubtipoNovedad, as: "novedadSubtipoNovedad", attributes: ["id", "nombre", "tiempo_respuesta_min"] },
         { model: EstadoNovedad, as: "novedadEstado" },
         { model: Sector, as: "novedadSector" },
         { model: Cuadrante, as: "novedadCuadrante" },
@@ -522,7 +522,7 @@ export const updateNovedad = async (req, res) => {
     const novedadActualizada = await Novedad.findByPk(id, {
       include: [
         { model: TipoNovedad, as: "novedadTipoNovedad" },
-        { model: SubtipoNovedad, as: "novedadSubtipoNovedad" },
+        { model: SubtipoNovedad, as: "novedadSubtipoNovedad", attributes: ["id", "nombre", "tiempo_respuesta_min"] },
         { model: EstadoNovedad, as: "novedadEstado" },
         { model: Sector, as: "novedadSector" },
         { model: Cuadrante, as: "novedadCuadrante" },
