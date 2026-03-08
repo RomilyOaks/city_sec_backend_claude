@@ -58,7 +58,7 @@ import { getNowInTimezone, convertToTimezone, getDateInTimezone, rawDate } from 
 const getResultadoFromEstadoId = (estadoId) => {
   const mapa = {
     1: "PENDIENTE",
-    2: "DESPACHADA", 
+    2: "PENDIENTE",  // DESPACHADA usa resultado PENDIENTE hasta que se atienda
     3: "EN_CURSO",
     4: "ESCALADO",
     5: "CANCELADO",
