@@ -344,7 +344,7 @@ export const createNovedadInCuadrante = async (req, res) => {
       });
     }
 
-    // Verificar si ya existe esta asignación (evitar duplicados por índice único)
+    // Verificar si ya existe esta asignación (si existe, actualizarla)
     const existingAsignacion = await OperativosPersonalNovedades.findOne({
       where: {
         operativo_personal_cuadrante_id: cuadranteId,
@@ -353,30 +353,39 @@ export const createNovedadInCuadrante = async (req, res) => {
       }
     });
 
+    let novedadAsignada;
+
     if (existingAsignacion) {
-      return res.status(409).json({
-        status: "error",
-        message: "Esta novedad ya está asignada a este cuadrante",
-        data: existingAsignacion
+      // Actualizar registro existente con nuevos datos del despacho
+      novedadAsignada = await existingAsignacion.update({
+        estado_novedad_id: req.body.estado_novedad_id || 2,
+        reportado: req.body.reportado || existingAsignacion.reportado,
+        atendido: req.body.atendido,
+        prioridad: req.body.prioridad || existingAsignacion.prioridad,
+        observaciones: req.body.observaciones || existingAsignacion.observaciones,
+        acciones_tomadas: req.body.acciones_tomadas || existingAsignacion.acciones_tomadas,
+        resultado: req.body.resultado || "PENDIENTE",
+        updated_by: req.user?.id || req.user?.usuario_id,
+      });
+    } else {
+      // Crear nuevo registro
+      novedadAsignada = await OperativosPersonalNovedades.create({
+        novedad_id: req.body.novedad_id,
+        estado_novedad_id: req.body.estado_novedad_id || 2,
+        reportado: req.body.reportado || new Date(),
+        atendido: req.body.atendido,
+        prioridad: req.body.prioridad || "MEDIA",
+        observaciones: req.body.observaciones,
+        acciones_tomadas: req.body.acciones_tomadas,
+        resultado: req.body.resultado || "PENDIENTE",
+        operativo_personal_cuadrante_id: cuadranteId,
+        created_by,
       });
     }
 
-    const newNovedadAsignada = await OperativosPersonalNovedades.create({
-      novedad_id: req.body.novedad_id,
-      estado_novedad_id: req.body.estado_novedad_id || 2,
-      reportado: req.body.reportado || new Date(),
-      atendido: req.body.atendido,
-      prioridad: req.body.prioridad || "MEDIA",
-      observaciones: req.body.observaciones,
-      acciones_tomadas: req.body.acciones_tomadas,
-      resultado: req.body.resultado || "PENDIENTE",
-      operativo_personal_cuadrante_id: cuadranteId,
-      created_by,
-    });
-
-    // Obtener la novedad creada con toda la información completa
+    // Obtener la novedad creada/actualizada con toda la información completa
     const novedadCompleta = await OperativosPersonalNovedades.findByPk(
-      newNovedadAsignada.id,
+      novedadAsignada.id,
       {
         include: [
           {
