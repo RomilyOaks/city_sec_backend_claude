@@ -1046,7 +1046,7 @@ export const getHistorialVehiculo = async (req, res) => {
         {
           model: SubtipoNovedad,
           as: "novedadSubtipoNovedad", // Alias correcto según models/index.js
-          attributes: ["nombre", "descripcion"],
+          attributes: ["nombre", "descripcion", "tiempo_respuesta_min"],
         },
         {
           model: UnidadOficina,
