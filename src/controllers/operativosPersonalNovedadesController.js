@@ -36,7 +36,8 @@ const {
   Cuadrante,
   PersonalSeguridad,
   Usuario,
-  Sector
+  Sector,
+  EstadoNovedad
 } = models;
 
 /**
@@ -198,6 +199,11 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
           model: Novedad,
           as: "novedad",
           include: [
+            {
+              model: EstadoNovedad,
+              as: "novedadEstado",
+              attributes: ["id", "nombre", "color_hex", "icono", "orden"],
+            },
             {
               model: TipoNovedad,
               as: "novedadTipoNovedad",
