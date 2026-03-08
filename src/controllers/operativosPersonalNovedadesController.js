@@ -31,6 +31,8 @@ const {
   OperativosPersonal,
   OperativosTurno,
   Novedad,
+  TipoNovedad,
+  SubtipoNovedad,
   Cuadrante,
   PersonalSeguridad,
   Usuario,
@@ -196,6 +198,18 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
         {
           model: Novedad,
           as: "novedad",
+          include: [
+            {
+              model: TipoNovedad,
+              as: "novedadTipoNovedad",
+              attributes: ["id", "nombre"],
+            },
+            {
+              model: SubtipoNovedad,
+              as: "novedadSubtipoNovedad",
+              attributes: ["id", "nombre"],
+            },
+          ],
         },
         {
           model: EstadoNovedad,
@@ -351,6 +365,18 @@ export const createNovedadInCuadrante = async (req, res) => {
           {
             model: Novedad,
             as: "novedad",
+            include: [
+              {
+                model: TipoNovedad,
+                as: "novedadTipoNovedad",
+                attributes: ["id", "nombre"],
+              },
+              {
+                model: SubtipoNovedad,
+                as: "novedadSubtipoNovedad",
+                attributes: ["id", "nombre"],
+              },
+            ],
           },
           {
             model: EstadoNovedad,
@@ -441,6 +467,18 @@ export const updateNovedadInCuadrante = async (req, res) => {
           {
             model: Novedad,
             as: "novedad",
+            include: [
+              {
+                model: TipoNovedad,
+                as: "novedadTipoNovedad",
+                attributes: ["id", "nombre"],
+              },
+              {
+                model: SubtipoNovedad,
+                as: "novedadSubtipoNovedad",
+                attributes: ["id", "nombre"],
+              },
+            ],
           },
           {
             model: EstadoNovedad,
