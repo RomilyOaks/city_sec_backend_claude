@@ -116,9 +116,9 @@ export const getNovedadesDisponiblesByCuadrante = async (req, res) => {
           baja: novedades.filter(n => n.prioridad_actual === "BAJA").length,
         },
         porEstado: {
-          despachado: novedades.filter(n => n.estado_novedad_id === 2).length,
-          pendiente: novedades.filter(n => n.estado_novedad_id === 1).length,
-          atendido: novedades.filter(n => n.estado_novedad_id === 3).length,
+          despachado: novedades.filter(n => n.novedad.estado_novedad_id === 2).length,
+          pendiente: novedades.filter(n => n.novedad.estado_novedad_id === 1).length,
+          atendido: novedades.filter(n => n.novedad.estado_novedad_id === 3).length,
         }
       }
     });
