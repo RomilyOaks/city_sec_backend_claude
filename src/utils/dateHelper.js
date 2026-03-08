@@ -48,9 +48,9 @@ const parseDbTimezoneOffset = () => {
   return sign * (hours * 60 + minutes) * 60 * 1000;
 };
 
-// Detectar si estamos en Railway para evitar doble offset
-const isRailway = process.env.RAILWAY_ENVIRONMENT !== undefined || process.env.RAILWAY_SERVICE_NAME !== undefined;
-const DB_TIMEZONE_OFFSET_MS = isRailway ? 0 : parseDbTimezoneOffset();
+// Detectar si estamos en producción (Railway) para aplicar conversiones correctas
+const isProduction = process.env.NODE_ENV === "production";
+const DB_TIMEZONE_OFFSET_MS = isProduction ? 0 : parseDbTimezoneOffset();
 
 const formatDateTimeToString = (dateObj) => {
   // Aplicar offset desde DB_TIMEZONE para evitar dependencia de ICU en Alpine (Railway)
@@ -175,10 +175,9 @@ export const getTimezoneDebugInfo = () => {
 
   return {
     servidor_utc: now.toISOString(),
+    node_env: process.env.NODE_ENV,
     db_timezone_env: process.env.DB_TIMEZONE || "-05:00",
-    is_railway: isRailway,
-    railway_env: process.env.RAILWAY_ENVIRONMENT,
-    railway_service: process.env.RAILWAY_SERVICE_NAME,
+    is_production: isProduction,
     offset_ms_aplicado: DB_TIMEZONE_OFFSET_MS,
     hora_local_calculada: getTimeInTimezone(),
     fecha_local_calculada: getDateInTimezone(),
