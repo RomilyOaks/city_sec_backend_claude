@@ -605,7 +605,11 @@ export const asignarRecursos = async (req, res) => {
     }
 
     // Validar que re-despachos solo los haga el usuario que despachó originalmente
-    if (novedad.usuario_despacho && novedad.usuario_despacho !== req.user.id) {
+    // EXCEPTO para roles supervisor, admin, super_admin
+    const rolesPermitidos = ["supervisor", "admin", "super_admin"];
+    const esRolPermitido = req.user.rolSlugs && req.user.rolSlugs.some(rol => rolesPermitidos.includes(rol));
+    
+    if (!esRolPermitido && novedad.usuario_despacho && novedad.usuario_despacho !== req.user.id) {
       await transaction.rollback();
       return res.status(403).json({
         success: false,
