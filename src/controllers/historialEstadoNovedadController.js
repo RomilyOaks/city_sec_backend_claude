@@ -22,7 +22,6 @@ import {
   Usuario,
   Novedad,
 } from "../models/index.js";
-import { Op } from "sequelize";
 import { getNowInTimezone, rawDate } from "../utils/dateHelper.js";
 import sequelize from "../config/database.js";
 
@@ -95,13 +94,14 @@ export const getHistorialByNovedad = async (req, res) => {
  * {
  *   "estado_nuevo_id": 2,           // Opcional si solo se agregan observaciones
  *   "observaciones": "Texto...",    // Requerido
+ *   "fecha_cambio": "2026-03-08 19:49:04", // Opcional - hora Perú
  *   "metadata": {}                  // Opcional
  * }
  */
 export const createHistorialEstado = async (req, res) => {
   try {
     const { novedadId } = req.params;
-    const { estado_nuevo_id, observaciones, metadata } = req.body;
+    const { estado_nuevo_id, observaciones, metadata, fecha_cambio } = req.body;
 
     // Verificar que se envíen observaciones
     if (!observaciones || observaciones.trim() === "") {
@@ -154,7 +154,7 @@ export const createHistorialEstado = async (req, res) => {
       tiempo_en_estado_min: tiempoEstado,
       observaciones,
       metadata: metadata || null,
-      fecha_cambio: rawDate(getNowInTimezone(), sequelize),
+      fecha_cambio: fecha_cambio ? rawDate(fecha_cambio, sequelize) : rawDate(getNowInTimezone(), sequelize),
       created_by: req.user.id,
       updated_by: req.user.id,
     });

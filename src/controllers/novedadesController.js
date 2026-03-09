@@ -670,7 +670,7 @@ export const asignarRecursos = async (req, res) => {
           usuario_id: req.user.id,
           tiempo_en_estado_min: historial.tiempo_en_estado_min || null,
           observaciones: historial.observaciones || observaciones,
-          fecha_cambio: rawDate(historial.fecha_cambio ? convertToTimezone(historial.fecha_cambio) : getNowInTimezone(), sequelize),
+          fecha_cambio: historial.fecha_cambio ? rawDate(historial.fecha_cambio, sequelize) : rawDate(getNowInTimezone(), sequelize),
           metadata: historial.metadata || null,
           created_by: historial.created_by || req.user.id,
           updated_by: historial.updated_by || req.user.id,
