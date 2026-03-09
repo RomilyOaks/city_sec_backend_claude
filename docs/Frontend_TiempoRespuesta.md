@@ -10,54 +10,68 @@ Comparar el tiempo de respuesta real vs el tiempo estimado para cada novedad.
 ```javascript
 novedad: {
   // ... otros campos
+  tiempo_respuesta_min: 45,  // ⭐ Tiempo operativo real (minutos)
   novedadSubtipoNovedad: {
     id: 15,
     nombre: "Robo con violencia",
-    tiempo_respuesta_min: 30,  // ⭐ Tiempo estimado en minutos
+    tiempo_respuesta_min: 30,  // ⭐ Tiempo estimado por subtipo (minutos)
     // ... otros campos
   },
-  fecha_reporte: "2026-03-08 12:30:00",    // 🕐 Cuando se reportó
-  fecha_despacho: "2026-03-08 12:32:00",    // 🚀 Cuando se despachó
-  fecha_llegada: "2026-03-08 12:45:00",     // 📍 Cuando llegó al lugar
-  fecha_atencion: "2026-03-08 13:15:00",    // ✅ Cuando se resolvió
+  fecha_hora_reporte: "2026-03-08 12:30:00",    // 🕐 Cuando se reportó
+  fecha_despacho: "2026-03-08 12:32:00",        // 🚀 Cuando se despachó
+  fecha_llegada: "2026-03-08 12:45:00",         // 📍 Cuando llegó al lugar
+  fecha_cierre: "2026-03-08 13:15:00",          // ✅ Cuando se resolvió
 }
 ```
 
 ## ⏱️ **Cálculo de Tiempos**
 
-### **1. Tiempo de Respuesta Real:**
+### **1. Tiempo de Respuesta Real (calculado):**
 ```javascript
 const calcularTiempoRespuestaReal = (novedad) => {
-  if (!novedad.fecha_reporte || !novedad.fecha_llegada) return null;
+  if (!novedad.fecha_hora_reporte || !novedad.fecha_llegada) return null;
   
-  const reporte = new Date(novedad.fecha_reporte);
+  const reporte = new Date(novedad.fecha_hora_reporte);
   const llegada = new Date(novedad.fecha_llegada);
   
   return Math.floor((llegada - reporte) / (1000 * 60)); // minutos
 };
 ```
 
-### **2. Tiempo de Respuesta Estimado:**
+### **2. Tiempo de Respuesta Operativo (registrado):**
+```javascript
+const getTiempoOperativo = (novedad) => {
+  return novedad.tiempo_respuesta_min || null; // Campo directo de novedades_incidentes
+};
+```
+
+### **3. Tiempo de Respuesta Estimado (por subtipo):**
 ```javascript
 const getTiempoEstimado = (novedad) => {
   return novedad.novedadSubtipoNovedad?.tiempo_respuesta_min || null;
 };
 ```
 
-### **3. Comparación:**
+### **4. Comparación Completa:**
 ```javascript
 const analizarTiempoRespuesta = (novedad) => {
   const tiempoReal = calcularTiempoRespuestaReal(novedad);
+  const tiempoOperativo = getTiempoOperativo(novedad);
   const tiempoEstimado = getTiempoEstimado(novedad);
   
-  if (!tiempoReal || !tiempoEstimado) return null;
+  if (!tiempoReal) return null;
   
-  const diferencia = tiempoReal - tiempoEstimado;
-  const porcentajeExceso = (diferencia / tiempoEstimado) * 100;
+  const baseComparacion = tiempoOperativo || tiempoEstimado;
+  if (!baseComparacion) return null;
+  
+  const diferencia = tiempoReal - baseComparacion;
+  const porcentajeExceso = (diferencia / baseComparacion) * 100;
   
   return {
     tiempo_real: tiempoReal,
+    tiempo_operativo: tiempoOperativo,
     tiempo_estimado: tiempoEstimado,
+    base_usada: tiempoOperativo ? 'operativo' : 'estimado',
     diferencia_min: diferencia,
     porcentaje_exceso: porcentajeExceso,
     estado: diferencia <= 0 ? '✅ A tiempo' : '⏰ Retrasado',

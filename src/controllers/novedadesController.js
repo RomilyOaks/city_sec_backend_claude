@@ -167,6 +167,9 @@ export const getAllNovedades = async (req, res) => {
 
     const { count, rows } = await Novedad.findAndCountAll({
       where: whereClause,
+      attributes: {
+        include: ["tiempo_respuesta_min"] // Asegurar que este campo se incluya
+      },
       include: [
         {
           model: TipoNovedad,
@@ -255,6 +258,9 @@ export const getNovedadById = async (req, res) => {
         id,
         estado: 1,
         deleted_at: null,
+      },
+      attributes: {
+        include: ["tiempo_respuesta_min"] // Asegurar que este campo se incluya
       },
       include: [
         { model: TipoNovedad, as: "novedadTipoNovedad" },
@@ -434,6 +440,9 @@ export const createNovedad = async (req, res) => {
     await transaction.commit();
 
     const novedadCompleta = await Novedad.findByPk(nuevaNovedad.id, {
+      attributes: {
+        include: ["tiempo_respuesta_min"] // Asegurar que este campo se incluya
+      },
       include: [
         { model: TipoNovedad, as: "novedadTipoNovedad" },
         { model: SubtipoNovedad, as: "novedadSubtipoNovedad", attributes: ["id", "nombre", "tiempo_respuesta_min"] },
@@ -520,6 +529,9 @@ export const updateNovedad = async (req, res) => {
     await transaction.commit();
 
     const novedadActualizada = await Novedad.findByPk(id, {
+      attributes: {
+        include: ["tiempo_respuesta_min"] // Asegurar que este campo se incluya
+      },
       include: [
         { model: TipoNovedad, as: "novedadTipoNovedad" },
         { model: SubtipoNovedad, as: "novedadSubtipoNovedad", attributes: ["id", "nombre", "tiempo_respuesta_min"] },
