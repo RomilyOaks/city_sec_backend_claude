@@ -168,7 +168,7 @@ export const getAllNovedades = async (req, res) => {
     const { count, rows } = await Novedad.findAndCountAll({
       where: whereClause,
       attributes: {
-        include: ["tiempo_respuesta_min"] // Asegurar que este campo se incluya
+        include: ["tiempo_respuesta_min", "tiempo_respuesta_min_operativo"] // Asegurar que estos campos se incluyan
       },
       include: [
         {
@@ -260,7 +260,7 @@ export const getNovedadById = async (req, res) => {
         deleted_at: null,
       },
       attributes: {
-        include: ["tiempo_respuesta_min"] // Asegurar que este campo se incluya
+        include: ["tiempo_respuesta_min", "tiempo_respuesta_min_operativo"] // Asegurar que estos campos se incluyan
       },
       include: [
         { model: TipoNovedad, as: "novedadTipoNovedad" },
@@ -441,7 +441,7 @@ export const createNovedad = async (req, res) => {
 
     const novedadCompleta = await Novedad.findByPk(nuevaNovedad.id, {
       attributes: {
-        include: ["tiempo_respuesta_min"] // Asegurar que este campo se incluya
+        include: ["tiempo_respuesta_min", "tiempo_respuesta_min_operativo"] // Asegurar que estos campos se incluyan
       },
       include: [
         { model: TipoNovedad, as: "novedadTipoNovedad" },
@@ -530,7 +530,7 @@ export const updateNovedad = async (req, res) => {
 
     const novedadActualizada = await Novedad.findByPk(id, {
       attributes: {
-        include: ["tiempo_respuesta_min"] // Asegurar que este campo se incluya
+        include: ["tiempo_respuesta_min", "tiempo_respuesta_min_operativo"] // Asegurar que estos campos se incluyan
       },
       include: [
         { model: TipoNovedad, as: "novedadTipoNovedad" },

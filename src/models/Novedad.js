@@ -188,6 +188,11 @@ const Novedad = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    tiempo_respuesta_min_operativo: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "Tiempo de respuesta operativo real en minutos",
+    },
     turno: {
       type: DataTypes.ENUM("MAÑANA", "TARDE", "NOCHE"),
       allowNull: true,
