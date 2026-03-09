@@ -102,9 +102,9 @@ OperativosPersonalNovedades.init(
       comment: "Fecha y hora en que se reportó la atención",
     },
     atendido: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
       allowNull: true,
-      comment: "Fecha en que se completó la atención (solo fecha)",
+      comment: "Fecha y hora en que se completó la atención (DATETIME en BD)",
     },
 
     // =========================================
