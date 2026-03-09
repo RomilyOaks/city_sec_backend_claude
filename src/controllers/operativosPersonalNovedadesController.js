@@ -40,6 +40,8 @@ const {
   EstadoNovedad
 } = models;
 
+import { getNowInTimezone } from "../utils/dateHelper.js";
+
 /**
  * Obtener novedades disponibles para un cuadrante específico
  * GET /:cuadranteId/novedades/disponibles
@@ -472,8 +474,13 @@ export const updateNovedadInCuadrante = async (req, res) => {
       updated_by,
     };
 
+    // Si el resultado es RESUELTO y no viene atendido del frontend, auto-asignar fecha actual
     if (req.body.resultado === "RESUELTO" && !req.body.atendido) {
-      updateData.atendido = new Date();
+      updateData.atendido = getNowInTimezone();
+    }
+    // Si viene atendido del frontend, usarlo directamente (sin conversión)
+    else if (req.body.atendido) {
+      updateData.atendido = req.body.atendido;
     }
 
     await novedadAsignada.update(updateData);
