@@ -34,6 +34,7 @@ const OperativosVehiculosNovedades = sequelize.define(
     atendido: {
       type: DataTypes.DATE,
       allowNull: true,
+      comment: "Fecha y hora de atención (DATETIME en BD)",
     },
     estado: {
       type: DataTypes.TINYINT,
