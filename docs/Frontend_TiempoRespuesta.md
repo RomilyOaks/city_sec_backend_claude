@@ -10,7 +10,8 @@ Comparar el tiempo de respuesta real vs el tiempo estimado para cada novedad.
 ```javascript
 novedad: {
   // ... otros campos
-  tiempo_respuesta_min: 45,  // ⭐ Tiempo operativo real (minutos)
+  tiempo_respuesta_min: 45,           // ⭐ Tiempo estándar (minutos)
+  tiempo_respuesta_min_operativo: 52,  // ⭐ Tiempo operativo real (minutos)
   novedadSubtipoNovedad: {
     id: 15,
     nombre: "Robo con violencia",
@@ -41,37 +42,51 @@ const calcularTiempoRespuestaReal = (novedad) => {
 ### **2. Tiempo de Respuesta Operativo (registrado):**
 ```javascript
 const getTiempoOperativo = (novedad) => {
-  return novedad.tiempo_respuesta_min || null; // Campo directo de novedades_incidentes
+  return novedad.tiempo_respuesta_min_operativo || null; // Campo directo de novedades_incidentes
 };
 ```
 
-### **3. Tiempo de Respuesta Estimado (por subtipo):**
+### **3. Tiempo de Respuesta Estándar:**
+```javascript
+const getTiempoEstandar = (novedad) => {
+  return novedad.tiempo_respuesta_min || null; // Campo estándar de novedades_incidentes
+};
+```
+
+### **4. Tiempo de Respuesta Estimado (por subtipo):**
 ```javascript
 const getTiempoEstimado = (novedad) => {
   return novedad.novedadSubtipoNovedad?.tiempo_respuesta_min || null;
 };
 ```
 
-### **4. Comparación Completa:**
+### **5. Comparación Completa:**
 ```javascript
 const analizarTiempoRespuesta = (novedad) => {
   const tiempoReal = calcularTiempoRespuestaReal(novedad);
   const tiempoOperativo = getTiempoOperativo(novedad);
+  const tiempoEstandar = getTiempoEstandar(novedad);
   const tiempoEstimado = getTiempoEstimado(novedad);
   
   if (!tiempoReal) return null;
   
-  const baseComparacion = tiempoOperativo || tiempoEstimado;
+  // Prioridad: operativo > estándar > estimado
+  const baseComparacion = tiempoOperativo || tiempoEstandar || tiempoEstimado;
   if (!baseComparacion) return null;
   
   const diferencia = tiempoReal - baseComparacion;
   const porcentajeExceso = (diferencia / baseComparacion) * 100;
   
+  let baseUsada = 'estimado';
+  if (tiempoOperativo) baseUsada = 'operativo';
+  else if (tiempoEstandar) baseUsada = 'estándar';
+  
   return {
     tiempo_real: tiempoReal,
     tiempo_operativo: tiempoOperativo,
+    tiempo_estandar: tiempoEstandar,
     tiempo_estimado: tiempoEstimado,
-    base_usada: tiempoOperativo ? 'operativo' : 'estimado',
+    base_usada: baseUsada,
     diferencia_min: diferencia,
     porcentaje_exceso: porcentajeExceso,
     estado: diferencia <= 0 ? '✅ A tiempo' : '⏰ Retrasado',
