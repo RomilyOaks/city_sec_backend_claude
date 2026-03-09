@@ -95,14 +95,14 @@ export const getNowInTimezone = () => {
  */
 export const convertToTimezone = (date) => {
   if (typeof date === "string") {
-    // Si NO tiene Z ni offset timezone → ya es hora local (Perú), normalizar formato
+    // Si NO tiene Z ni offset timezone → ya es hora local (Perú), devolver tal cual
     if (!date.endsWith("Z") && !/[+-]\d{2}:\d{2}$/.test(date)) {
       // Normalizar a "YYYY-MM-DD HH:mm:ss" (quitar T si existe, agregar :ss si falta)
       let normalized = date.replace("T", " ");
       if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(normalized)) {
         normalized += ":00";
       }
-      return normalized;
+      return normalized; // ⭐ DEVOLVER DIRECTAMENTE SIN CONVERSIÓN UTC
     }
     // Tiene Z o offset → es UTC, aplicar offset de DB_TIMEZONE
     return formatDateTimeToString(new Date(date));

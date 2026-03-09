@@ -37,7 +37,8 @@ const {
   EstadoNovedad
 } = models;
 
-import { getNowInTimezone } from "../utils/dateHelper.js";
+import sequelize from "../config/database.js";
+import { getNowInTimezone, rawDate } from "../utils/dateHelper.js";
 
 /**
  * Obtener novedades disponibles para un cuadrante específico
@@ -507,9 +508,9 @@ export const updateNovedadInCuadrante = async (req, res) => {
       updateData.atendido = getNowInTimezone();
       updateData.estado = 2; // Marcar como atendido
     }
-    // Si viene atendido del frontend, usarlo directamente (sin conversión)
+    // Si viene atendido del frontend, usarlo directamente con rawDate (evita conversión UTC)
     else if (req.body.atendido) {
-      updateData.atendido = req.body.atendido;
+      updateData.atendido = rawDate(req.body.atendido, sequelize);
     }
 
     await novedadAsignada.update(updateData);
