@@ -311,6 +311,10 @@ export const getNovedadById = async (req, res) => {
  * NOTA IMPORTANTE: Este endpoint crea manualmente el primer registro en historial
  * porque el trigger solo se ejecuta en UPDATE, no en INSERT.
  * Todos los cambios posteriores de estado son manejados automáticamente por el trigger.
+ *
+ * CAMPO OPCIONAL:
+ * - observaciones_historial: Texto personalizado para el primer registro del historial
+ *   Si no se envía, usa "Novedad creada" por defecto.
  */
 export const createNovedad = async (req, res) => {
   const transaction = await sequelize.transaction();
@@ -337,6 +341,7 @@ export const createNovedad = async (req, res) => {
       direccion_id,
       radio_tetra_id,
       num_personas_afectadas,
+      observaciones_historial,
     } = req.body;
 
     const estadoInicial = await EstadoNovedad.findOne({
@@ -430,7 +435,7 @@ export const createNovedad = async (req, res) => {
         estado_anterior_id: null,
         estado_nuevo_id: estadoInicial.id,
         usuario_id: req.user.id,
-        observaciones: "Novedad creada",
+        observaciones: observaciones_historial || "Novedad creada",
         created_by: req.user.id,
         updated_by: req.user.id,
       },
