@@ -41,8 +41,8 @@ export const getEstadosActivos = async (req, res) => {
     });
   } catch (error) {
     const timestamp = new Date().toISOString();
-    console.error(`🔥 ERROR en getEstadosActivos:`, error.message);
-    console.error(`🔥 Error stack:`, error.stack);
+    console.error("🔥 ERROR en getEstadosActivos:", error.message);
+    console.error("🔥 Error stack:", error.stack);
     console.error(`🔥 [${timestamp}] DEBUG: ERROR en getEstadosActivos:`, error.message);
     console.error(`🔥 [${timestamp}] DEBUG: Error stack:`, error.stack);
     

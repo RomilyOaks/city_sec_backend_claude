@@ -36,6 +36,15 @@ const router = Router();
 
 router.use(verificarToken);
 
+// novedades.rol_estados.read
+// ==========================================
+// RBAC: Control de Accesos y Permisos
+// ==========================================
+const permisos = {
+  leer: "novedades.rol_estados.read",
+  
+};
+
 // ============================================
 // ENDPOINT ESPECIAL — accesible a todos los roles autenticados
 // Retorna los estados disponibles para un rol dado (uso del frontend en flujo de novedades)
@@ -49,8 +58,8 @@ router.use(verificarToken);
 router.get(
   "/rol/:rolId/estados",
   verificarRolesOPermisos(
-    ["super_admin", "admin", "supervisor", "operador", "consulta", "radio_operador"],
-    []
+    ["super_admin", "admin", "supervisor", "operador", "consulta"],
+    [permisos.leer]
   ),
   validarRolId,
   (req, res, next) => {
@@ -62,7 +71,7 @@ router.get(
 );
 
 // ============================================
-// RUTAS DE LECTURA — solo super_admin y admin
+// RUTAS DE LECTURA — solo super_admin, admin y slugs de novedades
 // ============================================
 
 /**
@@ -72,7 +81,7 @@ router.get(
  */
 router.get(
   "/",
-  verificarRolesOPermisos(["super_admin", "admin"], []),
+  verificarRolesOPermisos(["super_admin", "admin"], [permisos.leer]),
   validarListar,
   (req, res, next) => {
     // #swagger.tags = ['RolEstadosNovedad']
@@ -89,7 +98,7 @@ router.get(
  */
 router.get(
   "/:id",
-  verificarRolesOPermisos(["super_admin", "admin"], []),
+  verificarRolesOPermisos(["super_admin", "admin"], [permisos.leer]),
   validarId,
   (req, res, next) => {
     // #swagger.tags = ['RolEstadosNovedad']
@@ -110,11 +119,11 @@ router.get(
  * @body    {number} rol_id           - ID del rol
  * @body    {number} estado_novedad_id - ID del estado de novedad
  * @body    {string} descripcion      - Descripción opcional
- * @body    {string} observaciones    - Observaciones opcionales
+ * @body    {string} observaciones    - Observacion`es opcionales
  */
 router.post(
   "/",
-  verificarRolesOPermisos(["super_admin", "admin"], []),
+  verificarRolesOPermisos(["super_admin", "admin"]),
   validarCrear,
   (req, res, next) => {
     // #swagger.tags = ['RolEstadosNovedad']
@@ -131,7 +140,7 @@ router.post(
  */
 router.put(
   "/:id",
-  verificarRolesOPermisos(["super_admin", "admin"], []),
+  verificarRolesOPermisos(["super_admin", "admin"]),
   validarActualizar,
   (req, res, next) => {
     // #swagger.tags = ['RolEstadosNovedad']
@@ -149,7 +158,7 @@ router.put(
  */
 router.patch(
   "/:id/estado",
-  verificarRolesOPermisos(["super_admin", "admin"], []),
+  verificarRolesOPermisos(["super_admin", "admin"]),
   validarCambiarEstado,
   (req, res, next) => {
     // #swagger.tags = ['RolEstadosNovedad']
@@ -166,7 +175,7 @@ router.patch(
  */
 router.delete(
   "/:id",
-  verificarRolesOPermisos(["super_admin", "admin"], []),
+  verificarRolesOPermisos(["super_admin", "admin"]),
   validarId,
   (req, res, next) => {
     // #swagger.tags = ['RolEstadosNovedad']
