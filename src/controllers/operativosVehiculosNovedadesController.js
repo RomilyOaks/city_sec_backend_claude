@@ -34,11 +34,15 @@ const {
   PersonalSeguridad,
   Usuario,
   Sector,
-  EstadoNovedad
+  EstadoNovedad,
 } = models;
 
 import sequelize from "../config/database.js";
-import { getNowInTimezone, rawDate } from "../utils/dateHelper.js";
+import {
+  getNowInTimezone,
+  rawDate,
+  convertToTimezone,
+} from "../utils/dateHelper.js";
 
 /**
  * Obtener novedades disponibles para un cuadrante específico
@@ -60,46 +64,52 @@ export const getNovedadesDisponiblesByCuadrante = async (req, res) => {
 
     // Obtener novedades que pertenecen a este cuadrante
     const novedades = await Novedad.findAll({
-      where: { 
+      where: {
         cuadrante_id: cuadranteId,
-        estado: 1 // Solo novedades activas
+        estado: 1, // Solo novedades activas
       },
       include: [
         {
           model: models.TipoNovedad,
           as: "novedadTipoNovedad",
-          attributes: ["id", "nombre", "color_hex", "icono"]
+          attributes: ["id", "nombre", "color_hex", "icono"],
         },
         {
           model: models.SubtipoNovedad,
           as: "novedadSubtipoNovedad",
-          attributes: ["id", "nombre", "descripcion", "prioridad", "tiempo_respuesta_min"]
+          attributes: [
+            "id",
+            "nombre",
+            "descripcion",
+            "prioridad",
+            "tiempo_respuesta_min",
+          ],
         },
         {
           model: models.EstadoNovedad,
           as: "novedadEstado",
-          attributes: ["id", "nombre", "color_hex", "icono"]
+          attributes: ["id", "nombre", "color_hex", "icono"],
         },
         {
           model: Sector,
           as: "novedadSector",
-          attributes: ["id", "nombre", "sector_code"]
+          attributes: ["id", "nombre", "sector_code"],
         },
         {
           model: Cuadrante,
           as: "novedadCuadrante",
-          attributes: ["id", "nombre", "cuadrante_code"]
+          attributes: ["id", "nombre", "cuadrante_code"],
         },
         {
           model: Vehiculo,
           as: "novedadVehiculo",
-          attributes: ["id", "codigo_vehiculo", "placa"]
-        }
+          attributes: ["id", "codigo_vehiculo", "placa"],
+        },
       ],
       order: [
         ["prioridad_actual", "DESC"],
-        ["fecha_hora_reporte", "DESC"]
-      ]
+        ["fecha_hora_reporte", "DESC"],
+      ],
     });
 
     res.status(200).json({
@@ -109,22 +119,26 @@ export const getNovedadesDisponiblesByCuadrante = async (req, res) => {
       cuadranteInfo: {
         id: cuadrante.id,
         nombre: cuadrante.nombre,
-        codigo: cuadrante.codigo || cuadrante.cuadrante_code
+        codigo: cuadrante.codigo || cuadrante.cuadrante_code,
       },
       summary: {
         total: novedades.length,
         porPrioridad: {
-          urgente: novedades.filter(n => n.prioridad_actual === "URGENTE").length,
-          alta: novedades.filter(n => n.prioridad_actual === "ALTA").length,
-          media: novedades.filter(n => n.prioridad_actual === "MEDIA").length,
-          baja: novedades.filter(n => n.prioridad_actual === "BAJA").length,
+          urgente: novedades.filter((n) => n.prioridad_actual === "URGENTE")
+            .length,
+          alta: novedades.filter((n) => n.prioridad_actual === "ALTA").length,
+          media: novedades.filter((n) => n.prioridad_actual === "MEDIA").length,
+          baja: novedades.filter((n) => n.prioridad_actual === "BAJA").length,
         },
         porEstado: {
-          despachado: novedades.filter(n => n.novedad.estado_novedad_id === 2).length,
-          pendiente: novedades.filter(n => n.novedad.estado_novedad_id === 1).length,
-          atendido: novedades.filter(n => n.novedad.estado_novedad_id === 3).length,
-        }
-      }
+          despachado: novedades.filter((n) => n.novedad.estado_novedad_id === 2)
+            .length,
+          pendiente: novedades.filter((n) => n.novedad.estado_novedad_id === 1)
+            .length,
+          atendido: novedades.filter((n) => n.novedad.estado_novedad_id === 3)
+            .length,
+        },
+      },
     });
   } catch (error) {
     console.error("Error en getNovedadesDisponiblesByCuadrante:", error);
@@ -145,9 +159,8 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
   const { cuadranteId } = req.params;
 
   try {
-    const operativoVehiculoCuadrante = await OperativosVehiculosCuadrantes.findByPk(
-      cuadranteId,
-      {
+    const operativoVehiculoCuadrante =
+      await OperativosVehiculosCuadrantes.findByPk(cuadranteId, {
         include: [
           {
             model: OperativosVehiculos,
@@ -159,39 +172,38 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
                 include: [
                   {
                     model: Sector,
-                    as: "sector"
+                    as: "sector",
                   },
                   {
                     model: PersonalSeguridad,
-                    as: "operador"
+                    as: "operador",
                   },
                   {
                     model: PersonalSeguridad,
-                    as: "supervisor"
-                  }
-                ]
+                    as: "supervisor",
+                  },
+                ],
               },
               {
                 model: Vehiculo,
-                as: "vehiculo"
+                as: "vehiculo",
               },
               {
                 model: PersonalSeguridad,
-                as: "conductor"
+                as: "conductor",
               },
               {
                 model: PersonalSeguridad,
-                as: "copiloto"
-              }
-            ]
+                as: "copiloto",
+              },
+            ],
           },
           {
             model: Cuadrante,
-            as: "datosCuadrante"
-          }
-        ]
-      }
-    );
+            as: "datosCuadrante",
+          },
+        ],
+      });
 
     if (!operativoVehiculoCuadrante) {
       return res.status(404).json({
@@ -227,19 +239,19 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
         {
           model: Usuario,
           as: "creadorOperativosVehiculosNovedades",
-          attributes: ["id", "username", "nombres", "apellidos"]
+          attributes: ["id", "username", "nombres", "apellidos"],
         },
         {
           model: Usuario,
           as: "actualizadorOperativosVehiculosNovedades",
-          attributes: ["id", "username", "nombres", "apellidos"]
-        }
+          attributes: ["id", "username", "nombres", "apellidos"],
+        },
       ],
-      order: [["reportado", "DESC"]]
+      order: [["reportado", "DESC"]],
     });
 
     // Enriquecer la respuesta con información completa de los niveles superiores
-    const novedadesEnriquecidas = novedades.map(novedad => ({
+    const novedadesEnriquecidas = novedades.map((novedad) => ({
       ...novedad.toJSON(),
       cuadranteOperativo: {
         id: operativoVehiculoCuadrante.id,
@@ -250,18 +262,23 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
         cuadrante: operativoVehiculoCuadrante.datosCuadrante,
         operativoVehiculo: {
           id: operativoVehiculoCuadrante.operativoVehiculo.id,
-          kilometraje_inicio: operativoVehiculoCuadrante.operativoVehiculo.kilometraje_inicio,
-          kilometraje_fin: operativoVehiculoCuadrante.operativoVehiculo.kilometraje_fin,
-          nivel_combustible_inicio: operativoVehiculoCuadrante.operativoVehiculo.nivel_combustible_inicio,
-          nivel_combustible_fin: operativoVehiculoCuadrante.operativoVehiculo.nivel_combustible_fin,
+          kilometraje_inicio:
+            operativoVehiculoCuadrante.operativoVehiculo.kilometraje_inicio,
+          kilometraje_fin:
+            operativoVehiculoCuadrante.operativoVehiculo.kilometraje_fin,
+          nivel_combustible_inicio:
+            operativoVehiculoCuadrante.operativoVehiculo
+              .nivel_combustible_inicio,
+          nivel_combustible_fin:
+            operativoVehiculoCuadrante.operativoVehiculo.nivel_combustible_fin,
           hora_inicio: operativoVehiculoCuadrante.operativoVehiculo.hora_inicio,
           hora_fin: operativoVehiculoCuadrante.operativoVehiculo.hora_fin,
           turno: operativoVehiculoCuadrante.operativoVehiculo.turno,
           vehiculo: operativoVehiculoCuadrante.operativoVehiculo.vehiculo,
           conductor: operativoVehiculoCuadrante.operativoVehiculo.conductor,
-          copiloto: operativoVehiculoCuadrante.operativoVehiculo.copiloto
-        }
-      }
+          copiloto: operativoVehiculoCuadrante.operativoVehiculo.copiloto,
+        },
+      },
     }));
 
     // Crear objeto cuadranteInfo para incluir siempre en la respuesta
@@ -269,17 +286,21 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
       cuadrante: operativoVehiculoCuadrante.datosCuadrante,
       operativoVehiculo: {
         id: operativoVehiculoCuadrante.operativoVehiculo.id,
-        kilometraje_inicio: operativoVehiculoCuadrante.operativoVehiculo.kilometraje_inicio,
-        kilometraje_fin: operativoVehiculoCuadrante.operativoVehiculo.kilometraje_fin,
-        nivel_combustible_inicio: operativoVehiculoCuadrante.operativoVehiculo.nivel_combustible_inicio,
-        nivel_combustible_fin: operativoVehiculoCuadrante.operativoVehiculo.nivel_combustible_fin,
+        kilometraje_inicio:
+          operativoVehiculoCuadrante.operativoVehiculo.kilometraje_inicio,
+        kilometraje_fin:
+          operativoVehiculoCuadrante.operativoVehiculo.kilometraje_fin,
+        nivel_combustible_inicio:
+          operativoVehiculoCuadrante.operativoVehiculo.nivel_combustible_inicio,
+        nivel_combustible_fin:
+          operativoVehiculoCuadrante.operativoVehiculo.nivel_combustible_fin,
         hora_inicio: operativoVehiculoCuadrante.operativoVehiculo.hora_inicio,
         hora_fin: operativoVehiculoCuadrante.operativoVehiculo.hora_fin,
         turno: operativoVehiculoCuadrante.operativoVehiculo.turno,
         vehiculo: operativoVehiculoCuadrante.operativoVehiculo.vehiculo,
         conductor: operativoVehiculoCuadrante.operativoVehiculo.conductor,
-        copiloto: operativoVehiculoCuadrante.operativoVehiculo.copiloto
-      }
+        copiloto: operativoVehiculoCuadrante.operativoVehiculo.copiloto,
+      },
     };
 
     res.status(200).json({
@@ -290,23 +311,36 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
       summary: {
         total: novedadesEnriquecidas.length,
         porEstado: {
-          activas: novedadesEnriquecidas.filter(n => n.estado === 1).length,
-          inactivas: novedadesEnriquecidas.filter(n => n.estado === 0).length,
-          atendidas: novedadesEnriquecidas.filter(n => n.estado === 2).length,
+          activas: novedadesEnriquecidas.filter((n) => n.estado === 1).length,
+          inactivas: novedadesEnriquecidas.filter((n) => n.estado === 0).length,
+          atendidas: novedadesEnriquecidas.filter((n) => n.estado === 2).length,
         },
         porPrioridad: {
-          baja: novedadesEnriquecidas.filter(n => n.prioridad === "BAJA").length,
-          media: novedadesEnriquecidas.filter(n => n.prioridad === "MEDIA").length,
-          alta: novedadesEnriquecidas.filter(n => n.prioridad === "ALTA").length,
-          urgente: novedadesEnriquecidas.filter(n => n.prioridad === "URGENTE").length,
+          baja: novedadesEnriquecidas.filter((n) => n.prioridad === "BAJA")
+            .length,
+          media: novedadesEnriquecidas.filter((n) => n.prioridad === "MEDIA")
+            .length,
+          alta: novedadesEnriquecidas.filter((n) => n.prioridad === "ALTA")
+            .length,
+          urgente: novedadesEnriquecidas.filter(
+            (n) => n.prioridad === "URGENTE",
+          ).length,
         },
         porResultado: {
-          pendientes: novedadesEnriquecidas.filter(n => n.resultado === "PENDIENTE").length,
-          resueltas: novedadesEnriquecidas.filter(n => n.resultado === "RESUELTO").length,
-          escaladas: novedadesEnriquecidas.filter(n => n.resultado === "ESCALADO").length,
-          canceladas: novedadesEnriquecidas.filter(n => n.resultado === "CANCELADO").length,
-        }
-      }
+          pendientes: novedadesEnriquecidas.filter(
+            (n) => n.resultado === "PENDIENTE",
+          ).length,
+          resueltas: novedadesEnriquecidas.filter(
+            (n) => n.resultado === "RESUELTO",
+          ).length,
+          escaladas: novedadesEnriquecidas.filter(
+            (n) => n.resultado === "ESCALADO",
+          ).length,
+          canceladas: novedadesEnriquecidas.filter(
+            (n) => n.resultado === "CANCELADO",
+          ).length,
+        },
+      },
     });
   } catch (error) {
     console.error("Error en getAllNovedadesByCuadrante:", error);
@@ -329,25 +363,23 @@ export const createNovedadInCuadrante = async (req, res) => {
 
   try {
     // Validar que el cuadrante operativo exista
-    const operativoVehiculoCuadrante = await OperativosVehiculosCuadrantes.findByPk(
-      cuadranteId,
-      {
+    const operativoVehiculoCuadrante =
+      await OperativosVehiculosCuadrantes.findByPk(cuadranteId, {
         include: [
           {
             model: OperativosVehiculos,
             as: "operativoVehiculo",
             include: [
               { model: OperativosTurno, as: "turno" },
-              { model: Vehiculo, as: "vehiculo" }
-            ]
+              { model: Vehiculo, as: "vehiculo" },
+            ],
           },
           {
             model: Cuadrante,
-            as: "datosCuadrante"
-          }
-        ]
-      }
-    );
+            as: "datosCuadrante",
+          },
+        ],
+      });
 
     if (!operativoVehiculoCuadrante) {
       return res.status(404).json({
@@ -370,8 +402,8 @@ export const createNovedadInCuadrante = async (req, res) => {
       where: {
         operativo_vehiculo_cuadrante_id: cuadranteId,
         novedad_id: req.body.novedad_id,
-        estado: 1
-      }
+        estado: 1,
+      },
     });
 
     let novedadAsignada;
@@ -382,8 +414,12 @@ export const createNovedadInCuadrante = async (req, res) => {
         reportado: req.body.reportado || existingAsignacion.reportado,
         atendido: req.body.atendido,
         prioridad: req.body.prioridad || existingAsignacion.prioridad,
-        observaciones: req.body.observaciones || existingAsignacion.observaciones,
-        acciones_tomadas: req.body.acciones_tomadas || existingAsignacion.acciones_tomadas || "",
+        observaciones:
+          req.body.observaciones || existingAsignacion.observaciones,
+        acciones_tomadas:
+          req.body.acciones_tomadas ||
+          existingAsignacion.acciones_tomadas ||
+          "",
         resultado: req.body.resultado || "PENDIENTE",
         updated_by: req.user?.id || req.user?.usuario_id,
       });
@@ -432,10 +468,10 @@ export const createNovedadInCuadrante = async (req, res) => {
           {
             model: Usuario,
             as: "creadorOperativosVehiculosNovedades",
-            attributes: ["id", "username", "nombres", "apellidos"]
-          }
-        ]
-      }
+            attributes: ["id", "username", "nombres", "apellidos"],
+          },
+        ],
+      },
     );
 
     // Enriquecer la respuesta
@@ -450,18 +486,23 @@ export const createNovedadInCuadrante = async (req, res) => {
         cuadrante: operativoVehiculoCuadrante.datosCuadrante,
         operativoVehiculo: {
           id: operativoVehiculoCuadrante.operativoVehiculo.id,
-          kilometraje_inicio: operativoVehiculoCuadrante.operativoVehiculo.kilometraje_inicio,
-          kilometraje_fin: operativoVehiculoCuadrante.operativoVehiculo.kilometraje_fin,
-          nivel_combustible_inicio: operativoVehiculoCuadrante.operativoVehiculo.nivel_combustible_inicio,
-          nivel_combustible_fin: operativoVehiculoCuadrante.operativoVehiculo.nivel_combustible_fin,
+          kilometraje_inicio:
+            operativoVehiculoCuadrante.operativoVehiculo.kilometraje_inicio,
+          kilometraje_fin:
+            operativoVehiculoCuadrante.operativoVehiculo.kilometraje_fin,
+          nivel_combustible_inicio:
+            operativoVehiculoCuadrante.operativoVehiculo
+              .nivel_combustible_inicio,
+          nivel_combustible_fin:
+            operativoVehiculoCuadrante.operativoVehiculo.nivel_combustible_fin,
           hora_inicio: operativoVehiculoCuadrante.operativoVehiculo.hora_inicio,
           hora_fin: operativoVehiculoCuadrante.operativoVehiculo.hora_fin,
           turno: operativoVehiculoCuadrante.operativoVehiculo.turno,
           vehiculo: operativoVehiculoCuadrante.operativoVehiculo.vehiculo,
           conductor: operativoVehiculoCuadrante.operativoVehiculo.conductor,
-          copiloto: operativoVehiculoCuadrante.operativoVehiculo.copiloto
-        }
-      }
+          copiloto: operativoVehiculoCuadrante.operativoVehiculo.copiloto,
+        },
+      },
     };
 
     res.status(201).json({
@@ -512,7 +553,8 @@ export const updateNovedadInCuadrante = async (req, res) => {
     else if (req.body.atendido) {
       updateData.atendido = rawDate(req.body.atendido, sequelize);
     }
-
+    // If the request includes fecha_llegada for the pivot table itself,
+    // keep it as-is; associated Novedad record handled below.
     await novedadAsignada.update(updateData);
 
     // Actualizar campos que pertenecen a la tabla novedades_incidentes (no a la pivot)
@@ -520,65 +562,69 @@ export const updateNovedadInCuadrante = async (req, res) => {
       const updateNovedadData = {};
 
       if (req.body.num_personas_afectadas !== undefined) {
-        updateNovedadData.num_personas_afectadas = req.body.num_personas_afectadas;
+        updateNovedadData.num_personas_afectadas =
+          req.body.num_personas_afectadas;
       }
 
       if (req.body.perdidas_materiales_estimadas !== undefined) {
-        updateNovedadData.perdidas_materiales_estimadas = req.body.perdidas_materiales_estimadas;
+        updateNovedadData.perdidas_materiales_estimadas =
+          req.body.perdidas_materiales_estimadas;
       }
 
       if (req.body.fecha_llegada !== undefined) {
-        updateNovedadData.fecha_llegada = req.body.fecha_llegada;
+        // normalize to Perú timezone and prevent Sequelize from re‑converting
+        // (the main updateNovedadData object is later passed directly to
+        // Novedad.update which uses the global timezone config).
+        updateNovedadData.fecha_llegada = rawDate(
+          convertToTimezone(req.body.fecha_llegada),
+          sequelize,
+        );
       }
 
       if (Object.keys(updateNovedadData).length > 0) {
         updateNovedadData.updated_by = updated_by;
-        await Novedad.update(
-          updateNovedadData,
-          { where: { id: novedadAsignada.novedad_id } }
-        );
+        await Novedad.update(updateNovedadData, {
+          where: { id: novedadAsignada.novedad_id },
+        });
       }
     }
 
     // Obtener la novedad actualizada con información completa
-    const novedadActualizada = await OperativosVehiculosNovedades.findByPk(
-      id,
-      {
-        include: [
-          {
-            model: Novedad,
-            as: "novedad",
-            include: [
-              {
-                model: EstadoNovedad,
-                as: "novedadEstado",
-                attributes: ["id", "nombre", "color_hex", "icono", "orden"],
-              },
-              {
-                model: TipoNovedad,
-                as: "novedadTipoNovedad",
-                attributes: ["id", "nombre"],
-              },
-              {
-                model: SubtipoNovedad,
-                as: "novedadSubtipoNovedad",
-                attributes: ["id", "nombre"],
-              },
-            ],
-          },
-          {
-            model: Usuario,
-            as: "creadorOperativosVehiculosNovedades",
-            attributes: ["id", "username", "nombres", "apellidos"]
-          },
-          {
-            model: Usuario,
-            as: "actualizadorOperativosVehiculosNovedades",
-            attributes: ["id", "username", "nombres", "apellidos"]
-          }
-        ]
-      }
-    );
+    const novedadActualizada = await OperativosVehiculosNovedades.findByPk(id, {
+      include: [
+        {
+          model: Novedad,
+          as: "novedad",
+          include: [
+            {
+              model: EstadoNovedad,
+              as: "novedadEstado",
+              attributes: ["id", "nombre", "color_hex", "icono", "orden"],
+            },
+            {
+              model: TipoNovedad,
+              as: "novedadTipoNovedad",
+              attributes: ["id", "nombre"],
+            },
+            {
+              model: SubtipoNovedad,
+              as: "novedadSubtipoNovedad",
+              attributes: ["id", "nombre"],
+            },
+          ],
+        },
+        {
+          model: Usuario,
+          as: "creadorOperativosVehiculosNovedades",
+          attributes: ["id", "username", "nombres", "apellidos"],
+        },
+        {
+          model: Usuario,
+          as: "actualizadorOperativosVehiculosNovedades",
+          attributes: ["id", "username", "nombres", "apellidos"],
+        },
+      ],
+    });
 
     res.status(200).json({
       status: "success",
