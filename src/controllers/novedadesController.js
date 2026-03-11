@@ -665,6 +665,9 @@ export const asignarRecursos = async (req, res) => {
       datosActualizacion.estado_novedad_id = estadoDespacho.id;
     }
 
+    // Guardar updated_at original antes de actualizar para cálculo de tiempo
+    const updatedAtOriginal = novedad.updated_at;
+
     await novedad.update(datosActualizacion, { transaction });
 
     // Crear registro en historial manualmente con datos del frontend
@@ -677,7 +680,7 @@ export const asignarRecursos = async (req, res) => {
           estado_anterior_id: historial.estado_anterior_id || estadoAnteriorId,
           estado_nuevo_id: historial.estado_nuevo_id || datosActualizacion.estado_novedad_id,
           usuario_id: req.user.id,
-          tiempo_en_estado_min: historial.tiempo_en_estado_min || Math.floor((new Date() - new Date(novedad.updated_at)) / 60000),
+          tiempo_en_estado_min: historial.tiempo_en_estado_min || Math.floor((new Date() - new Date(updatedAtOriginal)) / 60000),
           observaciones: historial.observaciones || observaciones,
           fecha_cambio: historial.fecha_cambio ? rawDate(historial.fecha_cambio, sequelize) : rawDate(getNowInTimezone(), sequelize),
           metadata: historial.metadata || null,
