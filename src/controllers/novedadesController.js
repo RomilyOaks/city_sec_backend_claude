@@ -677,7 +677,7 @@ export const asignarRecursos = async (req, res) => {
           estado_anterior_id: historial.estado_anterior_id || estadoAnteriorId,
           estado_nuevo_id: historial.estado_nuevo_id || datosActualizacion.estado_novedad_id,
           usuario_id: req.user.id,
-          tiempo_en_estado_min: historial.tiempo_en_estado_min || null,
+          tiempo_en_estado_min: historial.tiempo_en_estado_min || Math.floor((new Date(getNowInTimezone()) - new Date(novedad.updated_at)) / 60000),
           observaciones: historial.observaciones || observaciones,
           fecha_cambio: historial.fecha_cambio ? rawDate(historial.fecha_cambio, sequelize) : rawDate(getNowInTimezone(), sequelize),
           metadata: historial.metadata || null,
