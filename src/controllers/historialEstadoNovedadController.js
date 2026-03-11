@@ -140,9 +140,9 @@ export const createHistorialEstado = async (req, res) => {
     }
 
     // Calcular tiempo en estado anterior usando timezone de Perú
-    const ahora = getNowInTimezone();
+    // Usar la fecha actual de la novedad que ya está en UTC correcto
     const tiempoEstado = Math.floor(
-      (new Date(ahora) - new Date(novedad.updated_at)) / 60000
+      (new Date() - new Date(novedad.updated_at)) / 60000
     );
 
     // Crear registro en historial
