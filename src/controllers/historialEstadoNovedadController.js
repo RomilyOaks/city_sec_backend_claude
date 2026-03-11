@@ -139,10 +139,17 @@ export const createHistorialEstado = async (req, res) => {
       }
     }
 
-    // Calcular tiempo en estado anterior usando timezone de Perú
-    // Usar la fecha actual de la novedad que ya está en UTC correcto
+    // Calcular tiempo en estado anterior
+    // Obtener el último registro del historial para usar su fecha correcta
+    const ultimoHistorial = await HistorialEstadoNovedad.findOne({
+      where: { novedad_id: novedadId },
+      order: [["created_at", "DESC"]],
+      attributes: ["created_at"],
+    });
+
+    const fechaBase = ultimoHistorial ? ultimoHistorial.created_at : novedad.created_at;
     const tiempoEstado = Math.floor(
-      (new Date() - new Date(novedad.updated_at)) / 60000
+      (new Date() - new Date(fechaBase)) / 60000
     );
 
     // Crear registro en historial
