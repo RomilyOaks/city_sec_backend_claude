@@ -142,7 +142,7 @@ export const createHistorialEstado = async (req, res) => {
     // Calcular tiempo en estado anterior usando timezone de Perú
     const ahora = getNowInTimezone();
     const tiempoEstado = Math.floor(
-      (ahora - new Date(novedad.updated_at)) / 60000
+      (new Date(ahora) - new Date(novedad.updated_at)) / 60000
     );
 
     // Crear registro en historial
