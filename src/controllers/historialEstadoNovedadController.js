@@ -139,18 +139,7 @@ export const createHistorialEstado = async (req, res) => {
       }
     }
 
-    // Calcular tiempo en estado anterior
-    // Obtener el último registro del historial para usar su fecha correcta
-    const ultimoHistorial = await HistorialEstadoNovedad.findOne({
-      where: { novedad_id: novedadId },
-      order: [["created_at", "DESC"]],
-      attributes: ["created_at"],
-    });
-
-    const fechaBase = ultimoHistorial ? ultimoHistorial.created_at : novedad.created_at;
-    const tiempoEstado = Math.floor(
-      (new Date() - new Date(fechaBase)) / 60000
-    );
+    // El cálculo de tiempo_en_estado_min ahora lo maneja automáticamente el trigger
 
     // Crear registro en historial
     const nuevoHistorial = await HistorialEstadoNovedad.create({
@@ -158,7 +147,7 @@ export const createHistorialEstado = async (req, res) => {
       estado_anterior_id: estadoAnteriorId,
       estado_nuevo_id: estadoNuevoId,
       usuario_id: req.user.id,
-      tiempo_en_estado_min: tiempoEstado,
+      tiempo_en_estado_min: null, // El trigger calculará automáticamente
       observaciones,
       metadata: metadata || null,
       fecha_cambio: fecha_cambio ? rawDate(fecha_cambio, sequelize) : rawDate(getNowInTimezone(), sequelize),
