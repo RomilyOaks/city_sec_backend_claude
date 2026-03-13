@@ -35,6 +35,7 @@ const {
 } = models;
 import { Op } from "sequelize";
 import { obtenerRadioDelPersonal } from "../services/operativosHelperService.js";
+import { convertToTimezone } from "../utils/dateHelper.js";
 
 /**
  * Obtener un vehículo operativo por ID (general)
@@ -678,6 +679,21 @@ export const createVehiculoInTurno = async (req, res) => {
 
 /**
  * Actualizar una asignación de vehículo en un turno
+ * 
+ * Campos actualizables:
+ * - conductor_id, copiloto_id, tipo_copiloto_id
+ * - radio_tetra_id, estado_operativo_id
+ * - kilometraje_inicio, hora_inicio, nivel_combustible_inicio
+ * - kilometraje_fin, hora_fin, nivel_combustible_fin
+ * - kilometraje_recarga, hora_recarga, combustible_litros, importe_recarga, nivel_combustible_recarga
+ * - observaciones
+ * 
+ * Validaciones:
+ * - kilometraje_fin >= kilometraje_inicio
+ * - Si hay kilometraje_recarga, debe haber hora_recarga (y viceversa)
+ * - kilometraje_recarga, combustible_litros, importe_recarga deben ser números positivos
+ * - nivel_combustible_recarga debe ser: LLENO, 3/4, 1/2, 1/4, RESERVA
+ * 
  * @param {object} req - Request object
  * @param {object} res - Response object
  */
@@ -730,6 +746,84 @@ export const updateVehiculoInTurno = async (req, res) => {
         return res.status(400).json({
           success: false,
           message: "Conductor ya fue asignado a otro vehículo en el mismo sector, turno y fecha de los Operativos",
+        });
+      }
+    }
+
+    // ========================================
+    // VALIDAR CAMPOS DE RECARGA DE COMBUSTIBLE
+    // ========================================
+    const {
+      kilometraje_recarga,
+      hora_recarga,
+      combustible_litros,
+      importe_recarga,
+      nivel_combustible_recarga
+    } = req.body;
+
+    // Validar que si hay kilometraje de recarga, también haya hora de recarga
+    if (kilometraje_recarga && !hora_recarga) {
+      return res.status(400).json({
+        success: false,
+        message: "Si especifica kilometraje de recarga, debe especificar la hora de recarga",
+      });
+    }
+
+    // Validar que si hay hora de recarga, también haya kilometraje de recarga
+    if (hora_recarga && !kilometraje_recarga) {
+      return res.status(400).json({
+        success: false,
+        message: "Si especifica hora de recarga, debe especificar el kilometraje de recarga",
+      });
+    }
+
+    // Validar formato de hora de recarga si se proporciona
+    if (hora_recarga) {
+      try {
+        convertToTimezone(hora_recarga);
+      } catch (error) {
+        return res.status(400).json({
+          success: false,
+          message: "Formato de hora de recarga inválido. Use formato YYYY-MM-DD HH:mm:ss",
+        });
+      }
+    }
+
+    // Validar valores numéricos
+    if (kilometraje_recarga !== undefined && kilometraje_recarga !== null) {
+      if (isNaN(kilometraje_recarga) || kilometraje_recarga < 0) {
+        return res.status(400).json({
+          success: false,
+          message: "El kilometraje de recarga debe ser un número positivo",
+        });
+      }
+    }
+
+    if (combustible_litros !== undefined && combustible_litros !== null) {
+      if (isNaN(combustible_litros) || combustible_litros <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Los litros de combustible deben ser un número mayor a cero",
+        });
+      }
+    }
+
+    if (importe_recarga !== undefined && importe_recarga !== null) {
+      if (isNaN(importe_recarga) || importe_recarga <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "El importe de recarga debe ser un número mayor a cero",
+        });
+      }
+    }
+
+    // Validar ENUM de nivel de combustible
+    if (nivel_combustible_recarga !== undefined && nivel_combustible_recarga !== null) {
+      const nivelesValidos = ["LLENO", "3/4", "1/2", "1/4", "RESERVA"];
+      if (!nivelesValidos.includes(nivel_combustible_recarga)) {
+        return res.status(400).json({
+          success: false,
+          message: `El nivel de combustible debe ser uno de: ${nivelesValidos.join(", ")}`,
         });
       }
     }
