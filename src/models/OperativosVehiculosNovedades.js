@@ -114,30 +114,5 @@ const OperativosVehiculosNovedades = sequelize.define(
 
 export default OperativosVehiculosNovedades;
 
-OperativosVehiculosNovedades.associate = (models) => {
-  // Asociación principal con el cuadrante operativo
-  OperativosVehiculosNovedades.belongsTo(models.OperativosVehiculosCuadrantes, {
-    foreignKey: "operativo_vehiculo_cuadrante_id",
-    as: "cuadranteOperativo",
-  });
-
-  // Asociación con la novedad
-  OperativosVehiculosNovedades.belongsTo(models.Novedad, {
-    foreignKey: "novedad_id",
-    as: "novedad",
-  });
-
-  // Asociaciones de auditoría
-  OperativosVehiculosNovedades.belongsTo(models.Usuario, {
-    foreignKey: "created_by",
-    as: "creadoPor",
-  });
-  OperativosVehiculosNovedades.belongsTo(models.Usuario, {
-    foreignKey: "updated_by",
-    as: "actualizadoPor",
-  });
-  OperativosVehiculosNovedades.belongsTo(models.Usuario, {
-    foreignKey: "deleted_by",
-    as: "eliminadoPor",
-  });
-};
+// NOTA: Las asociaciones se definen en src/models/index.js para evitar
+// duplicación y errores de alias. La asociación equivalentePersonal se agregó allí.

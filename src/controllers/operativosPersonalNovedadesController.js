@@ -27,6 +27,7 @@
 import models from "../models/index.js";
 const {
   OperativosPersonalNovedades,
+  OperativosVehiculosNovedades,
   OperativosPersonalCuadrantes,
   OperativosPersonal,
   OperativosTurno,
@@ -485,6 +486,35 @@ export const updateNovedadInCuadrante = async (req, res) => {
     }
 
     await novedadAsignada.update(updateData);
+
+    // ========================================
+    // SINCRONIZACIÓN CON EQUIVALENTE DE VEHÍCULO
+    // ========================================
+    // Si se actualiza el resultado, sincronizar con el vehículo asignado a la misma novedad y cuadrante
+    if (req.body.resultado && novedadAsignada.novedad_id) {
+      try {
+        const equivalenteVehiculo = await OperativosVehiculosNovedades.findOne({
+          where: {
+            novedad_id: novedadAsignada.novedad_id,
+            cuadrante_id: novedadAsignada.cuadrante_id,
+            atendido: null // Vehículo aún no ha llegado
+          }
+        });
+
+        if (equivalenteVehiculo) {
+          await equivalenteVehiculo.update({
+            resultado: req.body.resultado,
+            updated_by: updated_by,
+            updated_at: new Date() // Forzar actualización de auditoría
+          });
+          
+          console.log(`🔄 Sincronizado resultado con equivalente vehículo: ${equivalenteVehiculo.id}`);
+        }
+      } catch (syncError) {
+        console.warn("⚠️ Error en sincronización con vehículo:", syncError.message);
+        // No fallar el endpoint principal si hay error en sincronización
+      }
+    }
 
     // Obtener la novedad actualizada con información completa
     const novedadActualizada = await OperativosPersonalNovedades.findByPk(
