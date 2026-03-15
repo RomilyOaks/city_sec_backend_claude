@@ -100,7 +100,6 @@
 //=============================================
 
 import sequelize from "../config/database.js";
-import { Sequelize } from "sequelize";
 
 //=============================================
 // IMPORTAR MODELOS - CATÁLOGOS BASE
@@ -560,11 +559,18 @@ OperativosVehiculosCuadrantes.hasMany(OperativosVehiculosNovedades, {
 
 /**
  * Relación: Novedad -> OperativosVehiculosNovedades (One-to-Many)
- * NOTA: La relación belongsTo se define en el método associate() del modelo OperativosVehiculosNovedades
  */
 Novedad.hasMany(OperativosVehiculosNovedades, {
   foreignKey: "novedad_id",
   as: "operativosVehiculosNovedades",
+});
+
+/**
+ * Relación: OperativosVehiculosNovedades -> Novedad (Many-to-One)
+ */
+OperativosVehiculosNovedades.belongsTo(Novedad, {
+  foreignKey: "novedad_id",
+  as: "novedad",
 });
 
 /**
@@ -672,16 +678,8 @@ OperativosPersonalNovedades.belongsTo(OperativosPersonalCuadrantes, {
   as: "cuadranteOperativo",
 });
 
-// Asociación con equivalente de vehículo (misma novedad y cuadrante)
-OperativosPersonalNovedades.belongsTo(OperativosVehiculosNovedades, {
-  foreignKey: "novedad_id",
-  sourceKey: "novedad_id",
-  as: "equivalenteVehiculo",
-  required: false,
-  scope: {
-    cuadrante_id: Sequelize.col("OperativosPersonalNovedades.cuadrante_id"),
-  },
-});
+// NOTA: La asociación equivalenteVehiculo se manejará en los controllers
+// debido a que cuadrante_id está en la tabla intermedia operativos_personal_cuadrantes
 
 /**
  * Relación: Novedad -> OperativosPersonalNovedades (One-to-Many)
@@ -691,6 +689,9 @@ Novedad.hasMany(OperativosPersonalNovedades, {
   as: "operativosPersonalNovedades",
 });
 
+/**
+ * Relación: OperativosPersonalNovedades -> Novedad (Many-to-One)
+ */
 OperativosPersonalNovedades.belongsTo(Novedad, {
   foreignKey: "novedad_id",
   as: "novedad",
@@ -1577,16 +1578,8 @@ OperativosVehiculosNovedades.belongsTo(Usuario, {
   as: "eliminadorOperativosVehiculosNovedades",
 });
 
-// Asociación con equivalente de personal (misma novedad y cuadrante)
-OperativosVehiculosNovedades.belongsTo(OperativosPersonalNovedades, {
-  foreignKey: "novedad_id",
-  sourceKey: "novedad_id",
-  as: "equivalentePersonal",
-  required: false,
-  scope: {
-    cuadrante_id: Sequelize.col("OperativosVehiculosNovedades.cuadrante_id"),
-  },
-});
+// NOTA: La asociación equivalentePersonal se manejará en los controllers
+// debido a que cuadrante_id está en la tabla intermedia operativos_vehiculos_cuadrantes
 
 // ============================================================================
 // ASOCIACIONES: OperativosVehiculos -> Usuario (Auditoría)

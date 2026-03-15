@@ -24,6 +24,7 @@ import models from "../models/index.js";
 const {
   OperativosVehiculosNovedades,
   OperativosPersonalNovedades,
+  OperativosPersonalCuadrantes,
   OperativosVehiculosCuadrantes,
   OperativosVehiculos,
   OperativosTurno,
@@ -562,24 +563,43 @@ export const updateNovedadInCuadrante = async (req, res) => {
     // SINCRONIZACIÓN CON EQUIVALENTE DE PERSONAL
     // ========================================
     // Si se actualiza el resultado, sincronizar con el personal asignado a la misma novedad y cuadrante
-    if (req.body.resultado && novedadAsignada.novedad_id) {
+    if (req.body.resultado && novedadAsignada.novedad_id && novedadAsignada.operativo_vehiculo_cuadrante_id) {
       try {
-        const equivalentePersonal = await OperativosPersonalNovedades.findOne({
-          where: {
-            novedad_id: novedadAsignada.novedad_id,
-            cuadrante_id: novedadAsignada.cuadrante_id,
-            atendido: null // Personal aún no ha llegado
-          }
+        // Primero obtener el cuadrante_id desde la tabla intermedia
+        const cuadranteVehiculo = await OperativosVehiculosCuadrantes.findOne({
+          where: { id: novedadAsignada.operativo_vehiculo_cuadrante_id },
+          attributes: ["cuadrante_id"]
         });
 
-        if (equivalentePersonal) {
-          await equivalentePersonal.update({
-            resultado: req.body.resultado,
-            updated_by: updated_by,
-            updated_at: new Date() // Forzar actualización de auditoría
+        if (cuadranteVehiculo) {
+          // Buscar operativos personales en el mismo cuadrante
+          const personalesEnCuadrante = await OperativosPersonalCuadrantes.findAll({
+            where: { cuadrante_id: cuadranteVehiculo.cuadrante_id },
+            attributes: ["id"]
           });
-          
-          console.log(`🔄 Sincronizado resultado con equivalente personal: ${equivalentePersonal.id}`);
+
+          if (personalesEnCuadrante.length > 0) {
+            const cuadranteIds = personalesEnCuadrante.map(p => p.id);
+            
+            // Buscar equivalente de personal (misma novedad y cuadrante)
+            const equivalentePersonal = await OperativosPersonalNovedades.findOne({
+              where: {
+                novedad_id: novedadAsignada.novedad_id,
+                operativo_personal_cuadrante_id: cuadranteIds,
+                atendido: null // Personal aún no ha llegado
+              }
+            });
+
+            if (equivalentePersonal) {
+              await equivalentePersonal.update({
+                resultado: req.body.resultado,
+                updated_by: updated_by,
+                updated_at: new Date() // Forzar actualización de auditoría
+              });
+              
+              console.log(`🔄 Sincronizado resultado con equivalente personal: ${equivalentePersonal.id}`);
+            }
+          }
         }
       } catch (syncError) {
         console.warn("⚠️ Error en sincronización con personal:", syncError.message);
