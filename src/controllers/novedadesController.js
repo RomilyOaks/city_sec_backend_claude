@@ -292,7 +292,7 @@ export const getNovedadById = async (req, res) => {
               model: OperativosPersonalNovedades,
               as: "equivalentePersonal",
               required: false,
-              attributes: ["id", "resultado", "atendido", "estado"]
+              attributes: ["id", "resultado", "atendido"]
             }
           ]
         },
@@ -307,7 +307,7 @@ export const getNovedadById = async (req, res) => {
               model: OperativosVehiculosNovedades,
               as: "equivalenteVehiculo",
               required: false,
-              attributes: ["id", "resultado", "atendido", "estado"]
+              attributes: ["id", "resultado", "atendido"]
             }
           ]
         },
