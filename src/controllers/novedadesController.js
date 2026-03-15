@@ -43,6 +43,8 @@ import {
   PersonalSeguridad,
   RadioTetra,
   HistorialEstadoNovedad,
+  OperativosVehiculosNovedades,
+  OperativosPersonalNovedades,
   Usuario,
 } from "../models/index.js";
 import sequelize from "../config/database.js";
@@ -279,6 +281,36 @@ export const getNovedadById = async (req, res) => {
         { model: Usuario, as: "creadorNovedad", required: false, attributes: ["id", "username", "nombres", "apellidos"] },
         { model: Usuario, as: "actualizadorNovedad", required: false, attributes: ["id", "username", "nombres", "apellidos"] },
         { model: Usuario, as: "usuarioCierre", required: false, attributes: ["id", "username", "nombres", "apellidos"] },
+        
+        // Operativos de vehículos asignados con sus equivalentes de personal
+        {
+          model: OperativosVehiculosNovedades,
+          as: "vehiculosAsignados",
+          required: false,
+          include: [
+            {
+              model: OperativosPersonalNovedades,
+              as: "equivalentePersonal",
+              required: false,
+              attributes: ["id", "resultado", "atendido", "estado"]
+            }
+          ]
+        },
+        
+        // Operativos de personal asignado con sus equivalentes de vehículos
+        {
+          model: OperativosPersonalNovedades,
+          as: "personalAsignado",
+          required: false,
+          include: [
+            {
+              model: OperativosVehiculosNovedades,
+              as: "equivalenteVehiculo",
+              required: false,
+              attributes: ["id", "resultado", "atendido", "estado"]
+            }
+          ]
+        },
       ],
     });
 

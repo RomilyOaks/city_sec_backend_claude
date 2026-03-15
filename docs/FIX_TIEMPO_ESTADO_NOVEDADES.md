@@ -30,14 +30,14 @@ FOR EACH ROW
 BEGIN
   DECLARE fecha_anterior DATETIME;
   DECLARE tiempo_diferencia INT;
-  
+
   -- Buscar la fecha_cambio del registro anterior más reciente
   SELECT fecha_cambio INTO fecha_anterior
   FROM historial_estado_novedades
   WHERE novedad_id = NEW.novedad_id
   ORDER BY fecha_cambio DESC, id DESC
   LIMIT 1;
-  
+
   -- Calcular diferencia en minutos
   IF fecha_anterior IS NOT NULL THEN
     SET tiempo_diferencia = ROUND(
@@ -56,12 +56,12 @@ Se ejecutó una corrección de todos los valores existentes, creando una tabla t
 
 ```sql
 CREATE TEMPORARY TABLE temp_tiempo_correcciones AS
-SELECT 
+SELECT
   h1.id,
   ROUND(
-    TIMESTAMPDIFF(SECOND, 
-      (SELECT fecha_cambio FROM historial_estado_novedades h2 
-       WHERE h2.novedad_id = h1.novedad_id 
+    TIMESTAMPDIFF(SECOND,
+      (SELECT fecha_cambio FROM historial_estado_novedades h2
+       WHERE h2.novedad_id = h1.novedad_id
        AND h2.fecha_cambio < h1.fecha_cambio
        ORDER BY h2.fecha_cambio DESC, h2.id DESC
        LIMIT 1),
@@ -103,13 +103,16 @@ Los valores ahora son **correctos y consistentes** con los tiempos reales entre 
 ## Cómo Funciona
 
 ### Para Nuevas Novedades (Forward)
+
 Cada vez que se registra un cambio de estado:
+
 1. Se ejecuta el trigger BEFORE INSERT
 2. Busca el registro anterior del mismo novedad_id
 3. Calcula `TIMESTAMPDIFF(SECOND, fecha_anterior, fecha_nueva) / 60`
 4. Asigna al`tiempo_en_estado_min` del nuevo registro
 
 ### Para el Primer Estado
+
 El primer cambio de estado de una novedad siempre tendrá `tiempo_en_estado_min = NULL` (no hay tiempo anterior).
 
 ---

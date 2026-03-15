@@ -100,6 +100,7 @@
 //=============================================
 
 import sequelize from "../config/database.js";
+import { Sequelize } from "sequelize";
 
 //=============================================
 // IMPORTAR MODELOS - CATÁLOGOS BASE
@@ -669,6 +670,17 @@ OperativosPersonalCuadrantes.hasMany(OperativosPersonalNovedades, {
 OperativosPersonalNovedades.belongsTo(OperativosPersonalCuadrantes, {
   foreignKey: "operativo_personal_cuadrante_id",
   as: "cuadranteOperativo",
+});
+
+// Asociación con equivalente de vehículo (misma novedad y cuadrante)
+OperativosPersonalNovedades.belongsTo(OperativosVehiculosNovedades, {
+  foreignKey: "novedad_id",
+  sourceKey: "novedad_id",
+  as: "equivalenteVehiculo",
+  required: false,
+  scope: {
+    cuadrante_id: Sequelize.col("OperativosPersonalNovedades.cuadrante_id"),
+  },
 });
 
 /**
@@ -1563,6 +1575,17 @@ OperativosVehiculosNovedades.belongsTo(Usuario, {
 OperativosVehiculosNovedades.belongsTo(Usuario, {
   foreignKey: "deleted_by",
   as: "eliminadorOperativosVehiculosNovedades",
+});
+
+// Asociación con equivalente de personal (misma novedad y cuadrante)
+OperativosVehiculosNovedades.belongsTo(OperativosPersonalNovedades, {
+  foreignKey: "novedad_id",
+  sourceKey: "novedad_id",
+  as: "equivalentePersonal",
+  required: false,
+  scope: {
+    cuadrante_id: Sequelize.col("OperativosVehiculosNovedades.cuadrante_id"),
+  },
 });
 
 // ============================================================================

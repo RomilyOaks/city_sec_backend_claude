@@ -23,6 +23,7 @@
 import models from "../models/index.js";
 const {
   OperativosVehiculosNovedades,
+  OperativosPersonalNovedades,
   OperativosVehiculosCuadrantes,
   OperativosVehiculos,
   OperativosTurno,
@@ -556,6 +557,35 @@ export const updateNovedadInCuadrante = async (req, res) => {
     // If the request includes fecha_llegada for the pivot table itself,
     // keep it as-is; associated Novedad record handled below.
     await novedadAsignada.update(updateData);
+
+    // ========================================
+    // SINCRONIZACIÓN CON EQUIVALENTE DE PERSONAL
+    // ========================================
+    // Si se actualiza el resultado, sincronizar con el personal asignado a la misma novedad y cuadrante
+    if (req.body.resultado && novedadAsignada.novedad_id) {
+      try {
+        const equivalentePersonal = await OperativosPersonalNovedades.findOne({
+          where: {
+            novedad_id: novedadAsignada.novedad_id,
+            cuadrante_id: novedadAsignada.cuadrante_id,
+            atendido: null // Personal aún no ha llegado
+          }
+        });
+
+        if (equivalentePersonal) {
+          await equivalentePersonal.update({
+            resultado: req.body.resultado,
+            updated_by: updated_by,
+            updated_at: new Date() // Forzar actualización de auditoría
+          });
+          
+          console.log(`🔄 Sincronizado resultado con equivalente personal: ${equivalentePersonal.id}`);
+        }
+      } catch (syncError) {
+        console.warn("⚠️ Error en sincronización con personal:", syncError.message);
+        // No fallar el endpoint principal si hay error en sincronización
+      }
+    }
 
     // Actualizar campos que pertenecen a la tabla novedades_incidentes (no a la pivot)
     if (novedadAsignada.novedad_id) {

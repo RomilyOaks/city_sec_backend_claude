@@ -245,3 +245,6 @@ OperativosPersonalNovedades.init(
 );
 
 export default OperativosPersonalNovedades;
+
+// NOTA: Las asociaciones se definen en src/models/index.js para evitar
+// duplicación y errores de alias. La asociación equivalenteVehiculo se agregará allí.
