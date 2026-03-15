@@ -285,7 +285,7 @@ export const getNovedadById = async (req, res) => {
         // Operativos de vehículos asignados con sus equivalentes de personal
         {
           model: OperativosVehiculosNovedades,
-          as: "vehiculosAsignados",
+          as: "operativosVehiculosNovedades",
           required: false,
           include: [
             {
@@ -300,7 +300,7 @@ export const getNovedadById = async (req, res) => {
         // Operativos de personal asignado con sus equivalentes de vehículos
         {
           model: OperativosPersonalNovedades,
-          as: "personalAsignado",
+          as: "operativosPersonalNovedades",
           required: false,
           include: [
             {
