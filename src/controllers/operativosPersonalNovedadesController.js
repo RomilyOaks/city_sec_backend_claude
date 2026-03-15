@@ -29,6 +29,7 @@ const {
   OperativosPersonalNovedades,
   OperativosVehiculosNovedades,
   OperativosPersonalCuadrantes,
+  OperativosVehiculosCuadrantes,
   OperativosPersonal,
   OperativosTurno,
   Novedad,
@@ -491,24 +492,43 @@ export const updateNovedadInCuadrante = async (req, res) => {
     // SINCRONIZACIÓN CON EQUIVALENTE DE VEHÍCULO
     // ========================================
     // Si se actualiza el resultado, sincronizar con el vehículo asignado a la misma novedad y cuadrante
-    if (req.body.resultado && novedadAsignada.novedad_id) {
+    if (req.body.resultado && novedadAsignada.novedad_id && novedadAsignada.operativo_personal_cuadrante_id) {
       try {
-        const equivalenteVehiculo = await OperativosVehiculosNovedades.findOne({
-          where: {
-            novedad_id: novedadAsignada.novedad_id,
-            cuadrante_id: novedadAsignada.cuadrante_id,
-            atendido: null // Vehículo aún no ha llegado
-          }
+        // Primero obtener el cuadrante_id desde la tabla intermedia
+        const cuadrantePersonal = await OperativosPersonalCuadrantes.findOne({
+          where: { id: novedadAsignada.operativo_personal_cuadrante_id },
+          attributes: ["cuadrante_id"]
         });
 
-        if (equivalenteVehiculo) {
-          await equivalenteVehiculo.update({
-            resultado: req.body.resultado,
-            updated_by: updated_by,
-            updated_at: new Date() // Forzar actualización de auditoría
+        if (cuadrantePersonal) {
+          // Buscar operativos de vehículos en el mismo cuadrante
+          const vehiculosEnCuadrante = await OperativosVehiculosCuadrantes.findAll({
+            where: { cuadrante_id: cuadrantePersonal.cuadrante_id },
+            attributes: ["id"]
           });
-          
-          console.log(`🔄 Sincronizado resultado con equivalente vehículo: ${equivalenteVehiculo.id}`);
+
+          if (vehiculosEnCuadrante.length > 0) {
+            const cuadranteIds = vehiculosEnCuadrante.map(v => v.id);
+            
+            // Buscar equivalente de vehículo (misma novedad y cuadrante)
+            const equivalenteVehiculo = await OperativosVehiculosNovedades.findOne({
+              where: {
+                novedad_id: novedadAsignada.novedad_id,
+                operativo_vehiculo_cuadrante_id: cuadranteIds,
+                atendido: null // Vehículo aún no ha llegado
+              }
+            });
+
+            if (equivalenteVehiculo) {
+              await equivalenteVehiculo.update({
+                resultado: req.body.resultado,
+                updated_by: updated_by,
+                updated_at: new Date() // Forzar actualización de auditoría
+              });
+              
+              console.log(`🔄 Sincronizado resultado con equivalente vehículo: ${equivalenteVehiculo.id}`);
+            }
+          }
         }
       } catch (syncError) {
         console.warn("⚠️ Error en sincronización con vehículo:", syncError.message);

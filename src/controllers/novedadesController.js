@@ -43,8 +43,6 @@ import {
   PersonalSeguridad,
   RadioTetra,
   HistorialEstadoNovedad,
-  OperativosVehiculosNovedades,
-  OperativosPersonalNovedades,
   Usuario,
 } from "../models/index.js";
 import sequelize from "../config/database.js";
@@ -282,35 +280,8 @@ export const getNovedadById = async (req, res) => {
         { model: Usuario, as: "actualizadorNovedad", required: false, attributes: ["id", "username", "nombres", "apellidos"] },
         { model: Usuario, as: "usuarioCierre", required: false, attributes: ["id", "username", "nombres", "apellidos"] },
         
-        // Operativos de vehículos asignados con sus equivalentes de personal
-        {
-          model: OperativosVehiculosNovedades,
-          as: "operativosVehiculosNovedades",
-          required: false,
-          include: [
-            {
-              model: OperativosPersonalNovedades,
-              as: "equivalentePersonal",
-              required: false,
-              attributes: ["id", "resultado", "atendido"]
-            }
-          ]
-        },
-        
-        // Operativos de personal asignado con sus equivalentes de vehículos
-        {
-          model: OperativosPersonalNovedades,
-          as: "operativosPersonalNovedades",
-          required: false,
-          include: [
-            {
-              model: OperativosVehiculosNovedades,
-              as: "equivalenteVehiculo",
-              required: false,
-              attributes: ["id", "resultado", "atendido"]
-            }
-          ]
-        },
+        // NOTA: Los operativos con equivalentes se manejarán en endpoints específicos
+        // debido a que cuadrante_id está en las tablas intermedias
       ],
     });
 
