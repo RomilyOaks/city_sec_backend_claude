@@ -30,6 +30,7 @@ import {
   createNovedadInCuadrante,
   updateNovedadInCuadrante,
   deleteNovedadInCuadrante,
+  getEyePersonalNovedad,
 } from "../controllers/operativosPersonalNovedadesController.js";
 import {
   verificarToken,
@@ -162,6 +163,20 @@ router.delete(
   handleValidationErrors,
   registrarAuditoria("Eliminación de novedad atendida en cuadrante de personal operativo"),
   deleteNovedadInCuadrante
+);
+
+// EYE - Obtener datos completos para modal READ ONLY
+router.get(
+  "/eye/:id",
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], [permisos.read]),
+  [
+    param("id")
+      .isInt({ min: 1 })
+      .withMessage("El ID de la novedad debe ser un número entero positivo."),
+  ],
+  handleValidationErrors,
+  getEyePersonalNovedad
 );
 
 export default router;

@@ -526,7 +526,6 @@ export const updateNovedadInCuadrante = async (req, res) => {
                 updated_at: new Date() // Forzar actualización de auditoría
               });
               
-              console.log(`🔄 Sincronizado resultado con equivalente vehículo: ${equivalenteVehiculo.id}`);
             }
           }
         }
@@ -619,6 +618,91 @@ export const deleteNovedadInCuadrante = async (req, res) => {
       status: "error",
       message: "Error al eliminar la novedad",
       error: error.message,
+    });
+  }
+};
+
+/**
+ * EYE - Obtener datos completos del modal para consulta (READ ONLY)
+ * GET /eye/:id
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ */
+export const getEyePersonalNovedad = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+        
+    // Obtener el operativo con toda la información completa para el modal
+    const operativo = await OperativosPersonalNovedades.findByPk(id, {
+      include: [
+        {
+          model: Novedad,
+          as: "novedad",
+          attributes: [
+            "id", 
+            "novedad_code", 
+            "descripcion",
+            "fecha_llegada",
+            "num_personas_afectadas", 
+            "perdidas_materiales_estimadas"
+          ],
+          include: [
+            { model: EstadoNovedad, as: "novedadEstado", attributes: ["id", "nombre", "color_hex", "icono", "orden"] },
+            { model: TipoNovedad, as: "novedadTipoNovedad", attributes: ["id", "nombre", "color_hex", "icono"] },
+            { model: SubtipoNovedad, as: "novedadSubtipoNovedad", attributes: ["id", "nombre", "descripcion", "prioridad", "tiempo_respuesta_min"] },
+            { model: Sector, as: "novedadSector", attributes: ["id", "nombre", "sector_code"] },
+            { model: Cuadrante, as: "novedadCuadrante", attributes: ["id", "nombre", "cuadrante_code"] }
+          ]
+        },
+        {
+          model: OperativosPersonalCuadrantes,
+          as: "cuadranteOperativo",
+          include: [
+            {
+              model: OperativosPersonal,
+              as: "operativoPersonal",
+              include: [
+                { model: OperativosTurno, as: "turno", attributes: ["id", "turno", "fecha", "fecha_hora_inicio", "fecha_hora_fin"] },
+                { model: PersonalSeguridad, as: "personal", attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "codigo_acceso"] },
+                { model: PersonalSeguridad, as: "sereno", attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "codigo_acceso"] }
+              ]
+            },
+            { model: Cuadrante, as: "datosCuadrante", attributes: ["id", "nombre", "cuadrante_code", "sector_id"] }
+          ]
+        },
+        { model: Usuario, as: "creadorOperativosPersonalNovedades", attributes: ["id", "username", "nombres", "apellidos"] },
+        { model: Usuario, as: "actualizadorOperativosPersonalNovedades", attributes: ["id", "username", "nombres", "apellidos"] }
+      ]
+    });
+        
+    if (!operativo) {
+      return res.status(404).json({
+        status: "error",
+        message: "Operativo de personal no encontrado",
+      });
+    }
+        
+    // Enviar respuesta con metadatos para el modal READ ONLY
+    res.status(200).json({
+      status: "success",
+      message: "Datos del operativo obtenidos para consulta",
+      data: operativo,
+      meta: {
+        mode: "READ_ONLY",
+        permission: "operativos.personal.novedades.read",
+        modalType: "Actualizar Novedad",
+        eyeTriggered: true
+      }
+    });
+
+  } catch (error) {
+    console.error("👁️ EYE Personal: Error en getEyePersonalNovedad:", error);
+    console.error("👁️ EYE Personal: Stack trace:", error.stack);
+    res.status(500).json({
+      status: "error",
+      message: "Error interno del servidor",
+      error: error.message
     });
   }
 };
