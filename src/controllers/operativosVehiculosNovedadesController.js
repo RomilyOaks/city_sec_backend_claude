@@ -597,7 +597,6 @@ export const updateNovedadInCuadrante = async (req, res) => {
                 updated_at: new Date() // Forzar actualización de auditoría
               });
               
-              console.log(`🔄 Sincronizado resultado con equivalente personal: ${equivalentePersonal.id}`);
             }
           }
         }
@@ -725,6 +724,93 @@ export const deleteNovedadInCuadrante = async (req, res) => {
       status: "error",
       message: "Error al eliminar la novedad",
       error: error.message,
+    });
+  }
+};
+
+/**
+ * EYE - Obtener datos completos del modal para consulta (READ ONLY)
+ * GET /eye/:id
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ */
+export const getEyeVehiculoNovedad = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+        
+    // Obtener el operativo con toda la información completa para el modal
+    const operativo = await OperativosVehiculosNovedades.findByPk(id, {
+      include: [
+        {
+          model: Novedad,
+          as: "novedad",
+          attributes: [
+            "id", 
+            "novedad_code", 
+            "descripcion",
+            "fecha_llegada",
+            "num_personas_afectadas", 
+            "perdidas_materiales_estimadas"
+          ],
+          include: [
+            { model: EstadoNovedad, as: "novedadEstado", attributes: ["id", "nombre", "color_hex", "icono", "orden"] },
+            { model: TipoNovedad, as: "novedadTipoNovedad", attributes: ["id", "nombre", "color_hex", "icono"] },
+            { model: SubtipoNovedad, as: "novedadSubtipoNovedad", attributes: ["id", "nombre", "descripcion", "prioridad", "tiempo_respuesta_min"] },
+            { model: Sector, as: "novedadSector", attributes: ["id", "nombre", "sector_code"] },
+            { model: Cuadrante, as: "novedadCuadrante", attributes: ["id", "nombre", "cuadrante_code"] },
+            { model: Vehiculo, as: "novedadVehiculo", attributes: ["id", "codigo_vehiculo", "placa"] }
+          ]
+        },
+        {
+          model: OperativosVehiculosCuadrantes,
+          as: "cuadranteOperativo",
+          include: [
+            {
+              model: OperativosVehiculos,
+              as: "operativoVehiculo",
+              include: [
+                { model: OperativosTurno, as: "turno", attributes: ["id", "turno", "fecha", "fecha_hora_inicio", "fecha_hora_fin"] },
+                { model: Vehiculo, as: "vehiculo", attributes: ["id", "codigo_vehiculo", "placa", "marca", "modelo_vehiculo", "color_vehiculo"] },
+                { model: PersonalSeguridad, as: "conductor", attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "codigo_acceso"] },
+                { model: PersonalSeguridad, as: "copiloto", attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "codigo_acceso"] }
+              ]
+            },
+            { model: Cuadrante, as: "cuadrante", attributes: ["id", "nombre", "cuadrante_code", "sector_id"] }
+          ]
+        },
+        { model: Usuario, as: "creadorOperativosVehiculosNovedades", attributes: ["id", "username", "nombres", "apellidos"] },
+        { model: Usuario, as: "actualizadorOperativosVehiculosNovedades", attributes: ["id", "username", "nombres", "apellidos"] }
+      ]
+    });
+        
+    if (!operativo) {
+      return res.status(404).json({
+        status: "error",
+        message: "Operativo de vehículo no encontrado",
+      });
+    }
+        
+    // Enviar respuesta con metadatos para el modal READ ONLY
+    res.status(200).json({
+      status: "success",
+      message: "Datos del operativo obtenidos para consulta",
+      data: operativo,
+      meta: {
+        mode: "READ_ONLY",
+        permission: "operativos.vehiculos.novedades.read",
+        modalType: "Atender Novedad",
+        eyeTriggered: true
+      }
+    });
+
+  } catch (error) {
+    console.error("👁️ EYE Vehículo: Error en getEyeVehiculoNovedad:", error);
+    console.error("👁️ EYE Vehículo: Stack trace:", error.stack);
+    res.status(500).json({
+      status: "error",
+      message: "Error interno del servidor",
+      error: error.message
     });
   }
 };

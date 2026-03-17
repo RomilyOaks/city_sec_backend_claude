@@ -96,6 +96,7 @@ import operativosVehiculosRoutes from "./operativos-vehiculos.routes.js";
 import operativosVehiculosGeneralRoutes from "./operativos-vehiculos-general.routes.js";
 import operativosVehiculosCuadrantesRoutes from "./operativos-vehiculos-cuadrantes.routes.js";
 import operativosVehiculosNovedadesRoutes from "./operativos-vehiculos-novedades.routes.js";
+import operativosCombinadosRoutes from "./operativos-combinados.routes.js";
 
 // 🚶 Módulo Operativos Personal (Patrullaje a pie) ✅ v2.2.2
 import operativosPersonalRoutes from "./operativos-personal.routes.js";
@@ -392,6 +393,12 @@ router.use(
   "/operativos/:turnoId/vehiculos/:vehiculoId/cuadrantes/:cuadranteId/novedades",
   operativosVehiculosNovedadesRoutes
 );
+
+// Ruta directa para novedades de vehículos por cuadrante (sin turnoId/vehiculoId)
+router.use(
+  "/operativos/vehiculos/cuadrantes/:cuadranteId/novedades",
+  operativosVehiculosNovedadesRoutes
+);
 router.use(
   "/operativos/:turnoId/vehiculos/:vehiculoId/cuadrantes",
   operativosVehiculosCuadrantesRoutes
@@ -406,11 +413,29 @@ router.use(
   "/operativos/:turnoId/personal/:personalId/cuadrantes/:cuadranteId/novedades",
   operativosPersonalNovedadesRoutes
 );
+
+// Ruta directa para novedades de personal por cuadrante (sin turnoId/personalId)
+router.use(
+  "/operativos/personal/cuadrantes/:cuadranteId/novedades",
+  operativosPersonalNovedadesRoutes
+);
 // Rutas de personal operativo
 router.use("/operativos/:turnoId/personal", operativosPersonalRoutes);
 
 // Ruta general al final
 router.use("/operativos", operativosTurnoRoutes);
+
+/**
+ * @route   /operativos/combinados
+ * @desc    Consulta combinada de operativos de vehículos y personal
+ * @access  Supervisor, Admin, Operador, Consulta
+ * @features
+ *   - Obtiene ambos operativos para una misma novedad
+ *   - Analiza quién llenó qué campos
+ *   - Determina orden de llegada
+ *   - Estado general consolidado
+ */
+router.use("/operativos", operativosCombinadosRoutes);
 
 /**
  * @route   /catalogos

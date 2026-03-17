@@ -574,6 +574,14 @@ OperativosVehiculosNovedades.belongsTo(Novedad, {
 });
 
 /**
+ * Relación: OperativosVehiculosNovedades -> OperativosVehiculosCuadrantes (Many-to-One)
+ */
+OperativosVehiculosNovedades.belongsTo(OperativosVehiculosCuadrantes, {
+  foreignKey: "operativo_vehiculo_cuadrante_id",
+  as: "cuadranteOperativo",
+});
+
+/**
  * Relación: Novedad -> RadioTetra (Many-to-One)
  * Una novedad puede tener un radio TETRA asociado
  */
