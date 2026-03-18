@@ -549,7 +549,6 @@ export const updateNovedadInCuadrante = async (req, res) => {
     // Si el resultado es RESUELTO y no viene atendido del frontend, auto-asignar fecha actual
     if (req.body.resultado === "RESUELTO" && !req.body.atendido) {
       updateData.atendido = getNowInTimezone();
-      updateData.estado = 2; // Marcar como atendido
     }
     // Si viene atendido del frontend, usarlo directamente con rawDate (evita conversión UTC)
     else if (req.body.atendido) {
@@ -585,8 +584,7 @@ export const updateNovedadInCuadrante = async (req, res) => {
             const equivalentePersonal = await OperativosPersonalNovedades.findOne({
               where: {
                 novedad_id: novedadAsignada.novedad_id,
-                operativo_personal_cuadrante_id: cuadranteIds,
-                atendido: null // Personal aún no ha llegado
+                operativo_personal_cuadrante_id: cuadranteIds
               }
             });
 
@@ -609,6 +607,11 @@ export const updateNovedadInCuadrante = async (req, res) => {
     // Actualizar campos que pertenecen a la tabla novedades_incidentes (no a la pivot)
     if (novedadAsignada.novedad_id) {
       const updateNovedadData = {};
+
+      // 🐛 NUEVA LÓGICA - Actualizar estado_novedad_id cuando resultado = RESUELTO
+      if (req.body.resultado === "RESUELTO") {
+        updateNovedadData.estado_novedad_id = 6; // ID 6 = RESUELTA
+      }
 
       if (req.body.num_personas_afectadas !== undefined) {
         updateNovedadData.num_personas_afectadas =

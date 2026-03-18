@@ -237,7 +237,27 @@ app.use((req, res, next) => {
 });
 
 // ============================================
-// MIDDLEWARE 7: SECURITY HEADERS ADICIONALES
+// MIDDLEWARE 7: DEBUGGING - PETICIONES PUT
+// ============================================
+
+app.use((req, res, next) => {
+  if (req.method === "PUT" && req.path.includes("/operativos/")) {
+    console.log("🔍 DEBUG MIDDLEWARE - PETICIÓN PUT RECIBIDA:", {
+      method: req.method,
+      path: req.path,
+      url: req.url,
+      headers: req.headers,
+      body: req.body,
+      query: req.query,
+      params: req.params,
+      timestamp: new Date().toISOString()
+    });
+  }
+  next();
+});
+
+// ============================================
+// MIDDLEWARE 8: SECURITY HEADERS ADICIONALES
 // ============================================
 
 app.use((req, res, next) => {
