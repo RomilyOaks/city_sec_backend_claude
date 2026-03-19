@@ -44,6 +44,7 @@ const {
 
 import sequelize from "../config/database.js";
 import { getNowInTimezone, rawDate, convertToTimezone } from "../utils/dateHelper.js";
+import { crearHistorialOperativo } from "../utils/historialHelper.js";
 
 /**
  * Obtener novedades disponibles para un cuadrante específico
@@ -578,6 +579,33 @@ export const updateNovedadInCuadrante = async (req, res) => {
       } else {
         console.log("🔍 DEBUG PERSONAL - NO se ejecuta Novedad.update() - updateNovedadData está vacío");
       }
+    }
+
+    // ========================================
+    // CREAR HISTORIAL AUTOMÁTICO DE CAMBIOS
+    // ========================================
+    try {
+      const datosActualizacion = {
+        acciones_tomadas: req.body.acciones_tomadas || "",
+        resultado: req.body.resultado || "",
+        observaciones: req.body.observaciones || ""
+      };
+
+      // Solo crear historial si hay datos relevantes
+      if (datosActualizacion.acciones_tomadas.trim() || 
+          datosActualizacion.observaciones.trim() || 
+          datosActualizacion.resultado) {
+        
+        await crearHistorialOperativo({
+          novedadId: novedadAsignada.novedad_id,
+          usuarioId: updated_by,
+          datosActualizacion,
+          tipoOperativo: "PERSONAL"
+        });
+      }
+    } catch (historialError) {
+      console.warn("⚠️ Error al crear historial automático:", historialError.message);
+      // No fallar el endpoint principal si hay error en historial
     }
 
     // Obtener la novedad actualizada con información completa
