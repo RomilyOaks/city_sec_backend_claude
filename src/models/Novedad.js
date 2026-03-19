@@ -18,7 +18,7 @@ const Novedad = sequelize.define(
       autoIncrement: true,
     },
     novedad_code: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(15),
       allowNull: false,
       unique: true,
     },
