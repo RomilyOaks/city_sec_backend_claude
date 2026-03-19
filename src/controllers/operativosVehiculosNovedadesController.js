@@ -32,6 +32,7 @@ const {
   TipoNovedad,
   SubtipoNovedad,
   Vehiculo,
+  TipoVehiculo,
   Cuadrante,
   PersonalSeguridad,
   Usuario,
@@ -45,6 +46,7 @@ import {
   rawDate,
   convertToTimezone,
 } from "../utils/dateHelper.js";
+import { crearHistorialOperativo } from "../utils/historialHelper.js";
 
 /**
  * Obtener novedades disponibles para un cuadrante específico
@@ -639,6 +641,79 @@ export const updateNovedadInCuadrante = async (req, res) => {
           where: { id: novedadAsignada.novedad_id },
         });
       }
+    }
+
+    // ========================================
+    // CREAR HISTORIAL AUTOMÁTICO DE CAMBIOS
+    // ========================================
+    try {
+      const datosActualizacion = {
+        acciones_tomadas: req.body.acciones_tomadas || "",
+        resultado: req.body.resultado || "",
+        observaciones: req.body.observaciones || "",
+        fecha_llegada: req.body.fecha_llegada || null
+      };
+
+      // Solo crear historial si hay datos relevantes
+      if (datosActualizacion.acciones_tomadas.trim() || 
+          datosActualizacion.observaciones.trim() || 
+          datosActualizacion.resultado) {
+        
+        // Obtener datos del vehículo para el historial personalizado
+        let datosVehiculo = {};
+        try {
+          const cuadranteVehiculo = await OperativosVehiculosCuadrantes.findOne({
+            where: { id: novedadAsignada.operativo_vehiculo_cuadrante_id },
+            include: [
+              {
+                model: OperativosVehiculos,
+                as: "operativoVehiculo",
+                include: [
+                  {
+                    model: Vehiculo,
+                    as: "vehiculo",
+                    include: [
+                      {
+                        model: TipoVehiculo,
+                        as: "tipoVehiculo",
+                        attributes: ["nombre"]
+                      },
+                      {
+                        model: PersonalSeguridad,
+                        as: "conductorAsignado",
+                        attributes: ["nombres", "apellido_paterno"]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          });
+
+          if (cuadranteVehiculo?.operativoVehiculo?.vehiculo) {
+            const vehiculo = cuadranteVehiculo.operativoVehiculo.vehiculo;
+            datosVehiculo = {
+              tipo_vehiculo: vehiculo.tipoVehiculo?.nombre || "Vehículo",
+              placa: vehiculo.placa,
+              piloto_nombres: vehiculo.conductorAsignado?.nombres,
+              piloto_apellido_paterno: vehiculo.conductorAsignado?.apellido_paterno
+            };
+          }
+        } catch (error) {
+          console.warn("⚠️ Error obteniendo datos del vehículo para historial:", error.message);
+        }
+
+        await crearHistorialOperativo({
+          novedadId: novedadAsignada.novedad_id,
+          usuarioId: updated_by,
+          datosActualizacion,
+          tipoOperativo: "VEHICULO",
+          datosAdicionales: datosVehiculo
+        });
+      }
+    } catch (historialError) {
+      console.warn("⚠️ Error al crear historial automático:", historialError.message);
+      // No fallar el endpoint principal si hay error en historial
     }
 
     // Obtener la novedad actualizada con información completa
