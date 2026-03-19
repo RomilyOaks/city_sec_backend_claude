@@ -381,7 +381,7 @@ export const createNovedad = async (req, res) => {
     const siguienteNumero = ultimaNovedad
       ? parseInt(ultimaNovedad.novedad_code) + 1
       : 1;
-    const novedad_code = String(siguienteNumero).padStart(6, "0");
+    const novedad_code = String(siguienteNumero).padStart(10, "0");
 
     // Convertir fecha_hora_ocurrencia a string Perú (evita doble conversión de mysql2)
     const fechaOcurrenciaLocal = fecha_hora_ocurrencia
