@@ -45,8 +45,7 @@ export const getOperativosCombinadosPorNovedad = async (req, res) => {
   const { novedadId } = req.params;
 
   try {
-    console.log(`🔍 COMBINADO: Buscando operativos para novedad ID: ${novedadId}`);
-
+    
     // Validar que la novedad exista
     const novedad = await Novedad.findByPk(novedadId, {
       attributes: [
@@ -67,7 +66,6 @@ export const getOperativosCombinadosPorNovedad = async (req, res) => {
     });
 
     if (!novedad) {
-      console.log(`🔍 COMBINADO: Novedad ID ${novedadId} no encontrada`);
       return res.status(404).json({
         status: "error",
         message: "Novedad no encontrada",
@@ -125,9 +123,7 @@ export const getOperativosCombinadosPorNovedad = async (req, res) => {
       ]
     });
 
-    console.log(`🔍 COMBINADO: Operativo vehículo encontrado: ${operativoVehiculo ? "SÍ" : "NO"}`);
-    console.log(`🔍 COMBINADO: Operativo personal encontrado: ${operativoPersonal ? "SÍ" : "NO"}`);
-
+    
     // Analizar quién llenó qué campos
     const analisisCampos = analizarCamposLlenados(operativoVehiculo, operativoPersonal);
 
@@ -169,12 +165,10 @@ export const getOperativosCombinadosPorNovedad = async (req, res) => {
       }
     };
 
-    console.log(`🔍 COMBINADO: Enviando respuesta para novedad ID: ${novedadId}`);
     res.status(200).json(respuesta);
 
   } catch (error) {
-    console.error("🔍 COMBINADO: Error en getOperativosCombinadosPorNovedad:", error);
-    console.error("🔍 COMBINADO: Stack trace:", error.stack);
+    console.error("Error en getOperativosCombinadosPorNovedad:", error);
     res.status(500).json({
       status: "error",
       message: "Error interno del servidor",

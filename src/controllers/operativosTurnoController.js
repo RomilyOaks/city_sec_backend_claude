@@ -50,8 +50,7 @@ export const getAllTurnos = async (req, res) => {
       order = "DESC",
     } = req.query;
 
-    console.log("🐛 DEBUG: Construyendo whereClause");
-
+    
     const whereClause = {
       deleted_at: null,
       estado_registro: 1,
@@ -160,32 +159,16 @@ export const getAllTurnos = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("🐛 DEBUG: Error en getAllTurnos:");
-    console.error("🐛 DEBUG: URL:", req.originalUrl);
-    console.error("🐛 DEBUG: Method:", req.method);
-    console.error("🐛 DEBUG: Query params:", req.query);
-    console.error("🐛 DEBUG: Error message:", error.message);
-    console.error("🐛 DEBUG: Error name:", error.name);
-    console.error("🐛 DEBUG: Error stack:", error.stack);
+    console.error("Error en getAllTurnos:", error);
     
     // Si es un error de asociaciones de Sequelize, mostrar detalles adicionales
     if (error.name === "SequelizeAssociationError" || error.message.includes("associated")) {
-      console.error("🐛 DEBUG: Error de asociaciones detectado");
-      console.error("🐛 DEBUG: Error completo:", JSON.stringify(error, null, 2));
+      console.error("Error de asociaciones detectado");
     }
 
     // Intentar identificar qué include está causando el problema
     if (error.message.includes("PersonalSeguridad")) {
-      console.error("🐛 DEBUG: El error está relacionado con PersonalSeguridad");
-      console.error("🐛 DEBUG: Revisando includes de PersonalSeguridad...");
-      
-      // Mostrar todas las asociaciones de PersonalSeguridad disponibles
-      try {
-        console.log("🐛 DEBUG: Asociaciones de OperativosTurno:", Object.keys(OperativosTurno.associations));
-        console.log("🐛 DEBUG: Asociaciones de PersonalSeguridad:", Object.keys(PersonalSeguridad.associations));
-      } catch (assocError) {
-        console.error("🐛 DEBUG: Error al obtener asociaciones:", assocError.message);
-      }
+      console.error("Error relacionado con PersonalSeguridad");
     }
 
     res.status(500).json({

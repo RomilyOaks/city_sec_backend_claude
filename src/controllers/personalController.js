@@ -56,14 +56,7 @@ import sequelize from "../config/database.js";
  * GET /api/v1/personal
  */
 export const getAllPersonal = async (req, res) => {
-  const timestamp = new Date().toISOString();
-  
   try {
-    console.log(`🔥 [${timestamp}] DEBUG: getAllPersonal INICIO`);
-    console.log(`🔥 [${timestamp}] DEBUG: Query params:`, JSON.stringify(req.query, null, 2));
-    console.log(`🔥 [${timestamp}] DEBUG: Headers:`, JSON.stringify(req.headers, null, 2));
-    console.log(`🔥 [${timestamp}] DEBUG: Request URL: ${req.originalUrl}`);
-    
     const {
       page = 1,
       limit = 20,
@@ -79,7 +72,6 @@ export const getAllPersonal = async (req, res) => {
       order = "ASC",
     } = req.query;
 
-    console.log(`🔥 [${timestamp}] DEBUG: Parámetros procesados - page: ${page}, limit: ${limit}`);
 
     const whereClause = {
       estado: 1,
@@ -94,7 +86,6 @@ export const getAllPersonal = async (req, res) => {
         { doc_numero: { [Op.like]: `%${search}%` } },
         { codigo_acceso: { [Op.like]: `%${search}%` } },
       ];
-      console.log(`🔥 [${timestamp}] DEBUG: Aplicando búsqueda por: ${search}`);
     }
 
     if (cargo_id) whereClause.cargo_id = cargo_id;

@@ -10,6 +10,7 @@
 import { HistorialEstadoNovedad, Novedad, EstadoNovedad } from "../models/index.js";
 import { getNowInTimezone, rawDate } from "./dateHelper.js";
 import sequelize from "../config/database.js";
+import { Op } from "sequelize";
 
 /**
  * Crea un registro en historial_estado_novedades
@@ -60,6 +61,30 @@ export async function crearHistorialNovedad({
       if (!estadoNuevo) {
         throw new Error("Estado nuevo no encontrado");
       }
+    }
+
+    // Verificar si ya existe un historial IDÉNTICO en el último minuto para evitar duplicados
+    // Permitir diferentes tipos de operativo (PERSONAL vs VEHICULO) en el mismo minuto
+    const fechaLimite = new Date(Date.now() - 30000); // 30 segundos atrás (más preciso)
+    const existente = await HistorialEstadoNovedad.findOne({
+      where: {
+        novedad_id: novedadId,
+        estado_anterior_id: estadoAnteriorId,
+        estado_nuevo_id: estadoFinalId,
+        usuario_id: usuarioId,
+        created_at: {
+          [Op.gte]: fechaLimite
+        },
+        // Solo considerar duplicado si las observaciones son exactamente iguales
+        observaciones: observaciones.trim()
+      },
+      order: [["created_at", "DESC"]],
+      transaction
+    });
+
+    // Si ya existe un registro IDÉNTICO (misma observación), retornarlo
+    if (existente) {
+      return existente;
     }
 
     // Crear registro en historial
