@@ -673,7 +673,8 @@ export const asignarRecursos = async (req, res) => {
     // Crear registro en historial manualmente con datos del frontend
     // IMPORTANTE: Esto evita que el trigger cree un registro sin observaciones
     // El frontend envía el objeto 'historial' con todos los campos necesarios
-    if (historial && datosActualizacion.estado_novedad_id && datosActualizacion.estado_novedad_id !== estadoAnteriorId) {
+    // Si viene el flag _skip_historial, no crear historial (ya fue creado por el helper)
+    if (historial && datosActualizacion.estado_novedad_id && datosActualizacion.estado_novedad_id !== estadoAnteriorId && !datosActualizacion._skip_historial) {
       await HistorialEstadoNovedad.create(
         {
           novedad_id: id,

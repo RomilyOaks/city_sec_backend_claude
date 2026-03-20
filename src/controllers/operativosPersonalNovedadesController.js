@@ -472,9 +472,7 @@ export const updateNovedadInCuadrante = async (req, res) => {
       });
     }
 
-    console.log("🔍 DEBUG PERSONAL - req.body completo:", JSON.stringify(req.body, null, 2));
-    console.log(`🔍 DEBUG PERSONAL - novedadAsignada.novedad_id: ${novedadAsignada.novedad_id}`);
-    
+        
     // Si se está actualizando el resultado a "RESUELTO", actualizar la fecha de atención
     const updateData = {
       ...req.body,
@@ -543,11 +541,8 @@ export const updateNovedadInCuadrante = async (req, res) => {
       const updateNovedadData = {};
 
       // 🐛 NUEVA LÓGICA - Actualizar estado_novedad_id cuando resultado = RESUELTO
-      console.log(`🔍 DEBUG PERSONAL - req.body.resultado: ${req.body.resultado}`);
       if (req.body.resultado === "RESUELTO") {
-        console.log("🔍 DEBUG PERSONAL - Entró a condición RESUELTO");
         updateNovedadData.estado_novedad_id = 6; // ID 6 = RESUELTA
-        console.log(`🔍 DEBUG PERSONAL - updateNovedadData.estado_novedad_id: ${updateNovedadData.estado_novedad_id}`);
       }
 
       if (req.body.num_personas_afectadas !== undefined) {
@@ -566,18 +561,13 @@ export const updateNovedadInCuadrante = async (req, res) => {
         );
       }
 
-      console.log("🔍 DEBUG PERSONAL - updateNovedadData:", JSON.stringify(updateNovedadData, null, 2));
-      console.log(`🔍 DEBUG PERSONAL - Object.keys(updateNovedadData).length: ${Object.keys(updateNovedadData).length}`);
-      
       if (Object.keys(updateNovedadData).length > 0) {
-        console.log("🔍 DEBUG PERSONAL - Ejecutando Novedad.update()");
         updateNovedadData.updated_by = updated_by;
+        // Agregar flag para evitar doble creación de historial
+        updateNovedadData._skip_historial = true;
         const updateResult = await Novedad.update(updateNovedadData, {
           where: { id: novedadAsignada.novedad_id },
         });
-        console.log("🔍 DEBUG PERSONAL - Novedad.update() resultado:", updateResult);
-      } else {
-        console.log("🔍 DEBUG PERSONAL - NO se ejecuta Novedad.update() - updateNovedadData está vacío");
       }
     }
 

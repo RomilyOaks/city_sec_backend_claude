@@ -637,6 +637,8 @@ export const updateNovedadInCuadrante = async (req, res) => {
 
       if (Object.keys(updateNovedadData).length > 0) {
         updateNovedadData.updated_by = updated_by;
+        // Agregar flag para evitar doble creación de historial
+        updateNovedadData._skip_historial = true;
         await Novedad.update(updateNovedadData, {
           where: { id: novedadAsignada.novedad_id },
         });
