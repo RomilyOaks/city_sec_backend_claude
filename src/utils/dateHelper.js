@@ -48,9 +48,8 @@ const parseDbTimezoneOffset = () => {
   return sign * (hours * 60 + minutes) * 60 * 1000;
 };
 
-// Detectar si estamos en producción (Railway) para aplicar conversiones correctas
-const isProduction = process.env.NODE_ENV === "production";
-const DB_TIMEZONE_OFFSET_MS = isProduction ? 0 : parseDbTimezoneOffset();
+// Siempre usar offset de America/Lima (-5 horas) sin importar el entorno
+const DB_TIMEZONE_OFFSET_MS = parseDbTimezoneOffset();
 
 const formatDateTimeToString = (dateObj) => {
   // Aplicar offset desde DB_TIMEZONE para evitar dependencia de ICU en Alpine (Railway)
@@ -177,7 +176,7 @@ export const getTimezoneDebugInfo = () => {
     servidor_utc: now.toISOString(),
     node_env: process.env.NODE_ENV,
     db_timezone_env: process.env.DB_TIMEZONE || "-05:00",
-    is_production: isProduction,
+    is_production: process.env.NODE_ENV === "production",
     offset_ms_aplicado: DB_TIMEZONE_OFFSET_MS,
     hora_local_calculada: getTimeInTimezone(),
     fecha_local_calculada: getDateInTimezone(),
