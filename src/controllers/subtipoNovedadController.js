@@ -40,16 +40,19 @@ const auditoriaIncludes = [
     model: Usuario,
     as: "creadorSubtipoNovedad",
     attributes: ["id", "username", "nombres", "apellidos"],
+    paranoid: false, // Incluir usuarios eliminados
   },
   {
     model: Usuario,
     as: "actualizadorSubtipoNovedad",
     attributes: ["id", "username", "nombres", "apellidos"],
+    paranoid: false, // Incluir usuarios eliminados
   },
   {
     model: Usuario,
     as: "eliminadorSubtipoNovedad",
     attributes: ["id", "username", "nombres", "apellidos"],
+    paranoid: false, // Incluir usuarios eliminados
   },
 ];
 
@@ -413,11 +416,10 @@ const remove = async (req, res) => {
       });
     }
 
-    // Soft delete
-    await item.update({
-      estado: false,
-      deleted_at: new Date(),
-      deleted_by: req.user.id,
+    // Soft delete usando destroy() por paranoid: true
+    await item.destroy({
+      force: false, // Soft delete, no hard delete
+      user: req.user.id // Para auditoría personalizada
     });
 
     res.status(200).json({
@@ -465,7 +467,7 @@ const getEliminados = async (req, res) => {
       include: [
         {
           model: TipoNovedad,
-          as: "tipoNovedad",
+          as: "subtipoNovedadTipoNovedad",
           attributes: ["id", "nombre", "tipo_code"],
         },
         ...auditoriaIncludes,
@@ -505,7 +507,7 @@ const reactivar = async (req, res) => {
       include: [
         {
           model: TipoNovedad,
-          as: "tipoNovedad",
+          as: "subtipoNovedadTipoNovedad",
           attributes: ["id", "nombre", "tipo_code"],
         },
       ],

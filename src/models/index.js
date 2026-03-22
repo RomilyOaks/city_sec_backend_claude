@@ -757,7 +757,7 @@ OperativosPersonalNovedades.belongsTo(Usuario, {
  */
 TipoNovedad.hasMany(SubtipoNovedad, {
   foreignKey: "tipo_novedad_id",
-  as: "tipoNovedadSubtipoNovedad",
+  as: "subtipos", // Alias simple y consistente
 });
 
 SubtipoNovedad.belongsTo(TipoNovedad, {
