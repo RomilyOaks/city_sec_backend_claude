@@ -202,6 +202,16 @@ const SubtipoNovedad = sequelize.define(
 
         subtipoNovedad.subtipo_code = subtipoNovedad.subtipo_code.toUpperCase();
       },
+
+      // Antes de soft delete (paranoid mode)
+      beforeDestroy: async (subtipoNovedad, options) => {
+        // Si no es hard delete y se proporciona user para auditoría
+        if (!options.force && options.user) {
+          subtipoNovedad.deleted_by = options.user;
+          subtipoNovedad.estado = false;
+          await subtipoNovedad.save();
+        }
+      },
     },
   }
 );
