@@ -122,24 +122,58 @@ const create = async (req, res) => {
   try {
     const { nombre, descripcion, tipo_code, color, icono, orden } = req.body;
 
-    // Verificar código duplicado
-    if (tipo_code) {
-      const existente = await TipoNovedad.findOne({
-        where: { tipo_code, deleted_at: null },
+    // Generar código automáticamente si no se proporciona
+    let codigoFinal = tipo_code;
+    
+    if (!tipo_code) {
+      // Buscar el último código numérico (T001, T002, etc.)
+      const ultimoTipoNumerico = await TipoNovedad.findOne({
+        where: {
+          tipo_code: { [Op.regexp]: "^T[0-9]{3}$" },
+          deleted_at: null
+        },
+        order: [["tipo_code", "DESC"]],
+        attributes: ["tipo_code"],
       });
 
-      if (existente) {
-        return res.status(400).json({
-          success: false,
-          message: "Ya existe un tipo de novedad con este código",
-        });
+      console.log("🔍 Último tipo numérico encontrado:", ultimoTipoNumerico?.tipo_code);
+
+      if (ultimoTipoNumerico) {
+        const numeroActual = parseInt(
+          ultimoTipoNumerico.tipo_code.replace("T", "")
+        );
+        codigoFinal = `T${String(numeroActual + 1).padStart(3, "0")}`;
+      } else {
+        codigoFinal = "T001";
       }
+    }
+
+    console.log("🎯 Código final a usar:", codigoFinal);
+    console.log("📝 Datos recibidos:", { nombre, tipo_code: tipo_code, color });
+
+    // Verificar código duplicado
+    const existente = await TipoNovedad.findOne({
+      where: { tipo_code: codigoFinal.toUpperCase(), deleted_at: null },
+    });
+
+    console.log("🔎 Existente encontrado:", existente?.tipo_code);
+
+    if (existente) {
+      return res.status(400).json({
+        success: false,
+        message: "Ya existe un tipo de novedad con este código",
+        debug: {
+          codigo_generado: codigoFinal,
+          existente_tipo_code: existente.tipo_code,
+          existente_nombre: existente.nombre
+        }
+      });
     }
 
     const nuevo = await TipoNovedad.create({
       nombre,
       descripcion,
-      tipo_code,
+      tipo_code: codigoFinal.toUpperCase(),
       color,
       icono,
       orden,

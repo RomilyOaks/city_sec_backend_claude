@@ -5,7 +5,7 @@
  * Ejemplos: Delitos Contra el Patrimonio, Faltas, Accidentes de Tránsito, etc.
  */
 
-import { DataTypes } from "sequelize";
+import { DataTypes, Op } from "sequelize";
 
 import sequelize from "../config/database.js";
 
@@ -150,14 +150,19 @@ const TipoNovedad = sequelize.define(
       // Antes de crear, generar código automático si no se proporciona
       beforeCreate: async (tipoNovedad) => {
         if (!tipoNovedad.tipo_code) {
-          const ultimoTipo = await TipoNovedad.findOne({
+          // Buscar el último código numérico (T001, T002, etc.)
+          const ultimoTipoNumerico = await TipoNovedad.findOne({
+            where: {
+              tipo_code: { [Op.like]: "T[0-9][0-9][0-9]" },
+              deleted_at: null
+            },
             order: [["tipo_code", "DESC"]],
             attributes: ["tipo_code"],
           });
 
-          if (ultimoTipo && /^T\d+$/.test(ultimoTipo.tipo_code)) {
+          if (ultimoTipoNumerico) {
             const numeroActual = parseInt(
-              ultimoTipo.tipo_code.replace("T", "")
+              ultimoTipoNumerico.tipo_code.replace("T", "")
             );
             tipoNovedad.tipo_code = `T${String(numeroActual + 1).padStart(
               3,
@@ -168,7 +173,10 @@ const TipoNovedad = sequelize.define(
           }
         }
 
-        tipoNovedad.tipo_code = tipoNovedad.tipo_code.toUpperCase();
+        // Asegurar que el código esté en mayúsculas
+        if (tipoNovedad.tipo_code) {
+          tipoNovedad.tipo_code = tipoNovedad.tipo_code.toUpperCase();
+        }
       },
     },
   }
