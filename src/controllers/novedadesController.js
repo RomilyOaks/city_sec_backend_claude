@@ -597,7 +597,7 @@ export const asignarRecursos = async (req, res) => {
       perdidas_materiales_estimadas,
       historial  // ✅ NUEVO: Objeto historial del frontend
     } = req.body;
-
+    
     const novedad = await Novedad.findOne({
       where: { id, estado: 1, deleted_at: null },
       transaction,
@@ -635,6 +635,11 @@ export const asignarRecursos = async (req, res) => {
 
     const estadoAnteriorId = novedad.estado_novedad_id;
 
+    // Guardar estado original en cache global para que createHistorialEstado lo use
+    // Esto es clave porque el frontend llama a createHistorialEstado después
+    const cacheKey = `estado_original_${id}`;
+    global[cacheKey] = estadoAnteriorId;
+
     // Construir objeto de actualización
     const datosActualizacion = {
       updated_by: req.user.id,
@@ -662,34 +667,42 @@ export const asignarRecursos = async (req, res) => {
     }
     
     // Actualizar estado: usar el proporcionado explícitamente o el de despacho automático
-    if (estado_novedad_id) {
+    // PERO SOLO si el frontend NO está enviando historial por separado
+    if (estado_novedad_id && !historial) {
       datosActualizacion.estado_novedad_id = estado_novedad_id;
-    } else if (estadoDespacho) {
+    } else if (estadoDespacho && !historial) {
       datosActualizacion.estado_novedad_id = estadoDespacho.id;
     }
-
+    
     await novedad.update(datosActualizacion, { transaction });
 
     // Crear registro en historial manualmente con datos del frontend
     // IMPORTANTE: Esto evita que el trigger cree un registro sin observaciones
     // El frontend envía el objeto 'historial' con todos los campos necesarios
     // Si viene el flag _skip_historial, no crear historial (ya fue creado por el helper)
-    if (historial && datosActualizacion.estado_novedad_id && datosActualizacion.estado_novedad_id !== estadoAnteriorId && !datosActualizacion._skip_historial) {
-      await HistorialEstadoNovedad.create(
-        {
-          novedad_id: id,
-          estado_anterior_id: historial.estado_anterior_id || estadoAnteriorId,
-          estado_nuevo_id: historial.estado_nuevo_id || datosActualizacion.estado_novedad_id,
-          usuario_id: req.user.id,
-          tiempo_en_estado_min: null, // El trigger calculará automáticamente
-          observaciones: historial.observaciones || observaciones,
-          fecha_cambio: historial.fecha_cambio ? rawDate(historial.fecha_cambio, sequelize) : rawDate(getNowInTimezone(), sequelize),
-          metadata: historial.metadata || null,
-          created_by: historial.created_by || req.user.id,
-          updated_by: historial.updated_by || req.user.id,
-        },
-        { transaction }
-      );
+    if (historial && !datosActualizacion._skip_historial) {
+      // Si el frontend envía historial, usar el estado anterior del payload o el capturado
+      const estadoAnteriorFinal = historial.estado_anterior_id || estadoAnteriorId;
+      const estadoNuevoFinal = historial.estado_nuevo_id || estado_novedad_id;
+      
+      // Solo crear historial si realmente hay cambio de estado
+      if (estadoAnteriorFinal !== estadoNuevoFinal) {
+        await HistorialEstadoNovedad.create(
+          {
+            novedad_id: id,
+            estado_anterior_id: historial.estado_anterior_id || estadoAnteriorId,
+            estado_nuevo_id: historial.estado_nuevo_id || datosActualizacion.estado_novedad_id,
+            usuario_id: req.user.id,
+            tiempo_en_estado_min: null, // El trigger calculará automáticamente
+            observaciones: historial.observaciones || observaciones,
+            fecha_cambio: historial.fecha_cambio ? rawDate(historial.fecha_cambio, sequelize) : rawDate(getNowInTimezone(), sequelize),
+            metadata: historial.metadata || null,
+            created_by: historial.created_by || req.user.id,
+            updated_by: historial.updated_by || req.user.id,
+          },
+          { transaction }
+        );
+      }
     }
 
     await transaction.commit();
