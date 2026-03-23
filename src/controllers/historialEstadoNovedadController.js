@@ -93,6 +93,7 @@ export const getHistorialByNovedad = async (req, res) => {
  * PAYLOAD:
  * {
  *   "estado_nuevo_id": 2,           // Opcional si solo se agregan observaciones
+ *   "estado_anterior_id": 1,        // Opcional - estado anterior antes del cambio
  *   "observaciones": "Texto...",    // Requerido
  *   "fecha_cambio": "2026-03-08 19:49:04", // Opcional - hora Perú
  *   "metadata": {}                  // Opcional
@@ -101,8 +102,8 @@ export const getHistorialByNovedad = async (req, res) => {
 export const createHistorialEstado = async (req, res) => {
   try {
     const { novedadId } = req.params;
-    const { estado_nuevo_id, observaciones, metadata, fecha_cambio } = req.body;
-
+    const { estado_nuevo_id, estado_anterior_id, observaciones, metadata, fecha_cambio } = req.body;
+    
     // Verificar que se envíen observaciones
     if (!observaciones || observaciones.trim() === "") {
       return res.status(400).json({
@@ -123,7 +124,24 @@ export const createHistorialEstado = async (req, res) => {
       });
     }
 
-    const estadoAnteriorId = novedad.estado_novedad_id;
+    // Intentar obtener estado_original de diferentes fuentes
+    let estadoAnteriorId = estado_anterior_id;
+    
+    // Si no se envía en payload, intentar obtener de cache temporal
+    if (!estadoAnteriorId) {
+      // Usar un cache simple basado en el ID de novedad
+      const cacheKey = `estado_original_${novedadId}`;
+      const cachedEstado = global[cacheKey];
+      
+      if (cachedEstado) {
+        estadoAnteriorId = cachedEstado;
+        // Limpiar cache después de usarlo
+        delete global[cacheKey];
+      } else {
+        // Si no hay en cache, usar el estado actual (fallback)
+        estadoAnteriorId = novedad.estado_novedad_id;
+      }
+    }
 
     // Determinar el estado nuevo (si no se envía, mantener el actual)
     const estadoNuevoId = estado_nuevo_id || estadoAnteriorId;
