@@ -593,11 +593,14 @@ export const asignarRecursos = async (req, res) => {
       observaciones,
       estado_novedad_id,
       requiere_seguimiento,
+      fecha_cierre,  // ✅ FALTANTE: Fecha de Cierre
+      usuario_cierre,  // ✅ FALTANTE: Usuario que cierra
       fecha_proxima_revision,
       perdidas_materiales_estimadas,
+      num_personas_afectadas,  // ✅ FALTANTE: N° Personas Afectadas
       historial  // ✅ NUEVO: Objeto historial del frontend
     } = req.body;
-    
+
     const novedad = await Novedad.findOne({
       where: { id, estado: 1, deleted_at: null },
       transaction,
@@ -611,7 +614,7 @@ export const asignarRecursos = async (req, res) => {
         message: "Novedad no encontrada",
       });
     }
-
+    
     // Validar que re-despachos solo los haga el usuario que despachó originalmente
     // EXCEPTO para roles supervisor, admin, super_admin
     const rolesPermitidos = ["supervisor", "admin", "super_admin"];
@@ -632,7 +635,7 @@ export const asignarRecursos = async (req, res) => {
       },
       transaction,
     });
-
+    
     const estadoAnteriorId = novedad.estado_novedad_id;
 
     // Guardar estado original en cache global para que createHistorialEstado lo use
@@ -657,8 +660,22 @@ export const asignarRecursos = async (req, res) => {
     if (observaciones) datosActualizacion.observaciones = observaciones;
     if (fecha_llegada) datosActualizacion.fecha_llegada = rawDate(convertToTimezone(fecha_llegada), sequelize);
     if (requiere_seguimiento !== undefined) datosActualizacion.requiere_seguimiento = requiere_seguimiento;
-    if (fecha_proxima_revision) datosActualizacion.fecha_proxima_revision = rawDate(convertToTimezone(fecha_proxima_revision), sequelize);
-    if (perdidas_materiales_estimadas) datosActualizacion.perdidas_materiales_estimadas = perdidas_materiales_estimadas;
+    if (fecha_proxima_revision) {
+      // Convertir Date a string con hora por defecto si es necesario
+      let fechaFormateada = fecha_proxima_revision;
+      if (fecha_proxima_revision instanceof Date) {
+        // Si es objeto Date, formatear a string YYYY-MM-DD HH:MM:SS
+        fechaFormateada = fecha_proxima_revision.toISOString().slice(0, 19).replace("T", " ");
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(fecha_proxima_revision)) {
+        // Si es solo fecha (YYYY-MM-DD), agregar hora por defecto
+        fechaFormateada = `${fecha_proxima_revision} 00:00:00`;
+      }
+      datosActualizacion.fecha_proxima_revision = rawDate(convertToTimezone(fechaFormateada), sequelize);
+    }
+    if (perdidas_materiales_estimadas !== undefined) datosActualizacion.perdidas_materiales_estimadas = perdidas_materiales_estimadas;
+    if (num_personas_afectadas !== undefined) datosActualizacion.num_personas_afectadas = num_personas_afectadas;
+    if (fecha_cierre) datosActualizacion.fecha_cierre = rawDate(convertToTimezone(fecha_cierre), sequelize);
+    if (usuario_cierre) datosActualizacion.usuario_cierre = usuario_cierre;
     // Fecha de despacho: usar la proporcionada o la actual (timezone Perú)
     datosActualizacion.fecha_despacho = rawDate(fecha_despacho ? convertToTimezone(fecha_despacho) : getNowInTimezone(), sequelize);
     // Registrar quién despacha (solo si aún no tiene usuario_despacho asignado)
@@ -667,10 +684,11 @@ export const asignarRecursos = async (req, res) => {
     }
     
     // Actualizar estado: usar el proporcionado explícitamente o el de despacho automático
-    // PERO SOLO si el frontend NO está enviando historial por separado
-    if (estado_novedad_id && !historial) {
+    if (estado_novedad_id) {
+      // Siempre actualizar el estado si se proporciona explícitamente
       datosActualizacion.estado_novedad_id = estado_novedad_id;
     } else if (estadoDespacho && !historial) {
+      // Solo usar estado de despacho automático si no se proporciona estado y no hay historial
       datosActualizacion.estado_novedad_id = estadoDespacho.id;
     }
     
