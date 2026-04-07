@@ -13,7 +13,12 @@
 
 import winston from "winston";
 import path from "path";
+import { fileURLToPath } from "url";
 import DailyRotateFile from "winston-daily-rotate-file";
+
+// Obtener __dirname para ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ========================================
 // NIVELES DE LOG
