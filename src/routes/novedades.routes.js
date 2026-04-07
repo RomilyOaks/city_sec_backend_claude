@@ -41,6 +41,12 @@ import {
 } from "../middlewares/authMiddleware.js";
 
 // ==========================================
+// IMPORTAR SSE MANAGER
+// ==========================================
+import { addClient, removeClient } from "../utils/sse-manager.js";
+import jwt from "jsonwebtoken"; 
+
+// ==========================================
 // IMPORTAR VALIDADORES (NUEVA UBICACIÓN)
 // ==========================================
 import {
@@ -108,6 +114,67 @@ router.get(
     return novedadesController.getNovedadesEnAtencion(req, res, next);
   }
 );
+
+/**
+ * @route   GET /api/v1/novedades/stream
+ * @desc    Endpoint SSE — mantiene conexión abierta y emite eventos en tiempo real.
+ * El frontend se conecta una sola vez y recibe actualizaciones instantáneas.
+ *
+ * Requiere autenticación JWT igual que el resto de endpoints.
+ */
+router.get("/stream", (req, res) => {
+  // ── Configurar headers SSE ──────────────────────────────────────────────────
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no"); // Importante para Railway/Nginx
+  res.flushHeaders(); // Enviar headers inmediatamente
+
+  // ── Autenticación especial para SSE (header o query param) ───────────────
+  const headerToken = req.headers.authorization?.replace("Bearer ", "");
+  const queryToken = req.query.token;
+  const token = headerToken || queryToken;
+
+  if (!token) {
+    res.write(`event: error\ndata: ${JSON.stringify({ error: "Token requerido" })}\n\n`);
+    return res.end();
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+  } catch {
+    res.write(`event: error\ndata: ${JSON.stringify({ error: "Token inválido" })}\n\n`);
+    return res.end();
+  }
+  // ── Registrar cliente ───────────────────────────────────────────────────────
+  const clientId = addClient(res);
+
+  // ── Enviar evento inicial de confirmación ───────────────────────────────────
+  // Confirma al frontend que la conexión SSE está activa
+  res.write(`event: connected\ndata: ${JSON.stringify({
+    message: "Conectado al stream de novedades CitySecure",
+    clientId,
+    timestamp: new Date().toISOString(),
+  })}\n\n`);
+
+  // ── Heartbeat cada 30 segundos ──────────────────────────────────────────────
+  // Mantiene la conexión viva y evita timeouts en proxies/Railway
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(": heartbeat\n\n"); // Comentario SSE, no dispara eventos en el cliente
+    } catch {
+      clearInterval(heartbeat);
+    }
+  }, 30000);
+
+  // ── Limpiar cuando el cliente se desconecta ─────────────────────────────────
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    removeClient(clientId);
+  });
+});
 
 /**
  * @route   GET /api/v1/novedades/:id/historial
@@ -345,5 +412,9 @@ router.post(
     return historialController.createHistorialEstado(req, res, next);
   }
 );
+
+// ==========================================
+// RUTAS ESPECIALES (ANTES DE /:id)
+// ==========================================
 
 export default router;

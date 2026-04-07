@@ -48,6 +48,7 @@ import {
 import sequelize from "../config/database.js";
 import { Op } from "sequelize";
 import { DEFAULT_UBIGEO_CODE } from "../config/constants.js";
+import { broadcastEvent } from "../utils/sse-manager.js";
 import { getNowInTimezone, convertToTimezone, getDateInTimezone, rawDate } from "../utils/dateHelper.js";
 
 /**
@@ -460,6 +461,22 @@ export const createNovedad = async (req, res) => {
         { model: Direccion, as: "direccion" },
       ],
     });
+
+    // ── Notificar a todos los operadores conectados en tiempo real ─────────────────────────────────
+    broadcastEvent("nueva_novedad", {
+      id: novedadCompleta.id,
+      novedad_code: novedadCompleta.novedad_code,
+      tipo_novedad_id: novedadCompleta.tipo_novedad_id,
+      descripcion: novedadCompleta.descripcion,
+      prioridad_actual: novedadCompleta.prioridad_actual,
+      estado_novedad_id: novedadCompleta.estado_novedad_id,
+      origen_llamada: novedadCompleta.origen_llamada,
+      localizacion: novedadCompleta.localizacion,
+      latitud: novedadCompleta.latitud,
+      longitud: novedadCompleta.longitud,
+      created_at: novedadCompleta.created_at,
+    });
+    // ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
     res.status(201).json({
       success: true,
