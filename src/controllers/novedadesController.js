@@ -457,7 +457,6 @@ export const createNovedad = async (req, res) => {
         { model: SubtipoNovedad, as: "novedadSubtipoNovedad", attributes: ["id", "nombre", "tiempo_respuesta_min"] },
         { model: EstadoNovedad, as: "novedadEstado" },
         { model: Sector, as: "novedadSector" },
-        { model: Cuadrante, as: "novedadCuadrante" },
         { model: Direccion, as: "direccion" },
       ],
     });
@@ -475,6 +474,15 @@ export const createNovedad = async (req, res) => {
       latitud: novedadCompleta.latitud,
       longitud: novedadCompleta.longitud,
       created_at: novedadCompleta.created_at,
+      fecha_hora_ocurrencia: novedadCompleta.fecha_hora_ocurrencia,
+      created_by: novedadCompleta.created_by,
+      // Datos relacionales para mostrar en la tabla
+      novedadTipoNovedad: novedadCompleta.novedadTipoNovedad,
+      novedadSubtipoNovedad: novedadCompleta.novedadSubtipoNovedad,
+      novedadEstado: novedadCompleta.novedadEstado,
+      novedadSector: novedadCompleta.novedadSector,
+      novedadCuadrante: novedadCompleta.novedadCuadrante,
+      direccion: novedadCompleta.direccion,
     });
     // ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
