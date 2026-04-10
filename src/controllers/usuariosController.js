@@ -477,17 +477,44 @@ export const updateUsuario = async (req, res) => {
         transaction: t,
       });
 
-      // Eliminar roles existentes y crear nuevos con auditoría
-      await UsuarioRol.destroy({ where: { usuario_id: id }, transaction: t });
+      // Obtener roles actuales del usuario
+      const rolesActuales = await UsuarioRol.findAll({
+        where: { usuario_id: id },
+        transaction: t,
+      });
 
-      const usuarioRolesData = rolesEncontrados.map((rol) => ({
-        usuario_id: id,
-        rol_id: rol.id,
-        created_by: updated_by,
-        updated_by: updated_by,
-        fecha_asignacion: new Date(),
-      }));
-      await UsuarioRol.bulkCreate(usuarioRolesData, { transaction: t });
+      // Identificar roles a eliminar (los que ya no están en la nueva lista)
+      const rolesAEliminar = rolesActuales.filter(
+        rolActual => !roles.includes(rolActual.rol_id)
+      );
+
+      // Identificar roles a agregar (los que no están en la lista actual)
+      const rolesAAgregar = rolesEncontrados.filter(
+        rolNuevo => !rolesActuales.some(rolActual => rolActual.rol_id === rolNuevo.id)
+      );
+
+      // Eliminar roles que ya no se necesitan
+      if (rolesAEliminar.length > 0) {
+        await UsuarioRol.destroy({
+          where: {
+            usuario_id: id,
+            rol_id: { [Op.in]: rolesAEliminar.map(r => r.rol_id) }
+          },
+          transaction: t,
+        });
+      }
+
+      // Agregar roles nuevos
+      if (rolesAAgregar.length > 0) {
+        const usuarioRolesData = rolesAAgregar.map((rol) => ({
+          usuario_id: id,
+          rol_id: rol.id,
+          created_by: updated_by,
+          updated_by: updated_by,
+          fecha_asignacion: new Date(),
+        }));
+        await UsuarioRol.bulkCreate(usuarioRolesData, { transaction: t });
+      }
     }
 
     await t.commit();
@@ -519,10 +546,27 @@ export const updateUsuario = async (req, res) => {
   } catch (error) {
     await t.rollback();
     console.error("Error en updateUsuario:", error);
-    res.status(500).json({
+    
+    // Manejo específico de errores conocidos
+    let errorMessage = "Error al actualizar usuario";
+    let statusCode = 500;
+    
+    if (error.name === 'SequelizeDatabaseError' && error.original?.code === 'ER_BAD_NULL_ERROR') {
+      errorMessage = "Error de base de datos: Campo requerido no proporcionado";
+      statusCode = 400;
+    } else if (error.name === 'SequelizeUniqueConstraintError') {
+      errorMessage = `Error de duplicidad: ${error.errors.map(e => e.message).join(', ')}`;
+      statusCode = 409;
+    } else if (error.name === 'SequelizeValidationError') {
+      errorMessage = `Error de validación: ${error.errors.map(e => e.message).join(', ')}`;
+      statusCode = 400;
+    }
+    
+    res.status(statusCode).json({
       success: false,
-      message: "Error al actualizar usuario",
+      message: errorMessage,
       error: error.message,
+      details: error.name === 'SequelizeDatabaseError' ? error.original?.sqlMessage : null
     });
   }
 };
