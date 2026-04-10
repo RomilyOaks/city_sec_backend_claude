@@ -24,7 +24,7 @@ import sequelize from "../config/database.js";
  */
 function getAuditData(options) {
   // Estas variables deben ser pasadas desde el controlador/servicio
-  const userId = options.currentUser || null;
+  const userId = options.currentUser || options.updated_by || null;
   const ipAddress = options.ipAddress || null;
   const userAgent = options.userAgent || null;
 
