@@ -1031,7 +1031,7 @@ export const getPersonalDisponibleParaRadioTetra = async (req, res) => {
     const { includeAsignados = false } = req.query;
     
     let whereClause = {
-      estado: 'ACTIVO'
+      status: 'Activo'
     };
     
     let includeClause = [
@@ -1068,8 +1068,9 @@ export const getPersonalDisponibleParaRadioTetra = async (req, res) => {
         "nombres",
         "apellido_paterno",
         "apellido_materno",
-        "dni",
-        "estado",
+        "doc_tipo",
+        "doc_numero",
+        "status",
         "cargo_id"
       ]
     });
