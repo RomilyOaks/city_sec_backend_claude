@@ -1030,49 +1030,55 @@ export const getPersonalDisponibleParaRadioTetra = async (req, res) => {
   try {
     const { includeAsignados = false } = req.query;
     
-    let whereClause = {
-      status: 'Activo'
-    };
-    
-    let includeClause = [
-      {
-        model: Cargo,
-        as: "PersonalSeguridadCargo",
-        attributes: ["id", "nombre"],
-      },
-    ];
-
-    // Si no se incluyen asignados, filtrar solo los sin radio asignado
-    if (includeAsignados === 'false' || !includeAsignados) {
-      includeClause.push({
-        model: RadioTetra,
-        as: "radiosTetraAsignados",
-        required: false, // LEFT JOIN
+    if (includeAsignados === 'true') {
+      // Si se incluyen asignados, retornar todo el personal activo
+      const personal = await PersonalSeguridad.findAll({
         where: {
-          personal_seguridad_id: null, // Solo los sin radio asignado
+          status: 'Activo'
         },
-        attributes: [], // No necesitamos datos de la radio
+        include: [
+          {
+            model: Cargo,
+            as: "PersonalSeguridadCargo",
+            attributes: ["id", "nombre"],
+          },
+        ],
+        order: [
+          ["apellido_paterno", "ASC"],
+          ["apellido_materno", "ASC"],
+          ["nombres", "ASC"]
+        ],
+        attributes: [
+          "id",
+          "nombres",
+          "apellido_paterno",
+          "apellido_materno",
+          "doc_tipo",
+          "doc_numero",
+          "status",
+          "cargo_id"
+        ]
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Personal activo obtenido exitosamente",
+        data: personal,
+        total: personal.length,
       });
     }
 
-    const personalDisponible = await PersonalSeguridad.findAll({
-      where: whereClause,
-      include: includeClause,
-      order: [
-        ["apellido_paterno", "ASC"],
-        ["apellido_materno", "ASC"],
-        ["nombres", "ASC"]
-      ],
-      attributes: [
-        "id",
-        "nombres",
-        "apellido_paterno",
-        "apellido_materno",
-        "doc_tipo",
-        "doc_numero",
-        "status",
-        "cargo_id"
-      ]
+    // Consulta SQL directa para personal sin radio asignado
+    const personalDisponible = await sequelize.query(`
+      SELECT p.*, c.nombre as cargo_nombre
+      FROM personal_seguridad p 
+      LEFT JOIN radios_tetra r ON p.id = r.personal_seguridad_id 
+      LEFT JOIN cargos c ON p.cargo_id = c.id
+      WHERE r.personal_seguridad_id IS NULL 
+      AND p.status = 'Activo'
+      ORDER BY p.apellido_paterno, p.apellido_materno, p.nombres
+    `, {
+      type: sequelize.QueryTypes.SELECT
     });
 
     res.status(200).json({
