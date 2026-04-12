@@ -589,6 +589,23 @@ router.get(
 );
 
 router.get(
+  "/disponibles-para-radio-tetra",
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),
+  (req, res, next) => {
+    // #swagger.tags = ['Personal']
+    // #swagger.summary = 'Listar personal disponible para asignar a radios Tetra'
+    // #swagger.description = 'Retorna personal ACTIVO que no tiene un radio Tetra asignado'
+    // #swagger.security = [{ bearerAuth: [] }]
+    // #swagger.parameters['includeAsignados'] = { in: 'query', description: 'Incluir personal con radio asignado (default: false)', type: 'boolean' }
+    // #swagger.responses[200] = { description: 'OK' }
+    // #swagger.responses[401] = { description: 'No autenticado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    // #swagger.responses[403] = { description: 'No autorizado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
+    return personalController.getPersonalDisponibleParaRadioTetra(req, res, next);
+  }
+);
+
+router.get(
   "/cargo/:cargoId",
   verificarToken,
   verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["personal.personal.read"]),

@@ -43,6 +43,7 @@ import {
   Novedad,
   TipoNovedad,
   EstadoNovedad,
+  RadioTetra,
 } from "../models/index.js";
 import { Op } from "sequelize";
 import sequelize from "../config/database.js";
@@ -1016,6 +1017,74 @@ export const getPersonalDisponible = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error al obtener personal disponible",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Obtener personal disponible para asignar a radios Tetra
+ * GET /api/v1/personal/disponibles-para-radio-tetra
+ */
+export const getPersonalDisponibleParaRadioTetra = async (req, res) => {
+  try {
+    const { includeAsignados = false } = req.query;
+    
+    let whereClause = {
+      estado: 'ACTIVO'
+    };
+    
+    let includeClause = [
+      {
+        model: Cargo,
+        as: "PersonalSeguridadCargo",
+        attributes: ["id", "nombre"],
+      },
+    ];
+
+    // Si no se incluyen asignados, filtrar solo los sin radio asignado
+    if (includeAsignados === 'false' || !includeAsignados) {
+      includeClause.push({
+        model: RadioTetra,
+        as: "radiosTetraAsignados",
+        required: false, // LEFT JOIN
+        where: {
+          personal_seguridad_id: null, // Solo los sin radio asignado
+        },
+        attributes: [], // No necesitamos datos de la radio
+      });
+    }
+
+    const personalDisponible = await PersonalSeguridad.findAll({
+      where: whereClause,
+      include: includeClause,
+      order: [
+        ["apellido_paterno", "ASC"],
+        ["apellido_materno", "ASC"],
+        ["nombres", "ASC"]
+      ],
+      attributes: [
+        "id",
+        "nombres",
+        "apellido_paterno",
+        "apellido_materno",
+        "dni",
+        "estado",
+        "cargo_id"
+      ]
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Personal disponible para radios Tetra obtenido exitosamente",
+      data: personalDisponible,
+      total: personalDisponible.length,
+    });
+  } catch (error) {
+    console.error("Error en getPersonalDisponibleParaRadioTetra:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener personal disponible para radios Tetra",
       error: error.message,
     });
   }
