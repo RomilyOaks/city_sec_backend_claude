@@ -133,7 +133,15 @@ export const getAllVehiculos = async (req, res) => {
         {
           model: PersonalSeguridad,
           as: "conductorAsignado",
-          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+          attributes: [
+            "id", 
+            "doc_tipo", 
+            "doc_numero", 
+            "nombres", 
+            "apellido_paterno", 
+            "apellido_materno",
+            "status"
+          ],
         },
       ],
       order: [["codigo_vehiculo", "ASC"]],
@@ -312,6 +320,15 @@ export const getVehiculoById = async (req, res) => {
         {
           model: PersonalSeguridad,
           as: "conductorAsignado",
+          attributes: [
+            "id", 
+            "doc_tipo", 
+            "doc_numero", 
+            "nombres", 
+            "apellido_paterno", 
+            "apellido_materno",
+            "status"
+          ],
         },
       ],
     });
@@ -493,7 +510,15 @@ export const createVehiculo = async (req, res) => {
         {
           model: PersonalSeguridad,
           as: "conductorAsignado",
-          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+          attributes: [
+            "id", 
+            "doc_tipo", 
+            "doc_numero", 
+            "nombres", 
+            "apellido_paterno", 
+            "apellido_materno",
+            "status"
+          ],
         },
       ],
     });
@@ -629,7 +654,15 @@ export const updateVehiculo = async (req, res) => {
         {
           model: PersonalSeguridad,
           as: "conductorAsignado",
-          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+          attributes: [
+            "id", 
+            "doc_tipo", 
+            "doc_numero", 
+            "nombres", 
+            "apellido_paterno", 
+            "apellido_materno",
+            "status"
+          ],
         },
       ],
     });

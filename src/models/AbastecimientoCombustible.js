@@ -83,12 +83,13 @@ const AbastecimientoCombustible = sequelize.define(
 
     tipo_combustible: {
       type: DataTypes.ENUM(
-        "GASOLINA_84",
-        "GASOLINA_90",
-        "GASOLINA_95",
-        "GASOLINA_97",
+        "GASOLINA_REGULAR",
+        "GASOLINA_PREMIUM",
+        "GASOHOL_REGULAR",
+        "GASOHOL_PREMIUM",
+        "DIESEL_B2",
         "DIESEL_B5",
-        "DIESEL_B20",
+        "DIESEL_S50",
         "GLP",
         "GNV"
       ),
@@ -153,6 +154,7 @@ const AbastecimientoCombustible = sequelize.define(
     observaciones: {
       type: DataTypes.TEXT,
       allowNull: true,
+      comment: "Observaciones adicionales del abastecimiento",
     },
 
     comprobante_adjunto: {

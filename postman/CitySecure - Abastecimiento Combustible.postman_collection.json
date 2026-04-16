@@ -1,0 +1,295 @@
+{
+	"info": {
+		"_postman_id": "citysecure-abastecimiento-combustible",
+		"name": "CitySecure - Abastecimiento Combustible",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "citysecure-backend",
+		"_exporter_link": "https://citysecure-backend.postman.co/api"
+	},
+	"item": [
+		{
+			"name": "1. Authentication - Login",
+			"item": [
+				{
+					"name": "Login - Get Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Guardar token en variables de entorno",
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.token) {",
+									"        pm.environment.set('auth_token', response.data.token);",
+									"        pm.environment.set('user_id', response.data.usuario.id);",
+									"        pm.environment.set('user_name', response.data.usuario.username);",
+									"        console.log('Token guardado exitosamente');",
+									"    }",
+									"} else {",
+									"    console.log('Error en login:', pm.response.json());",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username_or_email\": \"admin\",\n    \"password\": \"Admin123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Abastecimientos - CRUD",
+			"item": [
+				{
+					"name": "GET - Listar Abastecimientos",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Verificar que tenemos token",
+									"if (!pm.environment.get('auth_token')) {",
+									"    console.log('No hay token, ejecutando login primero');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/abastecimientos",
+							"host": ["{{baseUrl}}"],
+							"path": ["abastecimientos"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Obtener Abastecimiento por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/abastecimientos/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["abastecimientos", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Crear Abastecimiento",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"vehiculo_id\": 1,\n    \"fecha_hora\": \"2026-04-14T12:00:00.000Z\",\n    \"tipo_combustible\": \"GASOLINA_REGULAR\",\n    \"km_actual\": 15000.50,\n    \"cantidad\": 45.50,\n    \"precio_unitario\": 18.50,\n    \"importe_total\": 841.75,\n    \"grifo_nombre\": \"GRIFO REPSOL\",\n    \"grifo_ruc\": \"20100070270\",\n    \"factura_boleta\": \"F001-123456\",\n    \"moneda\": \"PEN\",\n    \"observaciones\": \"Abastecimiento de prueba\",\n    \"comprobante_adjunto\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/abastecimientos",
+							"host": ["{{baseUrl}}"],
+							"path": ["abastecimientos"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT - Actualizar Abastecimiento",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"km_actual\": 15500.75,\n    \"cantidad\": 50.00,\n    \"precio_unitario\": 19.00,\n    \"importe_total\": 950.00,\n    \"observaciones\": \"Actualización de prueba\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/abastecimientos/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["abastecimientos", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE - Eliminar Abastecimiento (Soft Delete)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/abastecimientos/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["abastecimientos", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Tests - Filtros y Consultas",
+			"item": [
+				{
+					"name": "GET - Filtrar por Vehículo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/abastecimientos?vehiculo_id=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["abastecimientos"],
+							"query": [
+								{
+									"key": "vehiculo_id",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Filtrar por Fecha",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/abastecimientos?fecha_inicio=2026-04-01&fecha_fin=2026-04-30",
+							"host": ["{{baseUrl}}"],
+							"path": ["abastecimientos"],
+							"query": [
+								{
+									"key": "fecha_inicio",
+									"value": "2026-04-01"
+								},
+								{
+									"key": "fecha_fin",
+									"value": "2026-04-30"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Filtrar por Personal",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/abastecimientos?personal_id=8",
+							"host": ["{{baseUrl}}"],
+							"path": ["abastecimientos"],
+							"query": [
+								{
+									"key": "personal_id",
+									"value": "8"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"exec": [
+					"// Configurar variables globales si no existen",
+					"if (!pm.environment.get('baseUrl')) {",
+					"    pm.environment.set('baseUrl', 'http://localhost:3000/api/v1');",
+					"}",
+					"",
+					"// Log para debugging",
+					"console.log('Collection: CitySecure - Abastecimiento Combustible');",
+					"console.log('Base URL:', pm.environment.get('baseUrl'));",
+					"console.log('Token disponible:', !!pm.environment.get('auth_token'));"
+				],
+				"type": "text/javascript"
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api/v1"
+		}
+	]
+}

@@ -28,7 +28,7 @@
  * @requires sequelize
  */
 
-import { AbastecimientoCombustible, Vehiculo, PersonalSeguridad } from "../models/index.js";
+import { AbastecimientoCombustible, Vehiculo, PersonalSeguridad, TipoVehiculo } from "../models/index.js";
 import { Op } from "sequelize";
 import sequelize from "../config/database.js";
 
@@ -54,11 +54,55 @@ export const getAbastecimientos = async (req, res) => {
     if (vehiculo_id) where.vehiculo_id = vehiculo_id;
     if (personal_id) where.personal_id = personal_id;
 
-    // Filtro por rango de fechas
+    // Filtro por rango de fechas (ajustado a timezone America/Lima)
     if (fecha_inicio || fecha_fin) {
       where.fecha_hora = {};
-      if (fecha_inicio) where.fecha_hora[Op.gte] = new Date(fecha_inicio);
-      if (fecha_fin) where.fecha_hora[Op.lte] = new Date(fecha_fin);
+      if (fecha_inicio) {
+        // Manejar diferentes formatos de fecha del frontend
+        let fechaInicioLocal;
+        
+        // Si ya viene con hora (formato ISO), usar directamente
+        if (fecha_inicio.includes("T")) {
+          fechaInicioLocal = new Date(fecha_inicio);
+        } else {
+          // Si es solo fecha, agregar hora en timezone Peru
+          fechaInicioLocal = new Date(fecha_inicio + "T00:00:00-05:00");
+        }
+        
+        // Validar fecha
+        if (isNaN(fechaInicioLocal.getTime())) {
+          return res.status(400).json({
+            success: false,
+            message: "Formato de fecha_inicio inválido",
+            error: "Use formato YYYY-MM-DD o ISO 8601"
+          });
+        }
+        
+        where.fecha_hora[Op.gte] = fechaInicioLocal;
+      }
+      if (fecha_fin) {
+        // Manejar diferentes formatos de fecha del frontend
+        let fechaFinLocal;
+        
+        // Si ya viene con hora (formato ISO), usar directamente
+        if (fecha_fin.includes("T")) {
+          fechaFinLocal = new Date(fecha_fin);
+        } else {
+          // Si es solo fecha, agregar hora en timezone Peru
+          fechaFinLocal = new Date(fecha_fin + "T23:59:59-05:00");
+        }
+        
+        // Validar fecha
+        if (isNaN(fechaFinLocal.getTime())) {
+          return res.status(400).json({
+            success: false,
+            message: "Formato de fecha_fin inválido",
+            error: "Use formato YYYY-MM-DD o ISO 8601"
+          });
+        }
+        
+        where.fecha_hora[Op.lte] = fechaFinLocal;
+      }
     }
 
     const abastecimientos = await AbastecimientoCombustible.findAll({
@@ -69,12 +113,37 @@ export const getAbastecimientos = async (req, res) => {
         {
           model: Vehiculo,
           as: "vehiculo",
-          attributes: ["id", "codigo_vehiculo", "placa"],
+          attributes: [
+            "id", 
+            "codigo_vehiculo", 
+            "placa", 
+            "marca", 
+            "modelo_vehiculo", 
+            "anio_vehiculo", 
+            "color_vehiculo",
+            "estado_operativo",
+            "kilometraje_actual"
+          ],
+          include: [
+            {
+              model: TipoVehiculo,
+              as: "tipo_vehiculo",
+              attributes: ["id", "nombre", "descripcion", "prefijo"]
+            }
+          ]
         },
         {
           model: PersonalSeguridad,
           as: "personal",
-          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno"],
+          attributes: [
+            "id", 
+            "doc_tipo", 
+            "doc_numero", 
+            "nombres", 
+            "apellido_paterno", 
+            "apellido_materno",
+            "status"
+          ],
         },
       ],
     });
@@ -87,7 +156,6 @@ export const getAbastecimientos = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error en getAbastecimientos:", error);
     return res.status(500).json({
       success: false,
       message: "Error al listar abastecimientos",
@@ -121,7 +189,6 @@ export const getAbastecimientoById = async (req, res) => {
 
     return res.status(200).json({ success: true, data: abastecimiento });
   } catch (error) {
-    console.error("Error en getAbastecimientoById:", error);
     return res.status(500).json({
       success: false,
       message: "Error al obtener el abastecimiento",
@@ -271,7 +338,6 @@ export const createAbastecimiento = async (req, res) => {
       await transaction.rollback();
     }
 
-    console.error("Error en createAbastecimiento:", error);
     return res.status(500).json({
       success: false,
       message: "Error al registrar abastecimiento",
@@ -344,7 +410,6 @@ export const updateAbastecimiento = async (req, res) => {
       await transaction.rollback();
     }
 
-    console.error("Error en updateAbastecimiento:", error);
     return res.status(500).json({
       success: false,
       message: "Error al actualizar abastecimiento",
@@ -398,7 +463,6 @@ export const deleteAbastecimiento = async (req, res) => {
       await transaction.rollback();
     }
 
-    console.error("Error en deleteAbastecimiento:", error);
     return res.status(500).json({
       success: false,
       message: "Error al eliminar abastecimiento",
