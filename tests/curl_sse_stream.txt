@@ -1,0 +1,11 @@
+# 1. Primero obtén tu JWT haciendo login
+curl -X POST https://citysecbackendclaude-production.up.railway.app/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"tu_usuario","password":"tu_password"}'
+
+# Copia el token de la respuesta, luego:
+
+# 2. Conectar al stream SSE
+curl -N \
+  -H "Accept: text/event-stream" \
+  "https://citysecbackendclaude-production.up.railway.app/api/v1/novedades/stream?token=TU_JWT_AQUI"

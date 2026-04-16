@@ -455,6 +455,15 @@ TipoVehiculo.hasMany(Vehiculo, {
 });
 
 /**
+ * Relación: Vehiculo -> TipoVehiculo (Many-to-One)
+ * Un vehículo pertenece a un tipo de vehículo.
+ */
+Vehiculo.belongsTo(TipoVehiculo, {
+  foreignKey: "tipo_id",
+  as: "tipo_vehiculo",
+});
+
+/**
  * Relación: Vehiculo -> AbastecimientoCombustible (One-to-Many)
  * Un vehículo puede tener múltiples abastecimientos.
  */

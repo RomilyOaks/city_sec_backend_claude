@@ -159,12 +159,13 @@ export const ESTADO_OPERATIVO_VEHICULO_ARRAY = Object.values(
 );
 
 export const TIPO_COMBUSTIBLE = {
-  GASOLINA_84: "GASOLINA_84",
-  GASOLINA_90: "GASOLINA_90",
-  GASOLINA_95: "GASOLINA_95",
-  GASOLINA_97: "GASOLINA_97",
+  GASOLINA_REGULAR: "GASOLINA_REGULAR",
+  GASOLINA_PREMIUM: "GASOLINA_PREMIUM",
+  GASOHOL_REGULAR: "GASOHOL_REGULAR",
+  GASOHOL_PREMIUM: "GASOHOL_PREMIUM",
+  DIESEL_B2: "DIESEL_B2",
   DIESEL_B5: "DIESEL_B5",
-  DIESEL_B20: "DIESEL_B20",
+  DIESEL_S50: "DIESEL_S50",
   GLP: "GLP",
   GNV: "GNV",
 };
@@ -172,12 +173,13 @@ export const TIPO_COMBUSTIBLE = {
 export const TIPO_COMBUSTIBLE_ARRAY = Object.values(TIPO_COMBUSTIBLE);
 
 export const TIPO_COMBUSTIBLE_DESCRIPCION = {
-  GASOLINA_84: "Gasolina 84 octanos",
-  GASOLINA_90: "Gasolina 90 octanos",
-  GASOLINA_95: "Gasolina 95 octanos",
-  GASOLINA_97: "Gasolina 97 octanos (Premium)",
-  DIESEL_B5: "Petróleo Diesel B5",
-  DIESEL_B20: "Petróleo Diesel B20",
+  GASOLINA_REGULAR: "Gasolina Regular",
+  GASOLINA_PREMIUM: "Gasolina Premium",
+  GASOHOL_REGULAR: "Gasohol Regular",
+  GASOHOL_PREMIUM: "Gasohol Premium",
+  DIESEL_B2: "Diésel B2",
+  DIESEL_B5: "Diésel B5",
+  DIESEL_S50: "Diésel S50",
   GLP: "Gas Licuado de Petróleo",
   GNV: "Gas Natural Vehicular",
 };

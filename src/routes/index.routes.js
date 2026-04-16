@@ -121,6 +121,7 @@ import horariosTurnosRoutes from "./horariosTurnos.routes.js";
 
 // 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
+import abastecimientosRoutes from "./abastecimientos.routes.js";
 // import reportesRoutes from "./reportes.routes.js"; // TODO: Implementar
 
 // ============================================================================
@@ -304,6 +305,24 @@ router.use("/vehiculos", vehiculosRoutes);
  * @access  Operador, Supervisor, Admin
  */
 router.use("/mantenimientos", mantenimientosRoutes);
+
+/**
+ * @route   /abastecimientos
+ * @desc    Gestión de abastecimientos de combustible
+ * @access  Operador, Supervisor, Admin
+ * @features
+ *   - CRUD completo
+ *   - Control de combustible por vehículo
+ *   - Registro de grifos y comprobantes
+ *   - Estadísticas de consumo
+ * @endpoints
+ *   - GET    /abastecimientos           - Listar con filtros
+ *   - GET    /abastecimientos/:id       - Obtener por ID
+ *   - POST   /abastecimientos           - Crear nuevo
+ *   - PUT    /abastecimientos/:id       - Actualizar
+ *   - DELETE /abastecimientos/:id       - Eliminar (soft)
+ */
+router.use("/abastecimientos", abastecimientosRoutes);
 
 /**
  * @route   /personal

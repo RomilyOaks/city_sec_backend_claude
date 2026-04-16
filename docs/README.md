@@ -1,11 +1,32 @@
 # 📚 Índice de Documentación
 
 > **Versión:** 1.0.0  
-> **Última actualización:** 2026-01-20
+> **Última actualización:** 2026-04-14
 
 ---
 
 ## 🎯 **Estructura de Documentación**
+
+### **📁 APIs y Endpoints**
+
+#### **🔥 Abastecimiento Combustible (NUEVO)**
+- **📄 API Reference**: `abastecimiento-combustible-api.md`
+  - Especificación completa de endpoints
+  - Estructura de request/response
+  - Códigos de error
+  - Ejemplos de uso
+  
+- **📄 Frontend Integration**: `frontend-integration-guide.md`
+  - Configuración de cliente HTTP
+  - Componentes React ejemplo
+  - Manejo de errores
+  - Estilos CSS
+  - Tips de testing
+
+- **📮 Postman Collection**: `../postman/CitySecure - Abastecimiento Combustible.postman_collection.json`
+  - Tests automáticos
+  - Variables de entorno
+  - Ejemplos de CRUD
 
 ### **📁 APIs y Endpoints**
 
