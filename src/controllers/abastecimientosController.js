@@ -31,6 +31,7 @@
 import { AbastecimientoCombustible, Vehiculo, PersonalSeguridad, TipoVehiculo } from "../models/index.js";
 import { Op } from "sequelize";
 import sequelize from "../config/database.js";
+import { convertToTimezone, rawDate } from "../utils/dateHelper.js";
 
 /**
  * GET /api/v1/abastecimientos
@@ -302,11 +303,14 @@ export const createAbastecimiento = async (req, res) => {
     }
 
     // 6) Crear registro de abastecimiento
+    // Convertir fecha_hora a timezone Perú y usar rawDate para evitar doble conversión
+    const fechaHoraLocal = convertToTimezone(fecha_hora);
+    
     const abastecimiento = await AbastecimientoCombustible.create(
       {
         vehiculo_id,
         personal_id: personalIdFinal,
-        fecha_hora,
+        fecha_hora: rawDate(fechaHoraLocal, sequelize),
         tipo_combustible,
         km_actual,
         cantidad: cantidadFinal,
@@ -382,21 +386,28 @@ export const updateAbastecimiento = async (req, res) => {
       observaciones,
       comprobante_adjunto,
       estado,
+      fecha_hora,
     } = req.body;
 
-    await abastecimiento.update(
-      {
-        grifo_nombre: grifo_nombre ?? grifo ?? abastecimiento.grifo_nombre,
-        grifo_ruc: grifo_ruc ?? abastecimiento.grifo_ruc,
-        factura_boleta: factura_boleta ?? abastecimiento.factura_boleta,
-        observaciones: observaciones ?? abastecimiento.observaciones,
-        comprobante_adjunto:
-          comprobante_adjunto ?? abastecimiento.comprobante_adjunto,
-        estado: estado ?? abastecimiento.estado,
-        updated_by: req.user?.id || null,
-      },
-      { transaction }
-    );
+    // Preparar objeto de actualización
+    const datosActualizacion = {
+      grifo_nombre: grifo_nombre ?? grifo ?? abastecimiento.grifo_nombre,
+      grifo_ruc: grifo_ruc ?? abastecimiento.grifo_ruc,
+      factura_boleta: factura_boleta ?? abastecimiento.factura_boleta,
+      observaciones: observaciones ?? abastecimiento.observaciones,
+      comprobante_adjunto:
+        comprobante_adjunto ?? abastecimiento.comprobante_adjunto,
+      estado: estado ?? abastecimiento.estado,
+      updated_by: req.user?.id || null,
+    };
+
+    // Si se envía fecha_hora, convertirla a timezone Perú
+    if (fecha_hora) {
+      const fechaHoraLocal = convertToTimezone(fecha_hora);
+      datosActualizacion.fecha_hora = rawDate(fechaHoraLocal, sequelize);
+    }
+
+    await abastecimiento.update(datosActualizacion, { transaction });
 
     await transaction.commit();
 
