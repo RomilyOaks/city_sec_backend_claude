@@ -34,16 +34,19 @@ export const getGrifos = async (req, res) => {
     };
 
     // Si hay búsqueda, filtrar por nombre o RUC
-    if (search) {
+    // Convertir búsqueda a mayúsculas para consistencia
+    const searchUpper = search ? search.toUpperCase() : null;
+    
+    if (searchUpper) {
       where[Op.or] = [
         {
           grifo_nombre: {
-            [Op.like]: `%${search}%`
+            [Op.like]: `%${searchUpper}%`
           }
         },
         {
           grifo_ruc: {
-            [Op.like]: `%${search}%`
+            [Op.like]: `%${searchUpper}%`
           }
         }
       ];
@@ -114,6 +117,9 @@ export const getSugerenciasGrifos = async (req, res) => {
       });
     }
 
+    // Convertir búsqueda a mayúsculas para consistencia
+    const qUpper = q ? q.toUpperCase() : null;
+    
     // Buscar grifos que coincidan con la búsqueda
     const grifos = await AbastecimientoCombustible.findAll({
       attributes: [
@@ -125,12 +131,12 @@ export const getSugerenciasGrifos = async (req, res) => {
         [Op.or]: [
           {
             grifo_nombre: {
-              [Op.like]: `%${q}%`
+              [Op.like]: `%${qUpper}%`
             }
           },
           {
             grifo_ruc: {
-              [Op.like]: `%${q}%`
+              [Op.like]: `%${qUpper}%`
             }
           }
         ]

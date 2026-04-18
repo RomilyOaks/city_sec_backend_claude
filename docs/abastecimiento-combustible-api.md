@@ -431,6 +431,7 @@ const validarFechas = (fecha_inicio, fecha_fin) => {
   - `nombre`: Nombre del tipo (Patrullero, Motocicleta, Ambulancia, etc.)
   - `descripcion`: Descripción del tipo
   - `prefijo`: Prefijo del tipo
+  - `grifo_nombre`: Nombre del grifo/estación (siempre en mayúsculas)
 
 **Atributos de Personal:**
 - `id`: ID del personal
@@ -696,6 +697,8 @@ const handleSubmit = async (formData) => {
 - Debe ser un número mayor o igual a 0
 - Si es `null` o `undefined`, el backend rechazará la solicitud
 - La actualización del vehículo es **automática** y **transaccional**
+- `grifo_nombre` se convierte automáticamente a **MAYÚSCULAS** antes de guardar
+- Las búsquedas de grifos son **case-insensitive**
 
 **Para PUT/PATCH (Actualización):**
 ```javascript
