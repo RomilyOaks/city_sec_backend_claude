@@ -579,6 +579,235 @@ Content-Type: application/json
 
 ---
 
+### **# Actualización Automática de Kilometraje**
+
+**Importante:** El sistema actualiza automáticamente el kilometraje del vehículo cuando se registra un abastecimiento.
+
+**Regla de Negocio:**
+- **Si `km_actual` > `vehiculo.kilometraje_actual`**: Se actualiza el kilometraje del vehículo
+- **Si `km_actual` <= `vehiculo.kilometraje_actual`**: No se actualiza (se mantiene el valor actual)
+
+**¿Cómo funciona?**
+1. El backend obtiene el kilometraje actual del vehículo
+2. Compara con el `km_actual` enviado en el abastecimiento
+3. Si es mayor, actualiza automáticamente el vehículo
+4. Siempre se registra el abastecimiento con el kilometraje enviado
+
+**Para Frontend - Envío de Datos:**
+
+**⚠️ IMPORTANTE: Formato de fecha_hora**
+Para evitar el bug de timezone en Railway, el frontend debe enviar la fecha en uno de estos formatos:
+
+```javascript
+// Opción 1: ISO 8601 CON timezone (Recomendado para Railway)
+fecha_hora: '2026-04-15T18:30:00-05:00'
+
+// Opción 2: Solo fecha (se usa hora actual de Perú)
+fecha_hora: '2026-04-15'
+
+// Opción 3: ISO 8601 SIN timezone (funciona en localhost)
+fecha_hora: '2026-04-15T18:30:00'
+```
+
+**Opción 1: Solo enviar km_actual (Recomendado)**
+```javascript
+// El backend decidirá si actualiza o no el kilometraje del vehículo
+const abastecimientoData = {
+  vehiculo_id: 38,
+  personal_id: 8,
+  fecha_hora: '2026-04-15T18:30:00-05:00', // <-- CON timezone para Railway
+  tipo_combustible: 'GASOLINA_95',
+  km_actual: 15600,  // <-- Enviar el kilometraje actual del odómetro
+  cantidad: 45,
+  unidad: 'LITROS',
+  precio_unitario: 18.50,
+  importe_total: 832.50,
+  grifo_nombre: 'Grifo Central',
+  moneda: 'PEN'
+};
+
+// El backend:
+// 1. Verificará si 15600 > kilometraje_actual del vehículo
+// 2. Si es mayor, actualizará vehiculo.kilometraje_actual = 15600
+// 3. Registrará el abastecimiento con km_actual = 15600
+```
+
+**Opción 2: Verificar antes de enviar (Opcional)**
+```javascript
+// Si quieres mostrar advertencia en frontend antes de enviar
+const verificarKilometraje = async (vehiculoId, kmNuevo) => {
+  try {
+    const response = await fetch(`/api/v1/vehiculos/${vehiculoId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const vehiculo = response.data.data;
+    const kmActual = vehiculo.kilometraje_actual;
+    
+    if (kmNuevo < kmActual) {
+      const confirmar = window.confirm(
+        `El kilometraje enviado (${kmNuevo}) es menor al actual del vehículo (${kmActual}).\n` +
+        `¿Desea continuar de todas formas?`
+      );
+      if (!confirmar) return false;
+    }
+    
+    if (kmNuevo > kmActual) {
+      console.log(`El kilometraje se actualizará de ${kmActual} a ${kmNuevo}`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error al verificar kilometraje:', error);
+    return false;
+  }
+};
+
+// Uso en el formulario
+const handleSubmit = async (formData) => {
+  const puedeContinuar = await verificarKilometraje(formData.vehiculo_id, formData.km_actual);
+  if (!puedeContinuar) return;
+  
+  // Enviar datos del abastecimiento
+  await createAbastecimiento(formData);
+};
+```
+
+**Respuesta del Backend con Actualización:**
+```json
+{
+  "success": true,
+  "message": "Abastecimiento registrado exitosamente",
+  "data": {
+    "id": 7,
+    "vehiculo_id": 38,
+    "km_actual": 15600,
+    // ... otros campos del abastecimiento
+    "vehiculo": {
+      "id": 38,
+      "kilometraje_actual": 15600,  // <-- Actualizado si era mayor
+      // ... otros datos del vehículo
+    }
+  }
+}
+```
+
+**Validaciones Importantes:**
+- `km_actual` es **requerido** en el POST
+- Debe ser un número mayor o igual a 0
+- Si es `null` o `undefined`, el backend rechazará la solicitud
+- La actualización del vehículo es **automática** y **transaccional**
+
+**Para PUT/PATCH (Actualización):**
+```javascript
+// Al actualizar un abastecimiento existente
+const actualizarAbastecimiento = async (id, datosActualizados) => {
+  // Si actualizas el kilometraje, el backend volverá a verificar
+  const response = await fetch(`/api/v1/abastecimientos/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      ...datosActualizados,
+      km_actual: 15750  // Nuevo kilometraje
+    })
+  });
+  
+  // El backend actualizará el vehículo si 15750 > kilometraje_actual actual
+};
+```
+
+**Tips para Frontend:**
+1. **Mostrar kilometraje actual** del vehículo en el formulario
+2. **Validar que sea mayor** al kilometraje anterior (opcional)
+3. **Informar al usuario** que el sistema actualizará automáticamente
+4. **Manejar el caso** de kilometraje menor con confirmación
+5. **No necesitas hacer PUT/PATCH adicional** al vehículo, el backend lo hace solo
+
+---
+
+### **# 🚨 BUG RESUELTO: Timezone en Railway**
+
+**Problema Identificado:**
+- **Localhost**: Las fechas se guardaban correctamente (hora Perú)
+- **Railway**: Las fechas se guardaban con -5 horas de diferencia
+
+**Causa del Bug:**
+- Railway usa UTC por defecto en Node.js
+- El frontend enviaba fecha sin timezone explícito
+- MySQL2 aplicaba conversión doble (UTC → Perú → UTC)
+
+**Solución Implementada:**
+1. **Backend**: Usa `convertToTimezone()` y `rawDate()` como en novedades
+2. **Frontend**: Debe enviar fecha con timezone explícito
+
+**Formatos Soportados:**
+```javascript
+// ✅ CORRECTO para Railway (con timezone)
+fecha_hora: '2026-04-15T18:30:00-05:00'
+
+// ✅ CORRECTO (solo fecha, usa hora actual Perú)
+fecha_hora: '2026-04-15'
+
+// ✅ CORRECTO para localhost (sin timezone)
+fecha_hora: '2026-04-15T18:30:00'
+
+// ❌ INCORRECTO (causaba el bug en Railway)
+fecha_hora: '2026-04-15T18:30:00' // sin timezone en Railway
+```
+
+**Función Helper para Frontend:**
+```javascript
+const formatFechaForAbastecimiento = (fecha) => {
+  // Detectar si estamos en Railway o localhost
+  const isRailway = window.location.hostname !== 'localhost';
+  
+  if (typeof fecha === 'string') {
+    // Si ya viene con timezone, devolver tal cual
+    if (fecha.includes('-05:00') || fecha.includes('+05:00')) {
+      return fecha;
+    }
+    
+    // Si es solo fecha, devolver tal cual
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      return fecha;
+    }
+    
+    // Si es ISO sin timezone y estamos en Railway, agregar timezone
+    if (isRailway && fecha.includes('T') && !fecha.includes('Z') && !fecha.includes('-05:00')) {
+      return fecha + '-05:00';
+    }
+  }
+  
+  return fecha;
+};
+
+// Uso en el formulario
+const handleSubmit = (formData) => {
+  const datosConFecha = {
+    ...formData,
+    fecha_hora: formatFechaForAbastecimiento(formData.fecha_hora)
+  };
+  
+  createAbastecimiento(datosConFecha);
+};
+```
+
+**Validación de Fecha Correcta:**
+```javascript
+const validarFechaAbastecimiento = (fecha_hora) => {
+  const formatosValidos = [
+    /^\d{4}-\d{2}-\d{2}$/,                           // YYYY-MM-DD
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/, // YYYY-MM-DDTHH:mm:ss
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}-05:00$/ // Con timezone Perú
+  ];
+  
+  return formatosValidos.some(formato => formato.test(fecha_hora));
+};
+```
+
+---
 ### **4. Actualizar Abastecimiento**
 ```http
 PUT /abastecimientos/{id}
