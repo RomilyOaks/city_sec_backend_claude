@@ -279,7 +279,7 @@ export const createAbastecimiento = async (req, res) => {
     const cantidadFinal = cantidad ?? cantidad_galones;
     const unidadFinal = unidad ?? (cantidad_galones ? "GALONES" : "LITROS");
     const precioFinal = precio_unitario ?? precio_galon ?? 0;
-    const grifoNombreFinal = grifo_nombre ?? grifo;
+    const grifoNombreFinal = grifo_nombre ? grifo_nombre.toUpperCase() : (grifo ? grifo.toUpperCase() : null);
 
     // Cálculo del total (si no viene)
     const importeTotalFinal =
@@ -391,7 +391,7 @@ export const updateAbastecimiento = async (req, res) => {
 
     // Preparar objeto de actualización
     const datosActualizacion = {
-      grifo_nombre: grifo_nombre ?? grifo ?? abastecimiento.grifo_nombre,
+      grifo_nombre: (grifo_nombre ?? grifo ?? abastecimiento.grifo_nombre)?.toUpperCase(),
       grifo_ruc: grifo_ruc ?? abastecimiento.grifo_ruc,
       factura_boleta: factura_boleta ?? abastecimiento.factura_boleta,
       observaciones: observaciones ?? abastecimiento.observaciones,

@@ -80,10 +80,15 @@ GET /grifos
 ```
 
 **📋 Atributos del Grifo:**
-- `grifo_nombre`: Nombre del grifo/estación
+- `grifo_nombre`: Nombre del grifo/estación (siempre en mayúsculas)
 - `grifo_ruc`: RUC del grifo (puede ser null)
 - `total_abastecimientos`: Cantidad de abastecimientos registrados
 - `tiene_ruc`: Indica si tiene RUC registrado
+
+**⚠️ Importante:** 
+- Todos los nombres de grifos se guardan automáticamente en **MAYÚSCULAS**
+- El backend convierte cualquier entrada a mayúsculas antes de guardar
+- Las búsquedas son case-insensitive (se convierten a mayúsculas)
 
 ---
 
