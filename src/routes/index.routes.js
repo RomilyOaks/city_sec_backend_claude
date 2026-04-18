@@ -122,6 +122,7 @@ import horariosTurnosRoutes from "./horariosTurnos.routes.js";
 // 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
 import abastecimientosRoutes from "./abastecimientos.routes.js";
+import grifosRoutes from "./grifos.routes.js";
 // import reportesRoutes from "./reportes.routes.js"; // TODO: Implementar
 
 // ============================================================================
@@ -323,6 +324,20 @@ router.use("/mantenimientos", mantenimientosRoutes);
  *   - DELETE /abastecimientos/:id       - Eliminar (soft)
  */
 router.use("/abastecimientos", abastecimientosRoutes);
+
+/**
+ * @route   /grifos
+ * @desc    Búsqueda de grifos registrados
+ * @access  Operador, Supervisor, Admin
+ * @features
+ *   - Búsqueda de grifos con filtros
+ *   - Sugerencias para autocompletar
+ *   - Estadísticas de uso
+ * @endpoints
+ *   - GET    /grifos              - Listar grifos
+ *   - GET    /grifos/sugerencias  - Sugerencias para búsqueda
+ */
+router.use("/grifos", grifosRoutes);
 
 /**
  * @route   /personal

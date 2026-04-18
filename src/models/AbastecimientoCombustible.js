@@ -239,6 +239,14 @@ const AbastecimientoCombustible = sequelize.define(
         name: "idx_fecha",
         fields: ["fecha_hora"],
       },
+      {
+        name: "idx_grifo_nombre",
+        fields: ["grifo_nombre"],
+      },
+      {
+        name: "idx_grifo_ruc",
+        fields: ["grifo_ruc"],
+      },
     ],
   }
 );
