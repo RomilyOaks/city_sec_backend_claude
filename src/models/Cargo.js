@@ -27,7 +27,7 @@
  * @date 2025-12-12
  */
 
-import { DataTypes, Op } from "sequelize";
+import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 
 const Cargo = sequelize.define(

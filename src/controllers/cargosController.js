@@ -101,7 +101,7 @@ export const getAllCargos = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Error en getAllCargos:", error);
+    console.error("Error en getAllCargos:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener cargos",
@@ -154,7 +154,7 @@ export const getCargoById = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Error en getCargoById:", error);
+    console.error("Error en getCargoById:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener cargo",
@@ -252,15 +252,13 @@ export const createCargo = async (req, res) => {
       updated_by: req.user?.id,
     });
 
-    console.log(`✅ Cargo creado: ${nuevoCargo.nombre} (ID: ${nuevoCargo.id})`);
-
     res.status(201).json({
       success: true,
       message: "Cargo creado exitosamente",
       data: nuevoCargo,
     });
   } catch (error) {
-    console.error("❌ Error en createCargo:", error);
+    console.error("Error en createCargo:", error);
 
     // Manejar errores de validación de Sequelize
     if (error.name === "SequelizeValidationError") {
@@ -382,15 +380,13 @@ export const updateCargo = async (req, res) => {
       updated_by: req.user?.id,
     });
 
-    console.log(`✏️  Cargo actualizado: ${cargo.nombre} (ID: ${cargo.id})`);
-
     res.json({
       success: true,
       message: "Cargo actualizado exitosamente",
       data: cargo,
     });
   } catch (error) {
-    console.error("❌ Error en updateCargo:", error);
+    console.error("Error en updateCargo:", error);
 
     if (error.name === "SequelizeValidationError") {
       return res.status(400).json({
@@ -457,14 +453,12 @@ export const deleteCargo = async (req, res) => {
     // Soft delete
     await cargo.softDelete(req.user?.id);
 
-    console.log(`🗑️  Cargo eliminado: ${cargo.nombre} (ID: ${cargo.id})`);
-
     res.json({
       success: true,
       message: "Cargo eliminado exitosamente",
     });
   } catch (error) {
-    console.error("❌ Error en deleteCargo:", error);
+    console.error("Error en deleteCargo:", error);
     res.status(500).json({
       success: false,
       message: "Error al eliminar cargo",
@@ -508,15 +502,13 @@ export const restoreCargo = async (req, res) => {
 
     await cargo.restore(req.user?.id);
 
-    console.log(`♻️  Cargo restaurado: ${cargo.nombre} (ID: ${cargo.id})`);
-
-    res.json({
+    res.status(201).json({
       success: true,
-      message: "Cargo restaurado exitosamente",
+      message: "Cargo creado exitosamente",
       data: cargo,
     });
   } catch (error) {
-    console.error("❌ Error en restoreCargo:", error);
+    console.error("Error en createCargo:", error);
     res.status(500).json({
       success: false,
       message: "Error al restaurar cargo",
@@ -547,7 +539,7 @@ export const getEstadisticas = async (req, res) => {
       data: estadisticas,
     });
   } catch (error) {
-    console.error("❌ Error en getEstadisticas:", error);
+    console.error("Error en getEstadisticas:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener estadísticas",
@@ -600,7 +592,7 @@ export const getCargosByCategoria = async (req, res) => {
       data: cargos,
     });
   } catch (error) {
-    console.error("❌ Error en getCargosByCategoria:", error);
+    console.error("Error en getCargosByCategoria:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener cargos por categoría",
@@ -631,7 +623,7 @@ export const getCargosConLicencia = async (req, res) => {
       data: cargos,
     });
   } catch (error) {
-    console.error("❌ Error en getCargosConLicencia:", error);
+    console.error("Error en getCargosConLicencia:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener cargos con licencia",
