@@ -73,7 +73,6 @@ export const getAllPersonal = async (req, res) => {
       order = "ASC",
     } = req.query;
 
-
     const whereClause = {
       estado: 1,
       deleted_at: null,
@@ -1030,11 +1029,11 @@ export const getPersonalDisponibleParaRadioTetra = async (req, res) => {
   try {
     const { includeAsignados = false } = req.query;
     
-    if (includeAsignados === 'true') {
+    if (includeAsignados === "true") {
       // Si se incluyen asignados, retornar todo el personal activo
       const personal = await PersonalSeguridad.findAll({
         where: {
-          status: 'Activo'
+          status: "Activo"
         },
         include: [
           {

@@ -7,12 +7,12 @@
  * que el historial de estados se guarde correctamente
  */
 
-import axios from 'axios';
+import axios from "axios";
 
 // Configuración
-const BASE_URL = 'http://localhost:3000/api/v1';
+const BASE_URL = "http://localhost:3000/api/v1";
 const NOVEDAD_ID = 1; // ID de una novedad de prueba
-const TOKEN = 'tu_token_de_autenticacion'; // Reemplazar con token real
+const TOKEN = "tu_token_de_autenticacion"; // Reemplazar con token real
 
 // Datos de prueba - Simula lo que envía el frontend
 const payloadAsignarRecursos = {
@@ -47,76 +47,76 @@ const payloadCrearHistorial = {
 
 async function testHistorialFix() {
   try {
-    console.log('🔍 INICIANDO PRUEBA DE FIX HISTORIAL ESTADOS\n');
+    console.log("🔍 INICIANDO PRUEBA DE FIX HISTORIAL ESTADOS\n");
 
     // 1. Asignar recursos (sin actualizar estado)
-    console.log('📋 Paso 1: Asignando recursos...');
+    console.log("📋 Paso 1: Asignando recursos...");
     const responseAsignar = await axios.put(
       `${BASE_URL}/novedades/${NOVEDAD_ID}/asignar`,
       payloadAsignarRecursos,
       {
         headers: {
-          'Authorization': `Bearer ${TOKEN}`,
-          'Content-Type': 'application/json'
+          "Authorization": `Bearer ${TOKEN}`,
+          "Content-Type": "application/json"
         }
       }
     );
     
-    console.log('✅ Recursos asignados exitosamente');
-    console.log('📊 Estado de la novedad después de asignar recursos:', 
+    console.log("✅ Recursos asignados exitosamente");
+    console.log("📊 Estado de la novedad después de asignar recursos:", 
       responseAsignar.data.data.novedadEstado.nombre);
 
     // 2. Crear historial con estado anterior correcto
-    console.log('\n📋 Paso 2: Creando historial de estados...');
+    console.log("\n📋 Paso 2: Creando historial de estados...");
     const responseHistorial = await axios.post(
       `${BASE_URL}/novedades/${NOVEDAD_ID}/historial`,
       payloadCrearHistorial,
       {
         headers: {
-          'Authorization': `Bearer ${TOKEN}`,
-          'Content-Type': 'application/json'
+          "Authorization": `Bearer ${TOKEN}`,
+          "Content-Type": "application/json"
         }
       }
     );
     
-    console.log('✅ Historial creado exitosamente');
-    console.log('📊 Datos del historial creado:');
-    console.log('  - Estado Anterior:', responseHistorial.data.data.estadoAnterior.nombre);
-    console.log('  - Estado Nuevo:', responseHistorial.data.data.estadoNuevo.nombre);
-    console.log('  - Observaciones:', responseHistorial.data.data.observaciones);
+    console.log("✅ Historial creado exitosamente");
+    console.log("📊 Datos del historial creado:");
+    console.log("  - Estado Anterior:", responseHistorial.data.data.estadoAnterior.nombre);
+    console.log("  - Estado Nuevo:", responseHistorial.data.data.estadoNuevo.nombre);
+    console.log("  - Observaciones:", responseHistorial.data.data.observaciones);
 
     // 3. Verificar historial completo
-    console.log('\n📋 Paso 3: Verificando historial completo...');
+    console.log("\n📋 Paso 3: Verificando historial completo...");
     const responseHistorialCompleto = await axios.get(
       `${BASE_URL}/novedades/${NOVEDAD_ID}/historial`,
       {
         headers: {
-          'Authorization': `Bearer ${TOKEN}`
+          "Authorization": `Bearer ${TOKEN}`
         }
       }
     );
 
-    console.log('📊 Historial completo de la novedad:');
+    console.log("📊 Historial completo de la novedad:");
     responseHistorialCompleto.data.data.forEach((item, index) => {
-      console.log(`  ${index + 1}. ${item.estadoAnterior?.nombre || 'INICIO'} → ${item.estadoNuevo.nombre}`);
+      console.log(`  ${index + 1}. ${item.estadoAnterior?.nombre || "INICIO"} → ${item.estadoNuevo.nombre}`);
       console.log(`     ${item.observaciones}`);
     });
 
     // 4. Verificar resultado esperado
     const ultimoHistorial = responseHistorialCompleto.data.data[0];
-    const transicionCorrecta = ultimoHistorial.estadoAnterior.nombre === 'RESUELTA' && 
-                              ultimoHistorial.estadoNuevo.nombre === 'CERRADA';
+    const transicionCorrecta = ultimoHistorial.estadoAnterior.nombre === "RESUELTA" && 
+                              ultimoHistorial.estadoNuevo.nombre === "CERRADA";
 
     if (transicionCorrecta) {
-      console.log('\n🎉 ✅ PRUEBA EXITOSA - El fix funciona correctamente!');
-      console.log('📈 Transición correcta: RESUELTA → CERRADA');
+      console.log("\n🎉 ✅ PRUEBA EXITOSA - El fix funciona correctamente!");
+      console.log("📈 Transición correcta: RESUELTA → CERRADA");
     } else {
-      console.log('\n❌ PRUEBA FALLIDA - El fix no funciona');
+      console.log("\n❌ PRUEBA FALLIDA - El fix no funciona");
       console.log(`📈 Transición incorrecta: ${ultimoHistorial.estadoAnterior?.nombre} → ${ultimoHistorial.estadoNuevo.nombre}`);
     }
 
   } catch (error) {
-    console.error('❌ Error en la prueba:', error.response?.data || error.message);
+    console.error("❌ Error en la prueba:", error.response?.data || error.message);
   }
 }
 

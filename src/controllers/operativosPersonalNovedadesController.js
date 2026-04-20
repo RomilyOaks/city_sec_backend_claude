@@ -471,7 +471,6 @@ export const updateNovedadInCuadrante = async (req, res) => {
         message: "Novedad no encontrada",
       });
     }
-
         
     // Si se está actualizando el resultado a "RESUELTO", actualizar la fecha de atención
     const updateData = {

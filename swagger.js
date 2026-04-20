@@ -38,13 +38,13 @@ const doc = {
   },
   ...(swaggerServerUrl
     ? {
-        servers: [
-          {
-            url: swaggerServerUrl,
-            description: process.env.NODE_ENV || "development",
-          },
-        ],
-      }
+      servers: [
+        {
+          url: swaggerServerUrl,
+          description: process.env.NODE_ENV || "development",
+        },
+      ],
+    }
     : {}),
   components: {
     securitySchemes: {
