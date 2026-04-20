@@ -91,13 +91,13 @@ const Cargo = sequelize.define(
 
     /**
      * Nivel jerárquico del cargo
-     * 1 = Más alto (Jefe), 10 = Más bajo (Operativo)
+     * 1 = Más alto (Jefe), 20 = Más bajo (Operativo)
      */
     nivel_jerarquico: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 5,
-      comment: "Nivel jerárquico (1=más alto, 10=más bajo)",
+      comment: "Nivel jerárquico (1=más alto, 20=más bajo)",
       validate: {
         isInt: {
           msg: "El nivel jerárquico debe ser un número entero",
@@ -107,8 +107,8 @@ const Cargo = sequelize.define(
           msg: "El nivel jerárquico mínimo es 1",
         },
         max: {
-          args: [10],
-          msg: "El nivel jerárquico máximo es 10",
+          args: [20],
+          msg: "El nivel jerárquico máximo es 20",
         },
       },
     },
