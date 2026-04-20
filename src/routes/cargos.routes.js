@@ -79,6 +79,20 @@ router.get("/", verificarToken, verificarRolesOPermisos(["super_admin", "admin",
  */
 router.get("/:id", verificarToken, verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.cargos.read"]), cargosController.getCargoById);
 
+/**
+ * @route   GET /api/v1/cargos/:id/can-delete
+ * @desc    Verificar si un cargo puede ser eliminado
+ * @access  Admin, Supervisor
+ */
+router.get("/:id/can-delete", verificarToken, verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.cargos.delete"]), cargosController.canDeleteCargo);
+
+/**
+ * @route   GET /api/v1/cargos/:id/personas-asociadas
+ * @desc    Obtener personas asociadas a un cargo
+ * @access  Todos los usuarios autenticados
+ */
+router.get("/:id/personas-asociadas", verificarToken, verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.cargos.read"]), cargosController.getPersonasAsociadas);
+
 // ==========================================
 // RUTAS PROTEGIDAS (Admin y Supervisor)
 // ==========================================

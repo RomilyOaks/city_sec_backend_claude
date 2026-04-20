@@ -49,7 +49,6 @@ export const getAllTurnos = async (req, res) => {
       sort = "fecha",
       order = "DESC",
     } = req.query;
-
     
     const whereClause = {
       deleted_at: null,

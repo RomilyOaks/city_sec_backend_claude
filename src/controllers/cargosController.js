@@ -25,6 +25,7 @@
 
 import { Cargo } from "../models/index.js";
 import { Op } from "sequelize";
+import sequelize from "../config/database.js";
 
 // ==========================================
 // LISTAR TODOS LOS CARGOS
@@ -59,7 +60,22 @@ export const getAllCargos = async (req, res) => {
     const whereClause = {};
 
     // Filtro de activos
-    if (activos === "true") {
+    if (activos !== undefined) {
+      if (activos === "true" || activos === true) {
+        // Mostrar solo activos
+        whereClause.estado = true;
+        whereClause.deleted_at = null;
+      } else if (activos === "false" || activos === false) {
+        // Mostrar solo inactivos (estado: false)
+        whereClause.estado = false;
+        // Incluir también los eliminados (soft delete)
+        whereClause[Op.or] = [
+          { estado: false },
+          { deleted_at: { [Op.not]: null } }
+        ];
+      }
+    } else {
+      // Por defecto: solo activos si no se especifica
       whereClause.estado = true;
       whereClause.deleted_at = null;
     }
@@ -636,6 +652,162 @@ export const getCargosConLicencia = async (req, res) => {
 // EXPORTACIONES
 // ==========================================
 
+// ==========================================
+// VERIFICAR SI CARGO PUEDE SER ELIMINADO
+// ==========================================
+
+/**
+ * GET /api/v1/cargos/:id/can-delete
+ * Verifica si un cargo puede ser eliminado
+ *
+ * @async
+ * @param {Object} req - Request de Express
+ * @param {Object} req.params - Parámetros de ruta
+ * @param {number} req.params.id - ID del cargo
+ * @param {Object} res - Response de Express
+ * @returns {Object} JSON con resultado de verificación
+ */
+export const canDeleteCargo = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const cargo = await Cargo.findOne({
+      where: {
+        id,
+        deleted_at: null,
+      },
+    });
+
+    if (!cargo) {
+      return res.status(404).json({
+        success: false,
+        message: "Cargo no encontrado",
+      });
+    }
+
+    // Verificar si hay personal asignado a este cargo
+    const cantidadPersonal = await cargo.contarPersonal();
+
+    res.json({
+      success: true,
+      data: {
+        canDelete: cantidadPersonal === 0,
+        reason: cantidadPersonal > 0 
+          ? `No se puede eliminar el cargo porque tiene ${cantidadPersonal} persona(s) asignada(s)`
+          : null,
+        cantidadPersonal
+      }
+    });
+  } catch (error) {
+    console.error("Error en canDeleteCargo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al verificar si puede eliminar el cargo",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+// ==========================================
+// OBTENER PERSONAS ASOCIADAS A UN CARGO
+// ==========================================
+
+/**
+ * GET /api/v1/cargos/:id/personas-asociadas
+ * Obtiene todas las personas asociadas a un cargo específico
+ *
+ * @async
+ * @param {Object} req - Request de Express
+ * @param {Object} req.params - Parámetros de ruta
+ * @param {number} req.params.id - ID del cargo
+ * @param {Object} res - Response de Express
+ * @returns {Object} JSON con cargo y personas asociadas
+ */
+export const getPersonasAsociadas = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscar el cargo
+    const cargo = await Cargo.findOne({
+      where: {
+        id,
+        deleted_at: null,
+      },
+    });
+
+    if (!cargo) {
+      return res.status(404).json({
+        success: false,
+        message: "Cargo no encontrado",
+      });
+    }
+
+    // Obtener personal asociado a este cargo
+    const PersonalSeguridad = sequelize.models.PersonalSeguridad;
+    
+    const personasAsociadas = await PersonalSeguridad.findAll({
+      where: {
+        cargo_id: id,
+        estado: true,
+        deleted_at: null,
+      },
+      attributes: [
+        "id",
+        "nombres",
+        "apellido_paterno",
+        "apellido_materno",
+        "doc_tipo",
+        "doc_numero",
+        "sexo",
+        "fecha_nacimiento",
+        "direccion",
+        "ubigeo_code",
+        "fecha_ingreso",
+        "status",
+        "licencia",
+        "categoria",
+        "vigencia",
+        "regimen",
+        "vehiculo_id",
+        "codigo_acceso",
+        "estado",
+        "created_at"
+      ],
+      order: [
+        ["apellido_paterno", "ASC"],
+        ["apellido_materno", "ASC"],
+        ["nombres", "ASC"]
+      ]
+    });
+
+    res.json({
+      success: true,
+      data: {
+        cargo: {
+          id: cargo.id,
+          nombre: cargo.nombre,
+          codigo: cargo.codigo,
+          categoria: cargo.categoria,
+          nivel_jerarquico: cargo.nivel_jerarquico
+        },
+        personas_asociadas: personasAsociadas,
+        total_personas: personasAsociadas.length
+      }
+    });
+  } catch (error) {
+    console.error("Error en getPersonasAsociadas:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener personas asociadas al cargo",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+// ==========================================
+// EXPORTACIONES
+// ==========================================
+
 export default {
   getAllCargos,
   getCargoById,
@@ -646,4 +818,6 @@ export default {
   getEstadisticas,
   getCargosByCategoria,
   getCargosConLicencia,
+  canDeleteCargo,
+  getPersonasAsociadas,
 };

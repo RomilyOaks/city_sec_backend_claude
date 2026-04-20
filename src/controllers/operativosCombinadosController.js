@@ -122,7 +122,6 @@ export const getOperativosCombinadosPorNovedad = async (req, res) => {
         { model: Usuario, as: "actualizadorOperativosPersonalNovedades", attributes: ["id", "username", "nombres", "apellidos"] }
       ]
     });
-
     
     // Analizar quién llenó qué campos
     const analisisCampos = analizarCamposLlenados(operativoVehiculo, operativoPersonal);

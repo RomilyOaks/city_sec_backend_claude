@@ -50,7 +50,7 @@ GET /cargos
 **Query Parameters (opcionales):**
 - `categoria` (string) - Filtrar por categoría
 - `requiere_licencia` (boolean) - Filtrar si requiere licencia
-- `activos` (boolean) - Solo activos (default: true)
+- `activos` (boolean) - Filtrar por estado (true=activos, false=inactivos, default: true)
 - `page` (number) - Página actual (default: 1)
 - `limit` (number) - Registros por página (default: 50)
 
@@ -196,7 +196,38 @@ PUT /cargos/{id}
 
 ---
 
-### **5. Eliminar Cargo (Soft Delete)**
+### **5. Verificar si Cargo Puede Ser Eliminado**
+```http
+GET /cargos/{id}/can-delete
+```
+
+**Response Body (puede eliminar):**
+```json
+{
+  "success": true,
+  "data": {
+    "canDelete": true,
+    "reason": null,
+    "cantidadPersonal": 0
+  }
+}
+```
+
+**Response Body (no puede eliminar):**
+```json
+{
+  "success": true,
+  "data": {
+    "canDelete": false,
+    "reason": "No se puede eliminar el cargo porque tiene 4 persona(s) asignada(s)",
+    "cantidadPersonal": 4
+  }
+}
+```
+
+---
+
+### **6. Eliminar Cargo (Soft Delete)**
 ```http
 DELETE /cargos/{id}
 ```
@@ -209,9 +240,17 @@ DELETE /cargos/{id}
 }
 ```
 
+**Error si tiene personal asignado:**
+```json
+{
+  "success": false,
+  "message": "No se puede eliminar el cargo porque tiene 4 persona(s) asignada(s)"
+}
+```
+
 ---
 
-### **6. Restaurar Cargo**
+### **7. Restaurar Cargo**
 ```http
 POST /cargos/{id}/restore
 ```
@@ -232,7 +271,7 @@ POST /cargos/{id}/restore
 
 ---
 
-### **7. Estadísticas de Cargos**
+### **8. Estadísticas de Cargos**
 ```http
 GET /cargos/stats
 ```
@@ -256,7 +295,7 @@ GET /cargos/stats
 
 ---
 
-### **8. Cargos por Categoría**
+### **9. Cargos por Categoría**
 ```http
 GET /cargos/categoria/{categoria}
 ```
@@ -278,7 +317,95 @@ GET /cargos/categoria/{categoria}
 
 ---
 
-### **9. Cargos con Licencia**
+### **10. Personas Asociadas a Cargo**
+```http
+GET /cargos/{id}/personas-asociadas
+```
+
+**Response Body:**
+```json
+{
+  "success": true,
+  "data": {
+    "cargo": {
+      "id": 1,
+      "nombre": "Sereno",
+      "codigo": "SERN-001",
+      "categoria": "Operativo",
+      "nivel_jerarquico": 8
+    },
+    "personas_asociadas": [
+      {
+        "id": 123,
+        "nombres": "Juan Carlos",
+        "apellido_paterno": "Pérez",
+        "apellido_materno": "García",
+        "doc_tipo": "DNI",
+        "doc_numero": "12345678",
+        "sexo": "Masculino",
+        "fecha_nacimiento": "1990-05-15",
+        "direccion": "Av. Principal 123",
+        "ubigeo_code": "150101",
+        "fecha_ingreso": "2020-01-15",
+        "status": "Activo",
+        "licencia": "A1234567",
+        "categoria": "Sereno",
+        "vigencia": "2025-12-31",
+        "regimen": "276",
+        "vehiculo_id": 5,
+        "codigo_acceso": "SER001",
+        "estado": true,
+        "created_at": "2026-04-19T18:30:00.000Z"
+      },
+      {
+        "id": 124,
+        "nombres": "María Elena",
+        "apellido_paterno": "López",
+        "apellido_materno": "Martínez",
+        "doc_tipo": "DNI",
+        "doc_numero": "87654321",
+        "sexo": "Femenino",
+        "fecha_nacimiento": "1992-08-20",
+        "direccion": "Jr. Secundaria 456",
+        "ubigeo_code": "150101",
+        "fecha_ingreso": "2021-03-10",
+        "status": "Activo",
+        "licencia": "B7654321",
+        "categoria": "Sereno",
+        "vigencia": "2025-12-31",
+        "regimen": "276",
+        "vehiculo_id": null,
+        "codigo_acceso": "SER002",
+        "estado": true,
+        "created_at": "2026-04-19T18:45:00.000Z"
+      }
+    ],
+    "total_personas": 2
+  }
+}
+```
+
+**Response Body (sin personas):**
+```json
+{
+  "success": true,
+  "data": {
+    "cargo": {
+      "id": 5,
+      "nombre": "Analista Senior",
+      "codigo": "ANLS-002",
+      "categoria": "Administrativo",
+      "nivel_jerarquico": 6
+    },
+    "personas_asociadas": [],
+    "total_personas": 0
+  }
+}
+```
+
+---
+
+### **11. Cargos con Licencia**
 ```http
 GET /cargos/con-licencia
 ```
@@ -462,6 +589,41 @@ const listarCargos = async (filtros = {}) => {
 };
 ```
 
+### **Ejemplos de Filtrado**
+
+#### **Solo Cargos Activos**
+```javascript
+// GET /api/v1/cargos?activos=true
+const activos = await listarCargos({ soloActivos: true });
+// Resultado: Solo cargos con estado=true y deleted_at=null
+```
+
+#### **Solo Cargos Inactivos**
+```javascript
+// GET /api/v1/cargos?activos=false
+const inactivos = await listarCargos({ soloActivos: false });
+// Resultado: Cargos con estado=false O deleted_at != null
+```
+
+#### **Por Categoría**
+```javascript
+// GET /api/v1/cargos?categoria=Operativo&activos=true
+const operativos = await listarCargos({ 
+  categoria: 'Operativo', 
+  soloActivos: true 
+});
+```
+
+#### **Combinar Filtros**
+```javascript
+// GET /api/v1/cargos?categoria=Supervisión&requiere_licencia=true&activos=true
+const supervisoresConLicencia = await listarCargos({
+  categoria: 'Supervisión',
+  requiereLicencia: true,
+  soloActivos: true
+});
+```
+
 ### **Actualizar Cargo**
 ```javascript
 const actualizarCargo = async (id, datosActualizados) => {
@@ -490,10 +652,76 @@ const actualizarCargo = async (id, datosActualizados) => {
 };
 ```
 
+### **Verificar si Cargo Puede Ser Eliminado**
+```javascript
+const verificarPuedeEliminar = async (id) => {
+  try {
+    const response = await fetch(`/api/v1/cargos/${id}/can-delete`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      return result.data;
+    } else {
+      throw new Error(result.message);
+    }
+  } catch (error) {
+    console.error('Error al verificar si puede eliminar:', error);
+    throw error;
+  }
+};
+```
+
+### **Obtener Personas Asociadas a Cargo**
+```javascript
+const getPersonasAsociadas = async (cargoId) => {
+  try {
+    const response = await fetch(`/api/v1/cargos/${cargoId}/personas-asociadas`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      return result.data;
+    } else {
+      throw new Error(result.message);
+    }
+  } catch (error) {
+    console.error('Error al obtener personas asociadas:', error);
+    throw error;
+  }
+};
+```
+
 ### **Eliminar Cargo**
 ```javascript
 const eliminarCargo = async (id) => {
   try {
+    // Primero verificar si puede eliminar
+    const puedeEliminar = await verificarPuedeEliminar(id);
+    
+    if (!puedeEliminar.canDelete) {
+      // Mostrar personas asociadas antes de bloquear eliminación
+      const personasAsociadas = await getPersonasAsociadas(id);
+      
+      if (personasAsociadas.total_personas > 0) {
+        // Mostrar modal con personas asociadas
+        console.log('Personas asociadas:', personasAsociadas.personas_asociadas);
+        alert(`No se puede eliminar el cargo porque tiene ${personasAsociadas.total_personas} persona(s) asignada(s):\n\n` +
+          personasAsociadas.personas_asociadas.map(p => 
+            `-${p.nombres} ${p.apellido_paterno} ${p.apellido_materno} (${p.doc_tipo}: ${p.doc_numero}) - Status: ${p.status}`
+          ).join('\n'));
+      }
+      return false;
+    }
+
     const response = await fetch(`/api/v1/cargos/${id}`, {
       method: 'DELETE',
       headers: {

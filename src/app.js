@@ -223,7 +223,7 @@ app.use(
     level: 6,
     filter: (req, res) => {
       // No comprimir el endpoint SSE — conexión abierta permanente
-      if (req.path && req.path.includes('/stream')) {
+      if (req.path && req.path.includes("/stream")) {
         return false;
       }
       // Para todo lo demás, usar el filtro por defecto

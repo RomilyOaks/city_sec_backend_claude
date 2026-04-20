@@ -551,14 +551,14 @@ export const updateUsuario = async (req, res) => {
     let errorMessage = "Error al actualizar usuario";
     let statusCode = 500;
     
-    if (error.name === 'SequelizeDatabaseError' && error.original?.code === 'ER_BAD_NULL_ERROR') {
+    if (error.name === "SequelizeDatabaseError" && error.original?.code === "ER_BAD_NULL_ERROR") {
       errorMessage = "Error de base de datos: Campo requerido no proporcionado";
       statusCode = 400;
-    } else if (error.name === 'SequelizeUniqueConstraintError') {
-      errorMessage = `Error de duplicidad: ${error.errors.map(e => e.message).join(', ')}`;
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      errorMessage = `Error de duplicidad: ${error.errors.map(e => e.message).join(", ")}`;
       statusCode = 409;
-    } else if (error.name === 'SequelizeValidationError') {
-      errorMessage = `Error de validación: ${error.errors.map(e => e.message).join(', ')}`;
+    } else if (error.name === "SequelizeValidationError") {
+      errorMessage = `Error de validación: ${error.errors.map(e => e.message).join(", ")}`;
       statusCode = 400;
     }
     
@@ -566,7 +566,7 @@ export const updateUsuario = async (req, res) => {
       success: false,
       message: errorMessage,
       error: error.message,
-      details: error.name === 'SequelizeDatabaseError' ? error.original?.sqlMessage : null
+      details: error.name === "SequelizeDatabaseError" ? error.original?.sqlMessage : null
     });
   }
 };
