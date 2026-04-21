@@ -310,7 +310,7 @@ export const createPersonal = async (req, res) => {
       const vehiculo = await Vehiculo.findOne({
         where: {
           id: datosPersonal.vehiculo_id,
-          estado_operativo: "DISPONIBLE",
+          estado_operativo: ["DISPONIBLE", "EN_SERVICIO"],
           estado: 1,
           deleted_at: null,
         },
@@ -505,11 +505,11 @@ export const updatePersonal = async (req, res) => {
           });
         }
 
-        if (vehiculo.estado_operativo !== "DISPONIBLE") {
+        if (!["DISPONIBLE", "EN_SERVICIO"].includes(vehiculo.estado_operativo)) {
           await transaction.rollback();
           return res.status(400).json({
             success: false,
-            message: "El vehículo no está disponible para asignación",
+            message: "El estado operativo del vehículo no está disponible para asignación",
             estado_actual: vehiculo.estado_operativo,
           });
         }
@@ -1402,11 +1402,11 @@ export const asignarVehiculo = async (req, res) => {
       });
     }
 
-    if (vehiculo.estado_operativo !== "DISPONIBLE") {
+    if (!["DISPONIBLE", "EN_SERVICIO"].includes(vehiculo.estado_operativo)) {
       await transaction.rollback();
       return res.status(400).json({
         success: false,
-        message: "El vehículo no está disponible",
+        message: "El estado operativo del vehículo no está disponible para asignación",
       });
     }
 
