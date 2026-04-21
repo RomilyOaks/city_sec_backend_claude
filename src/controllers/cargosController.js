@@ -733,6 +733,14 @@ export const getPersonasAsociadas = async (req, res) => {
         id,
         deleted_at: null,
       },
+      attributes: [
+        "id", 
+        "nombre", 
+        "codigo", 
+        "categoria", 
+        "nivel_jerarquico", 
+        "color"
+      ]
     });
 
     if (!cargo) {
@@ -788,7 +796,8 @@ export const getPersonasAsociadas = async (req, res) => {
           nombre: cargo.nombre,
           codigo: cargo.codigo,
           categoria: cargo.categoria,
-          nivel_jerarquico: cargo.nivel_jerarquico
+          nivel_jerarquico: cargo.nivel_jerarquico,
+          color: cargo.color
         },
         personas_asociadas: personasAsociadas,
         total_personas: personasAsociadas.length
