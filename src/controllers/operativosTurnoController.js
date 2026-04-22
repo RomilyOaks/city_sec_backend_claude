@@ -444,7 +444,14 @@ export const updateTurno = async (req, res) => {
       updateData.fecha_hora_inicio = fecha_hora_inicio;
     if (fecha_hora_fin !== undefined)
       updateData.fecha_hora_fin = fecha_hora_fin;
-    if (estado !== undefined) updateData.estado = estado;
+    
+    // Si se proporciona fecha_hora_fin, cambiar estado a CERRADO para mantener consistencia
+    if (fecha_hora_fin && (estado === undefined || estado === "ACTIVO")) {
+      updateData.estado = "CERRADO";
+    } else if (estado !== undefined) {
+      updateData.estado = estado;
+    }
+    
     if (observaciones !== undefined) updateData.observaciones = observaciones;
 
     await turnoRecord.update(updateData);
