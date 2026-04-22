@@ -969,7 +969,7 @@ const PersonalSeguridad = sequelize.define(
         include: [
           {
             association: "PersonalSeguridadCargo",
-            attributes: ["id", "nombre"],
+            attributes: ["id", "nombre", "color"],
           },
           {
             association: "PersonalSeguridadUbigeo",

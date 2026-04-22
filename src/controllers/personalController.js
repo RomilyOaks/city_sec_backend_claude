@@ -116,6 +116,7 @@ export const getAllPersonal = async (req, res) => {
       "status",
       "codigo_acceso",
       "created_at",
+      "cargo.color",
     ];
     const orderField = sortFields.includes(sort) ? sort : "apellido_paterno";
     const orderDir = order.toUpperCase() === "DESC" ? "DESC" : "ASC";
@@ -126,7 +127,7 @@ export const getAllPersonal = async (req, res) => {
         {
           model: Cargo,
           as: "PersonalSeguridadCargo",
-          attributes: ["id", "nombre"],
+          attributes: ["id", "nombre", "color"],
         },
         {
           model: Ubigeo,
@@ -190,7 +191,7 @@ export const getPersonalById = async (req, res) => {
         {
           model: Cargo,
           as: "PersonalSeguridadCargo",
-          attributes: ["id", "nombre"],
+          attributes: ["id", "nombre", "color"],
         },
         {
           model: Ubigeo,
@@ -373,7 +374,7 @@ export const createPersonal = async (req, res) => {
           {
             model: Cargo,
             as: "PersonalSeguridadCargo",
-            attributes: ["id", "nombre"],
+            attributes: ["id", "nombre", "color"],
           },
           {
             model: Ubigeo,
@@ -626,7 +627,7 @@ export const updatePersonal = async (req, res) => {
         {
           model: Cargo,
           as: "PersonalSeguridadCargo",
-          attributes: ["id", "nombre"],
+          attributes: ["id", "nombre", "color"],
         },
         {
           model: Ubigeo,
