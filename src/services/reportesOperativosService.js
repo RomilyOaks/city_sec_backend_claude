@@ -909,7 +909,7 @@ export const getOperativosPie = async (queryParams = {}) => {
       INNER JOIN operativos_turno ot ON op.operativo_turno_id = ot.id 
       INNER JOIN horarios_turnos ht ON ot.turno = ht.turno 
       INNER JOIN usuarios usr ON ot.operador_id = usr.id  
-      INNER JOIN SECTORES sec ON ot.sector_id = sec.id  
+      INNER JOIN sectores sec ON ot.sector_id = sec.id  
       INNER JOIN personal_seguridad ps1 ON ot.supervisor_id = ps1.id   -- Supervisor Sector
       LEFT JOIN cargos CargSup ON ps1.cargo_id = CargSup.id 
       
@@ -919,8 +919,8 @@ export const getOperativosPie = async (queryParams = {}) => {
       LEFT JOIN personal_seguridad ps3 ON op.sereno_id = ps3.id        -- Sereno acompañante (opcional)
       LEFT JOIN cargos carg_ser ON ps3.cargo_id = carg_ser.id 
       
-      LEFT JOIN citizen_security_v2.radios_tetra rt ON op.radio_tetra_id = rt.id 
-      INNER JOIN citizen_security_v2.cuadrantes cua ON opc.cuadrante_id = cua.id  
+      LEFT JOIN radios_tetra rt ON op.radio_tetra_id = rt.id 
+      INNER JOIN cuadrantes cua ON opc.cuadrante_id = cua.id  
       
       LEFT JOIN usuarios usr2 ON opn.updated_by = usr2.id  					-- Usuario_Actualizador_Novedad
       LEFT JOIN personal_seguridad ps4 ON usr2.personal_seguridad_id = ps4.id -- Nombres_Usuario_Actualizador_Novedad
@@ -1323,7 +1323,7 @@ export const getResumenPie = async (queryParams = {}) => {
         INNER JOIN operativos_personal_cuadrantes opc ON opn.operativo_personal_cuadrante_id = opc.id 
         INNER JOIN operativos_personal op ON opc.operativo_personal_id = op.id 
         INNER JOIN operativos_turno ot ON op.operativo_turno_id = ot.id 
-        INNER JOIN SECTORES sec ON ot.sector_id = sec.id 
+        INNER JOIN sectores sec ON ot.sector_id = sec.id 
         WHERE DATE(ni.fecha_hora_ocurrencia) BETWEEN ? AND ?
           AND ni.estado = 1 AND ni.deleted_at IS NULL
         GROUP BY sec.sector_code, sec.nombre
