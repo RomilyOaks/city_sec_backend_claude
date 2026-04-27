@@ -115,7 +115,7 @@ router.get(
   }
 );
 
-/**
+/**@@
  * @route   GET /api/v1/novedades/stream
  * @desc    Endpoint SSE — mantiene conexión abierta y emite eventos en tiempo real.
  * El frontend se conecta una sola vez y recibe actualizaciones instantáneas.

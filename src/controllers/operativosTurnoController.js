@@ -105,7 +105,13 @@ export const getAllTurnos = async (req, res) => {
     }
 
     const offset = (page - 1) * limit;
-    const orderField = sort;
+    
+    // Validar campos de ordenamiento
+    const validSortFields = [
+      "id", "fecha", "turno", "estado", "sector_id", "operador_id", 
+      "supervisor_id", "fecha_hora_inicio", "fecha_hora_fin"
+    ];
+    const orderField = validSortFields.includes(sort) ? sort : "fecha";
     const orderDir = order.toUpperCase() === "ASC" ? "ASC" : "DESC";
 
     const includeOptions = [

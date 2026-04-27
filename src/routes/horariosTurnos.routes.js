@@ -116,6 +116,7 @@ router.get(
  * @body {string} hora_inicio - Hora de inicio (HH:MM:SS)
  * @body {string} hora_fin - Hora de fin (HH:MM:SS)
  * @body {boolean} cruza_medianoche - Si cruza medianoche (default: false)
+ * @body {number} nro_orden - Número de orden para secuenciación (opcional)
  * 
  * @access Private
  * @roles super_admin ,admin, supervisor
@@ -137,6 +138,7 @@ router.post(
  * @body {string} hora_fin - Hora de fin (HH:MM:SS) [opcional]
  * @body {boolean} cruza_medianoche - Si cruza medianoche [opcional]
  * @body {boolean} estado - Estado del horario [opcional]
+ * @body {number} nro_orden - Número de orden para secuenciación [opcional]
  * 
  * @access Private
  * @roles super_admin ,admin, supervisor

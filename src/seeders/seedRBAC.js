@@ -963,6 +963,46 @@ async function seedRBAC() {
         descripcion: "Eliminar novedades de vehículos operativos en cuadrantes",
         es_sistema: true,
       },
+
+      // ============================================
+      // MÓDULO: OPERATIVOS - REPORTES
+      // ============================================
+      {
+        modulo: "operativos",
+        recurso: "reportes",
+        accion: "read",
+        descripcion: "Ver reportes operativos de todos los tipos (vehiculares, a pie, no atendidas)",
+        es_sistema: true,
+      },
+      {
+        modulo: "operativos",
+        recurso: "reportes",
+        accion: "export",
+        descripcion: "Exportar reportes operativos a Excel o CSV",
+        es_sistema: true,
+      },
+
+      // ============================================
+      // MÓDULO: OPERATIVOS - PERSONAL (PARA REPORTES A PIE)
+      // ============================================
+      {
+        modulo: "operativos",
+        recurso: "personal",
+        accion: "read",
+        descripcion: "Ver reportes de operativos a pie y patrullaje personal",
+        es_sistema: true,
+      },
+
+      // ============================================
+      // MÓDULO: NOVEDADES (PARA REPORTES NO ATENDIDAS)
+      // ============================================
+      {
+        modulo: "novedades",
+        recurso: "read",
+        accion: "read",
+        descripcion: "Ver novedades no atendidas y reportes de incidentes",
+        es_sistema: true,
+      },
     ];
 
     // Crear permisos uno por uno
@@ -1054,9 +1094,11 @@ async function seedRBAC() {
               "vehiculos",
               "vehiculos_cuadrantes",
               "vehiculos_novedades",
+              "reportes",
+              "personal",
             ],
           },
-          accion: { [sequelize.Op.in]: ["create", "read", "update", "delete"] },
+          accion: { [sequelize.Op.in]: ["create", "read", "update", "delete", "export"] },
         },
         transaction,
       });
@@ -1081,7 +1123,49 @@ async function seedRBAC() {
           ignoreDuplicates: true,
         });
         console.log(
-          `   ✓ ${permisosOperativos.length} permisos de 'operativos' (turnos, vehiculos) asignados a ${rolesParaOperativos.length} roles (Admin, Supervisor)`
+          `   ✓ ${permisosOperativos.length} permisos de 'operativos' (incluyendo reportes) asignados a ${rolesParaOperativos.length} roles (Admin, Supervisor)`
+        );
+      }
+    }
+
+    // Asignar permisos de novedades a roles que pueden ver reportes
+    const rolesParaNovedades = await Rol.findAll({
+      where: {
+        slug: { [sequelize.Op.in]: ["super_admin", "admin", "supervisor", "operador", "consulta"] },
+      },
+      transaction,
+    });
+
+    if (rolesParaNovedades.length > 0) {
+      const permisosNovedades = await Permiso.findAll({
+        where: {
+          modulo: "novedades",
+          recurso: "read",
+          accion: "read",
+        },
+        transaction,
+      });
+
+      if (permisosNovedades.length > 0) {
+        const { RolPermiso } = await import("../models/index.js");
+        const asignaciones = [];
+        for (const rol of rolesParaNovedades) {
+          for (const permiso of permisosNovedades) {
+            asignaciones.push({
+              rol_id: rol.id,
+              permiso_id: permiso.id,
+              created_by: 13, // Sistema/seeder
+              updated_by: 13,
+            });
+          }
+        }
+
+        await RolPermiso.bulkCreate(asignaciones, {
+          transaction,
+          ignoreDuplicates: true,
+        });
+        console.log(
+          `   ✓ ${permisosNovedades.length} permisos de 'novedades' asignados a ${rolesParaNovedades.length} roles (Todos los roles operativos)`
         );
       }
     }

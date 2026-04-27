@@ -1,0 +1,997 @@
+{
+	"info": {
+		"_postman_id": "citysec-reportes-operativos-collection",
+		"name": "CitySec - Reportes Operativos",
+		"description": "Collection completa para probar todos los endpoints de Reportes Operativos de CitySec. Incluye autenticación JWT y variables reutilizables.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "citysec-backend"
+	},
+	"item": [
+		{
+			"name": "🔐 Autenticación",
+			"item": [
+				{
+					"name": "Login - Obtener JWT Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Guardar token JWT en variables de entorno",
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data && response.data.token) {",
+									"        pm.collectionVariables.set('jwt_token', response.data.token);",
+									"        pm.collectionVariables.set('user_id', response.data.usuario.id);",
+									"        pm.collectionVariables.set('user_role', response.data.usuario.rol);",
+									"        console.log('✅ Token JWT guardado exitosamente');",
+									"    } else {",
+									"        console.error('❌ No se encontró token en la respuesta');",
+									"    }",
+									"}",
+									"",
+									"// Tests básicos",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success field', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"});",
+									"",
+									"pm.test('Response has token', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('token');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username_or_email\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de autenticación para obtener tokens JWT"
+		},
+		{
+			"name": "📊 Reportes Operativos - Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has service info', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('service');",
+									"    pm.expect(jsonData).to.have.property('version');",
+									"    pm.expect(jsonData).to.have.property('endpoints_implemented');",
+									"});",
+									"",
+									"pm.test('All endpoints are active', function () {",
+									"    const jsonData = pm.response.json();",
+									"    const endpoints = jsonData.endpoints_implemented;",
+									"    ",
+									"    Object.keys(endpoints).forEach(endpoint => {",
+									"        pm.expect(endpoints[endpoint]).to.eql('active');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Verificación del estado del servicio de reportes operativos"
+		},
+		{
+			"name": "🚗 Fase 1 - Operativos Vehiculares",
+			"item": [
+				{
+					"name": "GET - Operativos Vehiculares",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success field', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"});",
+									"",
+									"pm.test('Response has data array', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Response has pagination', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('pagination');",
+									"    pm.expect(jsonData.pagination).to.have.property('page');",
+									"    pm.expect(jsonData.pagination).to.have.property('limit');",
+									"    pm.expect(jsonData.pagination).to.have.property('total');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/vehiculares?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"vehiculares"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Resumen Vehicular",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has summary data', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('total_novedades');",
+									"    pm.expect(jsonData.data).to.have.property('novedades_por_turno');",
+									"    pm.expect(jsonData.data).to.have.property('vehiculos_activos');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/vehiculares/resumen",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"vehiculares",
+								"resumen"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Exportar Vehiculares",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has export info', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('total_registros');",
+									"    pm.expect(jsonData.data).to.have.property('formato');",
+									"    pm.expect(jsonData.data).to.have.property('filename');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/vehiculares/exportar?formato=excel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"vehiculares",
+								"exportar"
+							],
+							"query": [
+								{
+									"key": "formato",
+									"value": "excel"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Estadísticas Vehiculares",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has statistics', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('estadisticas_generales');",
+									"    pm.expect(jsonData.data).to.have.property('analisis_desempeno');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/vehiculares/estadisticas",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"vehiculares",
+								"estadisticas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Métricas Vehiculares",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has performance metrics', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('tiempos_respuesta');",
+									"    pm.expect(jsonData.data).to.have.property('eficiencia_operativa');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/vehiculares/metrics",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"vehiculares",
+								"metrics"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de la Fase 1: Operativos Vehiculares con novedades atendidas"
+		},
+		{
+			"name": "🚶 Fase 2 - Operativos a Pie",
+			"item": [
+				{
+					"name": "GET - Operativos a Pie",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has personal data', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"    ",
+									"    // Verificar estructura de datos de personal",
+									"    if (jsonData.data.length > 0) {",
+									"        const firstItem = jsonData.data[0];",
+									"        pm.expect(firstItem).to.have.property('personal_asignado');",
+									"        pm.expect(firstItem).to.have.property('cargo_personal_asignado');",
+									"        pm.expect(firstItem).to.have.property('equipamiento');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/pie?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"pie"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Resumen Operativos a Pie",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has pie summary', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('total_novedades');",
+									"    pm.expect(jsonData.data).to.have.property('novedades_por_turno');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/pie/resumen",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"pie",
+								"resumen"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Exportar Operativos a Pie",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has export info', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('total_registros');",
+									"    pm.expect(jsonData.data).to.have.property('formato');",
+									"    pm.expect(jsonData.data).to.have.property('filename');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/pie/exportar?formato=excel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"pie",
+								"exportar"
+							],
+							"query": [
+								{
+									"key": "formato",
+									"value": "excel"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de la Fase 2: Operativos a Pie con novedades atendidas"
+		},
+		{
+			"name": "⚠️ Fase 3 - Novedades No Atendidas",
+			"item": [
+				{
+					"name": "GET - Novedades No Atendidas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has unattended incidents', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"    ",
+									"    // Verificar estructura de datos de no atendidas",
+									"    if (jsonData.data.length > 0) {",
+									"        const firstItem = jsonData.data[0];",
+									"        pm.expect(firstItem).to.have.property('estado_atencion', 'NO_ATENDIDA');",
+									"        pm.expect(firstItem).to.have.property('tipo_atencion_faltante');",
+									"        pm.expect(firstItem.tipo_atencion_faltante).to.be.an('array');",
+									"    }",
+									"});",
+									"",
+									"pm.test('Response has query info', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('query_info');",
+									"    pm.expect(jsonData.query_info).to.have.property('query_type', 'UNION');",
+									"    pm.expect(jsonData.query_info).to.have.property('total_unicas');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/no-atendidas?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"no-atendidas"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Resumen Novedades No Atendidas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has unattended summary', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('total_novedades_no_atendidas');",
+									"    pm.expect(jsonData.data).to.have.property('novedades_por_tipo');",
+									"    pm.expect(jsonData.data).to.have.property('atencion_faltante');",
+									"});",
+									"",
+									"pm.test('Attention missing analysis', function () {",
+									"    const jsonData = pm.response.json();",
+									"    const atencionFaltante = jsonData.data.atencion_faltante;",
+									"    pm.expect(atencionFaltante).to.be.an('array');",
+									"    ",
+									"    if (atencionFaltante.length > 0) {",
+									"        const firstItem = atencionFaltante[0];",
+									"        pm.expect(firstItem).to.have.property('tipo_atencion_faltante');",
+									"        pm.expect(firstItem).to.have.property('cantidad');",
+									"        pm.expect(firstItem).to.have.property('porcentaje');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/no-atendidas/resumen",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"no-atendidas",
+								"resumen"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Exportar Novedades No Atendidas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has export info', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('total_registros');",
+									"    pm.expect(jsonData.data).to.have.property('formato');",
+									"    pm.expect(jsonData.data).to.have.property('filename');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/no-atendidas/exportar?formato=excel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"no-atendidas",
+								"exportar"
+							],
+							"query": [
+								{
+									"key": "formato",
+									"value": "excel"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de la Fase 3: Novedades No Atendidas por ningún operativo"
+		},
+		{
+			"name": "🔄 Fase 4 - Reportes Combinados y Dashboard",
+			"item": [
+				{
+					"name": "GET - Reportes Combinados",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has combined data', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success', true);",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"    ",
+									"    // Verificar estructura de datos combinados",
+									"    if (jsonData.data.length > 0) {",
+									"        const firstItem = jsonData.data[0];",
+									"        pm.expect(firstItem).to.have.property('tipo_operativo');",
+									"        pm.expect(['VEHICULAR', 'PIE', 'NO_ATENDIDA']).to.include(firstItem.tipo_operativo);",
+									"    }",
+									"});",
+									"",
+									"pm.test('Response has summary', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('resumen');",
+									"    pm.expect(jsonData.resumen).to.have.property('total_vehiculares');",
+									"    pm.expect(jsonData.resumen).to.have.property('total_pie');",
+									"    pm.expect(jsonData.resumen).to.have.property('total_no_atendidas');",
+									"    pm.expect(jsonData.resumen).to.have.property('porcentaje_atencion');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/combinados?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"combinados"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Dashboard Operativos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has dashboard KPIs', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('kpis_principales');",
+									"    pm.expect(jsonData.data).to.have.property('metricas_rendimiento');",
+									"    pm.expect(jsonData.data).to.have.property('analisis_turnos');",
+									"    pm.expect(jsonData.data).to.have.property('analisis_prioridad');",
+									"    pm.expect(jsonData.data).to.have.property('tendencias');",
+									"});",
+									"",
+									"pm.test('Main KPIs structure', function () {",
+									"    const jsonData = pm.response.json();",
+									"    const kpis = jsonData.data.kpis_principales;",
+									"    pm.expect(kpis).to.have.property('total_novedades');",
+									"    pm.expect(kpis).to.have.property('novedades_atendidas');",
+									"    pm.expect(kpis).to.have.property('novedades_no_atendidas');",
+									"    pm.expect(kpis).to.have.property('tasa_atencion_general');",
+									"    pm.expect(kpis).to.have.property('distribucion_tipo');",
+									"});",
+									"",
+									"pm.test('Type distribution structure', function () {",
+									"    const jsonData = pm.response.json();",
+									"    const distribucion = jsonData.data.kpis_principales.distribucion_tipo;",
+									"    pm.expect(distribucion).to.have.property('vehiculares');",
+									"    pm.expect(distribucion).to.have.property('pie');",
+									"    pm.expect(distribucion).to.have.property('no_atendidas');",
+									"    ",
+									"    // Verificar estructura de cada tipo",
+									"    Object.keys(distribucion).forEach(tipo => {",
+									"        pm.expect(distribucion[tipo]).to.have.property('cantidad');",
+									"        pm.expect(distribucion[tipo]).to.have.property('porcentaje');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/dashboard",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"dashboard"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de la Fase 4: Reportes Combinados y Dashboard con KPIs integrados"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global de pre-request - Validar token",
+					"const token = pm.collectionVariables.get('jwt_token');",
+					"if (!token && !pm.info.requestName.includes('Login')) {",
+					"    console.log('⚠️ No hay token JWT. Ejecuta primero el endpoint de Login.');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script global de tests - Validación común",
+					"pm.test('Response time is acceptable', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"pm.test('Content-Type is present', function () {",
+					"    pm.response.to.have.header('Content-Type');",
+					"});",
+					"",
+					"// Validar estructura de respuesta estándar",
+					"try {",
+					"    const jsonData = pm.response.json();",
+					"    pm.test('Response has standard structure', function () {",
+					"        pm.expect(jsonData).to.have.property('success');",
+					"        pm.expect(jsonData).to.have.property('message');",
+					"        pm.expect(jsonData).to.have.property('data');",
+					"    });",
+					"} catch (e) {",
+					"    // Si no es JSON, omitir esta prueba",
+									"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "username",
+			"value": "admin",
+			"type": "string"
+		},
+		{
+			"key": "password",
+			"value": "Admin123!",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_role",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

@@ -69,6 +69,14 @@ const HorariosTurnos = sequelize.define(
       comment: "1 si el turno cruza medianoche, 0 si no cruza",
     },
 
+    // Número de orden para secuenciación
+    nro_orden: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      comment: "Número de orden para secuenciación de turnos",
+    },
+
     // Estado del registro (activo/inactivo)
     estado: {
       type: DataTypes.TINYINT,
