@@ -137,6 +137,12 @@ export const validateCreateHorarioTurno = [
   validateHoraFin(),
   validateCruzaMedianoche(),
   
+  // Validación para nro_orden (opcional)
+  body("nro_orden")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("El número de orden debe ser un entero positivo"),
+  
   // Validación de negocio: hora_fin debe ser posterior a hora_inicio si no cruza medianoche
   body().custom((value, { req }) => {
     const { hora_inicio, hora_fin, cruza_medianoche } = req.body;
@@ -160,6 +166,12 @@ export const validateUpdateHorarioTurno = [
   validateHoraFin().optional(),
   validateCruzaMedianoche().optional(),
   validateEstado().optional(),
+  
+  // Validación para nro_orden (opcional)
+  body("nro_orden")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("El número de orden debe ser un entero positivo"),
   
   // Validación de negocio: si se actualizan las horas, validar consistencia
   body().custom((value, { req }) => {

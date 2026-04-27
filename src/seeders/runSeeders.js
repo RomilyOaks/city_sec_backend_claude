@@ -1,7 +1,7 @@
 import seedRBAC from "./seedRBAC.js";
 import seedEstadosNovedad from "./seedEstadosNovedad.js";
 import seedOperativosTurno from "./seedOperativosTurno.js";
-import { sequelize } from "../config/database.js";
+import sequelize from "../config/database.js";
 
 const seeders = {
   rbac: seedRBAC,

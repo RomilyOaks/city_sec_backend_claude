@@ -199,7 +199,7 @@ export const getHorarioTurnoById = async (req, res) => {
 export const createHorarioTurno = async (req, res) => {
   try {
     const { id: userId } = req.user;
-    const { turno, hora_inicio, hora_fin, cruza_medianoche = false } = req.body;
+    const { turno, hora_inicio, hora_fin, cruza_medianoche = false, nro_orden } = req.body;
 
     // Verificar si ya existe un horario para este turno
     const horarioExistente = await HorariosTurnos.findByPk(turno, {
@@ -250,6 +250,7 @@ export const createHorarioTurno = async (req, res) => {
       hora_inicio,
       hora_fin,
       cruza_medianoche: cruza_medianoche ? 1 : 0,
+      nro_orden,
       estado: 1,
       created_by: userId,
     });
@@ -318,7 +319,7 @@ export const updateHorarioTurno = async (req, res) => {
   try {
     const { turno } = req.params;
     const { id: userId } = req.user;
-    const { hora_inicio, hora_fin, cruza_medianoche, estado } = req.body;
+    const { hora_inicio, hora_fin, cruza_medianoche, estado, nro_orden } = req.body;
 
     // Verificar si el horario existe
     const horario = await HorariosTurnos.findByPk(turno);
@@ -352,6 +353,7 @@ export const updateHorarioTurno = async (req, res) => {
     if (hora_fin !== undefined) updateData.hora_fin = hora_fin;
     if (cruza_medianoche !== undefined) updateData.cruza_medianoche = cruza_medianoche ? 1 : 0;
     if (estado !== undefined) updateData.estado = estado ? 1 : 0;
+    if (nro_orden !== undefined) updateData.nro_orden = nro_orden;
 
     // Actualizar horario
     await horario.update(updateData);

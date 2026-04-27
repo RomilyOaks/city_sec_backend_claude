@@ -123,7 +123,7 @@ import horariosTurnosRoutes from "./horariosTurnos.routes.js";
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
 import abastecimientosRoutes from "./abastecimientos.routes.js";
 import grifosRoutes from "./grifos.routes.js";
-// import reportesRoutes from "./reportes.routes.js"; // TODO: Implementar
+import reportesOperativosRoutes from "./reportes-operativos.routes.js"; // ✅ Fase 1 Implementada
 
 // ============================================================================
 // 🛣️ MÓDULO CALLES Y DIRECCIONES v2.4.0 ✨
@@ -655,6 +655,27 @@ router.use("/estados-operativo-recurso", estadosOperativoRecursoRoutes);
  *   - Filtros avanzados
  */
 router.use("/auditoria", auditoriaAccionRoutes);
+
+/**
+ * @route   /reportes-operativos
+ * @desc    Reportes de operativos de patrullaje (Fase 1)
+ * @access  Mixto según endpoint
+ * @version 1.0.0
+ * @features
+ *   - Operativos vehiculares con novedades atendidas
+ *   - Resúmenes estadísticos
+ *   - Exportación a Excel/CSV
+ *   - Filtros avanzados por fecha, turno, sector
+ *   - Paginación optimizada
+ * @endpoints (Fase 1)
+ *   - GET    /reportes-operativos/vehiculares              → Listar operativos vehiculares
+ *   - GET    /reportes-operativos/vehiculares/resumen      → Resumen estadístico
+ *   - GET    /reportes-operativos/vehiculares/exportar     → Exportar datos
+ *   - GET    /reportes-operativos/vehiculares/estadisticas → Estadísticas avanzadas
+ *   - GET    /reportes-operativos/vehiculares/metrics      → Métricas de performance
+ * @new true
+ */
+router.use("/reportes-operativos", reportesOperativosRoutes);
 
 // ============================================================================
 // 🛣️ RUTAS DEL MÓDULO CALLES Y DIRECCIONES v2.4.0 ✨
