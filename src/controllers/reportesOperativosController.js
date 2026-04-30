@@ -727,19 +727,20 @@ export const exportarOperativosPie = async (req, res) => {
       "inicio_operativo_sector": item.inicio_operativo_sector || "",
       "fin_operativo_sector": item.fin_operativo_sector || "",
       "operador_id": item.operador_id || "",
-      "Operador_Sistema": item.Operador_Sistema || "",
+      "Usuario_Operador_Sistema": item.Usuario_Operador_Sistema || "",
+      "Cargo_Usuario_Operador": item.Cargo_Usuario_Operador || "",
       "sector_id": item.sector_id || "",
       "sector_code": item.sector_code || "",
       "nombre_sector": item.nombre_sector || "",
       "supervisor_id": item.supervisor_id || "",
       "Supervisor_Sector": item.Supervisor_Sector || "",
-      "Cargo_Supervisor": item.CargoSupervisor || "",
+      "Cargo_Supervisor": item.Cargo_Supervisor || "",
       "observaciones_turno": item.observaciones_turno || "",
       "estado_operativo_sector": item.estado_operativo_sector || "",
-      "updated_by": item.updated_by || "",
+      "ID_Usuario_Actualizador_Turno": item.ID_Usuario_Actualizador_Turno || "",
       "Usuario_Actualizador_Turno": item.Usuario_Actualizador_Turno || "",
       "Cargo_Actualizador_Turno": item.Cargo_Actualizador_Turno || "",
-      "Fecha_Actualizado_Turno": item.Fecha_Actualizado_Turno || "",
+      "Fecha_Actualizador_Turno": item.Fecha_Actualizador_Turno || "",
       
       // Datos del Personal Principal
       "doc_tipo": item.doc_tipo || "",
@@ -750,6 +751,32 @@ export const exportarOperativosPie = async (req, res) => {
       "nacionalidad": item.nacionalidad || "",
       "estado_personal_asignado": item.estado_personal_asignado || "",
       "regimen": item.regimen || "",
+      
+      // Datos del Personal Auxiliar
+      "Personal_Auxiliar": item.Personal_Auxiliar || "",
+      "Nombres_Personal_Auxiliar": item.Nombres_Personal_Auxiliar || "",
+      "Cargo_Personal_Auxiliar": item.Cargo_Personal_Auxiliar || "",
+      
+      // Datos del Operativo Personal
+      "radio_tetra_id": item.radio_tetra_id || "",
+      "radio_tetra_code": item.radio_tetra_code || "",
+      "Descripcion_Radio_Tetra": item.Descripcion_Radio_Tetra || "",
+      "estado_operativo_id": item.estado_operativo_id || "",
+      "estado_patrullaje_Pie": item.estado_patrullaje_Pie || "",
+      "tipo_patrullaje": item.tipo_patrullaje || "",
+      "chaleco_balistico": item.chaleco_balistico || "",
+      "porra_policial": item.porra_policial || "",
+      "esposas": item.esposas || "",
+      "linterna": item.linterna || "",
+      "kit_primeros_auxilios": item.kit_primeros_auxilios || "",
+      "hora_inicio_operativo": item.hora_inicio_operativo || "",
+      "hora_fin_operativo": item.hora_fin_operativo || "",
+      "observaciones_operativo_pie": item.observaciones_operativo_pie || "",
+      "estado_operativo_pie": item.estado_operativo_pie || "",
+      "ID_Usuario_Actualizador_Patrullaje_Pie": item.ID_Usuario_Actualizador_Patrullaje_Pie || "",
+      "Usuario_Actualizador_Patrullaje_Pie": item.Usuario_Actualizador_Patrullaje_Pie || "",
+      "Cargo_Actualizador_Patrullaje_Pie": item.Cargo_Actualizador_Patrullaje_Pie || "",
+      "Fecha_Actualizado_Patrullaje_Pie": item.Fecha_Actualizado_Patrullaje_Pie || "",
       
       // Datos del Cuadrante
       "cuadrante_id": item.cuadrante_id || "",
@@ -762,39 +789,16 @@ export const exportarOperativosPie = async (req, res) => {
       "observaciones_operativo_cuadrante": item.observaciones_operativo_cuadrante || "",
       "incidentes_reportados": item.incidentes_reportados || "",
       
-      // Datos del Operativo Personal
-      "Personal_Auxiliar": item.Personal_Auxiliar || "",
-      "Nombres_Personal_Auxiliar": item.Nombres_Personal_Auxiliar || "",
-      "Cargo_Personal_Auxiliar": item.Cargo_Personal_Auxiliar || "",
-      "radio_tetra_id": item.radio_tetra_id || "",
-      "radio_tetra_code": item.radio_tetra_code || "",
-      "Descripcion_Radio_Tetra": item.Descripcion_Radio_Tetra || "",
-      "estado_operativo_id": item.estado_operativo_id || "",
-      "estado_patrullaje_pie": item.estado_patrullaje_pie || "",
-      "tipo_patrullaje": item.tipo_patrullaje || "",
-      "chaleco_balistico": item.chaleco_balistico || "",
-      "porra_policial": item.porra_policial || "",
-      "esposas": item.esposas || "",
-      "linterna": item.linterna || "",
-      "kit_primeros_auxilios": item.kit_primeros_auxilios || "",
-      "hora_inicio_operativo": item.hora_inicio_operativo || "",
-      "hora_fin_operativo": item.hora_fin_operativo || "",
-      "observaciones_operativo_pie": item.observaciones_operativo_pie || "",
-      "estado_operativo_pie": item.estado_operativo_pie || "",
-      "updated_by_operativo_pie": item.updated_by || "",
-      "Usuario_Actualizador_Patrullaje_Pie": item.Usuario_Actualizador_Patrullaje_Pie || "",
-      "Cargo_Actualizador_Patrullaje_Pie": item.Cargo_Actualizador_Patrullaje_Pie || "",
-      "Fecha_Actualizado_Patrullaje_Pie": item.Fecha_Actualizado_Patrullaje_Pie || "",
-      
       // Datos de Atención
       "reportado": item.reportado || "",
       "atendido": item.atendido || "",
       "resultado": item.resultado || "",
       "prioridad": item.prioridad || "",
-      "Observaciones_Operativo_Novedad": item.Observaciones_Operativo_Novedad || "",
-      "Usuario_Actualiza_Operativo_Novedad": item.Usuario_Actualiza_Operativo_Novedad || "",
-      "cargo_Actualiza_Operativo_Novedad": item.cargo_Usuario_Actualiza_Operativo_Novedad || "",
-      "Operativo_Novedad_Actualizada": item.Operativo_Novedad_Actualizada || "",
+      "observaciones_operativo_novedad": item.observaciones_operativo_novedad || "",
+      "ID_Usuario_Actualizador_Novedad": item.ID_Usuario_Actualizador_Novedad || "",
+      "Usuario_Actualizador_Novedad": item.Usuario_Actualizador_Novedad || "",
+      "Cargo_Actualizador_Novedad": item.Cargo_Actualizador_Novedad || "",
+      "Fecha_Actualizador_Novedad": item.Fecha_Actualizador_Novedad || "",
       "acciones_tomadas": item.acciones_tomadas || "",
       
       // Datos de la Novedad
@@ -807,7 +811,6 @@ export const exportarOperativosPie = async (req, res) => {
       "descripcion_novedad": item.descripcion_novedad || "",
       "estado_novedad": item.estado_novedad || "",
       "origen_llamada": item.origen_llamada || "",
-      "ubigeo_code": item.ubigeo_code || "",
       "direccion_id": item.direccion_id || "",
       "localizacion": item.localizacion || "",
       "referencia_ubicacion": item.referencia_ubicacion || "",
@@ -826,7 +829,7 @@ export const exportarOperativosPie = async (req, res) => {
       "fecha_despacho": item.fecha_despacho || "",
       "usuario_despacho": item.usuario_despacho || "",
       "nombre_usuario_despacho": item.nombre_usuario_despacho || "",
-      "Cargo_Usuario_Despacho": item.Cargo_Usuario_Despacho || "",
+      "Cargo_Despachador": item.Cargo_Despachador || "",
       "fecha_llegada": item.fecha_llegada || "",
       "fecha_cierre": item.fecha_cierre || "",
       "usuario_cierre": item.usuario_cierre || "",
@@ -1164,7 +1167,7 @@ const traducirJSONaExcel = (dashboardData, queryParams) => {
   const rangoFechas = fecha_inicio && fecha_fin ? `${fecha_inicio} al ${fecha_fin}` : "Todos los datos";
   
   // Determinar si incluir columna JSON_Path (solo en desarrollo)
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = process.env.NODE_ENV === "development";
   
   // Función auxiliar para agregar campos con JSON_Path condicional
   const addCampo = (categoria, indicador, valor, unidad, jsonPath = null) => {
@@ -1435,8 +1438,8 @@ export const exportarReportesCombinados = async (req, res) => {
     // 3. Generar archivo Excel/CSV
     
     // Determinar si incluir columna JSON_Path (solo en desarrollo)
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const includeJsonPath = isDevelopment && datosParaExportar.length > 0 && datosParaExportar[0].hasOwnProperty('JSON_Path');
+    const isDevelopment = process.env.NODE_ENV === "development";
+    const includeJsonPath = isDevelopment && datosParaExportar.length > 0 && Object.prototype.hasOwnProperty.call(datosParaExportar[0], "JSON_Path");
     
     // Generar archivo de exportación
     if (datosParaExportar.length === 0) {
@@ -1531,7 +1534,7 @@ export const exportarReportesCombinados = async (req, res) => {
       const csvHeader = includeJsonPath ? "Categoría,Indicador,Valor,Unidad,JSON_Path\n" : "Categoría,Indicador,Valor,Unidad\n";
       const csvRows = datosParaExportar.map(row => {
         if (includeJsonPath) {
-          return `"${row.Categoría}","${row.Indicador}","${row.Valor}","${row.Unidad}","${row.JSON_Path || ''}"`;
+          return `"${row.Categoría}","${row.Indicador}","${row.Valor}","${row.Unidad}","${row.JSON_Path || ""}"`;
         } else {
           return `"${row.Categoría}","${row.Indicador}","${row.Valor}","${row.Unidad}"`;
         }
