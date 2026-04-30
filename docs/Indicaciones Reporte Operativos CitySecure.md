@@ -8,7 +8,7 @@ El objetivo es facilitar la correcta creacion de los endpoints necesarios para f
 
 
 ## 1. Query de Operativos de Patrullaje Vehicular 
-(x) Correcciones a aplicar
+(z) Correcciones a aplicar
 
 -- -----------------------------------------------------------------------
 -- Lista de Novedades atendidas por Operativos de Patrullaje con Vehiculos  
@@ -257,14 +257,14 @@ CONCAT(ps_sis.nombres,
             ps_sis.apellido_paterno,
             ' ',
             ps_sis.apellido_materno) AS Usuario_Operador_Sistema,	-- (*) NUEVA LINEA CORREGIDA
-carg_sis.nombre Cargo_Usuario_Operador,            
+carg_sis.nombre Cargo_Usuario_Operador,            -- (*) LINEA AGREGADA 
 ot.sector_id, sec.sector_code, sec.nombre nombre_sector,
 ot.supervisor_id,
 CONCAT(ps1.nombres,', ',ps1.apellido_paterno,' ',ps1.apellido_materno) as Supervisor_Sector,
-CargSup.nombre Cargo_Supervisor,
+CargSup.nombre Cargo_Supervisor,   -- (*) INCLUIR 
 ot.observaciones observaciones_turno,
 ot.estado estado_operativo_sector,
-ot.updated_by,
+ot.updated_by AS ID_Usuario_Actualizador_Turno,	-- (*) ALIAS AGREGADO
 CONCAT(usr4.username,', ',usr4.nombres,' ',usr4.apellidos) as Usuario_Actualizador_Turno,
 carg_t.nombre Cargo_Actualizador_Turno, ot.updated_at Fecha_Actualizador_Turno ,
 ps2.doc_tipo, ps2.doc_numero,
@@ -282,7 +282,7 @@ op.tipo_patrullaje, op.chaleco_balistico, op.porra_policial, op.esposas, op.lint
 op.hora_inicio hora_inicio_operativo, op.hora_fin hora_fin_operativo, 
 op.observaciones observaciones_operativo_pie, 
 op.estado_registro estado_operativo_pie,
-op.updated_by,
+op.updated_by as ID_Usuario_Actualizador_Patrullaje_Pie,	-- (*) ALIAS AGREGADO
 CONCAT(usr3.username,', ',usr3.nombres,' ',usr3.apellidos) as Usuario_Actualizador_Patrullaje_Pie,
 ps5.cargo_id,
 carg5.nombre Cargo_Actualizador_Patrullaje_Pie,
@@ -294,7 +294,7 @@ opc.hora_ingreso, opc.hora_salida, opc.tiempo_minutos,
 opc.observaciones observaciones_operativo_cuadrante , opc.incidentes_reportados,
 opn.reportado, opn.atendido, opn.resultado, opn.prioridad, 
 opn.observaciones observaciones_operativo_novedad,
-opn.updated_by,
+opn.updated_by AS ID_Usuario_Actualizador_Novedad,	-- (*) ALIAS AGREGADO
 CONCAT(usr2.username,', ',usr2.nombres,' ',usr2.apellidos) as Usuario_Actualizador_Novedad,
 carg_n.nombre Cargo_Actualizador_Novedad, opn.updated_at Fecha_Actualizador_Novedad  ,
 opn.acciones_tomadas, 
@@ -303,7 +303,9 @@ tn.nombre as tipo_novedad_nombre,
 ni.subtipo_novedad_id, stn.nombre sub_tipo_novedad_nombre, stn.prioridad,  
 ni.descripcion descripcion_novedad, 
 ni.estado estado_novedad, ni.origen_llamada, ni.direccion_id, ni.localizacion, ni.referencia_ubicacion,
-ni.latitud, ni.longitud, ni.ajustado_en_mapa, ni.fecha_ajuste_mapa, ni.radio_tetra_id, ni.es_anonimo,
+ni.latitud, ni.longitud, ni.ajustado_en_mapa, ni.fecha_ajuste_mapa, 
+-- ni.radio_tetra_id,  (*) ELIMINAR LINEA 
+ni.es_anonimo,
 ni.reportante_nombre, ni.reportante_telefono, ni.reportante_doc_identidad, 
 ni.descripcion descripcion_novedad,
 ni.observaciones observaciones_novedad, 
@@ -378,7 +380,6 @@ WHERE
  
 ni.estado = 1 AND ni.deleted_at IS NULL 
 ORDER BY ot.fecha, ht.nro_orden, ot.fecha_hora_inicio;
-
 
 
 
