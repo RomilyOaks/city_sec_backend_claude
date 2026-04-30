@@ -48,15 +48,12 @@ export const findOrCreateOperativoTurno = async (params, created_by) => {
     });
 
     if (operativoExistente) {
-      console.log(`✅ Turno operativo encontrado: ID=${operativoExistente.id}`);
       return {
         success: true,
         data: operativoExistente,
-        action: "found"
+        message: "Turno operativo encontrado"
       };
     }
-
-    console.log("⚠️ No se encontró turno operativo, creando nuevo...");
     
     // Si no existe, crear uno nuevo
     const nuevoTurno = await createOperativoTurno({
@@ -93,7 +90,6 @@ export const findOrCreateOperativoTurno = async (params, created_by) => {
         });
 
         if (operativoExistente) {
-          console.log(`✅ Turno operativo encontrado después de error de duplicado: ID=${operativoExistente.id}`);
           return {
             success: true,
             data: operativoExistente,
@@ -176,7 +172,6 @@ const createOperativoTurno = async (params) => {
     created_by,
   });
 
-  console.log(`✅ Turno operativo creado: ID=${nuevoTurno.id}, fecha=${nuevoTurno.fecha}`);
   return nuevoTurno;
 };
 
@@ -254,11 +249,9 @@ export const obtenerRadioDelPersonal = async (personalId) => {
     });
 
     if (radio) {
-      console.log(`📻 Radio encontrado para personal ${personalId}: ID=${radio.id}, código=${radio.radio_tetra_code}`);
       return radio.id;
     }
 
-    console.log(`📻 No se encontró radio asignado para personal ${personalId}`);
     return null;
   } catch (error) {
     console.error(`❌ Error al buscar radio del personal ${personalId}:`, error.message);

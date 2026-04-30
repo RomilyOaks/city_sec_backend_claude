@@ -9,7 +9,7 @@
  * 3. Asignación de permisos a roles
  * 4. Usuario administrador inicial
  *
- * VERSIÓN: 2.2.1 (Incluye módulo Calles y Direcciones)
+ * VERSIÓN: 2.3.0 (Incluye permisos específicos para Reportes Operativos)
  * EJECUTAR CON: npm run seed:rbac
  */
 
@@ -625,41 +625,62 @@ async function seedRBAC() {
       },
 
       // ============================================
-      // MÓDULO: REPORTES
+      // MÓDULO: REPORTES - OPERATIVOS
       // ============================================
       {
         modulo: "reportes",
-        recurso: "novedades",
+        recurso: "operativos_dashboard",
         accion: "read",
-        descripcion: "Ver reportes de novedades",
+        descripcion: "Dashboard Reportes - Ver KPIs y métricas operativas",
         es_sistema: true,
       },
       {
         modulo: "reportes",
-        recurso: "personal",
-        accion: "read",
-        descripcion: "Ver reportes de personal",
+        recurso: "operativos_dashboard",
+        accion: "export",
+        descripcion: "Dashboard Reportes - Exportar datos (XLS/CSV)",
         es_sistema: true,
       },
       {
         modulo: "reportes",
-        recurso: "vehiculos",
+        recurso: "operativos_vehiculares",
         accion: "read",
-        descripcion: "Ver reportes de vehículos",
+        descripcion: "Operativos Vehiculares - Ver listado y detalles",
         es_sistema: true,
       },
       {
         modulo: "reportes",
-        recurso: "mantenimientos",
-        accion: "read",
-        descripcion: "Ver reportes de mantenimientos",
+        recurso: "operativos_vehiculares",
+        accion: "export",
+        descripcion: "Operativos Vehiculares - Exportar datos (XLS/CSV)",
         es_sistema: true,
       },
       {
         modulo: "reportes",
-        recurso: "exportar",
-        accion: "execute",
-        descripcion: "Exportar reportes",
+        recurso: "operativos_personales",
+        accion: "read",
+        descripcion: "Operativos a Pie - Ver listado y detalles",
+        es_sistema: true,
+      },
+      {
+        modulo: "reportes",
+        recurso: "operativos_personales",
+        accion: "export",
+        descripcion: "Operativos a Pie - Exportar datos (XLS/CSV)",
+        es_sistema: true,
+      },
+      {
+        modulo: "reportes",
+        recurso: "novedades_no_atendidas",
+        accion: "read",
+        descripcion: "Novedades no Atendidas - Ver listado y análisis",
+        es_sistema: true,
+      },
+      {
+        modulo: "reportes",
+        recurso: "novedades_no_atendidas",
+        accion: "export",
+        descripcion: "Novedades no Atendidas - Exportar datos (XLS/CSV)",
         es_sistema: true,
       },
 
