@@ -23,11 +23,8 @@
  * @version 1.0.0
  */
 
-import reportesOperativosService, { 
-  formatOperativosPie,
-  formatNovedadesNoAtendidas
-} from "../services/reportesOperativosService.js";
-import * as XLSX from "xlsx";
+import reportesOperativosService from "../services/reportesOperativosService.js";
+import ExcelJS from "exceljs";
 
 /**
  * Manejo centralizado de errores
@@ -153,8 +150,10 @@ export const getResumenVehicular = async (req, res) => {
 export const exportarOperativosVehiculares = async (req, res) => {
   try {
     console.log("📤 Iniciando exportación de operativos vehiculares...");
+    console.log("🔍 Parámetros recibidos:", req.query);
     
     const formato = req.query.formato?.toLowerCase() || "excel";
+    console.log("📋 Formato solicitado:", formato);
     
     if (!["excel", "csv"].includes(formato)) {
       return res.status(400).json(buildResponse(
@@ -165,145 +164,229 @@ export const exportarOperativosVehiculares = async (req, res) => {
       ));
     }
     
-    // Obtener datos sin paginación para exportación
+    // 1. Primero obtener el JSON completo (como en dashboard)
+    console.log("🔄 Obteniendo datos JSON de operativos vehiculares...");
     const exportQuery = { ...req.query, limit: 10000, page: 1 };
     const result = await reportesOperativosService.getOperativosVehiculares(exportQuery);
     
-    // Los datos ya vienen formateados del SQL directo
-    if (result.data.length === 0) {
+    console.log("📊 Resultado del servicio:", { success: result.success, dataLength: result.data?.length });
+    
+    if (!result.success || result.data.length === 0) {
+      console.log("⚠️ No hay datos para exportar");
       return res.status(404).json(buildResponse(
         false,
         "No hay datos para exportar con los filtros seleccionados"
       ));
     }
     
-    // Implementar exportación real con librería xlsx
+    // Usar exactamente los mismos campos que el JSON
     const datos = result.data;
-    
-    if (datos.length === 0) {
-      return res.status(404).json(buildResponse(
-        false,
-        "No hay datos para exportar con los filtros seleccionados"
-      ));
-    }
-
-    // Preparar datos para exportación - asegurar que todos los campos estén presentes
     const datosParaExportar = datos.map(item => ({
       // Datos del Turno
-      "Fecha Turno": item.fecha_turno || "",
-      "N° Orden Turno": item.nro_orden_turno || "",
-      "Turno": item.turno || "",
-      "Hora Inicio Turno": item.turno_horario_inicio || "",
-      "Hora Fin Turno": item.turno_horario_fin || "",
-      "Inicio Operativo Sector": item.inicio_operativo_sector || "",
-      "Fin Operativo Sector": item.fin_operativo_sector || "",
-      "Observaciones Turno": item.observaciones_turno || "",
-      "Estado Operativo Sector": item.estado_operativo_sector || "",
+      "fecha_turno": item.fecha_turno || "",
+      "nro_orden_turno": item.nro_orden_turno || "",
+      "turno": item.turno || "",
+      "turno_horario_inicio": item.turno_horario_inicio || "",
+      "turno_horario_fin": item.turno_horario_fin || "",
+      "inicio_operativo_sector": item.inicio_operativo_sector || "",
+      "fin_operativo_sector": item.fin_operativo_sector || "",
+      "operador_id": item.operador_id || "",
+      "Usuario_Operador_Sistema": item.Usuario_Operador_Sistema || "",
+      "Cargo_Usuario_Operador": item.Cargo_Usuario_Operador || "",
+      "sector_id": item.sector_id || "",
+      "sector_code": item.sector_code || "",
+      "nombre_sector": item.nombre_sector || "",
+      "supervisor_id": item.supervisor_id || "",
+      "Supervisor_Sector": item.Supervisor_Sector || "",
+      "Cargo_Supervisor": item.Cargo_Supervisor || "",
+      "observaciones_turno": item.observaciones_turno || "",
+      "estado_operativo_sector": item.estado_operativo_sector || "",
+      "updated_by": item.updated_by || "",
+      "Usuario_Actualizador_Turno": item.Usuario_Actualizador_Turno || "",
+      "Cargo_Usuario_Actualizador_Turno": item.Cargo_Usuario_Actualizador_Turno || "",
+      "Fecha_Turno_Actualizado": item.Fecha_Turno_Actualizado || "",
       
       // Datos del Vehículo
-      "Placa Vehículo": item.placa_vehiculo || "",
-      "Marca Vehículo": item.marca_vehiculo || "",
-      "Modelo Vehículo": item.modelo_vehiculo || "",
-      "Color Vehículo": item.color_vehiculo || "",
-      "Año Vehículo": item.anio_vehiculo || "",
-      "SOAT Vehículo": item.soat_vehiculo || "",
-      "Vencimiento SOAT": item.vencimiento_soat || "",
-      "Próximo Mantenimiento": item.proximo_mantenimiento_vehiculo || "",
-      "Nivel Combustible Inicio": item.nivel_combustible_inicio || "",
-      "Nivel Combustible Fin": item.nivel_combustible_fin || "",
-      "Kilometraje Recarga": item.kilometraje_recarga || "",
-      "Combustible Litros": item.combustible_litros || "",
-      "Importe Recarga": item.importe_recarga || "",
-      "Observaciones Operativo Vehicular": item.observaciones_operativo_vehicular || "",
-      "Estado Patrullaje Vehicular": item.estado_patrullaje_vehiculo || "",
+      "vehiculo_id": item.vehiculo_id || "",
+      "tipo_vehiculo": item.tipo_vehiculo || "",
+      "codigo_vehiculo": item.codigo_vehiculo || "",
+      "nombre_vehiculo": item.nombre_vehiculo || "",
+      "placa_vehiculo": item.placa_vehiculo || "",
+      "marca_vehiculo": item.marca_vehiculo || "",
+      "soat_vehiculo": item.soat_vehiculo || "",
+      "vencimiento_soat": item.vencimiento_soat || "",
+      "proximo_mantenimiento_vehiculo": item.proximo_mantenimiento_vehiculo || "",
+      "conductor_id": item.conductor_id || "",
+      "Nombres_conductor": item.Nombres_conductor || "",
+      "Cargo_Conductor": item.Cargo_Conductor || "",
+      "copiloto_id": item.copiloto_id || "",
+      "Nombres_copiloto": item.Nombres_copiloto || "",
+      "Cargo_Copiloto": item.Cargo_Copiloto || "",
+      "tipo_copiloto_id": item.tipo_copiloto_id || "",
+      "tipo_copiloto": item.tipo_copiloto || "",
+      "radio_tetra_id": item.radio_tetra_id || "",
+      "radio_tetra_code": item.radio_tetra_code || "",
+      "Descripcion_Radio_Tetra": item.Descripcion_Radio_Tetra || "",
+      "estado_operativo_id": item.estado_operativo_id || "",
+      "estado_patrullaje_vehiculo": item.estado_patrullaje_vehiculo || "",
+      "kilometraje_inicio": item.kilometraje_inicio || "",
+      "hora_inicio": item.hora_inicio || "",
+      "nivel_combustible_inicio": item.nivel_combustible_inicio || "",
+      "kilometraje_recarga": item.kilometraje_recarga || "",
+      "hora_recarga": item.hora_recarga || "",
+      "combustible_litros": item.combustible_litros || "",
+      "importe_recarga": item.importe_recarga || "",
+      "nivel_combustible_recarga": item.nivel_combustible_recarga || "",
+      "kilometraje_fin": item.kilometraje_fin || "",
+      "hora_fin": item.hora_fin || "",
+      "nivel_combustible_fin": item.nivel_combustible_fin || "",
+      "kilometros_recorridos": item.kilometros_recorridos || "",
+      "observaciones_operativo_vehicular": item.observaciones_operativo_vehicular || "",
+      "Estado_registro_Operativo_Vehicular": item.Estado_registro_Operativo_Vehicular || "",
+      "Usuario_Actualiza_Operativo_Vehiculo": item.Usuario_Actualiza_Operativo_Vehiculo || "",
+      "Cargo_Usuario_Actualiza_Operativo_Vehiculo": item.Cargo_Usuario_Actualiza_Operativo_Vehiculo || "",
+      "Actualizacion_Operativo_Vehiculo": item.Actualizacion_Operativo_Vehiculo || "",
+      
+      // Datos del Cuadrante
+      "cuadrante_id": item.cuadrante_id || "",
+      "cuadrante_code": item.cuadrante_code || "",
+      "nombre_cuadrante": item.nombre_cuadrante || "",
+      "zona_code": item.zona_code || "",
+      "hora_ingreso": item.hora_ingreso || "",
+      "hora_salida": item.hora_salida || "",
+      "tiempo_minutos": item.tiempo_minutos || "",
+      "observaciones_operativo_cuadrante": item.observaciones_operativo_cuadrante || "",
+      "incidentes_reportados_cuadrante": item.incidentes_reportados_cuadrante || "",
+      
+      // Datos de Atención
+      "reportado": item.reportado || "",
+      "atendido": item.atendido || "",
+      "Estado_Operativo_Novedad": item.Estado_Operativo_Novedad || "",
+      "prioridad": item.prioridad || "",
+      "Observaciones_Operativo_Novedad": item.Observaciones_Operativo_Novedad || "",
+      "Usuario_Actualiza_Operativo_Novedad": item.Usuario_Actualiza_Operativo_Novedad || "",
+      "cargo_Usuario_Actualiza_Operativo_Novedad": item.cargo_Usuario_Actualiza_Operativo_Novedad || "",
+      "Operativo_Novedad_Actualizada": item.Operativo_Novedad_Actualizada || "",
+      "acciones_tomadas": item.acciones_tomadas || "",
       
       // Datos de la Novedad
-      "ID Novedad": item.novedad_id || "",
-      "Código Novedad": item.novedad_code || "",
-      "Fecha Hora Ocurrencia": item.fecha_hora_ocurrencia || "",
-      "Tipo Novedad": item.tipo_novedad_nombre || "",
-      "Subtipo Novedad": item.sub_tipo_novedad_nombre || "",
-      "Prioridad Novedad": item.Prioridad_Novedad || "",
-      "Descripción Novedad": item.descripcion_novedad || "",
-      "Estado Novedad": item.estado_novedad || "",
-      "Estado Novedad ID": item.estado_novedad_id || "",
-      "Estado Novedad Actual": item.estado_novedad_actual || "",
-      "Origen Llamada": item.origen_llamada || "",
-      "Ubigeo Code": item.ubigeo_code || "",
-      "Dirección ID": item.direccion_id || "",
-      "Localización": item.localizacion || "",
-      "Referencia Ubicación": item.referencia_ubicacion || "",
-      "Latitud": item.latitud || "",
-      "Longitud": item.longitud || "",
-      "Ajustado en Mapa": item.ajustado_en_mapa || "",
-      "Fecha Ajuste Mapa": item.fecha_ajuste_mapa || "",
-      "Radio Tetra ID": item.radio_tetra_id || "",
-      "Es Anónimo": item.es_anonimo || "",
-      "Reportante Nombre": item.reportante_nombre || "",
-      "Reportante Teléfono": item.reportante_telefono || "",
-      "Reportante Doc Identidad": item.reportante_doc_identidad || "",
-      "Observaciones Novedad": item.observaciones_novedad || "",
-      
-      // Datos de Personal
-      "Operador Sistema": item.Operador_Sistema || "",
-      "Sector": item.nombre_sector || "",
-      "Supervisor": item.Supervisor || "",
-      "Cargo Supervisor": item.Cargo_Supervisor || "",
-      "Conductor": item.Conductor || "",
-      "Cargo Conductor": item.Cargo_Conductor || "",
-      "Copiloto": item.Copiloto || "",
-      "Cargo Copiloto": item.Cargo_Copiloto || "",
-      
-      // Datos de Despacho y Cierre
-      "Fecha Despacho": item.fecha_despacho || "",
-      "Usuario Despacho": item.nombre_usuario_despacho || "",
-      "Cargo Usuario Despacho": item.Cargo_Usuario_Despacho || "",
-      "Fecha Llegada": item.fecha_llegada || "",
-      "Fecha Cierre": item.fecha_cierre || "",
-      "Usuario Cierre": item.nombre_usuario_cierre || "",
-      "Cargo Usuario Cierre": item.Cargo_Usuario_Cierre || "",
-      
-      // Métricas
-      "KM Inicial": item.km_inicial || "",
-      "KM Final": item.km_final || "",
-      "Base Tiempo Mínimo": item.Base_Tiempo_Minimo || "",
-      "Tiempo Respuesta Min": item.tiempo_respuesta_min || "",
-      "Tiempo Respuesta Min Operativo": item.tiempo_respuesta_min_operativo || "",
-      "Prioridad Actual": item.prioridad_actual || "",
-      "Requiere Seguimiento": item.requiere_seguimiento || "",
-      "Fecha Próxima Revisión": item.fecha_proxima_revision || "",
-      "Número Personas Afectadas": item.num_personas_afectadas || "",
-      "Pérdidas Materiales Estimadas": item.perdidas_materiales_estimadas || ""
+      "novedad_id": item.novedad_id || "",
+      "novedad_code": item.novedad_code || "",
+      "fecha_hora_ocurrencia": item.fecha_hora_ocurrencia || "",
+      "tipo_novedad_nombre": item.tipo_novedad_nombre || "",
+      "subtipo_novedad": item.subtipo_novedad || "",
+      "Prioridad_Novedad": item.Prioridad_Novedad || "",
+      "descripcion_novedad": item.descripcion_novedad || "",
+      "estado_novedad": item.estado_novedad || "",
+      "origen_llamada": item.origen_llamada || "",
+      "ubigeo_code": item.ubigeo_code || "",
+      "direccion_id": item.direccion_id || "",
+      "localizacion": item.localizacion || "",
+      "referencia_ubicacion": item.referencia_ubicacion || "",
+      "latitud": item.latitud || "",
+      "longitud": item.longitud || "",
+      "ajustado_en_mapa": item.ajustado_en_mapa || "",
+      "fecha_ajuste_mapa": item.fecha_ajuste_mapa || "",
+      "es_anonimo": item.es_anonimo || "",
+      "reportante_nombre": item.reportante_nombre || "",
+      "reportante_telefono": item.reportante_telefono || "",
+      "reportante_doc_identidad": item.reportante_doc_identidad || "",
+      "observaciones_novedad": item.observaciones_novedad || "",
+      "personal_cargo_id": item.personal_cargo_id || "",
+      "Nombres_Personal_a_Cargo": item.Nombres_Personal_a_Cargo || "",
+      "Cargo_Personal": item.Cargo_Personal || "",
+      "fecha_despacho": item.fecha_despacho || "",
+      "usuario_despacho": item.usuario_despacho || "",
+      "nombre_usuario_despacho": item.nombre_usuario_despacho || "",
+      "Cargo_Usuario_Despacho": item.Cargo_Usuario_Despacho || "",
+      "fecha_llegada": item.fecha_llegada || "",
+      "fecha_cierre": item.fecha_cierre || "",
+      "usuario_cierre": item.usuario_cierre || "",
+      "nombre_usuario_cierre": item.nombre_usuario_cierre || "",
+      "Cargo_Usuario_Cierre": item.Cargo_Usuario_Cierre || "",
+      "km_inicial": item.km_inicial || "",
+      "km_final": item.km_final || "",
+      "Base_Tiempo_Minimo": item.Base_Tiempo_Minimo || "",
+      "tiempo_respuesta_min": item.tiempo_respuesta_min || "",
+      "tiempo_respuesta_min_operativo": item.tiempo_respuesta_min_operativo || "",
+      "prioridad_actual": item.prioridad_actual || "",
+      "requiere_seguimiento": item.requiere_seguimiento || "",
+      "fecha_proxima_revision": item.fecha_proxima_revision || "",
+      "num_personas_afectadas": item.num_personas_afectadas || "",
+      "perdidas_materiales_estimadas": item.perdidas_materiales_estimadas || "",
+      "estado_novedad_id": item.estado_novedad_id || "",
+      "estado_novedad_actual": item.estado_novedad_actual || ""
     }));
 
-    // Crear workbook y worksheet
-    const ws = XLSX.utils.json_to_sheet(datosParaExportar);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Operativos Vehiculares");
+    console.log("🔄 Iniciando generación de archivo...", { formato, registros: datosParaExportar.length });
 
-    // Generar nombre de archivo
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").split("T")[0];
-    const filename = `operativos_vehiculares_${timestamp}.${formato}`;
-
-    // Configurar headers y enviar archivo
-    if (formato === "csv") {
-      // Para CSV, convertir a texto
-      const csvContent = XLSX.utils.sheet_to_csv(ws);
-      res.setHeader("Content-Type", "text/csv; charset=utf-8");
-      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-      res.status(200).send("\uFEFF" + csvContent); // BOM para Excel
-    } else {
-      // Para Excel
-      const excelBuffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+    // 2. Generar archivo Excel/CSV
+    if (formato === "excel") {
+      console.log("📊 Creando workbook Excel...");
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Operativos Vehiculares");
+      
+      // Obtener todos los campos únicos del primer registro como columnas
+      if (datosParaExportar.length > 0) {
+        console.log("📋 Configurando columnas...");
+        const columnas = Object.keys(datosParaExportar[0]);
+        console.log("📊 Columnas encontradas:", columnas.length);
+        
+        worksheet.columns = columnas.map(col => ({
+          header: col,
+          key: col,
+          width: 20
+        }));
+        
+        console.log("📝 Agregando datos a worksheet...");
+        // Agregar datos
+        worksheet.addRows(datosParaExportar);
+        
+        console.log("🎨 Aplicando estilos...");
+        // Estilos para encabezados
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFE6B8" }
+        };
+      }
+      
+      console.log("💾 Generando buffer Excel...");
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-      res.status(200).send(excelBuffer);
+      res.setHeader("Content-Disposition", `attachment; filename=operativos-vehiculares-${new Date().toISOString().split("T")[0]}.xlsx`);
+      
+      console.log("🔄 Escribiendo buffer...");
+      const buffer = await workbook.xlsx.writeBuffer();
+      console.log("✅ Buffer generado, enviando respuesta...");
+      return res.send(buffer);
+    } else {
+      // Generar CSV
+      if (datosParaExportar.length === 0) {
+        const csvHeader = Object.keys(datosParaExportar[0] || {}).join(",") + "\n";
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename=operativos-vehiculares-${new Date().toISOString().split("T")[0]}.csv`);
+        return res.send(csvHeader);
+      }
+      
+      const columnas = Object.keys(datosParaExportar[0]);
+      const csvHeader = columnas.join(",") + "\n";
+      const csvRows = datosParaExportar.map(row => 
+        columnas.map(col => `"${row[col] || ""}"`).join(",")
+      ).join("\n");
+      const csvData = csvHeader + csvRows;
+      
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=operativos-vehiculares-${new Date().toISOString().split("T")[0]}.csv`);
+      return res.send(csvData);
     }
-
-    console.log(`✅ Exportación a ${formato.toUpperCase()} completada: ${datos.length} registros`);
     
   } catch (error) {
-    handleError(res, error, "Error al exportar operativos vehiculares");
+    console.error("❌ Error en exportarOperativosVehiculares:", error);
+    return res.status(500).json(buildResponse(
+      false,
+      `Error al exportar operativos vehiculares: ${error.message}`
+    ));
   }
 };
 
@@ -621,90 +704,206 @@ export const exportarOperativosPie = async (req, res) => {
       ));
     }
     
-    // Obtener datos sin paginación para exportación
+    // Obtener datos sin paginación para exportación - usar mismo método que el endpoint JSON
     const exportQuery = { ...req.query, limit: 10000, page: 1 };
     const result = await reportesOperativosService.getOperativosPie(exportQuery);
-    const formattedData = reportesOperativosService.formatOperativosPieForExport(result.data);
     
-    if (formattedData.length === 0) {
+    if (!result.success || result.data.length === 0) {
       return res.status(404).json(buildResponse(
         false,
         "No hay datos para exportar con los filtros seleccionados"
       ));
     }
     
-    // Preparar respuesta completa con datos formateados
-    const filename = `operativos_pie_${new Date().toISOString().split("T")[0]}.${formato}`;
-    
-    // Estructura de datos para exportación
-    const exportData = {
-      total_registros: formattedData.length,
-      formato: formato.toUpperCase(),
-      filtros_aplicados: result.filters_applied,
-      filename: filename,
-      download_url: `/api/v1/download/${filename}`, // URL simulada para descarga
-      columnas: [
-        "id", "codigo_novedad", "fecha_hora_ocurrencia", "fecha_registro",
-        "tipo_novedad", "subtipo_novedad", "subtipo_novedad_id", "descripcion",
-        "estado_novedad_actual", "estado_novedad_id", "prioridad_actual", "prioridad",
-        "tiempo_respuesta_minutos", "tiempo_respuesta_min_operativo", "base_tiempo_minimo",
-        "requiere_seguimiento", "fecha_proxima_revision", "num_personas_afectadas",
-        "perdidas_materiales_estimadas", "observaciones", "acciones_tomadas",
+    // Usar exactamente los mismos campos que el JSON
+    const datos = result.data;
+    const datosParaExportar = datos.map(item => ({
+      // Datos del Turno
+      "fecha_turno": item.fecha_turno || "",
+      "nro_orden_turno": item.nro_orden_turno || "",
+      "turno": item.turno || "",
+      "turno_horario_inicio": item.turno_horario_inicio || "",
+      "turno_horario_fin": item.turno_horario_fin || "",
+      "inicio_operativo_sector": item.inicio_operativo_sector || "",
+      "fin_operativo_sector": item.fin_operativo_sector || "",
+      "operador_id": item.operador_id || "",
+      "Operador_Sistema": item.Operador_Sistema || "",
+      "sector_id": item.sector_id || "",
+      "sector_code": item.sector_code || "",
+      "nombre_sector": item.nombre_sector || "",
+      "supervisor_id": item.supervisor_id || "",
+      "Supervisor_Sector": item.Supervisor_Sector || "",
+      "Cargo_Supervisor": item.CargoSupervisor || "",
+      "observaciones_turno": item.observaciones_turno || "",
+      "estado_operativo_sector": item.estado_operativo_sector || "",
+      "updated_by": item.updated_by || "",
+      "Usuario_Actualizador_Turno": item.Usuario_Actualizador_Turno || "",
+      "Cargo_Actualizador_Turno": item.Cargo_Actualizador_Turno || "",
+      "Fecha_Actualizado_Turno": item.Fecha_Actualizado_Turno || "",
+      
+      // Datos del Personal Principal
+      "doc_tipo": item.doc_tipo || "",
+      "doc_numero": item.doc_numero || "",
+      "Personal_asignado": item.Personal_asignado || "",
+      "cargo_id": item.cargo_id || "",
+      "Cargo_Personal_Asignado": item.Cargo_Personal_Asignado || "",
+      "nacionalidad": item.nacionalidad || "",
+      "estado_personal_asignado": item.estado_personal_asignado || "",
+      "regimen": item.regimen || "",
+      
+      // Datos del Cuadrante
+      "cuadrante_id": item.cuadrante_id || "",
+      "cuadrante_code": item.cuadrante_code || "",
+      "nombre_cuadrante": item.nombre_cuadrante || "",
+      "zona_code": item.zona_code || "",
+      "hora_ingreso": item.hora_ingreso || "",
+      "hora_salida": item.hora_salida || "",
+      "tiempo_minutos": item.tiempo_minutos || "",
+      "observaciones_operativo_cuadrante": item.observaciones_operativo_cuadrante || "",
+      "incidentes_reportados": item.incidentes_reportados || "",
+      
+      // Datos del Operativo Personal
+      "Personal_Auxiliar": item.Personal_Auxiliar || "",
+      "Nombres_Personal_Auxiliar": item.Nombres_Personal_Auxiliar || "",
+      "Cargo_Personal_Auxiliar": item.Cargo_Personal_Auxiliar || "",
+      "radio_tetra_id": item.radio_tetra_id || "",
+      "radio_tetra_code": item.radio_tetra_code || "",
+      "Descripcion_Radio_Tetra": item.Descripcion_Radio_Tetra || "",
+      "estado_operativo_id": item.estado_operativo_id || "",
+      "estado_patrullaje_pie": item.estado_patrullaje_pie || "",
+      "tipo_patrullaje": item.tipo_patrullaje || "",
+      "chaleco_balistico": item.chaleco_balistico || "",
+      "porra_policial": item.porra_policial || "",
+      "esposas": item.esposas || "",
+      "linterna": item.linterna || "",
+      "kit_primeros_auxilios": item.kit_primeros_auxilios || "",
+      "hora_inicio_operativo": item.hora_inicio_operativo || "",
+      "hora_fin_operativo": item.hora_fin_operativo || "",
+      "observaciones_operativo_pie": item.observaciones_operativo_pie || "",
+      "estado_operativo_pie": item.estado_operativo_pie || "",
+      "updated_by_operativo_pie": item.updated_by || "",
+      "Usuario_Actualizador_Patrullaje_Pie": item.Usuario_Actualizador_Patrullaje_Pie || "",
+      "Cargo_Actualizador_Patrullaje_Pie": item.Cargo_Actualizador_Patrullaje_Pie || "",
+      "Fecha_Actualizado_Patrullaje_Pie": item.Fecha_Actualizado_Patrullaje_Pie || "",
+      
+      // Datos de Atención
+      "reportado": item.reportado || "",
+      "atendido": item.atendido || "",
+      "resultado": item.resultado || "",
+      "prioridad": item.prioridad || "",
+      "Observaciones_Operativo_Novedad": item.Observaciones_Operativo_Novedad || "",
+      "Usuario_Actualiza_Operativo_Novedad": item.Usuario_Actualiza_Operativo_Novedad || "",
+      "cargo_Actualiza_Operativo_Novedad": item.cargo_Usuario_Actualiza_Operativo_Novedad || "",
+      "Operativo_Novedad_Actualizada": item.Operativo_Novedad_Actualizada || "",
+      "acciones_tomadas": item.acciones_tomadas || "",
+      
+      // Datos de la Novedad
+      "novedad_id": item.novedad_id || "",
+      "novedad_code": item.novedad_code || "",
+      "fecha_hora_ocurrencia": item.fecha_hora_ocurrencia || "",
+      "tipo_novedad_nombre": item.tipo_novedad_nombre || "",
+      "subtipo_novedad_id": item.subtipo_novedad_id || "",
+      "sub_tipo_novedad_nombre": item.sub_tipo_novedad_nombre || "",
+      "descripcion_novedad": item.descripcion_novedad || "",
+      "estado_novedad": item.estado_novedad || "",
+      "origen_llamada": item.origen_llamada || "",
+      "ubigeo_code": item.ubigeo_code || "",
+      "direccion_id": item.direccion_id || "",
+      "localizacion": item.localizacion || "",
+      "referencia_ubicacion": item.referencia_ubicacion || "",
+      "latitud": item.latitud || "",
+      "longitud": item.longitud || "",
+      "ajustado_en_mapa": item.ajustado_en_mapa || "",
+      "fecha_ajuste_mapa": item.fecha_ajuste_mapa || "",
+      "es_anonimo": item.es_anonimo || "",
+      "reportante_nombre": item.reportante_nombre || "",
+      "reportante_telefono": item.reportante_telefono || "",
+      "reportante_doc_identidad": item.reportante_doc_identidad || "",
+      "observaciones_novedad": item.observaciones_novedad || "",
+      "personal_cargo_id": item.personal_cargo_id || "",
+      "Nombres_Personal_a_Cargo": item.Nombres_Personal_a_Cargo || "",
+      "Cargo_Personal": item.Cargo_Personal || "",
+      "fecha_despacho": item.fecha_despacho || "",
+      "usuario_despacho": item.usuario_despacho || "",
+      "nombre_usuario_despacho": item.nombre_usuario_despacho || "",
+      "Cargo_Usuario_Despacho": item.Cargo_Usuario_Despacho || "",
+      "fecha_llegada": item.fecha_llegada || "",
+      "fecha_cierre": item.fecha_cierre || "",
+      "usuario_cierre": item.usuario_cierre || "",
+      "nombre_usuario_cierre": item.nombre_usuario_cierre || "",
+      "Cargo_Usuario_Cierre": item.Cargo_Usuario_Cierre || "",
+      "km_inicial": item.km_inicial || "",
+      "km_final": item.km_final || "",
+      "Base_Tiempo_Minimo": item.Base_Tiempo_Minimo || "",
+      "tiempo_respuesta_min": item.tiempo_respuesta_min || "",
+      "tiempo_respuesta_min_operativo": item.tiempo_respuesta_min_operativo || "",
+      "prioridad_actual": item.prioridad_actual || "",
+      "requiere_seguimiento": item.requiere_seguimiento || "",
+      "fecha_proxima_revision": item.fecha_proxima_revision || "",
+      "num_personas_afectadas": item.num_personas_afectadas || "",
+      "perdidas_materiales_estimadas": item.perdidas_materiales_estimadas || "",
+      "estado_novedad_id": item.estado_novedad_id || "",
+      "estado_novedad_actual": item.estado_novedad_actual || ""
+    }));
+
+    // Generar archivo Excel/CSV
+    if (formato === "excel") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Operativos a Pie");
+      
+      // Obtener todos los campos únicos del primer registro como columnas
+      if (datosParaExportar.length > 0) {
+        const columnas = Object.keys(datosParaExportar[0]);
+        worksheet.columns = columnas.map(col => ({
+          header: col,
+          key: col,
+          width: 20
+        }));
         
-        "localizacion", "direccion_id", "referencia_ubicacion", "latitud", "longitud",
-        "ajustado_en_mapa", "fecha_ajuste_mapa", "ubigeo_code",
+        // Agregar datos
+        worksheet.addRows(datosParaExportar);
         
-        "origen_llamada", "radio_tetra_id", "reportante_nombre", "reportante_telefono",
-        "reportante_doc_identidad", "es_anonimo",
-        
-        "fecha_turno", "nro_orden_turno", "turno", "turno_horario_inicio", "turno_horario_fin",
-        "observaciones_turno",
-        
-        "sector_id", "sector_code", "nombre_sector", "supervisor_id", "supervisor_sector",
-        "cargo_supervisor",
-        
-        "personal_asignado", "doc_tipo", "doc_numero", "cargo_id", "cargo_personal_asignado",
-        "nacionalidad", "regimen", "estado_personal_asignado",
-        
-        "cuadrante_id", "cuadrante_code", "nombre_cuadrante", "zona_code", "hora_ingreso",
-        "hora_salida", "tiempo_minutos", "incidentes_reportados",
-        
-        "personal_auxiliar", "nombres_personal_auxiliar", "cargo_personal_auxiliar",
-        
-        "radio_tetra_code", "descripcion_radio_tetra", "chaleco_balistico", "porra_policial",
-        "esposas", "linterna", "kit_primeros_auxilios",
-        
-        "tipo_patrullaje", "hora_inicio_operativo", "hora_fin_operativo",
-        "estado_operativo_id", "estado_patrullaje_pie", "estado_operativo_pie",
-        "observaciones_operativo_pie",
-        
-        "reportado", "atendido", "resultado", "fecha_despacho", "fecha_llegada", "fecha_cierre",
-        
-        "operador_id", "operador_sistema", "usuario_despacho", "nombre_usuario_despacho",
-        "cargo_despachador", "usuario_cierre", "nombre_usuario_cierre", "cargo_usuario_cierre",
-        
-        "estado_operativo_sector", "inicio_operativo_sector", "fin_operativo_sector"
-      ],
-      datos: formattedData,
-      metadata: {
-        generado_por: "CitySec Backend",
-        fecha_generacion: new Date().toISOString(),
-        version: "1.0.0",
-        tipo_reporte: "Operativos de Patrullaje a Pie"
+        // Estilos para encabezados
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFE6B8" }
+        };
       }
-    };
-    
-    const response = buildResponse(
-      true,
-      `Exportación a ${formato.toUpperCase()} preparada exitosamente`,
-      exportData
-    );
-    
-    console.log(`✅ Exportación a ${formato.toUpperCase()} preparada: ${formattedData.length} registros`);
-    res.json(response);
+      
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename=operativos-pie-${new Date().toISOString().split("T")[0]}.xlsx`);
+      
+      const buffer = await workbook.xlsx.writeBuffer();
+      return res.send(buffer);
+    } else {
+      // Generar CSV
+      if (datosParaExportar.length === 0) {
+        const csvHeader = Object.keys(datosParaExportar[0] || {}).join(",") + "\n";
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename=operativos-pie-${new Date().toISOString().split("T")[0]}.csv`);
+        return res.send(csvHeader);
+      }
+      
+      const columnas = Object.keys(datosParaExportar[0]);
+      const csvHeader = columnas.join(",") + "\n";
+      const csvRows = datosParaExportar.map(row => 
+        columnas.map(col => `"${row[col] || ""}"`).join(",")
+      ).join("\n");
+      const csvData = csvHeader + csvRows;
+      
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=operativos-pie-${new Date().toISOString().split("T")[0]}.csv`);
+      return res.send(csvData);
+    }
     
   } catch (error) {
-    handleError(res, error, "Error al exportar operativos a pie");
+    console.error("❌ Error en exportarOperativosPie:", error);
+    return res.status(500).json(buildResponse(
+      false,
+      `Error al exportar operativos a pie: ${error.message}`
+    ));
   }
 };
 
@@ -810,111 +1009,546 @@ export const exportarNovedadesNoAtendidas = async (req, res) => {
       ));
     }
     
-    // Obtener datos sin paginación para exportación
+    // Obtener datos sin paginación para exportación - usar mismo método que el endpoint JSON
     const exportQuery = { ...req.query, limit: 10000, page: 1 };
     const result = await reportesOperativosService.getNovedadesNoAtendidas(exportQuery);
-    // Los datos ya vienen formateados del SQL directo
-    const formattedData = result.data;
     
-    if (formattedData.length === 0) {
+    if (!result.success || result.data.length === 0) {
       return res.status(404).json(buildResponse(
         false,
         "No hay datos para exportar con los filtros seleccionados"
       ));
     }
     
-    // TODO: Implementar exportación real con librerías correspondientes
-    // Por ahora retornamos información de la exportación
-    
-    const response = buildResponse(
-      true,
-      `Exportación a ${formato.toUpperCase()} preparada exitosamente`,
-      {
-        total_registros: formattedData.length,
-        formato: formato.toUpperCase(),
-        filtros_aplicados: result.filters_applied,
-        query_info: result.query_info,
-        filename: `novedades_no_atendidas_${new Date().toISOString().split("T")[0]}.${formato}`,
-        // TODO: Agregar URL de descarga cuando se implemente
-        download_url: null,
-        // Agregar los datos para exportación
-        datos: formattedData,
-        columnas: [
-          "id", "novedad_code", "fecha_hora_ocurrencia", "created_at",
-          "tipo_novedad_id", "subtipo_novedad_id", "estado_novedad_id",
-          "sector_id", "cuadrante_id", "direccion_id", "localizacion",
-          "referencia_ubicacion", "latitud", "longitud", "ajustado_en_mapa",
-          "fecha_ajuste_mapa", "ubigeo_code", "origen_llamada",
-          "radio_tetra_id", "reportante_nombre", "reportante_telefono",
-          "reportante_doc_identidad", "es_anonimo", "descripcion",
-          "observaciones", "prioridad_actual", "gravedad",
-          "usuario_registro", "unidad_oficina_id", "vehiculo_id",
-          "personal_cargo_id", "personal_seguridad2_id",
-          "personal_seguridad3_id", "personal_seguridad4_id",
-          "fecha_despacho", "usuario_despacho", "fecha_llegada",
-          "fecha_cierre", "usuario_cierre", "km_inicial", "km_final",
-          "tiempo_respuesta_min", "tiempo_respuesta_min_operativo",
-          "turno", "parte_adjuntos", "fotos_adjuntas",
-          "videos_adjuntos", "requiere_seguimiento",
-          "fecha_proxima_revision", "num_personas_afectadas",
-          "perdidas_materiales_estimadas", "estado", "created_by",
-          "updated_by", "deleted_at", "deleted_by", "usuario_cierre",
-          "updated_at", "tipo_novedad_nombre", "subtipo_novedad_nombre",
-          "subtipo_prioridad"
-        ],
-        metadata: {
-          generado_por: "CitySec Backend",
-          fecha_generacion: new Date().toISOString(),
-          version: "1.0.0",
-          tipo_reporte: "Novedades No Atendidas"
-        }
+    // Usar exactamente los mismos campos que el JSON
+    const datos = result.data;
+    const datosParaExportar = datos.map(item => ({
+      "id": item.id || "",
+      "novedad_code": item.novedad_code || "",
+      "fecha_hora_ocurrencia": item.fecha_hora_ocurrencia || "",
+      "created_at": item.created_at || "",
+      "tipo_novedad_id": item.tipo_novedad_id || "",
+      "subtipo_novedad_id": item.subtipo_novedad_id || "",
+      "estado_novedad_id": item.estado_novedad_id || "",
+      "sector_id": item.sector_id || "",
+      "cuadrante_id": item.cuadrante_id || "",
+      "direccion_id": item.direccion_id || "",
+      "localizacion": item.localizacion || "",
+      "referencia_ubicacion": item.referencia_ubicacion || "",
+      "latitud": item.latitud || "",
+      "longitud": item.longitud || "",
+      "ajustado_en_mapa": item.ajustado_en_mapa || "",
+      "fecha_ajuste_mapa": item.fecha_ajuste_mapa || "",
+      "ubigeo_code": item.ubigeo_code || "",
+      "origen_llamada": item.origen_llamada || "",
+      "radio_tetra_id": item.radio_tetra_id || "",
+      "reportante_nombre": item.reportante_nombre || "",
+      "reportante_telefono": item.reportante_telefono || "",
+      "reportante_doc_identidad": item.reportante_doc_identidad || "",
+      "es_anonimo": item.es_anonimo || "",
+      "descripcion": item.descripcion || "",
+      "observaciones": item.observaciones || "",
+      "prioridad_actual": item.prioridad_actual || "",
+      "gravedad": item.gravedad || "",
+      "usuario_registro": item.usuario_registro || "",
+      "unidad_oficina_id": item.unidad_oficina_id || "",
+      "vehiculo_id": item.vehiculo_id || "",
+      "personal_cargo_id": item.personal_cargo_id || "",
+      "personal_seguridad2_id": item.personal_seguridad2_id || "",
+      "personal_seguridad3_id": item.personal_seguridad3_id || "",
+      "personal_seguridad4_id": item.personal_seguridad4_id || "",
+      "fecha_despacho": item.fecha_despacho || "",
+      "usuario_despacho": item.usuario_despacho || "",
+      "fecha_llegada": item.fecha_llegada || "",
+      "fecha_cierre": item.fecha_cierre || "",
+      "usuario_cierre": item.usuario_cierre || "",
+      "km_inicial": item.km_inicial || "",
+      "km_final": item.km_final || "",
+      "tiempo_respuesta_min": item.tiempo_respuesta_min || "",
+      "tiempo_respuesta_min_operativo": item.tiempo_respuesta_min_operativo || "",
+      "turno": item.turno || "",
+      "parte_adjuntos": item.parte_adjuntos || "",
+      "fotos_adjuntas": item.fotos_adjuntas || "",
+      "videos_adjuntos": item.videos_adjuntos || "",
+      "requiere_seguimiento": item.requiere_seguimiento || "",
+      "fecha_proxima_revision": item.fecha_proxima_revision || "",
+      "num_personas_afectadas": item.num_personas_afectadas || "",
+      "perdidas_materiales_estimadas": item.perdidas_materiales_estimadas || "",
+      "estado": item.estado || "",
+      "created_by": item.created_by || "",
+      "updated_by": item.updated_by || "",
+      "deleted_at": item.deleted_at || "",
+      "deleted_by": item.deleted_by || "",
+      "updated_at": item.updated_at || "",
+      "tipo_novedad_nombre": item.tipo_novedad_nombre || "",
+      "subtipo_novedad_nombre": item.subtipo_novedad_nombre || "",
+      "subtipo_prioridad": item.subtipo_prioridad || ""
+    }));
+
+    // Generar archivo Excel/CSV
+    if (formato === "excel") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Novedades No Atendidas");
+      
+      // Obtener todos los campos únicos del primer registro como columnas
+      if (datosParaExportar.length > 0) {
+        const columnas = Object.keys(datosParaExportar[0]);
+        worksheet.columns = columnas.map(col => ({
+          header: col,
+          key: col,
+          width: 20
+        }));
+        
+        // Agregar datos
+        worksheet.addRows(datosParaExportar);
+        
+        // Estilos para encabezados
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFE6B8" }
+        };
       }
-    );
-    
-    console.log(`✅ Exportación a ${formato.toUpperCase()} preparada: ${formattedData.length} registros`);
-    res.json(response);
+      
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename=novedades-no-atendidas-${new Date().toISOString().split("T")[0]}.xlsx`);
+      
+      const buffer = await workbook.xlsx.writeBuffer();
+      return res.send(buffer);
+    } else {
+      // Generar CSV
+      if (datosParaExportar.length === 0) {
+        const csvHeader = Object.keys(datosParaExportar[0] || {}).join(",") + "\n";
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename=novedades-no-atendidas-${new Date().toISOString().split("T")[0]}.csv`);
+        return res.send(csvHeader);
+      }
+      
+      const columnas = Object.keys(datosParaExportar[0]);
+      const csvHeader = columnas.join(",") + "\n";
+      const csvRows = datosParaExportar.map(row => 
+        columnas.map(col => `"${row[col] || ""}"`).join(",")
+      ).join("\n");
+      const csvData = csvHeader + csvRows;
+      
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=novedades-no-atendidas-${new Date().toISOString().split("T")[0]}.csv`);
+      return res.send(csvData);
+    }
     
   } catch (error) {
-    handleError(res, error, "Error al exportar novedades no atendidas");
+    console.error("❌ Error en exportarNovedadesNoAtendidas:", error);
+    return res.status(500).json(buildResponse(
+      false,
+      `Error al exportar novedades no atendidas: ${error.message}`
+    ));
   }
 };
 
 // ==========================================
-// ENDPOINT 12: REPORTES COMBINADOS
+// FUNCIÓN AUXILIAR: TRADUCIR JSON A EXCEL
 // ==========================================
 
 /**
- * Obtener reportes combinados de operativos (vehiculares + a pie + no atendidas)
- * GET /api/v1/reportes-operativos/combinados
+ * Traduce el JSON del Dashboard a estructura plana para Excel/CSV
+ * @param {Object} dashboardData - Datos del dashboard del servicio
+ * @param {Object} queryParams - Parámetros de consulta para filtros
+ * @returns {Array} Array de objetos planos para exportación
+ */
+const traducirJSONaExcel = (dashboardData, queryParams) => {
+  const datosParaExportar = [];
+  
+  // Extraer filtros aplicados para metadatos
+  const { fecha_inicio, fecha_fin } = queryParams;
+  const rangoFechas = fecha_inicio && fecha_fin ? `${fecha_inicio} al ${fecha_fin}` : "Todos los datos";
+  
+  // Determinar si incluir columna JSON_Path (solo en desarrollo)
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  // Función auxiliar para agregar campos con JSON_Path condicional
+  const addCampo = (categoria, indicador, valor, unidad, jsonPath = null) => {
+    const campo = {
+      "Categoría": categoria,
+      "Indicador": indicador,
+      "Valor": valor,
+      "Unidad": unidad
+    };
+    
+    if (isDevelopment && jsonPath) {
+      campo["JSON_Path"] = jsonPath;
+    }
+    
+    return campo;
+  };
+  
+  // === SECCIÓN 1: KPIs PRINCIPALES (JSON: kpis_principales) ===
+  const kpis = dashboardData.kpis_principales;
+  if (kpis) {
+    datosParaExportar.push(
+      addCampo("KPIs Principales", "Total Novedades", Number(kpis.total_novedades) || 0, "Cantidad", "kpis_principales.total_novedades"),
+      addCampo("KPIs Principales", "Novedades Atendidas", Number(kpis.novedades_atendidas) || 0, "Cantidad", "kpis_principales.novedades_atendidas"),
+      addCampo("KPIs Principales", "Novedades No Atendidas", Number(kpis.novedades_no_atendidas) || 0, "Cantidad", "kpis_principales.novedades_no_atendidas"),
+      addCampo("KPIs Principales", "Tasa Atención General", Number(kpis.tasa_atencion_general) || 0, "%", "kpis_principales.tasa_atencion_general")
+    );
+    
+    // === SECCIÓN 2: DISTRIBUCIÓN POR TIPO (JSON: kpis_principales.distribucion_tipo) ===
+    if (kpis.distribucion_tipo) {
+      Object.entries(kpis.distribucion_tipo).forEach(([tipo, datos]) => {
+        const nombreTipo = tipo === "vehiculares" ? "Vehiculares" : 
+          tipo === "pie" ? "Operativos a Pie" : "No Atendidas";
+        datosParaExportar.push(
+          { "Categoría": "Distribución por Tipo", "Indicador": nombreTipo + " - Cantidad", "Valor": Number(datos.cantidad) || 0, "Unidad": "Cantidad", "JSON_Path": `kpis_principales.distribucion_tipo.${tipo}.cantidad` },
+          { "Categoría": "Distribución por Tipo", "Indicador": nombreTipo + " - Porcentaje", "Valor": Number(datos.porcentaje) || 0, "Unidad": "%", "JSON_Path": `kpis_principales.distribucion_tipo.${tipo}.porcentaje` }
+        );
+      });
+    }
+  }
+  
+  // === SECCIÓN 3: MÉTRICAS DE RENDIMIENTO (JSON: metricas_rendimiento) ===
+  const metricas = dashboardData.metricas_rendimiento;
+  if (metricas) {
+    datosParaExportar.push(
+      { "Categoría": "Métricas de Rendimiento", "Indicador": "Tiempo Promedio Respuesta", "Valor": Number(metricas.tiempo_promedio_respuesta) || 0, "Unidad": "minutos", "JSON_Path": "metricas_rendimiento.tiempo_promedio_respuesta" },
+      { "Categoría": "Métricas de Rendimiento", "Indicador": "Novedades Atendidas a Tiempo", "Valor": Number(metricas.novedades_atendidas_a_tiempo) || 0, "Unidad": "Cantidad", "JSON_Path": "metricas_rendimiento.novedades_atendidas_a_tiempo" },
+      { "Categoría": "Métricas de Rendimiento", "Indicador": "Novedades Atendidas Fuera de Tiempo", "Valor": Number(metricas.novedades_atendidas_fuera_tiempo) || 0, "Unidad": "Cantidad", "JSON_Path": "metricas_rendimiento.novedades_atendidas_fuera_tiempo" },
+      { "Categoría": "Métricas de Rendimiento", "Indicador": "Eficiencia Operativa", "Valor": Number(metricas.eficiencia_operativa) || 0, "Unidad": "%", "JSON_Path": "metricas_rendimiento.eficiencia_operativa" }
+    );
+  }
+  
+  // === SECCIÓN 4: ANÁLISIS POR TURNOS (JSON: analisis_turnos) ===
+  if (dashboardData.analisis_turnos) {
+    dashboardData.analisis_turnos.forEach(turno => {
+      datosParaExportar.push(
+        { "Categoría": "Análisis por Turnos", "Indicador": "Turno " + turno.turno + " - Cantidad", "Valor": Number(turno.cantidad) || 0, "Unidad": "Cantidad", "JSON_Path": `analisis_turnos[${dashboardData.analisis_turnos.indexOf(turno)}].cantidad` },
+        { "Categoría": "Análisis por Turnos", "Indicador": "Turno " + turno.turno + " - Porcentaje", "Valor": Number(turno.porcentaje) || 0, "Unidad": "%", "JSON_Path": `analisis_turnos[${dashboardData.analisis_turnos.indexOf(turno)}].porcentaje` }
+      );
+    });
+  }
+  
+  // === SECCIÓN 5: ANÁLISIS POR PRIORIDAD (JSON: analisis_prioridad) ===
+  if (dashboardData.analisis_prioridad) {
+    dashboardData.analisis_prioridad.forEach(prioridad => {
+      datosParaExportar.push(
+        { "Categoría": "Análisis por Prioridad", "Indicador": "Prioridad " + prioridad.prioridad + " - Cantidad", "Valor": Number(prioridad.cantidad) || 0, "Unidad": "Cantidad", "JSON_Path": `analisis_prioridad[${dashboardData.analisis_prioridad.indexOf(prioridad)}].cantidad` },
+        { "Categoría": "Análisis por Prioridad", "Indicador": "Prioridad " + prioridad.prioridad + " - Porcentaje", "Valor": Number(prioridad.porcentaje) || 0, "Unidad": "%", "JSON_Path": `analisis_prioridad[${dashboardData.analisis_prioridad.indexOf(prioridad)}].porcentaje` }
+      );
+    });
+  }
+  
+  // === SECCIÓN 6: TENDENCIAS DIARIAS (JSON: tendencias) ===
+  if (dashboardData.tendencias) {
+    const tendenciasFiltradas = dashboardData.tendencias.filter(tendencia => {
+      // Si hay rango de fechas, filtrar; otherwise incluir todas
+      if (fecha_inicio && fecha_fin) {
+        return tendencia.fecha >= fecha_inicio && tendencia.fecha <= fecha_fin;
+      }
+      return true;
+    });
+
+    tendenciasFiltradas.forEach(tendencia => {
+      datosParaExportar.push(
+        { "Categoría": "Tendencias Diarias", "Indicador": "Fecha " + tendencia.fecha, "Valor": Number(tendencia.cantidad) || 0, "Unidad": "Cantidad", "JSON_Path": `tendencias[${dashboardData.tendencias.indexOf(tendencia)}].cantidad` }
+      );
+    });
+  }
+  
+  // === SECCIÓN 7: RESÚMENES POR FUENTE (JSON: resumenes_fuentes) ===
+  const resumenes = dashboardData.resumenes_fuentes;
+  
+  // Resúmenes vehiculares (JSON: resumenes_fuentes.vehiculares.data)
+  if (resumenes.vehiculares?.data) {
+    const rv = resumenes.vehiculares.data;
+    datosParaExportar.push(
+      { "Categoría": "Resúmenes - Vehiculares", "Indicador": "Total Novedades Vehiculares", "Valor": Number(rv.total_novedades) || 0, "Unidad": "Cantidad", "JSON_Path": "resumenes_fuentes.vehiculares.data.total_novedades" }
+    );
+    
+    // Novedades por turno (JSON: resumenes_fuentes.vehiculares.data.novedades_por_turno)
+    if (rv.novedades_por_turno) {
+      rv.novedades_por_turno.forEach(item => {
+        datosParaExportar.push(
+          { "Categoría": "Resúmenes - Vehiculares", "Indicador": "Turno " + (item.turno || "SIN_TURNO") + " - Total", "Valor": Number(item.total) || 0, "Unidad": "Cantidad", "JSON_Path": `resumenes_fuentes.vehiculares.data.novedades_por_turno[${rv.novedades_por_turno.indexOf(item)}].total` }
+        );
+      });
+    }
+    
+    // Novedades por sector (JSON: resumenes_fuentes.vehiculares.data.novedades_por_sector)
+    if (rv.novedades_por_sector) {
+      rv.novedades_por_sector.forEach(item => {
+        datosParaExportar.push(
+          { "Categoría": "Resúmenes - Vehiculares", "Indicador": "Sector " + (item.sector || "SIN_SECTOR") + " - Total", "Valor": Number(item.total) || 0, "Unidad": "Cantidad", "JSON_Path": `resumenes_fuentes.vehiculares.data.novedades_por_sector[${rv.novedades_por_sector.indexOf(item)}].total` }
+        );
+      });
+    }
+    
+    // Novedades por prioridad (JSON: resumenes_fuentes.vehiculares.data.novedades_por_prioridad)
+    if (rv.novedades_por_prioridad) {
+      rv.novedades_por_prioridad.forEach(item => {
+        datosParaExportar.push(
+          { "Categoría": "Resúmenes - Vehiculares", "Indicador": "Prioridad " + (item.prioridad_actual || "SIN_PRIORIDAD") + " - Total", "Valor": Number(item.total) || 0, "Unidad": "Cantidad", "JSON_Path": `resumenes_fuentes.vehiculares.data.novedades_por_prioridad[${rv.novedades_por_prioridad.indexOf(item)}].total` }
+        );
+      });
+    }
+    
+    // Novedades por tipo (JSON: resumenes_fuentes.vehiculares.data.novedades_por_tipo)
+    if (rv.novedades_por_tipo) {
+      rv.novedades_por_tipo.forEach(item => {
+        datosParaExportar.push(
+          { "Categoría": "Resúmenes - Vehiculares", "Indicador": "Tipo " + (item.tipo_novedad || "SIN_TIPO") + " - Total", "Valor": Number(item.total) || 0, "Unidad": "Cantidad", "JSON_Path": `resumenes_fuentes.vehiculares.data.novedades_por_tipo[${rv.novedades_por_tipo.indexOf(item)}].total` }
+        );
+      });
+    }
+  }
+  
+  // Resúmenes pie (JSON: resumenes_fuentes.pie.data)
+  if (resumenes.pie?.data) {
+    const rp = resumenes.pie.data;
+    datosParaExportar.push(
+      { "Categoría": "Resúmenes - Operativos a Pie", "Indicador": "Total Novedades Pie", "Valor": Number(rp.total_novedades) || 0, "Unidad": "Cantidad", "JSON_Path": "resumenes_fuentes.pie.data.total_novedades" }
+    );
+    
+    // Novedades por turno (JSON: resumenes_fuentes.pie.data.novedades_por_turno)
+    if (rp.novedades_por_turno) {
+      rp.novedades_por_turno.forEach(item => {
+        datosParaExportar.push(
+          { "Categoría": "Resúmenes - Operativos a Pie", "Indicador": "Turno " + (item.turno || "SIN_TURNO") + " - Total", "Valor": Number(item.total) || 0, "Unidad": "Cantidad", "JSON_Path": `resumenes_fuentes.pie.data.novedades_por_turno[${rp.novedades_por_turno.indexOf(item)}].total` }
+        );
+      });
+    }
+    
+    // Novedades por sector (JSON: resumenes_fuentes.pie.data.novedades_por_sector)
+    if (rp.novedades_por_sector) {
+      rp.novedades_por_sector.forEach(item => {
+        datosParaExportar.push(
+          { "Categoría": "Resúmenes - Operativos a Pie", "Indicador": "Sector " + (item.sector_nombre || item.sector || "SIN_SECTOR") + " - Total", "Valor": Number(item.total) || 0, "Unidad": "Cantidad", "JSON_Path": `resumenes_fuentes.pie.data.novedades_por_sector[${rp.novedades_por_sector.indexOf(item)}].total` }
+        );
+      });
+    }
+    
+    // Novedades por prioridad (JSON: resumenes_fuentes.pie.data.novedades_por_prioridad)
+    if (rp.novedades_por_prioridad) {
+      rp.novedades_por_prioridad.forEach(item => {
+        datosParaExportar.push(
+          { "Categoría": "Resúmenes - Operativos a Pie", "Indicador": "Prioridad " + (item.prioridad_actual || "SIN_PRIORIDAD") + " - Total", "Valor": Number(item.total) || 0, "Unidad": "Cantidad", "JSON_Path": `resumenes_fuentes.pie.data.novedades_por_prioridad[${rp.novedades_por_prioridad.indexOf(item)}].total` }
+        );
+      });
+    }
+    
+    // Novedades por tipo (JSON: resumenes_fuentes.pie.data.novedades_por_tipo)
+    if (rp.novedades_por_tipo) {
+      rp.novedades_por_tipo.forEach(item => {
+        datosParaExportar.push(
+          { "Categoría": "Resúmenes - Operativos a Pie", "Indicador": "Tipo " + (item.tipo_novedad || "SIN_TIPO") + " - Total", "Valor": Number(item.total) || 0, "Unidad": "Cantidad", "JSON_Path": `resumenes_fuentes.pie.data.novedades_por_tipo[${rp.novedades_por_tipo.indexOf(item)}].total` }
+        );
+      });
+    }
+  }
+  
+  // Resúmenes no atendidas (JSON: resumenes_fuentes.no_atendidas.data)
+  if (resumenes.no_atendidas?.data) {
+    const rna = resumenes.no_atendidas.data;
+    datosParaExportar.push(
+      { "Categoría": "Resúmenes - No Atendidas", "Indicador": "Total Novedades No Atendidas", "Valor": Number(rna.total_novedades_no_atendidas) || 0, "Unidad": "Cantidad", "JSON_Path": "resumenes_fuentes.no_atendidas.data.total_novedades_no_atendidas" }
+    );
+    
+    // Novedades por tipo (JSON: resumenes_fuentes.no_atendidas.data.novedades_por_tipo)
+    if (rna.novedades_por_tipo) {
+      rna.novedades_por_tipo.forEach(item => {
+        datosParaExportar.push(
+          { "Categoría": "Resúmenes - No Atendidas", "Indicador": "Tipo " + (item.tipo || "SIN_TIPO") + " - Cantidad", "Valor": Number(item.cantidad) || 0, "Unidad": "Cantidad", "JSON_Path": `resumenes_fuentes.no_atendidas.data.novedades_por_tipo[${rna.novedades_por_tipo.indexOf(item)}].cantidad` },
+          { "Categoría": "Resúmenes - No Atendidas", "Indicador": "Tipo " + (item.tipo || "SIN_TIPO") + " - Porcentaje", "Valor": Number(item.porcentaje) || 0, "Unidad": "%", "JSON_Path": `resumenes_fuentes.no_atendidas.data.novedades_por_tipo[${rna.novedades_por_tipo.indexOf(item)}].porcentaje` }
+        );
+      });
+    }
+    
+    // Novedades por prioridad (JSON: resumenes_fuentes.no_atendidas.data.novedades_por_prioridad)
+    if (rna.novedades_por_prioridad) {
+      rna.novedades_por_prioridad.forEach(item => {
+        datosParaExportar.push(
+          { "Categoría": "Resúmenes - No Atendidas", "Indicador": "Prioridad " + (item.prioridad || "SIN_PRIORIDAD") + " - Cantidad", "Valor": Number(item.cantidad) || 0, "Unidad": "Cantidad", "JSON_Path": `resumenes_fuentes.no_atendidas.data.novedades_por_prioridad[${rna.novedades_por_prioridad.indexOf(item)}].cantidad` },
+          { "Categoría": "Resúmenes - No Atendidas", "Indicador": "Prioridad " + (item.prioridad || "SIN_PRIORIDAD") + " - Porcentaje", "Valor": Number(item.porcentaje) || 0, "Unidad": "%", "JSON_Path": `resumenes_fuentes.no_atendidas.data.novedades_por_prioridad[${rna.novedades_por_prioridad.indexOf(item)}].porcentaje` }
+        );
+      });
+    }
+    
+    // Atención faltante (JSON: resumenes_fuentes.no_atendidas.data.atencion_faltante)
+    if (rna.atencion_faltante) {
+      rna.atencion_faltante.forEach(item => {
+        datosParaExportar.push(
+          { "Categoría": "Resúmenes - No Atendidas", "Indicador": "Atención Faltante " + (item.tipo_atencion_faltante || "SIN_TIPO") + " - Cantidad", "Valor": Number(item.cantidad) || 0, "Unidad": "Cantidad", "JSON_Path": `resumenes_fuentes.no_atendidas.data.atencion_faltante[${rna.atencion_faltante.indexOf(item)}].cantidad` },
+          { "Categoría": "Resúmenes - No Atendidas", "Indicador": "Atención Faltante " + (item.tipo_atencion_faltante || "SIN_TIPO") + " - Porcentaje", "Valor": Number(item.porcentaje) || 0, "Unidad": "%", "JSON_Path": `resumenes_fuentes.no_atendidas.data.atencion_faltante[${rna.atencion_faltante.indexOf(item)}].porcentaje` }
+        );
+      });
+    }
+  }
+  
+  // === SECCIÓN 8: METADATOS ===
+  datosParaExportar.push(
+    { "Categoría": "Metadatos", "Indicador": "Fecha Generación", "Valor": dashboardData.generated_at || "", "Unidad": "Fecha/Hora", "JSON_Path": "generated_at" },
+    { "Categoría": "Metadatos", "Indicador": "Tipo Dashboard", "Valor": "COMPLETO", "Unidad": "Tipo", "JSON_Path": "dashboard_type" },
+    { "Categoría": "Metadatos", "Indicador": "Rango de Fechas", "Valor": rangoFechas, "Unidad": "Periodo", "JSON_Path": "filters_applied.fecha_range" }
+  );
+  
+  return datosParaExportar;
+};
+
+// ==========================================
+// ENDPOINT 13: EXPORTAR REPORTES COMBINADOS
+// ==========================================
+
+/**
+ * Exportar reportes combinados de operativos a Excel/CSV
+ * GET /api/v1/reportes-operativos/combinados/exportar
  * 
  * @param {Object} req - Request object
  * @param {Object} res - Response object
- * @returns {Promise<Object>} Datos consolidados de todos los operativos
+ * @returns {Promise<void>} Archivo de exportación
  */
-export const getReportesCombinados = async (req, res) => {
+export const exportarReportesCombinados = async (req, res) => {
   try {
-    console.log("🔄 Iniciando consulta de reportes combinados...");
+    console.log("📤 Iniciando exportación de Dashboard operativos...");
     
-    const result = await reportesOperativosService.getReportesCombinados(req.query);
+    // Obtener parámetros de exportación
+    const { formato = "excel" } = req.query;
     
-    const response = buildResponse(
-      true,
-      "Reportes combinados obtenidos exitosamente",
-      result.data,
-      {
-        pagination: result.pagination,
-        filters_applied: result.filters_applied,
-        resumen: result.resumen,
-        query_info: result.query_info,
-        total_records: result.pagination.total
+    // Validar formato
+    if (!["excel", "csv"].includes(formato)) {
+      return res.status(400).json(buildResponse(
+        false,
+        "Formato no válido. Use 'excel' o 'csv'"
+      ));
+    }
+    
+    // 1. Primero obtener el JSON completo del Dashboard
+    const dashboardResult = await reportesOperativosService.getDashboardOperativos(req.query);
+    
+    if (!dashboardResult.success) {
+      return res.status(404).json(buildResponse(
+        false,
+        "No hay datos para exportar con los filtros seleccionados"
+      ));
+    }
+    
+    // 2. Traducir el JSON a estructura de Excel manteniendo la integridad de los datos
+    const datosParaExportar = traducirJSONaExcel(dashboardResult.data, req.query);
+    
+    // 3. Generar archivo Excel/CSV
+    
+    // Determinar si incluir columna JSON_Path (solo en desarrollo)
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const includeJsonPath = isDevelopment && datosParaExportar.length > 0 && datosParaExportar[0].hasOwnProperty('JSON_Path');
+    
+    // Generar archivo de exportación
+    if (datosParaExportar.length === 0) {
+      // Si no hay datos, generar archivo vacío con encabezados
+      const emptyData = includeJsonPath ? [{
+        "Categoría": "",
+        "Indicador": "",
+        "Valor": "",
+        "Unidad": "",
+        "JSON_Path": ""
+      }] : [{
+        "Categoría": "",
+        "Indicador": "",
+        "Valor": "",
+        "Unidad": ""
+      }];
+      
+      if (formato === "excel") {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Dashboard Operativos");
+        
+        const columns = includeJsonPath ? [
+          { header: "Categoría", key: "Categoría", width: 30 },
+          { header: "Indicador", key: "Indicador", width: 40 },
+          { header: "Valor", key: "Valor", width: 20 },
+          { header: "Unidad", key: "Unidad", width: 15 },
+          { header: "JSON_Path", key: "JSON_Path", width: 50 }
+        ] : [
+          { header: "Categoría", key: "Categoría", width: 30 },
+          { header: "Indicador", key: "Indicador", width: 40 },
+          { header: "Valor", key: "Valor", width: 20 },
+          { header: "Unidad", key: "Unidad", width: 15 }
+        ];
+        
+        worksheet.columns = columns;
+        
+        worksheet.addRows(emptyData);
+        
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", `attachment; filename=dashboard-operativos-${new Date().toISOString().split("T")[0]}.xlsx`);
+        
+        const buffer = await workbook.xlsx.writeBuffer();
+        return res.send(buffer);
+      } else {
+        const csvHeader = includeJsonPath ? "Categoría,Indicador,Valor,Unidad,JSON_Path\n" : "Categoría,Indicador,Valor,Unidad\n";
+        const csvData = csvHeader;
+        
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename=dashboard-operativos-${new Date().toISOString().split("T")[0]}.csv`);
+        return res.send(csvData);
       }
-    );
+    }
     
-    console.log(`✅ Reportes combinados obtenidos: ${result.data.length} registros`);
-    res.json(response);
+    // Generar archivo con datos
+    if (formato === "excel") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Dashboard Operativos");
+      
+      const columns = includeJsonPath ? [
+        { header: "Categoría", key: "Categoría", width: 30 },
+        { header: "Indicador", key: "Indicador", width: 40 },
+        { header: "Valor", key: "Valor", width: 20 },
+        { header: "Unidad", key: "Unidad", width: 15 },
+        { header: "JSON_Path", key: "JSON_Path", width: 50 }
+      ] : [
+        { header: "Categoría", key: "Categoría", width: 30 },
+        { header: "Indicador", key: "Indicador", width: 40 },
+        { header: "Valor", key: "Valor", width: 20 },
+        { header: "Unidad", key: "Unidad", width: 15 }
+      ];
+      
+      worksheet.columns = columns;
+      
+      // Agregar todos los datos
+      worksheet.addRows(datosParaExportar);
+      
+      // Estilos para encabezados
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFE6B8" }
+      };
+      
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename=dashboard-operativos-${new Date().toISOString().split("T")[0]}.xlsx`);
+      
+      const buffer = await workbook.xlsx.writeBuffer();
+      return res.send(buffer);
+    } else {
+      // Generar CSV
+      const csvHeader = includeJsonPath ? "Categoría,Indicador,Valor,Unidad,JSON_Path\n" : "Categoría,Indicador,Valor,Unidad\n";
+      const csvRows = datosParaExportar.map(row => {
+        if (includeJsonPath) {
+          return `"${row.Categoría}","${row.Indicador}","${row.Valor}","${row.Unidad}","${row.JSON_Path || ''}"`;
+        } else {
+          return `"${row.Categoría}","${row.Indicador}","${row.Valor}","${row.Unidad}"`;
+        }
+      }).join("\n");
+      const csvData = csvHeader + csvRows;
+      
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=dashboard-operativos-${new Date().toISOString().split("T")[0]}.csv`);
+      return res.send(csvData);
+    }
     
   } catch (error) {
-    handleError(res, error, "Error al obtener reportes combinados");
+    console.error("❌ Error en exportarReportesCombinados:", error);
+    return res.status(500).json(buildResponse(
+      false,
+      `Error al exportar dashboard: ${error.message}`
+    ));
   }
 };
 
@@ -967,6 +1601,6 @@ export default {
   getNovedadesNoAtendidas,
   getResumenNovedadesNoAtendidas,
   exportarNovedadesNoAtendidas,
-  getReportesCombinados,
+  exportarReportesCombinados,
   getDashboardOperativos
 };

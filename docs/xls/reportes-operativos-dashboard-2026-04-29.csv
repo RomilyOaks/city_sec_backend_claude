@@ -1,0 +1,72 @@
+﻿Categoría;Indicador;Valor;Unidad;JSON_Path
+KPIs Principales;Total Novedades;12;Cantidad;kpis_principales.total_novedades
+KPIs Principales;Novedades Atendidas;11;Cantidad;kpis_principales.novedades_atendidas
+KPIs Principales;Novedades No Atendidas;1;Cantidad;kpis_principales.novedades_no_atendidas
+KPIs Principales;Tasa Atención General;91.67;%;kpis_principales.tasa_atencion_general
+Distribución por Tipo;Vehiculares - Cantidad;7;Cantidad;kpis_principales.distribucion_tipo.vehiculares.cantidad
+Distribución por Tipo;Vehiculares - Porcentaje;58.33;%;kpis_principales.distribucion_tipo.vehiculares.porcentaje
+Distribución por Tipo;Operativos a Pie - Cantidad;4;Cantidad;kpis_principales.distribucion_tipo.pie.cantidad
+Distribución por Tipo;Operativos a Pie - Porcentaje;33.33;%;kpis_principales.distribucion_tipo.pie.porcentaje
+Distribución por Tipo;No Atendidas - Cantidad;1;Cantidad;kpis_principales.distribucion_tipo.no_atendidas.cantidad
+Distribución por Tipo;No Atendidas - Porcentaje;8.33;%;kpis_principales.distribucion_tipo.no_atendidas.porcentaje
+Métricas de Rendimiento;Tiempo Promedio Respuesta;16;minutos;metricas_rendimiento.tiempo_promedio_respuesta
+Métricas de Rendimiento;Novedades Atendidas a Tiempo;7;Cantidad;metricas_rendimiento.novedades_atendidas_a_tiempo
+Métricas de Rendimiento;Novedades Atendidas Fuera de Tiempo;1;Cantidad;metricas_rendimiento.novedades_atendidas_fuera_tiempo
+Métricas de Rendimiento;Eficiencia Operativa;91.67;%;metricas_rendimiento.eficiencia_operativa
+Análisis por Turnos;Turno MAÑANA - Cantidad;6;Cantidad;analisis_turnos[0].cantidad
+Análisis por Turnos;Turno MAÑANA - Porcentaje;54.55;%;analisis_turnos[0].porcentaje
+Análisis por Turnos;Turno TARDE - Cantidad;5;Cantidad;analisis_turnos[1].cantidad
+Análisis por Turnos;Turno TARDE - Porcentaje;45.45;%;analisis_turnos[1].porcentaje
+Análisis por Prioridad;Prioridad ALTA - Cantidad;8;Cantidad;analisis_prioridad[0].cantidad
+Análisis por Prioridad;Prioridad ALTA - Porcentaje;66.67;%;analisis_prioridad[0].porcentaje
+Análisis por Prioridad;Prioridad MEDIA - Cantidad;2;Cantidad;analisis_prioridad[1].cantidad
+Análisis por Prioridad;Prioridad MEDIA - Porcentaje;16.67;%;analisis_prioridad[1].porcentaje
+Análisis por Prioridad;Prioridad BAJA - Cantidad;1;Cantidad;analisis_prioridad[2].cantidad
+Análisis por Prioridad;Prioridad BAJA - Porcentaje;8.33;%;analisis_prioridad[2].porcentaje
+Análisis por Prioridad;Prioridad SIN_PRIORIDAD - Cantidad;1;Cantidad;analisis_prioridad[3].cantidad
+Análisis por Prioridad;Prioridad SIN_PRIORIDAD - Porcentaje;8.33;%;analisis_prioridad[3].porcentaje
+Tendencias Diarias;Fecha 2026-04-22;5;Cantidad;tendencias[0].cantidad
+Tendencias Diarias;Fecha 2026-04-23;6;Cantidad;tendencias[1].cantidad
+Tendencias Diarias;Fecha 2026-04-24;0;Cantidad;tendencias[2].cantidad
+Tendencias Diarias;Fecha 2026-04-25;1;Cantidad;tendencias[3].cantidad
+Tendencias Diarias;Fecha 2026-04-26;0;Cantidad;tendencias[4].cantidad
+Tendencias Diarias;Fecha 2026-04-27;0;Cantidad;tendencias[5].cantidad
+Tendencias Diarias;Fecha 2026-04-28;0;Cantidad;tendencias[6].cantidad
+Tendencias Diarias;Fecha 2026-04-29;0;Cantidad;tendencias[7].cantidad
+Resúmenes - Vehiculares;Total Novedades Vehiculares;7;Cantidad;resumenes_fuentes.vehiculares.data.total_novedades
+Resúmenes - Vehiculares;Turno MAÑANA - Total;4;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_turno[0].total
+Resúmenes - Vehiculares;Turno TARDE - Total;3;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_turno[1].total
+Resúmenes - Vehiculares;Sector SECTOR 3 - MATEO PUMACAHUA - Total;3;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_sector[0].total
+Resúmenes - Vehiculares;Sector SECTOR 1 - CHORRILLOS CENTRO - Total;2;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_sector[1].total
+Resúmenes - Vehiculares;Sector SECTOR 4 -  SAN GENARO - Total;2;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_sector[2].total
+Resúmenes - Vehiculares;Prioridad ALTA - Total;5;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_prioridad[0].total
+Resúmenes - Vehiculares;Prioridad MEDIA - Total;1;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_prioridad[1].total
+Resúmenes - Vehiculares;Prioridad BAJA - Total;1;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_prioridad[2].total
+Resúmenes - Vehiculares;Tipo ACOSO - Total;2;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_tipo[0].total
+Resúmenes - Vehiculares;Tipo HURTO AGRAVADO / ROBO / ASALTO / RAQUETEO / ATRACO - Total;2;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_tipo[1].total
+Resúmenes - Vehiculares;Tipo HURTO SIMPLE / ROBO / ASALTO / ATRACO - Total;1;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_tipo[2].total
+Resúmenes - Vehiculares;Tipo ACCIDENTE DE TRANSITO - Total;1;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_tipo[3].total
+Resúmenes - Vehiculares;Tipo BROMA - Total;1;Cantidad;resumenes_fuentes.vehiculares.data.novedades_por_tipo[4].total
+Resúmenes - Operativos a Pie;Total Novedades Pie;4;Cantidad;resumenes_fuentes.pie.data.total_novedades
+Resúmenes - Operativos a Pie;Turno MAÑANA - Total;2;Cantidad;resumenes_fuentes.pie.data.novedades_por_turno[0].total
+Resúmenes - Operativos a Pie;Turno TARDE - Total;2;Cantidad;resumenes_fuentes.pie.data.novedades_por_turno[1].total
+Resúmenes - Operativos a Pie;Sector SECTOR 1 - CHORRILLOS CENTRO - Total;2;Cantidad;resumenes_fuentes.pie.data.novedades_por_sector[0].total
+Resúmenes - Operativos a Pie;Sector SECTOR 3 - MATEO PUMACAHUA - Total;1;Cantidad;resumenes_fuentes.pie.data.novedades_por_sector[1].total
+Resúmenes - Operativos a Pie;Sector SECTOR 4 -  SAN GENARO - Total;1;Cantidad;resumenes_fuentes.pie.data.novedades_por_sector[2].total
+Resúmenes - Operativos a Pie;Prioridad ALTA - Total;3;Cantidad;resumenes_fuentes.pie.data.novedades_por_prioridad[0].total
+Resúmenes - Operativos a Pie;Prioridad MEDIA - Total;1;Cantidad;resumenes_fuentes.pie.data.novedades_por_prioridad[1].total
+Resúmenes - Operativos a Pie;Tipo ACOSO - Total;2;Cantidad;resumenes_fuentes.pie.data.novedades_por_tipo[0].total
+Resúmenes - Operativos a Pie;Tipo HURTO AGRAVADO / ROBO / ASALTO / RAQUETEO / ATRACO - Total;1;Cantidad;resumenes_fuentes.pie.data.novedades_por_tipo[1].total
+Resúmenes - Operativos a Pie;Tipo HURTO SIMPLE / ROBO / ASALTO / ATRACO - Total;1;Cantidad;resumenes_fuentes.pie.data.novedades_por_tipo[2].total
+Resúmenes - No Atendidas;Total Novedades No Atendidas;1;Cantidad;resumenes_fuentes.no_atendidas.data.total_novedades_no_atendidas
+Resúmenes - No Atendidas;Tipo SIN_TIPO - Cantidad  (CORREGIR);1;Cantidad;resumenes_fuentes.no_atendidas.data.novedades_por_tipo[0].cantidad
+Resúmenes - No Atendidas;Tipo SIN_TIPO - Porcentaje ;100;%;resumenes_fuentes.no_atendidas.data.novedades_por_tipo[0].porcentaje
+Resúmenes - No Atendidas;Prioridad SIN_PRIORIDAD - Cantidad (CORREGIR);1;Cantidad;resumenes_fuentes.no_atendidas.data.novedades_por_prioridad[0].cantidad
+Resúmenes - No Atendidas;Prioridad SIN_PRIORIDAD - Porcentaje  (CORREGIR);100;%;resumenes_fuentes.no_atendidas.data.novedades_por_prioridad[0].porcentaje
+Resúmenes - No Atendidas;Atención Faltante PATRULLAJE_A_PIE - Cantidad;1;Cantidad;resumenes_fuentes.no_atendidas.data.atencion_faltante[0].cantidad
+Resúmenes - No Atendidas;Atención Faltante PATRULLAJE_A_PIE - Porcentaje;100;%;resumenes_fuentes.no_atendidas.data.atencion_faltante[0].porcentaje
+Resúmenes - No Atendidas;Atención Faltante PATRULLAJE_VEHICULAR - Cantidad;1;Cantidad;resumenes_fuentes.no_atendidas.data.atencion_faltante[1].cantidad
+Resúmenes - No Atendidas;Atención Faltante PATRULLAJE_VEHICULAR - Porcentaje;100;%;resumenes_fuentes.no_atendidas.data.atencion_faltante[1].porcentaje
+Metadatos;Fecha Generación;2026-04-29T18:53:06.583Z;Fecha/Hora;generated_at
+Metadatos;Tipo Dashboard;COMPLETO;Tipo;dashboard_type
+Metadatos;Rango de Fechas;2026-04-22 al 2026-04-29;Periodo;filters_applied.fecha_range

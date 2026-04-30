@@ -128,6 +128,7 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
     // Query SQL completo basado en el documento actualizado con todos los campos y alias correctos
     const baseQuery = `
       SELECT 
+        ot.id,
         ot.fecha fecha_turno,
         ht.nro_orden nro_orden_turno,
         ot.turno,
@@ -136,7 +137,7 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
         ot.fecha_hora_inicio inicio_operativo_sector,
         ot.fecha_hora_fin fin_operativo_sector,
         ot.operador_id,
-        CONCAT(usr.username, ', ', usr.nombres, ' ', usr.apellidos) AS Usuario_Operador_Sistema,
+        CONCAT(ps_sis.nombres, ', ', ps_sis.apellido_paterno, ' ', ps_sis.apellido_materno) AS Usuario_Operador_Sistema,
         carg_sis.nombre Cargo_Usuario_Operador,
         ot.sector_id,
         sec.sector_code,
@@ -146,7 +147,7 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
         carg_sup.nombre Cargo_Supervisor,
         ot.observaciones observaciones_turno,
         ot.estado estado_operativo_sector,
-        ot.updated_by,
+        ot.updated_by as ID_Usuario_Actualizador_Turno,
         CONCAT(usr4.username, ', ', usr4.nombres, ' ', usr4.apellidos) AS Usuario_Actualizador_Turno,
         carg_t.nombre Cargo_Usuario_Actualizador_Turno,
         ot.updated_at Fecha_Turno_Actualizado,
@@ -177,8 +178,8 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
         ov.nivel_combustible_inicio,
         ov.kilometraje_recarga,
         ov.hora_recarga,
-        ov.combustible_litros,
-        ov.importe_recarga,
+        CAST(ov.combustible_litros AS DECIMAL(10,2)) combustible_litros,
+        CAST(ov.importe_recarga AS DECIMAL(10,2)) importe_recarga,
         ov.nivel_combustible_recarga,
         ov.kilometraje_fin,
         ov.hora_fin,
@@ -186,7 +187,7 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
         ov.kilometros_recorridos,
         ov.observaciones observaciones_operativo_vehicular,
         ov.estado_registro Estado_registro_Operativo_Vehicular,
-        ov.updated_by,
+        ov.updated_by as ID_Usuario_Actualiza_Operativo_Vehiculo,
         CONCAT(usr3.username, ', ', usr3.nombres, ' ', usr3.apellidos) AS Usuario_Actualiza_Operativo_Vehiculo,
         carg_uov.nombre Cargo_Usuario_Actualiza_Operativo_Vehiculo,
         ov.updated_at Actualizacion_Operativo_Vehiculo,
@@ -204,7 +205,7 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
         ovn.estado Estado_Operativo_Novedad,
         ovn.prioridad,
         ovn.observaciones Observaciones_Operativo_Novedad,
-        ovn.updated_by,
+        ovn.updated_by as ID_Usuario_Actualiza_Operativo_Novedad,
         CONCAT(usr2.username, ', ', usr2.nombres, ' ', usr2.apellidos) AS Usuario_Actualiza_Operativo_Novedad,
         carg.nombre cargo_Usuario_Actualiza_Operativo_Novedad,
         ovn.updated_at Operativo_Novedad_Actualizada,
@@ -226,7 +227,6 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
         ni.longitud,
         ni.ajustado_en_mapa,
         ni.fecha_ajuste_mapa,
-        ni.radio_tetra_id,
         ni.es_anonimo,
         ni.reportante_nombre,
         ni.reportante_telefono,
@@ -264,8 +264,7 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
         INNER JOIN operativos_vehiculos ov ON ovc.operativo_vehiculo_id = ov.id
         INNER JOIN operativos_turno ot ON ov.operativo_turno_id = ot.id
         INNER JOIN horarios_turnos ht ON ot.turno = ht.turno
-        INNER JOIN usuarios usr ON ot.operador_id = usr.id
-        INNER JOIN personal_seguridad ps_sis ON usr.personal_seguridad_id = ps_sis.id
+        INNER JOIN personal_seguridad ps_sis ON ot.operador_id = ps_sis.id
         LEFT JOIN cargos carg_sis ON ps_sis.cargo_id = carg_sis.id
         INNER JOIN sectores sec ON ot.sector_id = sec.id
         INNER JOIN personal_seguridad ps1 ON ot.supervisor_id = ps1.id
@@ -284,7 +283,7 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
         LEFT JOIN cargos carg ON ps4.cargo_id = carg.id
         LEFT JOIN usuarios usr3 ON ov.updated_by = usr3.id
         LEFT JOIN personal_seguridad ps_uov ON usr3.personal_seguridad_id = ps_uov.id
-        LEFT JOIN cargos carg_uov ON ps_uov.cargo_id = carg.id
+        LEFT JOIN cargos carg_uov ON ps_uov.cargo_id = carg_uov.id
         LEFT JOIN usuarios usr4 ON ot.updated_by = usr4.id
         LEFT JOIN personal_seguridad ps_t ON usr4.personal_seguridad_id = ps_t.id
         LEFT JOIN cargos carg_t ON ps_t.cargo_id = carg_t.id
@@ -340,12 +339,24 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
       })
     ]);
 
+    // Procesar resultados para convertir campos numéricos
+    const processedResults = results.map(item => {
+      // Convertir campos numéricos que vienen como string
+      if (item.combustible_litros !== null && item.combustible_litros !== undefined) {
+        item.combustible_litros = parseFloat(item.combustible_litros) || 0;
+      }
+      if (item.importe_recarga !== null && item.importe_recarga !== undefined) {
+        item.importe_recarga = parseFloat(item.importe_recarga) || 0;
+      }
+      return item;
+    });
+
     const total = countResult[0]?.total || 0;
     const totalPages = Math.ceil(total / sanitizedLimit);
 
     return {
       success: true,
-      data: results,
+      data: processedResults,
       pagination: {
         page: sanitizedPage,
         limit: sanitizedLimit,
@@ -825,7 +836,9 @@ export const getOperativosPie = async (queryParams = {}) => {
         ht.hora_fin turno_horario_fin,
         ot.fecha_hora_inicio inicio_operativo_sector,
         ot.fecha_hora_fin fin_operativo_sector,
-        ot.operador_id, CONCAT(usr.username,', ',usr.nombres,' ',usr.apellidos) as Operador_Sistema,
+        ot.operador_id, 
+        CONCAT(ps_sis.nombres, ', ', ps_sis.apellido_paterno, ' ', ps_sis.apellido_materno) AS Usuario_Operador_Sistema,
+        carg_sis.nombre Cargo_Usuario_Operador,
         ot.sector_id, sec.sector_code, sec.nombre nombre_sector,
         ot.supervisor_id,
         CONCAT(ps1.nombres,', ',ps1.apellido_paterno,' ',ps1.apellido_materno) as Supervisor_Sector,
@@ -880,7 +893,7 @@ export const getOperativosPie = async (queryParams = {}) => {
         ni.subtipo_novedad_id, stn.nombre sub_tipo_novedad_nombre, stn.prioridad,  
         ni.descripcion descripcion_novedad, 
         ni.estado estado_novedad, ni.origen_llamada, ni.direccion_id, ni.localizacion, ni.referencia_ubicacion,
-        ni.latitud, ni.longitud, ni.ajustado_en_mapa, ni.fecha_ajuste_mapa, ni.radio_tetra_id, ni.es_anonimo,
+        ni.latitud, ni.longitud, ni.ajustado_en_mapa, ni.fecha_ajuste_mapa, ni.es_anonimo,
         ni.reportante_nombre, ni.reportante_telefono, ni.reportante_doc_identidad, 
         ni.descripcion descripcion_novedad,
         ni.observaciones observaciones_novedad,
@@ -908,8 +921,9 @@ export const getOperativosPie = async (queryParams = {}) => {
       INNER JOIN operativos_personal op ON opc.operativo_personal_id = op.id 
       INNER JOIN operativos_turno ot ON op.operativo_turno_id = ot.id 
       INNER JOIN horarios_turnos ht ON ot.turno = ht.turno 
-      INNER JOIN usuarios usr ON ot.operador_id = usr.id  
-      INNER JOIN sectores sec ON ot.sector_id = sec.id  
+      INNER JOIN personal_seguridad ps_sis ON ot.operador_id = ps_sis.id
+        LEFT JOIN cargos carg_sis ON ps_sis.cargo_id = carg_sis.id
+        INNER JOIN sectores sec ON ot.sector_id = sec.id  
       INNER JOIN personal_seguridad ps1 ON ot.supervisor_id = ps1.id   -- Supervisor Sector
       LEFT JOIN cargos CargSup ON ps1.cargo_id = CargSup.id 
       
@@ -1425,7 +1439,6 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
         ni.fecha_ajuste_mapa,
         ni.ubigeo_code,
         ni.origen_llamada,
-        ni.radio_tetra_id,
         ni.reportante_nombre,
         ni.reportante_telefono,
         ni.reportante_doc_identidad,
@@ -1649,14 +1662,14 @@ export const getResumenNovedadesNoAtendidas = async (queryParams = {}) => {
     // Agrupar por tipo de novedad
     const novedadesPorTipo = {};
     novedades.forEach(novedad => {
-      const tipo = novedad.novedadTipoNovedad?.nombre || "SIN_TIPO";
+      const tipo = novedad.tipo_novedad_nombre || "SIN_TIPO";
       novedadesPorTipo[tipo] = (novedadesPorTipo[tipo] || 0) + 1;
     });
     
     // Agrupar por prioridad
     const novedadesPorPrioridad = {};
     novedades.forEach(novedad => {
-      const prioridad = novedad.novedadSubtipoNovedad?.prioridad || "SIN_PRIORIDAD";
+      const prioridad = novedad.subtipo_prioridad || "SIN_PRIORIDAD";
       novedadesPorPrioridad[prioridad] = (novedadesPorPrioridad[prioridad] || 0) + 1;
     });
     
@@ -1718,8 +1731,6 @@ export const getResumenNovedadesNoAtendidas = async (queryParams = {}) => {
  */
 export const getReportesCombinados = async (queryParams = {}) => {
   try {
-    console.log("🔄 Iniciando generación de reportes combinados...");
-    
     const filters = buildFilters(queryParams);
     const paginationOptions = buildPaginationOptions(queryParams);
 
@@ -1801,8 +1812,6 @@ export const getReportesCombinados = async (queryParams = {}) => {
  */
 export const getDashboardOperativos = async (queryParams = {}) => {
   try {
-    console.log("📊 Iniciando generación de dashboard operativos...");
-    
     const filters = buildFilters(queryParams);
 
     // Obtener resúmenes de todas las fuentes en paralelo

@@ -7,13 +7,15 @@ El objetivo es facilitar la correcta creacion de los endpoints necesarios para f
 
 
 
-## 1. Query de Operativos de Patrullaje Vehicular
+## 1. Query de Operativos de Patrullaje Vehicular 
+(x) Correcciones a aplicar
 
 -- -----------------------------------------------------------------------
 -- Lista de Novedades atendidas por Operativos de Patrullaje con Vehiculos  
 -- -----------------------------------------------------------------------
 
 SELECT 
+ot.id,
     ot.fecha fecha_turno,
     ht.nro_orden nro_orden_turno,
     ot.turno,
@@ -22,11 +24,11 @@ SELECT
     ot.fecha_hora_inicio inicio_operativo_sector,
     ot.fecha_hora_fin fin_operativo_sector,
     ot.operador_id,
-    CONCAT(usr.username,
+    CONCAT(ps_sis.nombres,
             ', ',
-            usr.nombres,
+            ps_sis.apellido_paterno,
             ' ',
-            usr.apellidos) AS Usuario_Operador_Sistema,
+            ps_sis.apellido_materno) AS Usuario_Operador_Sistema,	-- (*) CORREGIDO
     carg_sis.nombre Cargo_Usuario_Operador,
     ot.sector_id,
     sec.sector_code,
@@ -40,7 +42,7 @@ SELECT
     carg_sup.nombre Cargo_Supervisor,
     ot.observaciones observaciones_turno,
     ot.estado estado_operativo_sector,
-    ot.updated_by,
+    ot.updated_by as ID_Usuario_Actualizador_Turno,	-- (x) poner alias para evitar confusion
     CONCAT(usr4.username,
             ', ',
             usr4.nombres,
@@ -62,7 +64,7 @@ SELECT
             ', ',
             ps2.apellido_paterno,
             ' ',
-            ps2.apellido_materno) AS Nombres_conductor,
+            ps2.apellido_materno) AS Nombres_conductor,   -- corregido
     carg_chof.nombre Cargo_Conductor,
     ov.copiloto_id,
     CONCAT(ps3.nombres,
@@ -92,9 +94,9 @@ SELECT
     ov.kilometros_recorridos,
     ov.observaciones observaciones_operativo_vehicular,
     ov.estado_registro Estado_registro_Operativo_Vehicular,
-    ov.updated_by,
+    ov.updated_by as ID_Usuario_Actualiza_Operativo_Vehiculo,	-- (x) poner alias para evitar confusion
     CONCAT(usr3.username, ', ', usr3.nombres, ' ', usr3.apellidos) AS Usuario_Actualiza_Operativo_Vehiculo,
-    carg_uov.nombre Cargo_Usuario_Actualiza_Operativo_Vehiculo,
+    carg_uov.nombre Cargo_Usuario_Actualiza_Operativo_Vehiculo, -- (y)
     ov.updated_at Actualizacion_Operativo_Vehiculo,
     ovc.cuadrante_id,
     cua.cuadrante_code,
@@ -110,7 +112,7 @@ SELECT
     ovn.estado Estado_Operativo_Novedad,
     ovn.prioridad,
     ovn.observaciones Observaciones_Operativo_Novedad ,
-    ovn.updated_by,
+    ovn.updated_by as ID_Usuario_Actualiza_Operativo_Novedad ,  -- (x) poner alias para evitar confusion
     CONCAT(usr2.username,
             ', ',
             usr2.nombres,
@@ -134,7 +136,7 @@ SELECT
     ni.longitud,
     ni.ajustado_en_mapa,
     ni.fecha_ajuste_mapa,
-    ni.radio_tetra_id,
+    -- ni.radio_tetra_id,  (z) ELIMINAR ESTA COLUMNA 
     ni.es_anonimo,
     ni.reportante_nombre,
     ni.reportante_telefono,
@@ -185,8 +187,8 @@ FROM
         INNER JOIN operativos_vehiculos ov ON ovc.operativo_vehiculo_id = ov.id
         INNER JOIN operativos_turno ot ON ov.operativo_turno_id = ot.id
         INNER JOIN horarios_turnos ht ON ot.turno = ht.turno
-        INNER JOIN usuarios usr ON ot.operador_id = usr.id
-        INNER JOIN personal_seguridad ps_sis ON usr.personal_seguridad_id = ps_sis.id
+        INNER JOIN personal_seguridad ps_sis ON ot.operador_id = ps_sis.id		-- INNER JOIN usuarios usr ON ot.operador_id = usr.id  (*) CORREGIDO 
+        --  INNER JOIN personal_seguridad ps_sis ON usr.personal_seguridad_id = ps_sis.id   (*) ELIMINAR LINEA
         LEFT JOIN cargos carg_sis ON ps_sis.cargo_id = carg_sis.id
         INNER JOIN SECTORES sec ON ot.sector_id = sec.id
         INNER JOIN personal_seguridad ps1 ON ot.supervisor_id = ps1.id
@@ -203,9 +205,9 @@ FROM
         LEFT JOIN usuarios usr2 ON ovn.updated_by = usr2.id
         LEFT JOIN personal_seguridad ps4 ON usr2.personal_seguridad_id = ps4.id
         LEFT JOIN cargos carg ON ps4.cargo_id = carg.id
-        LEFT JOIN usuarios usr3 ON ov.updated_by = usr3.id
-        LEFT JOIN personal_seguridad ps_uov ON usr3.personal_seguridad_id = ps_uov.id
-        LEFT JOIN cargos carg_uov ON ps_uov.cargo_id = carg_uov.id   -- OJO esto lo he corregido
+        LEFT JOIN usuarios usr3 ON ov.updated_by = usr3.id  -- (y)
+        LEFT JOIN personal_seguridad ps_uov ON usr3.personal_seguridad_id = ps_uov.id -- (y)
+        LEFT JOIN cargos carg_uov ON ps_uov.cargo_id = carg_uov.id   -- (y) CORREGIR
         LEFT JOIN usuarios usr4 ON ot.updated_by = usr4.id
         LEFT JOIN personal_seguridad ps_t ON usr4.personal_seguridad_id = ps_t.id
         LEFT JOIN cargos carg_t ON ps_t.cargo_id = carg_t.id
@@ -226,14 +228,11 @@ LEFT JOIN estados_operativo_recurso Sts_Opr ON ov.estado_operativo_id = Sts_Opr.
 LEFT JOIN estados_novedad en ON ni.estado_novedad_id = en.id 	
 
 WHERE
-    DATE(ni.fecha_hora_ocurrencia) BETWEEN '2026-04-19' AND '2026-04-26'
+    DATE(ni.fecha_hora_ocurrencia) BETWEEN '2026-04-22' AND '2026-04-29'
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
 
 ORDER BY ot.fecha , ht.nro_orden , ot.fecha_hora_inicio;
-
-
-
 
 
 
@@ -251,7 +250,14 @@ ht.hora_inicio turno_horario_inicio,
 ht.hora_fin turno_horario_fin,
 ot.fecha_hora_inicio inicio_operativo_sector,
 ot.fecha_hora_fin fin_operativo_sector,
-ot.operador_id, CONCAT(usr.username,', ',usr.nombres,' ',usr.apellidos) as Operador_Sistema,
+ot.operador_id,
+-- CONCAT(usr.username,', ',usr.nombres,' ',usr.apellidos) as Operador_Sistema, (*) LINEA ANTERIOR
+CONCAT(ps_sis.nombres,
+            ', ',
+            ps_sis.apellido_paterno,
+            ' ',
+            ps_sis.apellido_materno) AS Usuario_Operador_Sistema,	-- (*) NUEVA LINEA CORREGIDA
+carg_sis.nombre Cargo_Usuario_Operador,            
 ot.sector_id, sec.sector_code, sec.nombre nombre_sector,
 ot.supervisor_id,
 CONCAT(ps1.nombres,', ',ps1.apellido_paterno,' ',ps1.apellido_materno) as Supervisor_Sector,
@@ -324,7 +330,9 @@ INNER JOIN operativos_personal_cuadrantes opc ON opn.operativo_personal_cuadrant
 INNER JOIN operativos_personal op ON opc.operativo_personal_id = op.id 
 INNER JOIN operativos_turno ot ON op.operativo_turno_id = ot.id 
 INNER JOIN horarios_turnos ht ON ot.turno = ht.turno 
-INNER JOIN usuarios usr ON ot.operador_id = usr.id  
+--  INNER JOIN usuarios usr ON ot.operador_id = usr.id    (*) ELIMINAR LINEA
+INNER JOIN personal_seguridad ps_sis ON ot.operador_id = ps_sis.id
+LEFT JOIN cargos carg_sis ON ps_sis.cargo_id = carg_sis.id  -- (*) NUEVA LINEA AGREGADA
 INNER JOIN SECTORES sec ON ot.sector_id = sec.id  
 INNER JOIN personal_seguridad ps1 ON ot.supervisor_id = ps1.id   -- Supervisor Sector
 LEFT JOIN cargos CargSup ON ps1.cargo_id = CargSup.id 
@@ -365,8 +373,10 @@ LEFT JOIN estados_operativo_recurso Sts_Opr ON op.estado_operativo_id = Sts_Opr.
 
 LEFT JOIN estados_novedad en ON ni.estado_novedad_id = en.id 	
 
-WHERE DATE(ni.fecha_hora_ocurrencia) BETWEEN '2026-04-01' AND '2026-04-22' 
-AND ni.estado = 1 AND ni.deleted_at IS NULL 
+WHERE 
+ DATE(ni.fecha_hora_ocurrencia) BETWEEN '2026-04-19' AND '2026-04-26'  AND 
+ 
+ni.estado = 1 AND ni.deleted_at IS NULL 
 ORDER BY ot.fecha, ht.nro_orden, ot.fecha_hora_inicio;
 
 

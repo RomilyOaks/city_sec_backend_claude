@@ -42,14 +42,14 @@ const DB_PASSWORD = process.env.DB_PASSWORD || "";
 const DB_NAME = process.env.DB_NAME || "citizen_security_v2";
 const DB_NAME_TEST = process.env.DB_NAME_TEST || "citizen_security_test";
 
-// Pool de conexiones (desde .env)
+// Pool de conexiones (desde .env) - Optimizado para desarrollo
 const POOL_MAX =
-  parseInt(process.env.DB_POOL_MAX) || (NODE_ENV === "production" ? 20 : 10);
+  parseInt(process.env.DB_POOL_MAX) || (NODE_ENV === "production" ? 20 : 5);
 const POOL_MIN =
-  parseInt(process.env.DB_POOL_MIN) || (NODE_ENV === "production" ? 5 : 2);
-const POOL_ACQUIRE = parseInt(process.env.DB_POOL_ACQUIRE) || 60000; // 60 segundos
-const POOL_IDLE = parseInt(process.env.DB_POOL_IDLE) || 10000; // 10 segundos
-const POOL_EVICT = parseInt(process.env.DB_POOL_EVICT) || 1000; // 1 segundo
+  parseInt(process.env.DB_POOL_MIN) || (NODE_ENV === "production" ? 5 : 1);
+const POOL_ACQUIRE = parseInt(process.env.DB_POOL_ACQUIRE) || 30000; // 30 segundos (reducido)
+const POOL_IDLE = parseInt(process.env.DB_POOL_IDLE) || 5000; // 5 segundos (reducido)
+const POOL_EVICT = parseInt(process.env.DB_POOL_EVICT) || 5000; // 5 segundos (aumentado)
 
 // Retry (desde .env)
 const RETRY_MAX = parseInt(process.env.DB_RETRY_MAX) || 3;
@@ -78,17 +78,22 @@ const config = {
     dialect: DB_DIALECT,
     logging: ENABLE_LOGGING ? console.log : false,
 
+    // Timeout de conexión para desarrollo
+    acquireConnectionTimeout: 10000, // 10 segundos
+    
     pool: {
       max: POOL_MAX,
       min: POOL_MIN,
       acquire: POOL_ACQUIRE,
       idle: POOL_IDLE,
       evict: POOL_EVICT,
+      // Handle timeout errors gracefully
+      handleDisconnects: true,
     },
 
     retry: {
-      max: RETRY_MAX,
-      timeout: RETRY_TIMEOUT,
+      max: 2, // Reducido para desarrollo
+      timeout: 2000, // Reducido para desarrollo
       match: [
         /ER_LOCK_WAIT_TIMEOUT/,
         /SQLITE_BUSY/,
@@ -110,6 +115,9 @@ const config = {
       charset: "utf8mb4",
       dateStrings: true,
       typeCast: true,
+      // Timeout específico para MySQL
+      connectTimeout: 10000,
+      queryTimeout: 10000,
     },
 
     timezone: DB_TIMEZONE,
@@ -228,11 +236,11 @@ const sequelize = new Sequelize(
 );
 
 /**
- * Probar conexión a la base de datos
+ * Función para probar conexión a la base de datos (se llama manualmente)
  */
-sequelize
-  .authenticate()
-  .then(() => {
+export const testConnection = async () => {
+  try {
+    await sequelize.authenticate();
     console.log(
       `✅ Conexión a base de datos exitosa - Entorno: ${NODE_ENV.toUpperCase()}`
     );
@@ -241,14 +249,16 @@ sequelize
     console.log(
       `   🔌 Pool: max=${dbConfig.pool.max}, min=${dbConfig.pool.min}`
     );
-  })
-  .catch((error) => {
+    return true;
+  } catch (error) {
     console.error("❌ Error al conectar a la base de datos:");
     console.error(`   Host: ${dbConfig.host}:${dbConfig.port}`);
     console.error(`   Database: ${dbConfig.database}`);
     console.error(`   User: ${dbConfig.username}`);
     console.error(`   Error: ${error.message}`);
-  });
+    return false;
+  }
+};
 
 // Exportar la instancia de Sequelize (export default)
 export default sequelize;
