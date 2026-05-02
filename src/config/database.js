@@ -80,7 +80,7 @@ const config = {
 
     // Timeout de conexión para desarrollo
     acquireConnectionTimeout: 10000, // 10 segundos
-    
+
     pool: {
       max: POOL_MAX,
       min: POOL_MIN,
@@ -117,7 +117,7 @@ const config = {
       typeCast: true,
       // Timeout específico para MySQL
       connectTimeout: 10000,
-      queryTimeout: 10000,
+
     },
 
     timezone: DB_TIMEZONE,
