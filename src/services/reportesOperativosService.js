@@ -1658,6 +1658,33 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
 
     const total = countResult[0]?.total || 0;
 
+    // Calcular estadísticas por prioridades con colores
+    const estadisticasPrioridades = processedResults.reduce((acc, item) => {
+      const prioridad = item.prioridad?.toUpperCase() || "SIN_PRIORIDAD";
+      
+      if (!acc[prioridad]) {
+        acc[prioridad] = {
+          count: 0,
+          color: prioridad === "ALTA" ? "rojo" : 
+            prioridad === "MEDIA" ? "ambar" : 
+              prioridad === "BAJA" ? "verde" : "gris",
+          novedades: []
+        };
+      }
+      
+      acc[prioridad].count++;
+      acc[prioridad].novedades.push({
+        id: item.id,
+        novedad_code: item.novedad_code,
+        tipo_subtipo_novedad: item.tipo_subtipo_novedad,
+        fecha_hora_ocurrencia: item.fecha_hora_ocurrencia,
+        nombre_sector: item.nombre_sector,
+        localizacion: item.localizacion
+      });
+      
+      return acc;
+    }, {});
+
     return {
       success: true,
       data: processedResults,
@@ -1678,7 +1705,8 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
         query_type: "NOT_EXISTS",
         total_registros: processedResults.length,
         total_sin_paginar: total
-      }
+      },
+      estadisticas_prioridades: estadisticasPrioridades
     };
 
   } catch (error) {

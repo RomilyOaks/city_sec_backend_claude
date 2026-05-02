@@ -937,7 +937,8 @@ export const getNovedadesNoAtendidas = async (req, res) => {
         pagination: result.pagination,
         filters_applied: result.filters_applied,
         query_info: result.query_info,
-        total_records: result.pagination.total
+        total_records: result.pagination.total,
+        estadisticas_prioridades: result.estadisticas_prioridades
       }
     );
     
