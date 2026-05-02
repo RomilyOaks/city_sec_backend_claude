@@ -388,14 +388,178 @@ ORDER BY ot.fecha, ht.nro_orden, ot.fecha_hora_inicio;
 -- -------------------------
 -- Novedades no atendidas
 -- -------------------------
-SELECT * FROM novedades_incidentes ni
+SELECT ni.id, ni.novedad_code,
+ni.fecha_hora_ocurrencia,
+ni.tipo_novedad_id, 
+ni.subtipo_novedad_id, CONCAT(tn.nombre,' ',stn.nombre) as tipo_subtipo_novedad, stn.prioridad,  
+ni.estado_novedad_id, en.nombre estado_novedad_actual ,
+ni.sector_id, sec.sector_code, sec.nombre nombre_sector,
+ni.cuadrante_id, cua.cuadrante_code, cua.nombre nombre_cuadrante, cua.zona_code,
+ni.localizacion,
+ni.direccion_id,
+ni.referencia_ubicacion,
+ni.latitud,
+ni.longitud,
+ni.ajustado_en_mapa,
+ni.fecha_ajuste_mapa,
+ni.ubigeo_code,
+ni.origen_llamada,
+ni.radio_tetra_id, rt.radio_tetra_code, rt.descripcion Descripcion_Radio_Tetra,
+ni.reportante_nombre,
+ni.reportante_telefono,
+ni.reportante_doc_identidad,
+ni.descripcion,
+ni.observaciones,
+ni.unidad_oficina_id,
+ni.vehiculo_id,
+ni.personal_cargo_id,
+ni.fecha_despacho,
+ni.usuario_despacho,
+CONCAT(usr_desp.username,', ',usr_desp.nombres,' ',usr_desp.apellidos) as nombre_usuario_despacho,
+carg_desp.nombre Cargo_Despachador,
+ni.fecha_llegada,
+ni.fecha_cierre,
+ni.usuario_cierre,
+ni.km_inicial,
+ni.km_final,
+ni.tiempo_respuesta_min,
+ni.tiempo_respuesta_min_operativo,
+ni.turno,
+ni.parte_adjuntos,
+ni.fotos_adjuntas,
+ni.videos_adjuntos,
+ni.prioridad_actual,
+ni.requiere_seguimiento,
+ni.personal_seguridad2_id,
+ni.personal_seguridad3_id,
+ni.personal_seguridad4_id,
+ni.gravedad,
+ni.fecha_hora_reporte,
+ni.es_anonimo,
+ni.fecha_proxima_revision,
+ni.num_personas_afectadas,
+ni.perdidas_materiales_estimadas ,
+ni.usuario_registro ,
+ni.estado ,
+ni.created_by as Usuario_Creacion,
+CONCAT(usr_crea.username,', ',usr_crea.nombres,' ',usr_crea.apellidos) as nombre_usuario_creacion,
+carg_crea.nombre Cargo_Usuario_Creacion,
+ni.created_at ,
+ni.updated_by  usuario_modificacion,
+CONCAT(usr_modif.username,', ',usr_modif.nombres,' ',usr_modif.apellidos) as nombre_usuario_modificacion,
+carg_modif.nombre cargo_usuario_modificacion,
+ni.updated_at ,
+ni.deleted_by ,
+ni.deleted_at ,
+ni.reporte_vecino_id 
+ FROM novedades_incidentes ni 
+	INNER JOIN tipos_novedad tn ON ni.tipo_novedad_id = tn.id 
+	LEFT JOIN subtipos_novedad stn on ni.subtipo_novedad_id = stn.id 
+    LEFT JOIN estados_novedad en ON ni.estado_novedad_id = en.id 	
+    INNER JOIN sectores sec ON ni.sector_id = sec.id  
+    INNER JOIN cuadrantes cua ON ni.cuadrante_id = cua.id  
+    LEFT JOIN radios_tetra rt ON ni.radio_tetra_id = rt.id 
+	LEFT JOIN usuarios usr_desp ON ni.usuario_despacho = usr_desp.id  					-- Usuario_Despacho
+	LEFT JOIN personal_seguridad ps_desp ON usr_desp.personal_seguridad_id = ps_desp.id -- Nombres_Usuario_Despacho
+	LEFT JOIN cargos carg_desp ON ps_desp.cargo_id = carg_desp.id 						-- Cargo_Usuario_Despacho    
+    
+	LEFT JOIN usuarios usr_crea ON ni.created_by = usr_crea.id  						-- Usuario_Creacion
+	LEFT JOIN personal_seguridad ps_crea ON usr_crea.personal_seguridad_id = ps_crea.id -- Nombres_Usuario_Creacion
+	LEFT JOIN cargos carg_crea ON ps_crea.cargo_id = carg_crea.id 						-- Cargo_Usuario_Creacion
+
+	LEFT JOIN usuarios usr_modif ON ni.updated_by = usr_modif.id  							-- Usuario_Modificacion
+	LEFT JOIN personal_seguridad ps_modif ON usr_modif.personal_seguridad_id = ps_modif.id 	-- Nombres_Usuario_Modificacion
+	LEFT JOIN cargos carg_modif ON ps_modif.cargo_id = carg_modif.id 						-- Cargo_Usuario_Modificacion
+    
 WHERE NOT exists( SELECT opn.novedad_id from operativos_personal_novedades opn WHERE ni.id = opn.novedad_id )
-and DATE(ni.fecha_hora_ocurrencia) BETWEEN '2026-04-23' AND '2026-04-24' 
+and DATE(ni.fecha_hora_ocurrencia) BETWEEN '2026-01-19' AND '2026-04-26' 
 AND ni.estado = 1 AND ni.deleted_at IS NULL 
-union 
-SELECT * FROM novedades_incidentes ni
+UNION 
+SELECT ni.id, ni.novedad_code,
+ni.fecha_hora_ocurrencia,
+ni.tipo_novedad_id, 
+ni.subtipo_novedad_id, CONCAT(tn.nombre,' ',stn.nombre) as tipo_subtipo_novedad, stn.prioridad,  
+ni.estado_novedad_id, en.nombre estado_novedad_actual ,
+ni.sector_id, sec.sector_code, sec.nombre nombre_sector,
+ni.cuadrante_id, cua.cuadrante_code, cua.nombre nombre_cuadrante, cua.zona_code,
+ni.localizacion,
+ni.direccion_id,
+ni.referencia_ubicacion,
+ni.latitud,
+ni.longitud,
+ni.ajustado_en_mapa,
+ni.fecha_ajuste_mapa,
+ni.ubigeo_code,
+ni.origen_llamada,
+ni.radio_tetra_id, rt.radio_tetra_code, rt.descripcion Descripcion_Radio_Tetra,
+ni.reportante_nombre,
+ni.reportante_telefono,
+ni.reportante_doc_identidad,
+ni.descripcion,
+ni.observaciones,
+ni.unidad_oficina_id,
+ni.vehiculo_id,
+ni.personal_cargo_id,
+ni.fecha_despacho,
+ni.usuario_despacho,
+CONCAT(usr_desp.username,', ',usr_desp.nombres,' ',usr_desp.apellidos) as nombre_usuario_despacho,
+carg_desp.nombre Cargo_Despachador,
+ni.fecha_llegada,
+ni.fecha_cierre,
+ni.usuario_cierre,
+ni.km_inicial,
+ni.km_final,
+ni.tiempo_respuesta_min,
+ni.tiempo_respuesta_min_operativo,
+ni.turno,
+ni.parte_adjuntos,
+ni.fotos_adjuntas,
+ni.videos_adjuntos,
+ni.prioridad_actual,
+ni.requiere_seguimiento,
+ni.personal_seguridad2_id,
+ni.personal_seguridad3_id,
+ni.personal_seguridad4_id,
+ni.gravedad,
+ni.fecha_hora_reporte,
+ni.es_anonimo,
+ni.fecha_proxima_revision,
+ni.num_personas_afectadas,
+ni.perdidas_materiales_estimadas ,
+ni.usuario_registro ,
+ni.estado ,
+ni.created_by as Usuario_Creacion,
+CONCAT(usr_crea.username,', ',usr_crea.nombres,' ',usr_crea.apellidos) as nombre_usuario_creacion,
+carg_crea.nombre Cargo_Usuario_Creacion,
+ni.created_at ,
+ni.updated_by usuario_modificacion,
+CONCAT(usr_modif.username,', ',usr_modif.nombres,' ',usr_modif.apellidos) as nombre_usuario_modificacion,
+carg_modif.nombre cargo_usuario_modificacion,
+ni.updated_at ,
+ni.deleted_by ,
+ni.deleted_at ,
+ni.reporte_vecino_id 
+ FROM novedades_incidentes ni 
+	INNER JOIN tipos_novedad tn ON ni.tipo_novedad_id = tn.id 
+	LEFT JOIN subtipos_novedad stn on ni.subtipo_novedad_id = stn.id 
+    LEFT JOIN estados_novedad en ON ni.estado_novedad_id = en.id 	
+    INNER JOIN sectores sec ON ni.sector_id = sec.id  
+    INNER JOIN cuadrantes cua ON ni.cuadrante_id = cua.id  
+    LEFT JOIN radios_tetra rt ON ni.radio_tetra_id = rt.id 
+	LEFT JOIN usuarios usr_desp ON ni.usuario_despacho = usr_desp.id  					-- Usuario_Despacho
+	LEFT JOIN personal_seguridad ps_desp ON usr_desp.personal_seguridad_id = ps_desp.id -- Nombres_Usuario_Despacho
+	LEFT JOIN cargos carg_desp ON ps_desp.cargo_id = carg_desp.id 						-- Cargo_Usuario_Despacho    
+    
+	LEFT JOIN usuarios usr_crea ON ni.created_by = usr_crea.id  						-- Usuario_Creacion
+	LEFT JOIN personal_seguridad ps_crea ON usr_crea.personal_seguridad_id = ps_crea.id -- Nombres_Usuario_Creacion
+	LEFT JOIN cargos carg_crea ON ps_crea.cargo_id = carg_crea.id 						-- Cargo_Usuario_Creacion
+
+	LEFT JOIN usuarios usr_modif ON ni.updated_by = usr_modif.id  							-- Usuario_Modificacion
+	LEFT JOIN personal_seguridad ps_modif ON usr_modif.personal_seguridad_id = ps_modif.id 	-- Nombres_Usuario_Modificacion
+	LEFT JOIN cargos carg_modif ON ps_modif.cargo_id = carg_modif.id 						-- Cargo_Usuario_Modificacion
+    
 WHERE NOT exists( SELECT ovn.novedad_id from operativos_vehiculos_novedades ovn WHERE ni.id = ovn.novedad_id )
-and DATE(ni.fecha_hora_ocurrencia) BETWEEN '2026-04-23' AND '2026-04-24' 
+and DATE(ni.fecha_hora_ocurrencia) BETWEEN '2026-04-19' AND '2026-04-24' 
 AND ni.estado = 1 AND ni.deleted_at IS NULL ;
 
 

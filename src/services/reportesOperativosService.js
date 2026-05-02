@@ -1424,21 +1424,21 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
     const limit = Math.min(parseInt(queryParams.limit) || 50, 1000);
     const offset = (page - 1) * limit;
 
-    // SQL para obtener novedades no atendidas (usando NOT EXISTS para evitar GROUP BY)
-    const query = `
-      SELECT DISTINCT
-        ni.id,
-        ni.novedad_code,
+    // SQL para obtener novedades no atendidas (versión corregida sin UNION para evitar problemas con placeholders)
+    let query;
+    let replacements;
+
+    if (fecha_inicio && fecha_fin) {
+      query = `
+        SELECT ni.id, ni.novedad_code,
         ni.fecha_hora_ocurrencia,
-        ni.fecha_hora_reporte,
-        ni.created_at,
-        ni.tipo_novedad_id,
-        ni.subtipo_novedad_id,
-        ni.estado_novedad_id,
-        ni.sector_id,
-        ni.cuadrante_id,
-        ni.direccion_id,
+        ni.tipo_novedad_id, 
+        ni.subtipo_novedad_id, CONCAT(tn.nombre,' ',stn.nombre) as tipo_subtipo_novedad, stn.prioridad,  
+        ni.estado_novedad_id, en.nombre estado_novedad_actual ,
+        ni.sector_id, sec.sector_code, sec.nombre nombre_sector,
+        ni.cuadrante_id, cua.cuadrante_code, cua.nombre nombre_cuadrante, cua.zona_code,
         ni.localizacion,
+        ni.direccion_id,
         ni.referencia_ubicacion,
         ni.latitud,
         ni.longitud,
@@ -1446,23 +1446,19 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
         ni.fecha_ajuste_mapa,
         ni.ubigeo_code,
         ni.origen_llamada,
+        ni.radio_tetra_id, rt.radio_tetra_code, rt.descripcion Descripcion_Radio_Tetra,
         ni.reportante_nombre,
         ni.reportante_telefono,
         ni.reportante_doc_identidad,
-        ni.es_anonimo,
         ni.descripcion,
         ni.observaciones,
-        ni.prioridad_actual,
-        ni.gravedad,
-        ni.usuario_registro,
         ni.unidad_oficina_id,
         ni.vehiculo_id,
         ni.personal_cargo_id,
-        ni.personal_seguridad2_id,
-        ni.personal_seguridad3_id,
-        ni.personal_seguridad4_id,
         ni.fecha_despacho,
         ni.usuario_despacho,
+        CONCAT(usr_desp.username,', ',usr_desp.nombres,' ',usr_desp.apellidos) as nombre_usuario_despacho,
+        carg_desp.nombre Cargo_Despachador,
         ni.fecha_llegada,
         ni.fecha_cierre,
         ni.usuario_cierre,
@@ -1474,45 +1470,165 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
         ni.parte_adjuntos,
         ni.fotos_adjuntas,
         ni.videos_adjuntos,
+        ni.prioridad_actual,
         ni.requiere_seguimiento,
+        ni.personal_seguridad2_id,
+        ni.personal_seguridad3_id,
+        ni.personal_seguridad4_id,
+        ni.gravedad,
+        ni.fecha_hora_reporte,
+        ni.es_anonimo,
         ni.fecha_proxima_revision,
         ni.num_personas_afectadas,
-        ni.perdidas_materiales_estimadas,
-        ni.estado,
-        ni.created_by,
-        ni.updated_by,
-        ni.deleted_at,
-        ni.deleted_by,
-        ni.usuario_cierre,
-        ni.updated_at,
-        tn.nombre as tipo_novedad_nombre,
-        stn.nombre as subtipo_novedad_nombre,
-        stn.prioridad as subtipo_prioridad
-      FROM novedades_incidentes ni
-      INNER JOIN tipos_novedad tn ON ni.tipo_novedad_id = tn.id
-      LEFT JOIN subtipos_novedad stn ON ni.subtipo_novedad_id = stn.id
-      WHERE ni.estado = 1 
-        AND ni.deleted_at IS NULL
-        AND NOT EXISTS (
-          SELECT 1 FROM operativos_personal_novedades opn 
-          WHERE opn.novedad_id = ni.id AND opn.deleted_at IS NULL
-        )
-        AND NOT EXISTS (
-          SELECT 1 FROM operativos_vehiculos_novedades ovn 
-          WHERE ovn.novedad_id = ni.id AND ovn.deleted_at IS NULL
-        )
-        ${fecha_inicio && fecha_fin ? "AND DATE(ni.fecha_hora_ocurrencia) BETWEEN ? AND ?" : ""}
-      ORDER BY ni.fecha_hora_ocurrencia DESC
-      LIMIT ? OFFSET ?
-    `;
+        ni.perdidas_materiales_estimadas ,
+        ni.usuario_registro ,
+        ni.estado ,
+        ni.created_by as Usuario_Creacion,
+        CONCAT(usr_crea.username,', ',usr_crea.nombres,' ',usr_crea.apellidos) as nombre_usuario_creacion,
+        carg_crea.nombre Cargo_Usuario_Creacion,
+        ni.created_at ,
+        ni.updated_by  usuario_modificacion,
+        CONCAT(usr_modif.username,', ',usr_modif.nombres,' ',usr_modif.apellidos) as nombre_usuario_modificacion,
+        carg_modif.nombre cargo_usuario_modificacion,
+        ni.updated_at ,
+        ni.deleted_by ,
+        ni.deleted_at ,
+        ni.reporte_vecino_id 
+        FROM novedades_incidentes ni 
+          INNER JOIN tipos_novedad tn ON ni.tipo_novedad_id = tn.id 
+          LEFT JOIN subtipos_novedad stn on ni.subtipo_novedad_id = stn.id 
+          LEFT JOIN estados_novedad en ON ni.estado_novedad_id = en.id 	
+          INNER JOIN sectores sec ON ni.sector_id = sec.id  
+          INNER JOIN cuadrantes cua ON ni.cuadrante_id = cua.id  
+          LEFT JOIN radios_tetra rt ON ni.radio_tetra_id = rt.id 
+          LEFT JOIN usuarios usr_desp ON ni.usuario_despacho = usr_desp.id  					
+          LEFT JOIN personal_seguridad ps_desp ON usr_desp.personal_seguridad_id = ps_desp.id 
+          LEFT JOIN cargos carg_desp ON ps_desp.cargo_id = carg_desp.id 						
+          
+          LEFT JOIN usuarios usr_crea ON ni.created_by = usr_crea.id  						
+          LEFT JOIN personal_seguridad ps_crea ON usr_crea.personal_seguridad_id = ps_crea.id 
+          LEFT JOIN cargos carg_crea ON ps_crea.cargo_id = carg_crea.id 						
 
-    const replacements = fecha_inicio && fecha_fin 
-      ? [fecha_inicio, fecha_fin, limit, offset]
-      : [limit, offset];
+          LEFT JOIN usuarios usr_modif ON ni.updated_by = usr_modif.id  							
+          LEFT JOIN personal_seguridad ps_modif ON usr_modif.personal_seguridad_id = ps_modif.id 	
+          LEFT JOIN cargos carg_modif ON ps_modif.cargo_id = carg_modif.id 						
+          
+        WHERE (NOT exists( SELECT opn.novedad_id from operativos_personal_novedades opn WHERE ni.id = opn.novedad_id )
+        OR NOT exists( SELECT ovn.novedad_id from operativos_vehiculos_novedades ovn WHERE ni.id = ovn.novedad_id ))
+        AND DATE(ni.fecha_hora_ocurrencia) BETWEEN '${fecha_inicio}' AND '${fecha_fin}'
+        AND ni.estado = 1 AND ni.deleted_at IS NULL 
+        
+        ORDER BY ni.fecha_hora_ocurrencia DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+      replacements = [];
+    } else {
+      query = `
+        SELECT ni.id, ni.novedad_code,
+        ni.fecha_hora_ocurrencia,
+        ni.tipo_novedad_id, 
+        ni.subtipo_novedad_id, CONCAT(tn.nombre,' ',stn.nombre) as tipo_subtipo_novedad, stn.prioridad,  
+        ni.estado_novedad_id, en.nombre estado_novedad_actual ,
+        ni.sector_id, sec.sector_code, sec.nombre nombre_sector,
+        ni.cuadrante_id, cua.cuadrante_code, cua.nombre nombre_cuadrante, cua.zona_code,
+        ni.localizacion,
+        ni.direccion_id,
+        ni.referencia_ubicacion,
+        ni.latitud,
+        ni.longitud,
+        ni.ajustado_en_mapa,
+        ni.fecha_ajuste_mapa,
+        ni.ubigeo_code,
+        ni.origen_llamada,
+        ni.radio_tetra_id, rt.radio_tetra_code, rt.descripcion Descripcion_Radio_Tetra,
+        ni.reportante_nombre,
+        ni.reportante_telefono,
+        ni.reportante_doc_identidad,
+        ni.descripcion,
+        ni.observaciones,
+        ni.unidad_oficina_id,
+        ni.vehiculo_id,
+        ni.personal_cargo_id,
+        ni.fecha_despacho,
+        ni.usuario_despacho,
+        CONCAT(usr_desp.username,', ',usr_desp.nombres,' ',usr_desp.apellidos) as nombre_usuario_despacho,
+        carg_desp.nombre Cargo_Despachador,
+        ni.fecha_llegada,
+        ni.fecha_cierre,
+        ni.usuario_cierre,
+        ni.km_inicial,
+        ni.km_final,
+        ni.tiempo_respuesta_min,
+        ni.tiempo_respuesta_min_operativo,
+        ni.turno,
+        ni.parte_adjuntos,
+        ni.fotos_adjuntas,
+        ni.videos_adjuntos,
+        ni.prioridad_actual,
+        ni.requiere_seguimiento,
+        ni.personal_seguridad2_id,
+        ni.personal_seguridad3_id,
+        ni.personal_seguridad4_id,
+        ni.gravedad,
+        ni.fecha_hora_reporte,
+        ni.es_anonimo,
+        ni.fecha_proxima_revision,
+        ni.num_personas_afectadas,
+        ni.perdidas_materiales_estimadas ,
+        ni.usuario_registro ,
+        ni.estado ,
+        ni.created_by as Usuario_Creacion,
+        CONCAT(usr_crea.username,', ',usr_crea.nombres,' ',usr_crea.apellidos) as nombre_usuario_creacion,
+        carg_crea.nombre Cargo_Usuario_Creacion,
+        ni.created_at ,
+        ni.updated_by  usuario_modificacion,
+        CONCAT(usr_modif.username,', ',usr_modif.nombres,' ',usr_modif.apellidos) as nombre_usuario_modificacion,
+        carg_modif.nombre cargo_usuario_modificacion,
+        ni.updated_at ,
+        ni.deleted_by ,
+        ni.deleted_at ,
+        ni.reporte_vecino_id 
+        FROM novedades_incidentes ni 
+          INNER JOIN tipos_novedad tn ON ni.tipo_novedad_id = tn.id 
+          LEFT JOIN subtipos_novedad stn on ni.subtipo_novedad_id = stn.id 
+          LEFT JOIN estados_novedad en ON ni.estado_novedad_id = en.id 	
+          INNER JOIN sectores sec ON ni.sector_id = sec.id  
+          INNER JOIN cuadrantes cua ON ni.cuadrante_id = cua.id  
+          LEFT JOIN radios_tetra rt ON ni.radio_tetra_id = rt.id 
+          LEFT JOIN usuarios usr_desp ON ni.usuario_despacho = usr_desp.id  					
+          LEFT JOIN personal_seguridad ps_desp ON usr_desp.personal_seguridad_id = ps_desp.id 
+          LEFT JOIN cargos carg_desp ON ps_desp.cargo_id = carg_desp.id 						
+          
+          LEFT JOIN usuarios usr_crea ON ni.created_by = usr_crea.id  						
+          LEFT JOIN personal_seguridad ps_crea ON usr_crea.personal_seguridad_id = ps_crea.id 
+          LEFT JOIN cargos carg_crea ON ps_crea.cargo_id = carg_crea.id 						
+
+          LEFT JOIN usuarios usr_modif ON ni.updated_by = usr_modif.id  							
+          LEFT JOIN personal_seguridad ps_modif ON usr_modif.personal_seguridad_id = ps_modif.id 	
+          LEFT JOIN cargos carg_modif ON ps_modif.cargo_id = carg_modif.id 						
+          
+        WHERE (NOT exists( SELECT opn.novedad_id from operativos_personal_novedades opn WHERE ni.id = opn.novedad_id )
+        OR NOT exists( SELECT ovn.novedad_id from operativos_vehiculos_novedades ovn WHERE ni.id = ovn.novedad_id ))
+        AND ni.estado = 1 AND ni.deleted_at IS NULL 
+        
+        ORDER BY ni.fecha_hora_ocurrencia DESC
+        LIMIT ? OFFSET ?
+      `;
+      replacements = [limit, offset];
+    }
 
     const novedades = await db.query(query, {
       replacements,
       type: QueryTypes.SELECT
+    });
+
+    // Procesar resultados para convertir campos numéricos
+    const processedResults = novedades.map(item => {
+      // Convertir perdidas_materiales_estimadas a número
+      if (item.perdidas_materiales_estimadas !== null && item.perdidas_materiales_estimadas !== undefined) {
+        item.perdidas_materiales_estimadas = parseFloat(item.perdidas_materiales_estimadas) || 0;
+      }
+      return item;
     });
 
     // Query para contar total (sin paginación)
@@ -1544,7 +1660,7 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
 
     return {
       success: true,
-      data: novedades,
+      data: processedResults,
       pagination: {
         page,
         limit,
@@ -1560,7 +1676,7 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
       },
       query_info: {
         query_type: "NOT_EXISTS",
-        total_registros: novedades.length,
+        total_registros: processedResults.length,
         total_sin_paginar: total
       }
     };

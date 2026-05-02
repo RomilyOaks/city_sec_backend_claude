@@ -363,7 +363,7 @@ router.get(
  * @permissions operativos.reportes.export, novedades.read
  */
 router.get(
-  "/no-atendidas/exportar",
+  "/novedades-no-atendidas/exportar",
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor"],
