@@ -433,6 +433,7 @@ export const getOperativosPie = async (req, res) => {
       formattedData,
       {
         pagination: result.pagination,
+        estadisticas_prioridades: result.estadisticas_prioridades,
         filters_applied: req.query,
         total_records: result.pagination.total
       }

@@ -887,7 +887,22 @@ export const getEstadisticasVehiculares = async (queryParams = {}) => {
  */
 export const getOperativosPie = async (queryParams = {}) => {
   try {
-    const { fecha_inicio, fecha_fin, page = 1, limit = 10 } = queryParams;
+    // Extraer parámetros existentes y nuevos filtros (homologado con vehiculares)
+    const { 
+      fecha_inicio, 
+      fecha_fin, 
+      estado_novedad_id, 
+      page = 1, 
+      limit = 10,
+      // Nuevos filtros homologados
+      prioridad,
+      sector_id,
+      cuadrante_id,
+      turno,
+      origen_llamada,
+      generico,
+      personal_id // Filtro específico para personal (en lugar de vehiculo_id)
+    } = queryParams;
     
     // Sanitización de parámetros
     const today = new Date();
@@ -896,9 +911,19 @@ export const getOperativosPie = async (queryParams = {}) => {
     
     const sanitizedFechaInicio = fecha_inicio ? fecha_inicio.replace(/[^0-9-]/g, "") : defaultFechaInicio;
     const sanitizedFechaFin = fecha_fin ? fecha_fin.replace(/[^0-9-]/g, "") : defaultFechaFin;
+    const sanitizedEstadoNovedadId = estado_novedad_id ? parseInt(estado_novedad_id) : null;
     const sanitizedPage = Math.max(1, parseInt(page)) || 1;
     const sanitizedLimit = Math.min(100, Math.max(1, parseInt(limit))) || 10;
     const offset = (sanitizedPage - 1) * sanitizedLimit;
+    
+    // Sanitización de nuevos filtros
+    const sanitizedPrioridad = prioridad ? prioridad.trim().toUpperCase() : null;
+    const sanitizedSectorId = sector_id ? parseInt(sector_id) : null;
+    const sanitizedCuadranteId = cuadrante_id ? parseInt(cuadrante_id) : null;
+    const sanitizedTurno = turno ? turno.trim().toUpperCase() : null;
+    const sanitizedOrigenLlamada = origen_llamada ? origen_llamada.trim() : null;
+    const sanitizedGenerico = generico ? generico.trim() : null;
+    const sanitizedPersonalId = personal_id ? parseInt(personal_id) : null;
 
     // Usar SQL directo para operativos a pie (exactamente como en documentación)
     const baseQuery = `
@@ -1047,6 +1072,14 @@ export const getOperativosPie = async (queryParams = {}) => {
       
       WHERE DATE(ni.fecha_hora_ocurrencia) BETWEEN ? AND ?
         AND ni.estado = 1 AND ni.deleted_at IS NULL 
+        ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
+        ${sanitizedPrioridad ? "AND stn.prioridad = ?" : ""}
+        ${sanitizedSectorId ? "AND ot.sector_id = ?" : ""}
+        ${sanitizedCuadranteId ? "AND opc.cuadrante_id = ?" : ""}
+        ${sanitizedTurno ? "AND ot.turno = ?" : ""}
+        ${sanitizedOrigenLlamada ? "AND ni.origen_llamada = ?" : ""}
+        ${sanitizedGenerico ? "AND (ni.descripcion LIKE ? OR ni.localizacion LIKE ? OR ni.referencia_ubicacion LIKE ? OR ps2.nombres LIKE ? OR ps2.apellido_paterno LIKE ? OR ps2.apellido_materno LIKE ?)" : ""}
+        ${sanitizedPersonalId ? "AND op.personal_id = ?" : ""}
       ORDER BY ot.fecha, ht.nro_orden, ot.fecha_hora_inicio;
     `;
 
@@ -1056,29 +1089,108 @@ export const getOperativosPie = async (queryParams = {}) => {
       INNER JOIN operativos_personal_novedades opn ON ni.id = opn.novedad_id
       INNER JOIN operativos_personal_cuadrantes opc ON opn.operativo_personal_cuadrante_id = opc.id
       INNER JOIN operativos_personal op ON opc.operativo_personal_id = op.id
+      LEFT JOIN subtipos_novedad stn ON ni.subtipo_novedad_id = stn.id
+      LEFT JOIN operativos_turno ot ON op.operativo_turno_id = ot.id
+      LEFT JOIN personal_seguridad ps2 ON op.personal_id = ps2.id
       WHERE DATE(ni.fecha_hora_ocurrencia) BETWEEN ? AND ?
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
         AND opn.estado_registro = 1
         AND opc.estado_registro = 1
         AND op.estado_registro = 1
+        ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
+        ${sanitizedPrioridad ? "AND stn.prioridad = ?" : ""}
+        ${sanitizedSectorId ? "AND ot.sector_id = ?" : ""}
+        ${sanitizedCuadranteId ? "AND opc.cuadrante_id = ?" : ""}
+        ${sanitizedTurno ? "AND ot.turno = ?" : ""}
+        ${sanitizedOrigenLlamada ? "AND ni.origen_llamada = ?" : ""}
+        ${sanitizedGenerico ? "AND (ni.descripcion LIKE ? OR ni.localizacion LIKE ? OR ni.referencia_ubicacion LIKE ? OR ps2.nombres LIKE ? OR ps2.apellido_paterno LIKE ? OR ps2.apellido_materno LIKE ?)" : ""}
+        ${sanitizedPersonalId ? "AND op.personal_id = ?" : ""}
     `;
 
+    // Preparar replacements dinámicamente para operativos a pie
+    const baseReplacements = [sanitizedFechaInicio, sanitizedFechaFin];
+    const countReplacements = [sanitizedFechaInicio, sanitizedFechaFin];
+    
+    // Agregar filtros dinámicamente
+    if (sanitizedEstadoNovedadId) {
+      baseReplacements.push(sanitizedEstadoNovedadId);
+      countReplacements.push(sanitizedEstadoNovedadId);
+    }
+    if (sanitizedPrioridad) {
+      baseReplacements.push(sanitizedPrioridad);
+      countReplacements.push(sanitizedPrioridad);
+    }
+    if (sanitizedSectorId) {
+      baseReplacements.push(sanitizedSectorId);
+      countReplacements.push(sanitizedSectorId);
+    }
+    if (sanitizedCuadranteId) {
+      baseReplacements.push(sanitizedCuadranteId);
+      countReplacements.push(sanitizedCuadranteId);
+    }
+    if (sanitizedTurno) {
+      baseReplacements.push(sanitizedTurno);
+      countReplacements.push(sanitizedTurno);
+    }
+    if (sanitizedOrigenLlamada) {
+      baseReplacements.push(sanitizedOrigenLlamada);
+      countReplacements.push(sanitizedOrigenLlamada);
+    }
+    if (sanitizedGenerico) {
+      const genericPattern = `%${sanitizedGenerico}%`;
+      baseReplacements.push(genericPattern, genericPattern, genericPattern, genericPattern, genericPattern, genericPattern);
+      countReplacements.push(genericPattern, genericPattern, genericPattern, genericPattern, genericPattern, genericPattern);
+    }
+    if (sanitizedPersonalId) {
+      baseReplacements.push(sanitizedPersonalId);
+      countReplacements.push(sanitizedPersonalId);
+    }
+    
+    // Agregar paginación solo al query principal
+    baseReplacements.push(sanitizedLimit, offset);
+
     // Ejecutar queries en paralelo
-    const [resultadoVehiculares, totalCount] = await Promise.all([
+    const [resultadoPie, totalCount] = await Promise.all([
       models.sequelize.query(baseQuery, {
-        replacements: [sanitizedFechaInicio, sanitizedFechaFin, sanitizedLimit, offset],
+        replacements: baseReplacements,
         type: Sequelize.QueryTypes.SELECT
       }),
       models.sequelize.query(countQuery, {
-        replacements: [sanitizedFechaInicio, sanitizedFechaFin],
+        replacements: countReplacements,
         type: Sequelize.QueryTypes.SELECT
       })
     ]);
 
-    const operativos = resultadoVehiculares;
+    const operativos = resultadoPie;
     const total = totalCount[0]?.total || 0;
 
+    // Calcular estadísticas por prioridades con colores (igual que no atendidas)
+    const estadisticasPrioridades = operativos.reduce((acc, item) => {
+      const prioridad = item.prioridad?.toUpperCase() || "SIN_PRIORIDAD";
+      
+      if (!acc[prioridad]) {
+        acc[prioridad] = {
+          count: 0,
+          color: prioridad === "ALTA" ? "rojo" : 
+            prioridad === "MEDIA" ? "ambar" : 
+              prioridad === "BAJA" ? "verde" : "gris",
+          novedades: []
+        };
+      }
+      
+      acc[prioridad].count++;
+      acc[prioridad].novedades.push({
+        id: item.novedad_id,
+        tipo_subtipo_novedad: item.tipo_subtipo_novedad,
+        fecha_hora_ocurrencia: item.fecha_hora_ocurrencia,
+        nombre_sector: item.nombre_sector,
+        localizacion: item.localizacion
+      });
+      
+      return acc;
+    }, {});
+    
     return {
       success: true,
       data: operativos,
@@ -1090,15 +1202,24 @@ export const getOperativosPie = async (queryParams = {}) => {
         has_next: sanitizedPage < Math.ceil(total / sanitizedLimit),
         has_prev: sanitizedPage > 1
       },
+      estadisticas_prioridades: estadisticasPrioridades,
       filters_applied: {
         fecha_inicio: sanitizedFechaInicio,
         fecha_fin: sanitizedFechaFin,
-        estado: 1
+        estado_novedad_id: sanitizedEstadoNovedadId,
+        prioridad: sanitizedPrioridad,
+        sector_id: sanitizedSectorId,
+        cuadrante_id: sanitizedCuadranteId,
+        turno: sanitizedTurno,
+        origen_llamada: sanitizedOrigenLlamada,
+        generico: sanitizedGenerico,
+        personal_id: sanitizedPersonalId,
+        page: sanitizedPage,
+        limit: sanitizedLimit
       }
     };
 
   } catch (error) {
-    console.error("❌ Error en getOperativosPie:", error);
     throw new Error(`Error al obtener operativos a pie: ${error.message}`);
   }
 };
