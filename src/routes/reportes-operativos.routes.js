@@ -46,7 +46,6 @@ import {
   validateEstadisticasVehiculares,
   validateMetricsVehiculares,
   validateReportesOperativosPie,
-  validateResumenPie,
   validateNovedadesNoAtendidas,
 } from "../validators/reportesOperativos.validator.js";
 
@@ -247,47 +246,6 @@ router.get(
  * @roles super_admin, admin, supervisor, operador, consulta
  * @permissions operativos.reportes.read, operativos.personal.read
  */
-router.get(
-  "/pie/resumen",
-  verificarToken,
-  verificarRolesOPermisos(
-    ["super_admin", "admin", "supervisor", "operador", "consulta"],
-    ["reportes.operativos_personales.read"]
-  ),
-  validateResumenPie,
-  reportesOperativosController.getResumenPie
-);
-
-/**
- * GET /api/v1/reportes-operativos/pie/exportar
- * Exportar operativos a pie a Excel o CSV
- * 
- * @query {string} fecha_inicio - Fecha de inicio del rango (YYYY-MM-DD) [opcional]
- * @query {string} fecha_fin - Fecha de fin del rango (YYYY-MM-DD) [opcional]
- * @query {string} turno - Tipo de turno (MAÑANA, TARDE, NOCHE) [opcional]
- * @query {number} sector_id - ID del sector [opcional]
- * @query {number} personal_id - ID del personal [opcional]
- * @query {number} cuadrante_id - ID del cuadrante [opcional]
- * @query {number} estado_novedad - Estado de la novedad (0,1) [opcional]
- * @query {string} prioridad - Prioridad (BAJA, MEDIA, ALTA, CRÍTICA) [opcional]
- * @query {number} tipo_novedad_id - ID del tipo de novedad [opcional]
- * @query {string} formato - Formato de exportación (excel, csv) [opcional]
- * @query {boolean} include_deleted - Incluir eliminados (default: false) [opcional]
- * 
- * @access Private
- * @roles super_admin, admin, supervisor
- * @permissions operativos.reportes.export, operativos.personal.read
- */
-router.get(
-  "/pie/exportar",
-  verificarToken,
-  verificarRolesOPermisos(
-    ["super_admin", "admin", "supervisor"],
-    ["reportes.operativos_personales.export"]
-  ),
-  validateExportarVehicular, // Reutilizamos validador de exportación
-  reportesOperativosController.exportarOperativosPie
-);
 
 // ==========================================
 // ENDPOINTS FASE 3: NOVEDADES NO ATENDIDAS (PREPARACIÓN)
@@ -336,42 +294,6 @@ router.get(
  * @roles super_admin, admin, supervisor, operador, consulta
  * @permissions operativos.reportes.read, novedades.read
  */
-router.get(
-  "/no-atendidas/resumen",
-  verificarToken,
-  verificarRolesOPermisos(
-    ["super_admin", "admin", "supervisor", "operador", "consulta"],
-    ["reportes.novedades_no_atendidas.read"]
-  ),
-  validateNovedadesNoAtendidas,
-  reportesOperativosController.getResumenNovedadesNoAtendidas
-);
-
-/**
- * GET /api/v1/reportes-operativos/no-atendidas/exportar
- * Exportar novedades no atendidas a Excel o CSV
- * 
- * @query {string} fecha_inicio - Fecha de inicio del rango (YYYY-MM-DD) [opcional]
- * @query {string} fecha_fin - Fecha de fin del rango (YYYY-MM-DD) [opcional]
- * @query {number} tipo_novedad_id - ID del tipo de novedad [opcional]
- * @query {string} prioridad - Prioridad (BAJA, MEDIA, ALTA, CRÍTICA) [opcional]
- * @query {string} formato - Formato de exportación (excel, csv) [opcional]
- * @query {boolean} include_deleted - Incluir eliminados (default: false) [opcional]
- * 
- * @access Private
- * @roles super_admin, admin, supervisor
- * @permissions operativos.reportes.export, novedades.read
- */
-router.get(
-  "/novedades-no-atendidas/exportar",
-  verificarToken,
-  verificarRolesOPermisos(
-    ["super_admin", "admin", "supervisor"],
-    ["reportes.novedades_no_atendidas.export"]
-  ),
-  validateExportarVehicular, // Reutilizamos validador de exportación
-  reportesOperativosController.exportarNovedadesNoAtendidas
-);
 
 // ==========================================
 // ENDPOINTS FASE 4: REPORTES COMBINADOS (PREPARACIÓN)
@@ -410,36 +332,6 @@ router.get(
   ),
   validateReportesOperativosVehiculares, // Reutilizamos validadores completos
   reportesOperativosController.getDashboardOperativos
-);
-
-/**
- * GET /api/v1/reportes-operativos/combinados/exportar
- * Exportar datos combinados de todos los operativos a Excel o CSV
- * 
- * @query {string} fecha_inicio - Fecha de inicio del rango (YYYY-MM-DD) [opcional]
- * @query {string} fecha_fin - Fecha de fin del rango (YYYY-MM-DD) [opcional]
- * @query {string} turno - Tipo de turno (MAÑANA, TARDE, NOCHE) [opcional]
- * @query {number} sector_id - ID del sector [opcional]
- * @query {number} estado_novedad - Estado de la novedad (0,1) [opcional]
- * @query {string} prioridad - Prioridad (BAJA, MEDIA, ALTA, CRÍTICA) [opcional]
- * @query {number} tipo_novedad_id - ID del tipo de novedad [opcional]
- * @query {boolean} include_deleted - Incluir eliminados (default: false) [opcional]
- * @query {string} formato - Formato de exportación (excel|csv) [opcional, default: excel]
- * @query {number} limit - Límite de registros (default: 1000) [opcional]
- * 
- * @access Private
- * @roles super_admin, admin, supervisor
- * @permissions reportes.operativos_dashboard.export
- */
-router.get(
-  "/combinados/exportar",
-  verificarToken,
-  verificarRolesOPermisos(
-    ["super_admin", "admin", "supervisor"],
-    ["reportes.operativos_dashboard.export"]
-  ),
-  validateExportarVehicular, // Reutilizamos validador de exportación
-  reportesOperativosController.exportarReportesCombinados
 );
 
 /**
@@ -494,13 +386,7 @@ router.get("/health", (req, res) => {
       vehiculares_estadisticas: "active",
       vehiculares_metrics: "active",
       pie: "active",
-      pie_resumen: "active",
-      pie_exportar: "active",
       no_atendidas: "active",
-      no_atendidas_resumen: "active",
-      no_atendidas_exportar: "active",
-      combinados: "active",
-      combinados_exportar: "active",
       dashboard: "active"
     }
   });
