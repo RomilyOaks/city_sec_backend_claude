@@ -111,7 +111,22 @@ const buildPaginationOptions = (queryParams) => {
  */
 export const getOperativosVehiculares = async (queryParams = {}) => {
   try {
-    const { fecha_inicio, fecha_fin, estado_novedad_id, page = 1, limit = 10 } = queryParams;
+    // Extraer parámetros existentes y nuevos filtros
+    const { 
+      fecha_inicio, 
+      fecha_fin, 
+      estado_novedad_id, 
+      page = 1, 
+      limit = 10,
+      // Nuevos filtros
+      prioridad,
+      sector_id,
+      cuadrante_id,
+      turno,
+      origen_llamada,
+      generico,
+      vehiculo_id // Filtro específico para vehículos
+    } = queryParams;
     
     // Sanitización de parámetros con valores por defecto
     const today = new Date();
@@ -124,6 +139,15 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
     const sanitizedPage = Math.max(1, parseInt(page)) || 1;
     const sanitizedLimit = Math.min(100, Math.max(1, parseInt(limit))) || 10;
     const offset = (sanitizedPage - 1) * sanitizedLimit;
+    
+    // Sanitización de nuevos filtros
+    const sanitizedPrioridad = prioridad ? prioridad.trim().toUpperCase() : null;
+    const sanitizedSectorId = sector_id ? parseInt(sector_id) : null;
+    const sanitizedCuadranteId = cuadrante_id ? parseInt(cuadrante_id) : null;
+    const sanitizedTurno = turno ? turno.trim().toUpperCase() : null;
+    const sanitizedOrigenLlamada = origen_llamada ? origen_llamada.trim() : null;
+    const sanitizedGenerico = generico ? generico.trim() : null;
+    const sanitizedVehiculoId = vehiculo_id ? parseInt(vehiculo_id) : null;
 
     // Query SQL completo basado en el documento actualizado con todos los campos y alias correctos
     const baseQuery = `
@@ -301,31 +325,82 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
         ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
+        ${sanitizedPrioridad ? "AND stn.prioridad = ?" : ""}
+        ${sanitizedSectorId ? "AND ot.sector_id = ?" : ""}
+        ${sanitizedCuadranteId ? "AND ovc.cuadrante_id = ?" : ""}
+        ${sanitizedTurno ? "AND ot.turno = ?" : ""}
+        ${sanitizedOrigenLlamada ? "AND ni.origen_llamada = ?" : ""}
+        ${sanitizedVehiculoId ? "AND ov.vehiculo_id = ?" : ""}
+        ${sanitizedGenerico ? "AND (ni.descripcion LIKE ? OR ni.localizacion LIKE ? OR ni.reportante_nombre LIKE ? OR v.placa LIKE ?)" : ""}
       ORDER BY ot.fecha, ht.nro_orden, ot.fecha_hora_inicio
       LIMIT ? OFFSET ?
     `;
 
-    // Query para contar total de registros
+    // Query para contar total de registros con mismos filtros
     const countQuery = `
       SELECT COUNT(*) as total
       FROM novedades_incidentes ni
+        INNER JOIN tipos_novedad tn ON ni.tipo_novedad_id = tn.id
+        LEFT JOIN subtipos_novedad stn ON ni.subtipo_novedad_id = stn.id
         INNER JOIN operativos_vehiculos_novedades ovn ON ni.id = ovn.novedad_id
+        INNER JOIN operativos_vehiculos_cuadrantes ovc ON ovn.operativo_vehiculo_cuadrante_id = ovc.id
+        INNER JOIN operativos_vehiculos ov ON ovc.operativo_vehiculo_id = ov.id
+        INNER JOIN operativos_turno ot ON ov.operativo_turno_id = ot.id
+        INNER JOIN vehiculos v ON ov.vehiculo_id = v.id
       WHERE DATE(ni.fecha_hora_ocurrencia) BETWEEN ? AND ?
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
         ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
+        ${sanitizedPrioridad ? "AND stn.prioridad = ?" : ""}
+        ${sanitizedSectorId ? "AND ot.sector_id = ?" : ""}
+        ${sanitizedCuadranteId ? "AND ovc.cuadrante_id = ?" : ""}
+        ${sanitizedTurno ? "AND ot.turno = ?" : ""}
+        ${sanitizedOrigenLlamada ? "AND ni.origen_llamada = ?" : ""}
+        ${sanitizedVehiculoId ? "AND ov.vehiculo_id = ?" : ""}
+        ${sanitizedGenerico ? "AND (ni.descripcion LIKE ? OR ni.localizacion LIKE ? OR ni.reportante_nombre LIKE ? OR v.placa LIKE ?)" : ""}
     `;
 
     // Preparar replacements dinámicamente
     const baseReplacements = [sanitizedFechaInicio, sanitizedFechaFin];
     const countReplacements = [sanitizedFechaInicio, sanitizedFechaFin];
     
+    // Agregar filtros adicionales si existen
     if (sanitizedEstadoNovedadId) {
-      baseReplacements.push(sanitizedEstadoNovedadId, sanitizedLimit, offset);
+      baseReplacements.push(sanitizedEstadoNovedadId);
       countReplacements.push(sanitizedEstadoNovedadId);
-    } else {
-      baseReplacements.push(sanitizedLimit, offset);
     }
+    if (sanitizedPrioridad) {
+      baseReplacements.push(sanitizedPrioridad);
+      countReplacements.push(sanitizedPrioridad);
+    }
+    if (sanitizedSectorId) {
+      baseReplacements.push(sanitizedSectorId);
+      countReplacements.push(sanitizedSectorId);
+    }
+    if (sanitizedCuadranteId) {
+      baseReplacements.push(sanitizedCuadranteId);
+      countReplacements.push(sanitizedCuadranteId);
+    }
+    if (sanitizedTurno) {
+      baseReplacements.push(sanitizedTurno);
+      countReplacements.push(sanitizedTurno);
+    }
+    if (sanitizedOrigenLlamada) {
+      baseReplacements.push(sanitizedOrigenLlamada);
+      countReplacements.push(sanitizedOrigenLlamada);
+    }
+    if (sanitizedVehiculoId) {
+      baseReplacements.push(sanitizedVehiculoId);
+      countReplacements.push(sanitizedVehiculoId);
+    }
+    if (sanitizedGenerico) {
+      const genericPattern = `%${sanitizedGenerico}%`;
+      baseReplacements.push(genericPattern, genericPattern, genericPattern, genericPattern);
+      countReplacements.push(genericPattern, genericPattern, genericPattern, genericPattern);
+    }
+    
+    // Agregar paginación al final
+    baseReplacements.push(sanitizedLimit, offset);
 
     // Ejecutar queries usando Sequelize con SQL directo
     const [results, countResult] = await Promise.all([
