@@ -429,6 +429,32 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
     const total = countResult[0]?.total || 0;
     const totalPages = Math.ceil(total / sanitizedLimit);
 
+    // Calcular estadísticas por prioridades con colores (igual que operativos a pie)
+    const estadisticasPrioridades = processedResults.reduce((acc, item) => {
+      const prioridad = item.prioridad?.toUpperCase() || "SIN_PRIORIDAD";
+      
+      if (!acc[prioridad]) {
+        acc[prioridad] = {
+          count: 0,
+          color: prioridad === "ALTA" ? "rojo" : 
+            prioridad === "MEDIA" ? "ambar" : 
+              prioridad === "BAJA" ? "verde" : "gris",
+          novedades: []
+        };
+      }
+      
+      acc[prioridad].count++;
+      acc[prioridad].novedades.push({
+        id: item.novedad_id,
+        tipo_subtipo_novedad: item.subtipo_novedad,
+        fecha_hora_ocurrencia: item.fecha_hora_ocurrencia,
+        nombre_sector: item.nombre_sector,
+        localizacion: item.localizacion
+      });
+      
+      return acc;
+    }, {});
+
     return {
       success: true,
       data: processedResults,
@@ -438,6 +464,7 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
         total,
         totalPages
       },
+      estadisticas_prioridades: estadisticasPrioridades,
       filters_applied: {
         fecha_inicio: sanitizedFechaInicio,
         fecha_fin: sanitizedFechaFin,
