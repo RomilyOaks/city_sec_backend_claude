@@ -866,6 +866,7 @@ export const getEstadisticasVehiculares = async (queryParams = {}) => {
           total_operativos: parseInt(item.total_operativos) || 0
         }))
       },
+      estadisticas_prioridades: {},
       filters_applied: {
         fecha_inicio: sanitizedFechaInicio,
         fecha_fin: sanitizedFechaFin,

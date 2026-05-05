@@ -84,6 +84,7 @@ export const getOperativosVehiculares = async (req, res) => {
       result.data,
       {
         pagination: result.pagination,
+        estadisticas_prioridades: result.estadisticas_prioridades,
         filters_applied: result.filters_applied,
         total_records: result.pagination.total
       }
