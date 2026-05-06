@@ -557,6 +557,134 @@ export const getDashboardOperativos = async (req, res) => {
   }
 };
 
+/**
+ * Exportar reportes combinados de operativos
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ * @returns {Promise<void>} Archivo de exportación
+ */
+export const exportarReportesCombinados = async (req, res) => {
+  try {
+    const formato = req.query.formato?.toLowerCase() || "excel";
+    
+    if (!["excel", "csv"].includes(formato)) {
+      return res.status(400).json(buildResponse(
+        false,
+        "Formato no válido. Use 'excel' o 'csv'",
+        null,
+        { formatos_validos: ["excel", "csv"] }
+      ));
+    }
+    
+    // 1. Primero obtener el JSON completo del dashboard combinado
+    const exportQuery = { ...req.query, limit: 10000, page: 1 };
+    const result = await reportesOperativosService.getDashboardOperativos(exportQuery);
+    
+    if (!result.success || !result.data || Object.keys(result.data).length === 0) {
+      return res.status(404).json(buildResponse(
+        false,
+        "No hay datos para exportar con los filtros seleccionados"
+      ));
+    }
+    
+    // 2. Preparar datos para exportación (combinados de todas las fuentes)
+    const datosCombinados = [];
+    
+    // Agregar operativos vehiculares
+    if (result.data.operativos_vehiculares && result.data.operativos_vehiculares.length > 0) {
+      result.data.operativos_vehiculares.forEach(item => {
+        datosCombinados.push({
+          tipo_operativo: "VEHICULAR",
+          ...item
+        });
+      });
+    }
+    
+    // Agregar operativos a pie
+    if (result.data.operativos_pie && result.data.operativos_pie.length > 0) {
+      result.data.operativos_pie.forEach(item => {
+        datosCombinados.push({
+          tipo_operativo: "A PIE",
+          ...item
+        });
+      });
+    }
+    
+    // Agregar novedades no atendidas
+    if (result.data.novedades_no_atendidas && result.data.novedades_no_atendidas.length > 0) {
+      result.data.novedades_no_atendidas.forEach(item => {
+        datosCombinados.push({
+          tipo_operativo: " NO ATENDIDA",
+          ...item
+        });
+      });
+    }
+    
+    if (datosCombinados.length === 0) {
+      return res.status(404).json(buildResponse(
+        false,
+        "No hay datos para exportar con los filtros seleccionados"
+      ));
+    }
+    
+    // 3. Exportar en el formato solicitado
+    if (formato === "excel") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Reportes Combinados Operativos");
+      
+      // Definir columnas basadas en los datos combinados
+      const columnas = Object.keys(datosCombinados[0] || {}).map(key => ({
+        header: key.replace(/_/g, " ").toUpperCase(),
+        key: key,
+        width: 20
+      }));
+      
+      worksheet.columns = columnas;
+      worksheet.addRows(datosCombinados);
+      
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=reportes-combinados-operativos-${new Date()
+          .toISOString()
+          .split("T")[0]
+          .replace(/-/g, "")}.xlsx`
+      );
+      
+      await workbook.xlsx.write(res);
+    } else if (formato === "csv") {
+      // Generar CSV manualmente (como en la función original)
+      if (datosCombinados.length === 0) {
+        const csvHeader = Object.keys(datosCombinados[0] || {}).join(",") + "\n";
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename=reportes-combinados-operativos-${new Date().toISOString().split("T")[0]}.csv`);
+        return res.send(csvHeader);
+      }
+      
+      const columnas = Object.keys(datosCombinados[0]);
+      const csvHeader = columnas.join(",") + "\n";
+      const csvRows = datosCombinados.map(row => 
+        columnas.map(col => `"${row[col] || ""}"`).join(",")
+      ).join("\n");
+      const csvData = csvHeader + csvRows;
+      
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=reportes-combinados-operativos-${new Date().toISOString().split("T")[0]}.csv`);
+      res.send(csvData);
+    }
+    
+  } catch (error) {
+    console.error("❌ Error en exportarReportesCombinados:", error);
+    return res.status(500).json(buildResponse(
+      false,
+      `Error al exportar reportes combinados: ${error.message}`
+    ));
+  }
+};
+
 export default {
   getOperativosVehiculares,
   getResumenVehicular,
@@ -565,5 +693,6 @@ export default {
   getMetricsVehiculares,
   getOperativosPie,
   getNovedadesNoAtendidas,
-  getDashboardOperativos
+  getDashboardOperativos,
+  exportarReportesCombinados
 };
