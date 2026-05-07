@@ -914,6 +914,81 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "GET - Exportar Reportes Combinados (NUEVO)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is downloadable file', function () {",
+									"    pm.response.to.have.header('Content-Disposition');",
+									"    const contentType = pm.response.headers.get('Content-Type');",
+									"    pm.expect(contentType).to.include('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').or.to.include('text/csv');",
+									"});",
+									"",
+									"pm.test('File has proper filename', function () {",
+									"    const contentDisposition = pm.response.headers.get('Content-Disposition');",
+									"    pm.expect(contentDisposition).to.include('attachment');",
+									"    pm.expect(contentDisposition).to.include('reportes-combinados-operativos');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes-operativos/combinados/exportar?fecha_inicio=2026-04-06&fecha_fin=2026-05-06&limit=1000&formato=excel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reportes-operativos",
+								"combinados",
+								"exportar"
+							],
+							"query": [
+								{
+									"key": "fecha_inicio",
+									"value": "2026-04-06",
+									"description": "Fecha de inicio del rango"
+								},
+								{
+									"key": "fecha_fin",
+									"value": "2026-05-06",
+									"description": "Fecha de fin del rango"
+								},
+								{
+									"key": "limit",
+									"value": "1000",
+									"description": "Límite de registros"
+								},
+								{
+									"key": "formato",
+									"value": "excel",
+									"description": "Formato de exportación (excel o csv)"
+								}
+							]
+						},
+						"description": "Exportar reportes combinados de operativos (vehiculares + a pie + no atendidas)"
+					},
+					"response": []
 				}
 			],
 			"description": "Endpoints de la Fase 4: Reportes Combinados y Dashboard con KPIs integrados"

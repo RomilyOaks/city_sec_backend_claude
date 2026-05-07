@@ -576,23 +576,24 @@ export const exportarReportesCombinados = async (req, res) => {
       ));
     }
     
-    // 1. Primero obtener el JSON completo del dashboard combinado
+    // 1. Obtener datos brutos de cada servicio individualmente
     const exportQuery = { ...req.query, limit: 10000, page: 1 };
-    const result = await reportesOperativosService.getDashboardOperativos(exportQuery);
     
-    if (!result.success || !result.data || Object.keys(result.data).length === 0) {
-      return res.status(404).json(buildResponse(
-        false,
-        "No hay datos para exportar con los filtros seleccionados"
-      ));
-    }
+    // Obtener operativos vehiculares
+    const vehicularesResult = await reportesOperativosService.getOperativosVehiculares(exportQuery);
     
+    // Obtener operativos a pie  
+    const pieResult = await reportesOperativosService.getOperativosPie(exportQuery);
+    
+    // Obtener novedades no atendidas
+    const noAtendidasResult = await reportesOperativosService.getNovedadesNoAtendidas(exportQuery);
+        
     // 2. Preparar datos para exportación (combinados de todas las fuentes)
     const datosCombinados = [];
     
     // Agregar operativos vehiculares
-    if (result.data.operativos_vehiculares && result.data.operativos_vehiculares.length > 0) {
-      result.data.operativos_vehiculares.forEach(item => {
+    if (vehicularesResult.success && vehicularesResult.data && vehicularesResult.data.length > 0) {
+      vehicularesResult.data.forEach(item => {
         datosCombinados.push({
           tipo_operativo: "VEHICULAR",
           ...item
@@ -601,8 +602,8 @@ export const exportarReportesCombinados = async (req, res) => {
     }
     
     // Agregar operativos a pie
-    if (result.data.operativos_pie && result.data.operativos_pie.length > 0) {
-      result.data.operativos_pie.forEach(item => {
+    if (pieResult.success && pieResult.data && pieResult.data.length > 0) {
+      pieResult.data.forEach(item => {
         datosCombinados.push({
           tipo_operativo: "A PIE",
           ...item
@@ -611,10 +612,10 @@ export const exportarReportesCombinados = async (req, res) => {
     }
     
     // Agregar novedades no atendidas
-    if (result.data.novedades_no_atendidas && result.data.novedades_no_atendidas.length > 0) {
-      result.data.novedades_no_atendidas.forEach(item => {
+    if (noAtendidasResult.success && noAtendidasResult.data && noAtendidasResult.data.length > 0) {
+      noAtendidasResult.data.forEach(item => {
         datosCombinados.push({
-          tipo_operativo: " NO ATENDIDA",
+          tipo_operativo: "NO ATENDIDA",
           ...item
         });
       });
