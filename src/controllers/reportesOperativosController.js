@@ -567,12 +567,12 @@ export const exportarReportesCombinados = async (req, res) => {
   try {
     const formato = req.query.formato?.toLowerCase() || "excel";
     
-    if (!["excel", "csv"].includes(formato)) {
+    if (!["excel", "csv", "turnos", "prioridades", "sectores"].includes(formato)) {
       return res.status(400).json(buildResponse(
         false,
-        "Formato no válido. Use 'excel' o 'csv'",
+        "Formato no válido. Use 'excel', 'csv', 'turnos', 'prioridades' o 'sectores'",
         null,
-        { formatos_validos: ["excel", "csv"] }
+        { formatos_validos: ["excel", "csv", "turnos", "prioridades", "sectores"] }
       ));
     }
     
@@ -675,6 +675,20 @@ export const exportarReportesCombinados = async (req, res) => {
       res.setHeader("Content-Type", "text/csv");
       res.setHeader("Content-Disposition", `attachment; filename=reportes-combinados-operativos-${new Date().toISOString().split("T")[0]}.csv`);
       res.send(csvData);
+    } else if (["turnos", "prioridades", "sectores"].includes(formato)) {
+      // Formatos para gráficos - Devolver datos procesados para frontend
+      const datosGrafico = procesarDatosParaGrafico(datosCombinados, formato);
+      
+      return res.json(buildResponse(
+        true,
+        `Datos para gráfico de ${formato} generados exitosamente`,
+        datosGrafico,
+        {
+          formato: formato,
+          total_registros: datosCombinados.length,
+          generated_at: new Date().toISOString()
+        }
+      ));
     }
     
   } catch (error) {
@@ -684,6 +698,137 @@ export const exportarReportesCombinados = async (req, res) => {
       `Error al exportar reportes combinados: ${error.message}`
     ));
   }
+};
+
+/**
+ * Procesar datos para gráficos según el formato solicitado
+ * @param {Array} datosCombinados - Datos combinados de todas las fuentes
+ * @param {string} formato - Tipo de gráfico (turnos, prioridades, sectores)
+ * @returns {Object} Datos procesados para el gráfico
+ */
+const procesarDatosParaGrafico = (datosCombinados, formato) => {
+  switch (formato) {
+  case "turnos":
+    return procesarDatosPorTurnos(datosCombinados);
+  case "prioridades":
+    return procesarDatosPorPrioridades(datosCombinados);
+  case "sectores":
+    return procesarDatosPorSectores(datosCombinados);
+  default:
+    return { labels: [], datasets: [] };
+  }
+};
+
+/**
+ * Procesar datos para gráfico por turnos
+ */
+const procesarDatosPorTurnos = (datos) => {
+  const turnosCount = {};
+  
+  datos.forEach(item => {
+    const turno = item.turno || "SIN_TURNO";
+    turnosCount[turno] = (turnosCount[turno] || 0) + 1;
+  });
+  
+  const labels = Object.keys(turnosCount);
+  const data = Object.values(turnosCount);
+  const total = data.reduce((a, b) => a + b, 0);
+  
+  return {
+    labels,
+    datasets: [{
+      label: "Operativos por Turno",
+      data,
+      backgroundColor: ["#2E7D32", "#1565C0", "#F57C00", "#C62828"],
+      borderColor: ["#1B5E20", "#0D47A1", "#E65100", "#B71C1C"],
+      borderWidth: 2
+    }],
+    estadisticas: labels.map((label, index) => ({
+      categoria: label,
+      cantidad: data[index],
+      porcentaje: ((data[index] / total) * 100).toFixed(2)
+    })),
+    total
+  };
+};
+
+/**
+ * Procesar datos para gráfico por prioridades
+ */
+const procesarDatosPorPrioridades = (datos) => {
+  const prioridadesCount = {};
+  
+  datos.forEach(item => {
+    const prioridad = (item.prioridad || "SIN_PRIORIDAD").toUpperCase();
+    prioridadesCount[prioridad] = (prioridadesCount[prioridad] || 0) + 1;
+  });
+  
+  const labels = Object.keys(prioridadesCount);
+  const data = Object.values(prioridadesCount);
+  const total = data.reduce((a, b) => a + b, 0);
+  
+  // Colores según prioridad
+  const colorMap = {
+    "ALTA": "#C62828",
+    "MEDIA": "#F57C00", 
+    "BAJA": "#2E7D32",
+    "SIN_PRIORIDAD": "#757575"
+  };
+  
+  return {
+    labels,
+    datasets: [{
+      label: "Operativos por Prioridad",
+      data,
+      backgroundColor: labels.map(label => colorMap[label] || "#757575"),
+      borderColor: labels.map(label => (colorMap[label] || "#757575").replace("0.8", "1")),
+      borderWidth: 2
+    }],
+    estadisticas: labels.map((label, index) => ({
+      categoria: label,
+      cantidad: data[index],
+      porcentaje: ((data[index] / total) * 100).toFixed(2)
+    })),
+    total
+  };
+};
+
+/**
+ * Procesar datos para gráfico por sectores
+ */
+const procesarDatosPorSectores = (datos) => {
+  const sectoresCount = {};
+  
+  datos.forEach(item => {
+    const sector = item.nombre_sector || item.sector_nombre || "SIN_SECTOR";
+    sectoresCount[sector] = (sectoresCount[sector] || 0) + 1;
+  });
+  
+  // Ordenar por cantidad descendente
+  const sortedSectores = Object.entries(sectoresCount)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 10); // Top 10 sectores
+  
+  const labels = sortedSectores.map(([sector]) => sector);
+  const data = sortedSectores.map(([,count]) => count);
+  const total = data.reduce((a, b) => a + b, 0);
+  
+  return {
+    labels,
+    datasets: [{
+      label: "Operativos por Sector",
+      data,
+      backgroundColor: "#1976D2",
+      borderColor: "#0D47A1",
+      borderWidth: 2
+    }],
+    estadisticas: labels.map((label, index) => ({
+      categoria: label,
+      cantidad: data[index],
+      porcentaje: ((data[index] / total) * 100).toFixed(2)
+    })),
+    total
+  };
 };
 
 export default {
