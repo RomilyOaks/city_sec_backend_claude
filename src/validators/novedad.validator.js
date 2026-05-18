@@ -350,6 +350,54 @@ export const validarEsAnonimo = () =>
     .withMessage("es_anonimo debe ser 0 o 1");
 
 /**
+ * Validar fotos adjuntas (array de objetos con url requerido)
+ * Usado por el flujo BOTON_DENUNCIA_VECINO_ALERTA desde app móvil
+ */
+export const validarFotosAdjuntas = () =>
+  body("fotos_adjuntas")
+    .optional({ nullable: true })
+    .isArray({ max: 10 })
+    .withMessage("fotos_adjuntas debe ser un array de máximo 10 elementos")
+    .custom((arr) => {
+      if (!Array.isArray(arr)) return true;
+      for (const item of arr) {
+        if (typeof item !== "object" || !item.url || typeof item.url !== "string") {
+          throw new Error("Cada elemento de fotos_adjuntas debe ser un objeto con campo 'url' (string)");
+        }
+        try {
+          new URL(item.url);
+        } catch {
+          throw new Error(`URL inválida en fotos_adjuntas: ${item.url}`);
+        }
+      }
+      return true;
+    });
+
+/**
+ * Validar partes adjuntos (array de objetos con url requerido)
+ * Incluye audios grabados desde la app móvil vecino alerta
+ */
+export const validarParteAdjuntos = () =>
+  body("parte_adjuntos")
+    .optional({ nullable: true })
+    .isArray({ max: 10 })
+    .withMessage("parte_adjuntos debe ser un array de máximo 10 elementos")
+    .custom((arr) => {
+      if (!Array.isArray(arr)) return true;
+      for (const item of arr) {
+        if (typeof item !== "object" || !item.url || typeof item.url !== "string") {
+          throw new Error("Cada elemento de parte_adjuntos debe ser un objeto con campo 'url' (string)");
+        }
+        try {
+          new URL(item.url);
+        } catch {
+          throw new Error(`URL inválida en parte_adjuntos: ${item.url}`);
+        }
+      }
+      return true;
+    });
+
+/**
  * Validar observaciones
  */
 export const validarObservaciones = () =>
@@ -491,6 +539,8 @@ export const validateCreateNovedad = [
   validarUbigeoCode(),
   validarPrioridad(),
   validarGravedad(),
+  validarFotosAdjuntas(),
+  validarParteAdjuntos(),
   handleValidationErrors,
 ];
 
@@ -509,6 +559,8 @@ export const validateUpdateNovedad = [
   validarDescripcion(true),
   validarObservaciones(),
   validarObservacionesCambioEstado(),
+  validarFotosAdjuntas(),
+  validarParteAdjuntos(),
   handleValidationErrors,
 ];
 

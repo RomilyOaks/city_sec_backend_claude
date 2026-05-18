@@ -346,6 +346,8 @@ export const createNovedad = async (req, res) => {
       radio_tetra_id,
       num_personas_afectadas,
       observaciones_historial,
+      fotos_adjuntas,
+      parte_adjuntos,
     } = req.body;
 
     const estadoInicial = await EstadoNovedad.findOne({
@@ -425,6 +427,8 @@ export const createNovedad = async (req, res) => {
         prioridad_actual: subtipo.prioridad || "MEDIA",
         turno,
         num_personas_afectadas: num_personas_afectadas || 0,
+        fotos_adjuntas: fotos_adjuntas || null,
+        parte_adjuntos: parte_adjuntos || null,
         usuario_registro: req.user.personal_seguridad_id,
         created_by: req.user.id,
         updated_by: req.user.id,
