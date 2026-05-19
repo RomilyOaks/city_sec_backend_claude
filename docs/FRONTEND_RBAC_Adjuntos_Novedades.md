@@ -39,14 +39,16 @@ El permiso `novedades.fotos.downloader` **no redacta ningún campo** en el JSON.
 
 ## Política de asignación por rol
 
-| Rol | `viewer` | `downloader` | `player` |
-|-----|:--------:|:------------:|:--------:|
-| `super_admin` | ✅ | ✅ | ✅ |
-| `admin` | ✅ | ✅ | ✅ |
-| `supervisor` | ✅ | ✅ | ✅ |
-| `operador` | ✅ | ❌ | ✅ |
-| `consulta` | ✅ | ❌ | ✅ |
-| `usuario_basico` | ❌ | ❌ | ❌ |
+| Rol | `viewer` | `downloader` | `player` | Nota |
+|-----|:--------:|:------------:|:--------:|------|
+| `super_admin` | ✅ | ✅ | ✅ | Bypass total en backend — no necesita slugs asignados |
+| `admin` | ✅ | ✅ | ✅ | |
+| `supervisor` | ✅ | ✅ | ✅ | |
+| `operador` | ✅ | ❌ | ✅ | |
+| `consulta` | ✅ | ❌ | ✅ | |
+| `usuario_basico` | ❌ | ❌ | ❌ | |
+
+> **`super_admin`**: el backend detecta el rol por `req.user.rolSlugs` y devuelve los campos completos sin evaluar slugs de permiso. No requiere correr el seeder para funcionar.
 
 ---
 

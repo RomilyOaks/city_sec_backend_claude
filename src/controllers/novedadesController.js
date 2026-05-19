@@ -56,13 +56,17 @@ import { getNowInTimezone, convertToTimezone, getDateInTimezone, rawDate } from 
  * Los permisos son field-level: el endpoint es accesible, pero el valor del campo
  * se redacta a null si el rol no tiene el permiso correspondiente.
  *
+ * super_admin siempre tiene acceso irrestricto sin necesitar slugs individuales.
+ *
  * Permisos controlados:
  *   novedades.fotos.viewer   → expone fotos_adjuntas
  *   novedades.audio.player   → expone parte_adjuntos
  *   novedades.fotos.downloader → solo frontend (no redacta campo, controla botón descarga)
  */
-const filtrarAdjuntosPorPermiso = (novedadData, permisos = []) => {
+const filtrarAdjuntosPorPermiso = (novedadData, permisos = [], rolSlugs = []) => {
   const data = novedadData.toJSON ? novedadData.toJSON() : { ...novedadData };
+  // super_admin tiene acceso irrestricto — no aplicar filtro de campo
+  if (rolSlugs.includes("super_admin")) return data;
   if (!permisos.includes("novedades.fotos.viewer")) {
     data.fotos_adjuntas = null;
   }
@@ -247,7 +251,8 @@ export const getAllNovedades = async (req, res) => {
     });
 
     const permisos = req.user?.permisos || [];
-    const data = rows.map((n) => filtrarAdjuntosPorPermiso(n, permisos));
+    const rolSlugs = req.user?.rolSlugs || [];
+    const data = rows.map((n) => filtrarAdjuntosPorPermiso(n, permisos, rolSlugs));
 
     res.status(200).json({
       success: true,
@@ -318,7 +323,8 @@ export const getNovedadById = async (req, res) => {
     }
 
     const permisos = req.user?.permisos || [];
-    const data = filtrarAdjuntosPorPermiso(novedad, permisos);
+    const rolSlugs = req.user?.rolSlugs || [];
+    const data = filtrarAdjuntosPorPermiso(novedad, permisos, rolSlugs);
 
     res.status(200).json({
       success: true,
