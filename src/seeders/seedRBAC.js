@@ -1024,6 +1024,32 @@ async function seedRBAC() {
         descripcion: "Ver novedades no atendidas y reportes de incidentes",
         es_sistema: true,
       },
+
+      // ============================================
+      // MÓDULO: NOVEDADES - ADJUNTOS (FOTOS Y AUDIO)
+      // Originados desde la app vecino alerta (Supabase Storage)
+      // ============================================
+      {
+        modulo: "novedades",
+        recurso: "fotos",
+        accion: "viewer",
+        descripcion: "Ver fotos adjuntas en novedades (URLs Supabase)",
+        es_sistema: true,
+      },
+      {
+        modulo: "novedades",
+        recurso: "fotos",
+        accion: "downloader",
+        descripcion: "Descargar fotos adjuntas en novedades",
+        es_sistema: true,
+      },
+      {
+        modulo: "novedades",
+        recurso: "audio",
+        accion: "player",
+        descripcion: "Reproducir audio adjunto en novedades (URLs Supabase)",
+        es_sistema: true,
+      },
     ];
 
     // Crear permisos uno por uno
@@ -1189,6 +1215,65 @@ async function seedRBAC() {
           `   ✓ ${permisosNovedades.length} permisos de 'novedades' asignados a ${rolesParaNovedades.length} roles (Todos los roles operativos)`
         );
       }
+    }
+
+    // ========================================
+    // ASIGNAR PERMISOS DE ADJUNTOS (FOTOS + AUDIO) A ROLES
+    // Política:
+    //   viewer + player   → admin, supervisor, operador, consulta
+    //   downloader        → admin, supervisor  (solo roles con capacidad de análisis)
+    // ========================================
+    console.log("\n🔗 Asignando permisos de adjuntos (fotos/audio) a roles...");
+
+    const { RolPermiso } = await import("../models/index.js");
+
+    // Roles que pueden VER fotos y REPRODUCIR audio
+    const rolesViewerPlayer = await Rol.findAll({
+      where: { slug: { [sequelize.Op.in]: ["admin", "supervisor", "operador", "consulta"] } },
+      transaction,
+    });
+
+    const permisosViewerPlayer = await Permiso.findAll({
+      where: {
+        [sequelize.Op.or]: [
+          { modulo: "novedades", recurso: "fotos",  accion: "viewer" },
+          { modulo: "novedades", recurso: "audio",  accion: "player" },
+        ],
+      },
+      transaction,
+    });
+
+    if (rolesViewerPlayer.length > 0 && permisosViewerPlayer.length > 0) {
+      const asignacionesViewer = [];
+      for (const rol of rolesViewerPlayer) {
+        for (const permiso of permisosViewerPlayer) {
+          asignacionesViewer.push({ rol_id: rol.id, permiso_id: permiso.id, created_by: 13, updated_by: 13 });
+        }
+      }
+      await RolPermiso.bulkCreate(asignacionesViewer, { transaction, ignoreDuplicates: true });
+      console.log(`   ✓ viewer + player asignados a ${rolesViewerPlayer.length} roles (admin, supervisor, operador, consulta)`);
+    }
+
+    // Roles que además pueden DESCARGAR fotos
+    const rolesDownloader = await Rol.findAll({
+      where: { slug: { [sequelize.Op.in]: ["admin", "supervisor"] } },
+      transaction,
+    });
+
+    const permisosDownloader = await Permiso.findAll({
+      where: { modulo: "novedades", recurso: "fotos", accion: "downloader" },
+      transaction,
+    });
+
+    if (rolesDownloader.length > 0 && permisosDownloader.length > 0) {
+      const asignacionesDownloader = [];
+      for (const rol of rolesDownloader) {
+        for (const permiso of permisosDownloader) {
+          asignacionesDownloader.push({ rol_id: rol.id, permiso_id: permiso.id, created_by: 13, updated_by: 13 });
+        }
+      }
+      await RolPermiso.bulkCreate(asignacionesDownloader, { transaction, ignoreDuplicates: true });
+      console.log(`   ✓ downloader asignado a ${rolesDownloader.length} roles (admin, supervisor)`);
     }
 
     // ========================================

@@ -52,6 +52,27 @@ import { broadcastEvent } from "../utils/sse-manager.js";
 import { getNowInTimezone, convertToTimezone, getDateInTimezone, rawDate } from "../utils/dateHelper.js";
 
 /**
+ * Filtra los campos de adjuntos (fotos y audio) según los permisos del usuario.
+ * Los permisos son field-level: el endpoint es accesible, pero el valor del campo
+ * se redacta a null si el rol no tiene el permiso correspondiente.
+ *
+ * Permisos controlados:
+ *   novedades.fotos.viewer   → expone fotos_adjuntas
+ *   novedades.audio.player   → expone parte_adjuntos
+ *   novedades.fotos.downloader → solo frontend (no redacta campo, controla botón descarga)
+ */
+const filtrarAdjuntosPorPermiso = (novedadData, permisos = []) => {
+  const data = novedadData.toJSON ? novedadData.toJSON() : { ...novedadData };
+  if (!permisos.includes("novedades.fotos.viewer")) {
+    data.fotos_adjuntas = null;
+  }
+  if (!permisos.includes("novedades.audio.player")) {
+    data.parte_adjuntos = null;
+  }
+  return data;
+};
+
+/**
  * Obtener todas las novedades con filtros
  * GET /api/v1/novedades
  */
@@ -225,10 +246,13 @@ export const getAllNovedades = async (req, res) => {
       offset: parseInt(offset),
     });
 
+    const permisos = req.user?.permisos || [];
+    const data = rows.map((n) => filtrarAdjuntosPorPermiso(n, permisos));
+
     res.status(200).json({
       success: true,
       message: "Novedades obtenidas exitosamente",
-      data: rows,
+      data,
       pagination: {
         total: count,
         page: parseInt(page),
@@ -293,10 +317,13 @@ export const getNovedadById = async (req, res) => {
       });
     }
 
+    const permisos = req.user?.permisos || [];
+    const data = filtrarAdjuntosPorPermiso(novedad, permisos);
+
     res.status(200).json({
       success: true,
       message: "Novedad obtenida exitosamente",
-      data: novedad,
+      data,
     });
   } catch (error) {
     console.error("❌ Error en getNovedadById:", error);
