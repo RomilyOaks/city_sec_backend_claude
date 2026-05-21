@@ -335,35 +335,6 @@ router.get(
 );
 
 /**
- * GET /api/v1/reportes-operativos/combinados/exportar
- * Exportar reportes combinados de operativos (vehiculares + a pie + no atendidas)
- * 
- * @query {string} fecha_inicio - Fecha de inicio del rango (YYYY-MM-DD) [opcional]
- * @query {string} fecha_fin - Fecha de fin del rango (YYYY-MM-DD) [opcional]
- * @query {string} turno - Tipo de turno (MAÑANA, TARDE, NOCHE) [opcional]
- * @query {number} sector_id - ID del sector [opcional]
- * @query {number} estado_novedad - Estado de la novedad (0,1) [opcional]
- * @query {string} prioridad - Prioridad (BAJA, MEDIA, ALTA, CRÍTICA) [opcional]
- * @query {number} tipo_novedad_id - ID del tipo de novedad [opcional]
- * @query {string} formato - Formato de exportación (excel, csv) [opcional]
- * @query {boolean} include_deleted - Incluir eliminados (default: false) [opcional]
- * 
- * @access Private
- * @roles super_admin, admin, supervisor
- * @permissions operativos.reportes.read
- */
-router.get(
-  "/combinados/exportar",
-  verificarToken,
-  verificarRolesOPermisos(
-    ["super_admin", "admin", "supervisor"],
-    ["reportes.operativos_dashboard.read"]
-  ),
-  validateReportesOperativosVehiculares, // Reutilizamos validadores completos
-  reportesOperativosController.exportarReportesCombinados
-);
-
-/**
  * GET /api/v1/reportes-operativos/dashboard
  * Obtener dashboard con KPIs integrados de todos los operativos
  * 
