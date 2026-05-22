@@ -1741,18 +1741,18 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
           LEFT JOIN personal_seguridad ps_modif ON usr_modif.personal_seguridad_id = ps_modif.id 	
           LEFT JOIN cargos carg_modif ON ps_modif.cargo_id = carg_modif.id 						
           
-        WHERE (NOT exists( SELECT opn.novedad_id from operativos_personal_novedades opn WHERE ni.id = opn.novedad_id )
-        OR NOT exists( SELECT ovn.novedad_id from operativos_vehiculos_novedades ovn WHERE ni.id = ovn.novedad_id ))
+        WHERE ni.estado = 1 AND ni.deleted_at IS NULL
         AND DATE(ni.fecha_hora_ocurrencia) BETWEEN '${fecha_inicio}' AND '${fecha_fin}'
-        AND ni.estado = 1 AND ni.deleted_at IS NULL
+        AND ${estado_novedad_id
+    ? `ni.estado_novedad_id = ${estado_novedad_id}`
+    : "ni.estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = 1 LIMIT 1)"}
         ${prioridad ? `AND stn.prioridad = '${prioridad}'` : ""}
         ${sector_id ? `AND ni.sector_id = ${sector_id}` : ""}
         ${cuadrante_id ? `AND ni.cuadrante_id = ${cuadrante_id}` : ""}
         ${turno ? `AND ni.turno = '${turno}'` : ""}
-        ${estado_novedad_id ? `AND ni.estado_novedad_id = ${estado_novedad_id}` : ""}
         ${origen_llamada ? `AND ni.origen_llamada = '${origen_llamada}'` : ""}
-        ${generico ? `AND (ni.descripcion LIKE '%${generico}%' OR ni.localizacion LIKE '%${generico}%' OR ni.reportante_nombre LIKE '%${generico}%')` : ""} 
-        
+        ${generico ? `AND (ni.descripcion LIKE '%${generico}%' OR ni.localizacion LIKE '%${generico}%' OR ni.reportante_nombre LIKE '%${generico}%')` : ""}
+
         ORDER BY ni.fecha_hora_ocurrencia DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
@@ -1842,17 +1842,17 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
           LEFT JOIN personal_seguridad ps_modif ON usr_modif.personal_seguridad_id = ps_modif.id 	
           LEFT JOIN cargos carg_modif ON ps_modif.cargo_id = carg_modif.id 						
           
-        WHERE (NOT exists( SELECT opn.novedad_id from operativos_personal_novedades opn WHERE ni.id = opn.novedad_id )
-        OR NOT exists( SELECT ovn.novedad_id from operativos_vehiculos_novedades ovn WHERE ni.id = ovn.novedad_id ))
-        AND ni.estado = 1 AND ni.deleted_at IS NULL
+        WHERE ni.estado = 1 AND ni.deleted_at IS NULL
+        AND ${estado_novedad_id
+    ? `ni.estado_novedad_id = ${estado_novedad_id}`
+    : "ni.estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = 1 LIMIT 1)"}
         ${prioridad ? `AND stn.prioridad = '${prioridad}'` : ""}
         ${sector_id ? `AND ni.sector_id = ${sector_id}` : ""}
         ${cuadrante_id ? `AND ni.cuadrante_id = ${cuadrante_id}` : ""}
         ${turno ? `AND ni.turno = '${turno}'` : ""}
-        ${estado_novedad_id ? `AND ni.estado_novedad_id = ${estado_novedad_id}` : ""}
         ${origen_llamada ? `AND ni.origen_llamada = '${origen_llamada}'` : ""}
-        ${generico ? `AND (ni.descripcion LIKE '%${generico}%' OR ni.localizacion LIKE '%${generico}%' OR ni.reportante_nombre LIKE '%${generico}%')` : ""} 
-        
+        ${generico ? `AND (ni.descripcion LIKE '%${generico}%' OR ni.localizacion LIKE '%${generico}%' OR ni.reportante_nombre LIKE '%${generico}%')` : ""}
+
         ORDER BY ni.fecha_hora_ocurrencia DESC
         LIMIT ? OFFSET ?
       `;
@@ -1883,22 +1883,16 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
         FROM novedades_incidentes ni
         INNER JOIN tipos_novedad tn ON ni.tipo_novedad_id = tn.id
         LEFT JOIN subtipos_novedad stn ON ni.subtipo_novedad_id = stn.id
-        WHERE ni.estado = 1 
+        WHERE ni.estado = 1
           AND ni.deleted_at IS NULL
-          AND NOT EXISTS (
-            SELECT 1 FROM operativos_personal_novedades opn 
-            WHERE opn.novedad_id = ni.id AND opn.deleted_at IS NULL
-          )
-          AND NOT EXISTS (
-            SELECT 1 FROM operativos_vehiculos_novedades ovn 
-            WHERE ovn.novedad_id = ni.id AND ovn.deleted_at IS NULL
-          )
           AND DATE(ni.fecha_hora_ocurrencia) BETWEEN '${fecha_inicio}' AND '${fecha_fin}'
+          AND ${estado_novedad_id
+    ? `ni.estado_novedad_id = ${estado_novedad_id}`
+    : "ni.estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = 1 LIMIT 1)"}
           ${prioridad ? `AND stn.prioridad = '${prioridad}'` : ""}
           ${sector_id ? `AND ni.sector_id = ${sector_id}` : ""}
           ${cuadrante_id ? `AND ni.cuadrante_id = ${cuadrante_id}` : ""}
           ${turno ? `AND ni.turno = '${turno}'` : ""}
-          ${estado_novedad_id ? `AND ni.estado_novedad_id = ${estado_novedad_id}` : ""}
           ${origen_llamada ? `AND ni.origen_llamada = '${origen_llamada}'` : ""}
           ${generico ? `AND (ni.descripcion LIKE '%${generico}%' OR ni.localizacion LIKE '%${generico}%' OR ni.reportante_nombre LIKE '%${generico}%')` : ""}
       `;
@@ -1909,21 +1903,15 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
         FROM novedades_incidentes ni
         INNER JOIN tipos_novedad tn ON ni.tipo_novedad_id = tn.id
         LEFT JOIN subtipos_novedad stn ON ni.subtipo_novedad_id = stn.id
-        WHERE ni.estado = 1 
+        WHERE ni.estado = 1
           AND ni.deleted_at IS NULL
-          AND NOT EXISTS (
-            SELECT 1 FROM operativos_personal_novedades opn 
-            WHERE opn.novedad_id = ni.id AND opn.deleted_at IS NULL
-          )
-          AND NOT EXISTS (
-            SELECT 1 FROM operativos_vehiculos_novedades ovn 
-            WHERE ovn.novedad_id = ni.id AND ovn.deleted_at IS NULL
-          )
+          AND ${estado_novedad_id
+    ? `ni.estado_novedad_id = ${estado_novedad_id}`
+    : "ni.estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = 1 LIMIT 1)"}
           ${prioridad ? `AND stn.prioridad = '${prioridad}'` : ""}
           ${sector_id ? `AND ni.sector_id = ${sector_id}` : ""}
           ${cuadrante_id ? `AND ni.cuadrante_id = ${cuadrante_id}` : ""}
           ${turno ? `AND ni.turno = '${turno}'` : ""}
-          ${estado_novedad_id ? `AND ni.estado_novedad_id = ${estado_novedad_id}` : ""}
           ${origen_llamada ? `AND ni.origen_llamada = '${origen_llamada}'` : ""}
           ${generico ? `AND (ni.descripcion LIKE '%${generico}%' OR ni.localizacion LIKE '%${generico}%' OR ni.reportante_nombre LIKE '%${generico}%')` : ""}
       `;
