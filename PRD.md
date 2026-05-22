@@ -1,9 +1,10 @@
 # PRD — Sistema de Seguridad Ciudadana (CitySec Backend)
 
-**Versión:** 2.4.x  
-**Fecha:** 2026-05-13  
+**Versión:** 2.5.0  
+**Fecha:** 2026-05-21  
 **Estado:** Producción activa — desarrollo incremental  
-**Stakeholders primarios:** Área de Tecnología Municipal, Coordinación de Serenazgo
+**Stakeholders primarios:** Área de Tecnología Municipal, Coordinación de Serenazgo  
+**Deploy:** `https://citysecbackendclaude-production.up.railway.app`
 
 ---
 
@@ -58,6 +59,29 @@ Ejemplos:
 
 Los permisos son aditivos: un rol hereda sus permisos base y puede recibir permisos adicionales individuales por usuario.
 
+**Regla especial:** `super_admin` tiene bypass completo en todas las verificaciones de permisos de campo (field-level RBAC). No requiere slugs individuales asignados en BD.
+
+### 2.3 Permisos granulares de adjuntos (v2.5.0)
+
+Control de acceso a nivel de campo sobre los adjuntos multimedia de novedades (fotos y audio originados desde la app vecino alerta):
+
+| Slug | Recurso | Acción | Efecto en backend |
+|------|---------|--------|-------------------|
+| `novedades.fotos.viewer` | Fotos | Ver | Expone `fotos_adjuntas` en la respuesta JSON |
+| `novedades.fotos.downloader` | Fotos | Descargar | Solo frontend — controla botón descarga |
+| `novedades.audio.player` | Audio | Reproducir | Expone `parte_adjuntos` en la respuesta JSON |
+
+**Política por rol:**
+
+| Rol | `viewer` | `downloader` | `player` |
+|-----|:--------:|:------------:|:--------:|
+| `super_admin` | ✅ bypass | ✅ bypass | ✅ bypass |
+| `admin` | ✅ | ✅ | ✅ |
+| `supervisor` | ✅ | ✅ | ✅ |
+| `operador` | ✅ | ❌ | ✅ |
+| `consulta` | ✅ | ❌ | ✅ |
+| `usuario_basico` | ❌ | ❌ | ❌ |
+
 ---
 
 ## 3. Dominio de Negocio
@@ -107,14 +131,23 @@ La dirección se valida contra la tabla `CallesCuadrantes` (rangos de numeració
 ### 3.3 Ciclo de vida de una novedad (incidente)
 
 ```
-REPORTADA → EN_PROCESO → ATENDIDA → CERRADA
-               ↓
-           DERIVADA (a otra unidad: PNP, Bomberos)
-               ↓
-           CANCELADA
+PENDIENTE/REPORTADA → DESPACHADA → EN RUTA → EN LUGAR → EN ATENCIÓN → RESUELTA → CERRADA
+        ↓                                                                    ↓
+   (NO ATENDIDA)                                                         DERIVADA
+                                                                             ↓
+                                                                         CANCELADA
 ```
 
 La transición entre estados está restringida por rol via `RolEstadoNovedad`. Un `operador` puede reportar y poner en proceso, pero solo un `supervisor` puede cerrar o derivar.
+
+**Clasificación para reportes (v2.5.0):**
+
+| Estado | Clasificación | Aparece en "No Atendidas" |
+|--------|--------------|--------------------------|
+| PENDIENTE / REPORTADA (`es_inicial = 1`) | No atendida | ✅ Sí |
+| DESPACHADA y superiores | En atención / Atendida | ❌ No |
+
+> El criterio es por `estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = 1)`. No se usa presencia/ausencia en tablas de operativos como criterio, ya que generaba falsos positivos.
 
 ### 3.4 Estructura de un Operativo
 
@@ -326,12 +359,64 @@ PATCH /api/v1/direcciones/:id/geocodificar → Actualizar coordenadas GPS
 
 #### Reportes
 ```
-GET /api/v1/reportes-operativos/vehiculares              → Listado de operativos
-GET /api/v1/reportes-operativos/vehiculares/resumen      → Estadísticas agregadas
-GET /api/v1/reportes-operativos/vehiculares/exportar     → Descarga Excel/CSV
-GET /api/v1/reportes-operativos/vehiculares/estadisticas → Analytics avanzados
-GET /api/v1/reportes-operativos/vehiculares/metrics      → KPIs de rendimiento
+GET /api/v1/reportes-operativos/vehiculares                  → Listado de operativos vehiculares
+GET /api/v1/reportes-operativos/vehiculares/resumen          → Estadísticas agregadas
+GET /api/v1/reportes-operativos/vehiculares/exportar         → Descarga Excel/CSV vehiculares
+GET /api/v1/reportes-operativos/vehiculares/estadisticas     → Analytics avanzados
+GET /api/v1/reportes-operativos/vehiculares/metrics          → KPIs de rendimiento
+GET /api/v1/reportes-operativos/combinados                   → Vista combinada (vehicular + pie + no atendidas)
+GET /api/v1/reportes-operativos/combinados/exportar          → Excel/CSV combinado (roles: admin, supervisor, super_admin)
+GET /api/v1/reportes-operativos/novedades-no-atendidas       → Solo novedades en estado PENDIENTE
+GET /api/v1/reportes-operativos/dashboard                    → KPIs integrados de todos los operativos
 ```
+
+**Parámetros del exportar combinado:**
+```
+?fecha_inicio=2026-05-15&fecha_fin=2026-05-22&formato=excel&limit=1000
+```
+Responde blob `.xlsx` con columnas en orden fijo: `TIPO OPERATIVO | ID_TURNO | NOVEDAD CODE | NOVEDAD ID | ...resto`
+
+---
+
+## 5b. Adjuntos Multimedia en Novedades (v2.5.0)
+
+### Campos en `novedades_incidentes`
+
+| Campo | Tipo BD | Descripción |
+|-------|---------|-------------|
+| `fotos_adjuntas` | JSON | Array de objetos `{ url, nombre, tipo, tamaño_bytes }` |
+| `parte_adjuntos` | JSON | Array de objetos `{ url, nombre, tipo, tamaño_bytes, duracion_seg }` — incluye audios |
+| `videos_adjuntos` | JSON | Reservado para uso futuro |
+
+### Flujo de ingesta (app vecino alerta)
+
+```
+city_sec_alert (app móvil)
+    │  graba fotos + audio
+    ▼
+Supabase Storage  ←── URLs públicas permanentes (bucket: denuncias, path: YYYY/MM/DD/*)
+    │  retorna URLs
+    ▼
+voice_gateway  ←── transcribe voz con Wispr Flow + Claude AI → construye payload
+    │  POST /api/v1/novedades
+    ▼
+CitySec Backend  ←── persiste fotos_adjuntas y parte_adjuntos como JSON
+```
+
+`origen_llamada` para este flujo: `BOTON_DENUNCIA_VECINO_ALERTA`
+
+### Comportamiento de campo-level RBAC
+
+El controlador aplica `filtrarAdjuntosPorPermiso()` en `getAllNovedades` y `getNovedadById`:
+- Sin `novedades.fotos.viewer` → `fotos_adjuntas: null` en la respuesta
+- Sin `novedades.audio.player` → `parte_adjuntos: null` en la respuesta
+- Con rol `super_admin` → bypass total, siempre devuelve los campos
+
+### Documentación relacionada
+
+- `docs/VOICE_GATEWAY_ADJUNTOS_NOVEDADES.md` — spec de integración para voice_gateway
+- `docs/FRONTEND_Adjuntos_Novedades.md` — cómo renderizar fotos y audio en frontend
+- `docs/FRONTEND_RBAC_Adjuntos_Novedades.md` — política RBAC y código de ejemplo por rol
 
 ---
 
@@ -465,7 +550,7 @@ export default router
 
 ## 8. Roadmap y Features Pendientes
 
-### 8.1 Estado actual (v2.4.x)
+### 8.1 Estado actual (v2.5.0)
 
 - [x] RBAC completo con permisos granulares
 - [x] Gestión de novedades con workflow de estados
@@ -479,24 +564,28 @@ export default router
 - [x] TETRA radio management
 - [x] Swagger UI
 - [x] Health check endpoint
+- [x] **Adjuntos multimedia en novedades** — fotos y audio desde app vecino alerta via Supabase
+- [x] **RBAC field-level para adjuntos** — viewer / downloader / player por rol
+- [x] **Integración voice_gateway** — flujo city_sec_alert → Supabase → voice_gateway → CitySec
+- [x] **Reporte combinado exportar** — Excel con vehiculares + pie + no atendidas en un archivo
+- [x] **Fix criterio novedades no atendidas** — solo estado PENDIENTE (es_inicial=1)
 
 ### 8.2 Features identificadas para implementar
 
 #### Fase 2 — Reportes ampliados
-- [ ] Reportes de operativos peatonales (espejo de vehiculares)
-- [ ] Reporte combinado: personal + vehículos por turno
+- [x] Reporte combinado exportar: vehicular + pie + no atendidas
 - [ ] Dashboard de cobertura geográfica (heatmap por cuadrante)
-- [ ] Exportación de gráficos (ya existe endpoint base)
 - [ ] Reporte de tiempos de respuesta por tipo de novedad
 - [ ] Métricas de efectivo: novedades atendidas, horas operativas
 
 #### Fase 3 — Tiempo real
-- [ ] Notificaciones SSE para despacho de novedades
+- [x] Notificaciones SSE para despacho de novedades (evento `nueva_novedad`)
 - [ ] Tracking de posición de vehículos en tiempo real
 - [ ] Alertas automáticas por tipo de novedad crítica
 - [ ] WebSocket para actualización de estado de operativos
 
 #### Fase 4 — Integraciones externas
+- [x] Integración voice_gateway — recepción de denuncias con fotos y audio desde app vecino
 - [ ] Integración con sistema PNP (derivación de novedades)
 - [ ] Integración con Bomberos (novedades de emergencia)
 - [ ] API pública ciudadana (portal de denuncias)
@@ -515,6 +604,7 @@ export default router
 - [ ] Documentación Swagger incompleta en algunos endpoints nuevos
 - [ ] Validadores pendientes para módulo de calles v2.4.0
 - [ ] Índices de BD no revisados para queries de reportes complejos
+- [ ] Seeder `seedRBAC.js` debe re-ejecutarse en BD de producción para asignar los 3 nuevos slugs de adjuntos a roles distintos de `super_admin`
 
 ---
 
@@ -594,4 +684,13 @@ GET /api/v1/        → Info API y módulos disponibles
 
 ---
 
-*Documento generado el 2026-05-13. Mantener actualizado con cada release.*
+---
+
+## 12. Historial de versiones
+
+| Versión | Fecha | Cambios principales |
+|---------|-------|---------------------|
+| 2.5.0 | 2026-05-21 | Adjuntos multimedia (fotos+audio) en novedades; RBAC field-level; integración voice_gateway; reporte combinado exportar; fix novedades no atendidas (criterio PENDIENTE) |
+| 2.4.x | 2026-05-13 | Sistema de direcciones dual; módulo calles/cuadrantes v2; SSE tiempo real; reportes operativos fase 1 |
+
+*Mantener actualizado con cada release.*
