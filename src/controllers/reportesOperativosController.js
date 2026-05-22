@@ -556,6 +556,208 @@ export const getDashboardOperativos = async (req, res) => {
   }
 };
 
+/**
+ * Exportar reportes combinados de operativos
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ * @returns {Promise<void>} Archivo de exportación
+ */
+export const exportarReportesCombinados = async (req, res) => {
+  try {
+    const formato = req.query.formato?.toLowerCase() || "excel";
+
+    if (!["excel", "csv", "turnos", "prioridades", "sectores"].includes(formato)) {
+      return res.status(400).json(buildResponse(
+        false,
+        "Formato no válido. Use 'excel', 'csv', 'turnos', 'prioridades' o 'sectores'",
+        null,
+        { formatos_validos: ["excel", "csv", "turnos", "prioridades", "sectores"] }
+      ));
+    }
+
+    // 1. Obtener datos brutos de cada servicio individualmente
+    const exportQuery = { ...req.query, limit: 10000, page: 1 };
+
+    // Obtener operativos vehiculares
+    const vehicularesResult = await reportesOperativosService.getOperativosVehiculares(exportQuery);
+
+    // Obtener operativos a pie
+    const pieResult = await reportesOperativosService.getOperativosPie(exportQuery);
+
+    // Obtener novedades no atendidas
+    const noAtendidasResult = await reportesOperativosService.getNovedadesNoAtendidas(exportQuery);
+
+    // 2. Preparar datos para exportación (combinados de todas las fuentes)
+    const datosCombinados = [];
+
+    // Agregar operativos vehiculares
+    if (vehicularesResult.success && vehicularesResult.data && vehicularesResult.data.length > 0) {
+      vehicularesResult.data.forEach(item => {
+        datosCombinados.push({
+          tipo_operativo: "VEHICULAR",
+          ...item
+        });
+      });
+    }
+
+    // Agregar operativos a pie
+    if (pieResult.success && pieResult.data && pieResult.data.length > 0) {
+      pieResult.data.forEach(item => {
+        datosCombinados.push({
+          tipo_operativo: "A PIE",
+          ...item
+        });
+      });
+    }
+
+    // Agregar novedades no atendidas
+    if (noAtendidasResult.success && noAtendidasResult.data && noAtendidasResult.data.length > 0) {
+      noAtendidasResult.data.forEach(item => {
+        datosCombinados.push({
+          tipo_operativo: "NO ATENDIDA",
+          ...item
+        });
+      });
+    }
+
+    if (datosCombinados.length === 0) {
+      return res.status(404).json(buildResponse(
+        false,
+        "No hay datos para exportar con los filtros seleccionados"
+      ));
+    }
+
+    // 3. Exportar en el formato solicitado
+    if (formato === "excel") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Reportes Combinados Operativos");
+
+      // Definir columnas basadas en los datos combinados
+      const columnas = Object.keys(datosCombinados[0] || {}).map(key => ({
+        header: key.replace(/_/g, " ").toUpperCase(),
+        key: key,
+        width: 20
+      }));
+
+      worksheet.columns = columnas;
+      worksheet.addRows(datosCombinados);
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=reportes-combinados-operativos-${new Date()
+          .toISOString()
+          .split("T")[0]
+          .replace(/-/g, "")}.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+    } else if (formato === "csv") {
+      if (datosCombinados.length === 0) {
+        const csvHeader = Object.keys(datosCombinados[0] || {}).join(",") + "\n";
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename=reportes-combinados-operativos-${new Date().toISOString().split("T")[0]}.csv`);
+        return res.send(csvHeader);
+      }
+
+      const columnas = Object.keys(datosCombinados[0]);
+      const csvHeader = columnas.join(",") + "\n";
+      const csvRows = datosCombinados.map(row =>
+        columnas.map(col => `"${row[col] || ""}"`).join(",")
+      ).join("\n");
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=reportes-combinados-operativos-${new Date().toISOString().split("T")[0]}.csv`);
+      res.send(csvHeader + csvRows);
+    } else if (["turnos", "prioridades", "sectores"].includes(formato)) {
+      const datosGrafico = procesarDatosParaGrafico(datosCombinados, formato);
+
+      return res.json(buildResponse(
+        true,
+        `Datos para gráfico de ${formato} generados exitosamente`,
+        datosGrafico,
+        {
+          formato: formato,
+          total_registros: datosCombinados.length,
+          generated_at: new Date().toISOString()
+        }
+      ));
+    }
+
+  } catch (error) {
+    console.error("❌ Error en exportarReportesCombinados:", error);
+    return res.status(500).json(buildResponse(
+      false,
+      `Error al exportar reportes combinados: ${error.message}`
+    ));
+  }
+};
+
+const procesarDatosParaGrafico = (datosCombinados, formato) => {
+  switch (formato) {
+  case "turnos":     return procesarDatosPorTurnos(datosCombinados);
+  case "prioridades": return procesarDatosPorPrioridades(datosCombinados);
+  case "sectores":   return procesarDatosPorSectores(datosCombinados);
+  default:           return { labels: [], datasets: [] };
+  }
+};
+
+const procesarDatosPorTurnos = (datos) => {
+  const turnosCount = {};
+  datos.forEach(item => {
+    const turno = item.turno || "SIN_TURNO";
+    turnosCount[turno] = (turnosCount[turno] || 0) + 1;
+  });
+  const labels = Object.keys(turnosCount);
+  const data = Object.values(turnosCount);
+  const total = data.reduce((a, b) => a + b, 0);
+  return {
+    labels,
+    datasets: [{ label: "Operativos por Turno", data, backgroundColor: ["#2E7D32", "#1565C0", "#F57C00", "#C62828"], borderColor: ["#1B5E20", "#0D47A1", "#E65100", "#B71C1C"], borderWidth: 2 }],
+    estadisticas: labels.map((label, i) => ({ categoria: label, cantidad: data[i], porcentaje: ((data[i] / total) * 100).toFixed(2) })),
+    total
+  };
+};
+
+const procesarDatosPorPrioridades = (datos) => {
+  const prioridadesCount = {};
+  datos.forEach(item => {
+    const prioridad = (item.prioridad || "SIN_PRIORIDAD").toUpperCase();
+    prioridadesCount[prioridad] = (prioridadesCount[prioridad] || 0) + 1;
+  });
+  const colorMap = { "ALTA": "#C62828", "MEDIA": "#F57C00", "BAJA": "#2E7D32", "SIN_PRIORIDAD": "#757575" };
+  const labels = Object.keys(prioridadesCount);
+  const data = Object.values(prioridadesCount);
+  const total = data.reduce((a, b) => a + b, 0);
+  return {
+    labels,
+    datasets: [{ label: "Operativos por Prioridad", data, backgroundColor: labels.map(l => colorMap[l] || "#757575"), borderWidth: 2 }],
+    estadisticas: labels.map((label, i) => ({ categoria: label, cantidad: data[i], porcentaje: ((data[i] / total) * 100).toFixed(2) })),
+    total
+  };
+};
+
+const procesarDatosPorSectores = (datos) => {
+  const sectoresCount = {};
+  datos.forEach(item => {
+    const sector = item.nombre_sector || item.sector_nombre || "SIN_SECTOR";
+    sectoresCount[sector] = (sectoresCount[sector] || 0) + 1;
+  });
+  const sorted = Object.entries(sectoresCount).sort(([,a],[,b]) => b - a).slice(0, 10);
+  const labels = sorted.map(([s]) => s);
+  const data = sorted.map(([,c]) => c);
+  const total = data.reduce((a, b) => a + b, 0);
+  return {
+    labels,
+    datasets: [{ label: "Operativos por Sector", data, backgroundColor: "#1976D2", borderColor: "#0D47A1", borderWidth: 2 }],
+    estadisticas: labels.map((label, i) => ({ categoria: label, cantidad: data[i], porcentaje: ((data[i] / total) * 100).toFixed(2) })),
+    total
+  };
+};
+
 export default {
   getOperativosVehiculares,
   getResumenVehicular,
@@ -564,5 +766,6 @@ export default {
   getMetricsVehiculares,
   getOperativosPie,
   getNovedadesNoAtendidas,
-  getDashboardOperativos
+  getDashboardOperativos,
+  exportarReportesCombinados
 };
