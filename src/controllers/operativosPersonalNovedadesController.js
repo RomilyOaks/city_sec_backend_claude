@@ -204,6 +204,24 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
         {
           model: Novedad,
           as: "novedad",
+          attributes: [
+            "id",
+            "novedad_code",
+            "descripcion",
+            "fecha_hora_ocurrencia",
+            "fecha_llegada",
+            "localizacion",
+            "referencia_ubicacion",
+            "latitud",
+            "longitud",
+            "prioridad_actual",
+            "observaciones",
+            "reportante_nombre",
+            "reportante_telefono",
+            "estado_novedad_id",
+            "origen_llamada",
+            "gravedad",
+          ],
           include: [
             {
               model: EstadoNovedad,
@@ -213,27 +231,27 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
             {
               model: TipoNovedad,
               as: "novedadTipoNovedad",
-              attributes: ["id", "nombre"],
+              attributes: ["id", "nombre", "color_hex", "icono"],
             },
             {
               model: SubtipoNovedad,
               as: "novedadSubtipoNovedad",
-              attributes: ["id", "nombre", "tiempo_respuesta_min"],
+              attributes: ["id", "nombre", "tiempo_respuesta_min", "prioridad"],
             },
           ],
         },
         {
           model: Usuario,
           as: "creadorOperativosPersonalNovedades",
-          attributes: ["id", "username", "nombres", "apellidos"]
+          attributes: ["id", "username", "nombres", "apellidos"],
         },
         {
           model: Usuario,
           as: "actualizadorOperativosPersonalNovedades",
-          attributes: ["id", "username", "nombres", "apellidos"]
-        }
+          attributes: ["id", "username", "nombres", "apellidos"],
+        },
       ],
-      order: [["reportado", "DESC"]]
+      order: [["reportado", "DESC"]],
     });
 
     // Enriquecer la respuesta con información completa de los niveles superiores
