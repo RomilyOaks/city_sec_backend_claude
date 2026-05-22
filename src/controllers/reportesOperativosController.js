@@ -627,20 +627,63 @@ export const exportarReportesCombinados = async (req, res) => {
       ));
     }
 
+    // Normalizar cada fila: campos fijos al frente, sin ambigüedad de IDs
+    const datosParaExcel = datosCombinados.map(item => {
+      const tipo = item.tipo_operativo;
+
+      // Resolver id_turno según origen
+      let id_turno;
+      if (tipo === "VEHICULAR") {
+        id_turno = item.id;             // ot.id viene como primer campo en SELECT vehiculares
+      } else if (tipo === "A PIE") {
+        id_turno = item.turno_id;       // ot.id turno_id — agregado al SELECT a pie
+      } else {
+        id_turno = null;                // NO ATENDIDA no tiene turno asignado
+      }
+
+      // Resolver novedad_id (nunca vacío)
+      const novedad_id = item.novedad_id ?? item.id ?? null;
+
+      // Resolver novedad_code
+      const novedad_code = item.novedad_code ?? item.codigo_novedad ?? null;
+
+      // Excluir campos que ya normalizamos para evitar duplicados en el spread
+      const { id, turno_id, novedad_id: _nid, novedad_code: _nc, tipo_operativo: _to, codigo_novedad: _cn, ...resto } = item;
+
+      return {
+        tipo_operativo: tipo,
+        id_turno:       id_turno ?? "",
+        novedad_code:   novedad_code ?? "",
+        novedad_id:     novedad_id ?? "",
+        ...resto,
+      };
+    });
+
     // 3. Exportar en el formato solicitado
     if (formato === "excel") {
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Reportes Combinados Operativos");
 
-      // Definir columnas basadas en los datos combinados
-      const columnas = Object.keys(datosCombinados[0] || {}).map(key => ({
+      // Columnas fijas en el orden correcto
+      const columnasFijas = [
+        { header: "TIPO OPERATIVO", key: "tipo_operativo", width: 15 },
+        { header: "ID_TURNO",       key: "id_turno",       width: 12 },
+        { header: "NOVEDAD CODE",   key: "novedad_code",   width: 16 },
+        { header: "NOVEDAD ID",     key: "novedad_id",     width: 12 },
+      ];
+
+      // Columnas dinámicas: resto de campos (excluye las fijas ya definidas)
+      const clavesExcluidas = new Set(["tipo_operativo", "id_turno", "novedad_code", "novedad_id"]);
+      const clavesResto = [...new Set(datosParaExcel.flatMap(r => Object.keys(r)))]
+        .filter(k => !clavesExcluidas.has(k));
+      const columnasResto = clavesResto.map(key => ({
         header: key.replace(/_/g, " ").toUpperCase(),
-        key: key,
-        width: 20
+        key,
+        width: 20,
       }));
 
-      worksheet.columns = columnas;
-      worksheet.addRows(datosCombinados);
+      worksheet.columns = [...columnasFijas, ...columnasResto];
+      worksheet.addRows(datosParaExcel);
 
       res.setHeader(
         "Content-Type",
@@ -656,17 +699,10 @@ export const exportarReportesCombinados = async (req, res) => {
 
       await workbook.xlsx.write(res);
     } else if (formato === "csv") {
-      if (datosCombinados.length === 0) {
-        const csvHeader = Object.keys(datosCombinados[0] || {}).join(",") + "\n";
-        res.setHeader("Content-Type", "text/csv");
-        res.setHeader("Content-Disposition", `attachment; filename=reportes-combinados-operativos-${new Date().toISOString().split("T")[0]}.csv`);
-        return res.send(csvHeader);
-      }
-
-      const columnas = Object.keys(datosCombinados[0]);
+      const columnas = Object.keys(datosParaExcel[0] || {});
       const csvHeader = columnas.join(",") + "\n";
-      const csvRows = datosCombinados.map(row =>
-        columnas.map(col => `"${row[col] || ""}"`).join(",")
+      const csvRows = datosParaExcel.map(row =>
+        columnas.map(col => `"${row[col] ?? ""}"`).join(",")
       ).join("\n");
 
       res.setHeader("Content-Type", "text/csv");

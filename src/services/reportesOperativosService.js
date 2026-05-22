@@ -949,11 +949,12 @@ export const getOperativosPie = async (queryParams = {}) => {
 
     // Usar SQL directo para operativos a pie (exactamente como en documentación)
     const baseQuery = `
-      SELECT 
+      SELECT
         -- Datos del Turno
+        ot.id turno_id,
         ot.fecha fecha_turno,
         ht.nro_orden nro_orden_turno,
-        ot.turno, 
+        ot.turno,
         ht.hora_inicio turno_horario_inicio,
         ht.hora_fin turno_horario_fin,
         ot.fecha_hora_inicio inicio_operativo_sector,
