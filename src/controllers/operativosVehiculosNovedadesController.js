@@ -239,6 +239,7 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
             "estado_novedad_id",
             "origen_llamada",
             "gravedad",
+            "fecha_despacho",
           ],
           include: [
             {

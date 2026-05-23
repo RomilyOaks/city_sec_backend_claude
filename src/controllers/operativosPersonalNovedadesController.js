@@ -221,6 +221,7 @@ export const getAllNovedadesByCuadrante = async (req, res) => {
             "estado_novedad_id",
             "origen_llamada",
             "gravedad",
+            "fecha_despacho",
           ],
           include: [
             {
@@ -582,7 +583,7 @@ export const updateNovedadInCuadrante = async (req, res) => {
         updateNovedadData.updated_by = updated_by;
         // Agregar flag para evitar doble creación de historial
         updateNovedadData._skip_historial = true;
-        const updateResult = await Novedad.update(updateNovedadData, {
+        await Novedad.update(updateNovedadData, {
           where: { id: novedadAsignada.novedad_id },
         });
       }
