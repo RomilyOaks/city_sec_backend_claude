@@ -1324,7 +1324,8 @@ HistorialUsuario.belongsTo(Usuario, {
 });
 
 /**
- * Usuario -> LoginIntento
+ * Usuario -> LoginIntento (One-to-Many)
+ * Registra todos los intentos de login del usuario (exitosos y fallidos)
  */
 Usuario.hasMany(LoginIntento, {
   foreignKey: "usuario_id",

@@ -11,7 +11,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 
-// CORRECCIÓN: Usar el nombre de modelo singularizado
 const LoginIntento = sequelize.define(
   "LoginIntento",
   {
@@ -19,18 +18,13 @@ const LoginIntento = sequelize.define(
       type: DataTypes.BIGINT.UNSIGNED,
       primaryKey: true,
       autoIncrement: true,
-    }, // 🚨 ADDED: Clave foránea al usuario
+    },
 
     usuario_id: {
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true, // Puede ser null si el usuario no existe (ej. intento de fuerza bruta)
-      comment: "ID del usuario asociado (si existe)",
-      references: {
-        model: "usuarios", // Nombre de la tabla
-        key: "id",
-      },
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "ID del usuario asociado (null si el usuario no existe en el sistema)",
     },
-    // ------------------------------------------
 
     username_or_email: {
       type: DataTypes.STRING(100),
@@ -73,9 +67,7 @@ const LoginIntento = sequelize.define(
     underscored: true,
 
     indexes: [
-      // 🚨 ADDED: Índice para la clave foránea
       { name: "idx_usuario_id", fields: ["usuario_id"] },
-      // ----------------------------------------
       { name: "idx_username", fields: ["username_or_email"] },
       { name: "idx_ip", fields: ["ip_address"] },
       { name: "idx_exitoso", fields: ["intento_exitoso"] },

@@ -38,7 +38,8 @@
 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { Usuario, Rol, Permiso, UsuarioRol } from "../models/index.js";
+import crypto from "crypto";
+import { Usuario, Rol, Permiso, UsuarioRol, LoginIntento, TokenAcceso, Sesion } from "../models/index.js";
 import { Op } from "sequelize";
 
 // ==========================================
@@ -93,6 +94,80 @@ const parseTimeToMilliseconds = (timeStr) => {
   if (unit === "h") return value * 60 * 60 * 1000;
 
   return 15 * 60 * 1000;
+};
+
+// ==========================================
+// HELPERS DE SEGURIDAD (Sprint 1)
+// ==========================================
+
+/**
+ * Genera SHA-256 de un token para almacenamiento seguro (nunca guardar en claro)
+ * @param {string} token
+ * @returns {string} hash hex
+ */
+const hashToken = (token) =>
+  crypto.createHash("sha256").update(token).digest("hex");
+
+/**
+ * Convierte duración de expiración JWT ("2h", "7d", "15m") a milisegundos
+ * @param {string} timeStr
+ * @returns {number}
+ */
+const parseJwtExpToMs = (timeStr = "7d") => {
+  const match = timeStr.match(/^(\d+)([smhd])$/);
+  if (!match) return 7 * 24 * 60 * 60 * 1000; // fallback 7 días
+  const val = parseInt(match[1]);
+  const units = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 };
+  return val * (units[match[2]] || 86_400_000);
+};
+
+/**
+ * Detecta tipo de dispositivo desde el User-Agent
+ * @param {string} userAgent
+ * @returns {"DESKTOP"|"MOBILE"|"TABLET"|"OTHER"}
+ */
+const detectarDispositivo = (userAgent = "") => {
+  const ua = userAgent.toLowerCase();
+  if (/tablet|ipad/.test(ua)) return "TABLET";
+  if (/mobile|android|iphone|ipod/.test(ua)) return "MOBILE";
+  if (/windows|macintosh|linux|x11/.test(ua)) return "DESKTOP";
+  return "OTHER";
+};
+
+/**
+ * Registra un intento de login (fire-and-forget — nunca bloquea el flujo principal)
+ * @param {Object} data
+ */
+const registrarIntentoLogin = async (data) => {
+  try {
+    await LoginIntento.create(data);
+  } catch (err) {
+    console.error("⚠️  No se pudo registrar intento de login:", err.message);
+  }
+};
+
+/**
+ * Guarda un refresh token en tokens_acceso (fire-and-forget)
+ * @param {Object} data
+ */
+const guardarRefreshToken = async (data) => {
+  try {
+    await TokenAcceso.create({ token_type: "REFRESH", ...data });
+  } catch (err) {
+    console.error("⚠️  No se pudo guardar refresh token:", err.message);
+  }
+};
+
+/**
+ * Crea una sesión activa en la tabla sesiones (fire-and-forget)
+ * @param {Object} data
+ */
+const crearSesion = async (data) => {
+  try {
+    await Sesion.create(data);
+  } catch (err) {
+    console.error("⚠️  No se pudo crear sesión:", err.message);
+  }
 };
 
 // ==========================================
@@ -458,7 +533,13 @@ export const login = async (req, res) => {
 
     // Usuario no encontrado
     if (!usuario) {
-      // TODO: Registrar intento fallido en login_intentos
+      registrarIntentoLogin({
+        username_or_email: credencial,
+        ip_address,
+        user_agent,
+        intento_exitoso: 0,
+        razon_fallo: "usuario_no_encontrado",
+      });
       console.log(
         `⚠️  Intento de login fallido: Usuario no encontrado - ${credencial}`
       );
@@ -523,7 +604,14 @@ export const login = async (req, res) => {
         `⚠️  Intento ${nuevosIntentos} de login fallido para: ${credencial}`
       );
 
-      // TODO: Registrar intento fallido en login_intentos
+      registrarIntentoLogin({
+        username_or_email: credencial,
+        ip_address,
+        user_agent,
+        intento_exitoso: 0,
+        razon_fallo: "password_incorrecto",
+        usuario_id: usuario.id,
+      });
 
       return res.status(401).json({
         success: false,
@@ -550,7 +638,14 @@ export const login = async (req, res) => {
 
     console.log(`✅ Login exitoso: ${usuario.username} (ID: ${usuario.id})`);
 
-    // TODO: Registrar login exitoso en login_intentos y auditoria_acciones
+    // ✅ Registrar login exitoso en login_intentos
+    registrarIntentoLogin({
+      username_or_email: credencial,
+      ip_address,
+      user_agent,
+      intento_exitoso: 1,
+      usuario_id: usuario.id,
+    });
 
     // ==========================================
     // VERIFICAR CAMBIO DE CONTRASEÑA
@@ -591,16 +686,39 @@ export const login = async (req, res) => {
       expiresIn: JWT_ACCESS_EXPIRATION,
     });
 
-    // Generar Refresh Token
+    // Generar JTI único para el refresh token (permite revocación individual)
+    const jti = crypto.randomUUID();
+
+    // Generar Refresh Token (incluye jti para trazabilidad)
     const refreshToken = jwt.sign(
-      { userId: usuario.id },
+      { userId: usuario.id, jti },
       process.env.JWT_REFRESH_SECRET,
       { expiresIn: JWT_REFRESH_EXPIRATION }
     );
 
     console.log(`🔑 Tokens generados para usuario: ${usuario.username}`);
 
-    // TODO: Guardar refresh token en la tabla tokens_acceso
+    // ✅ Guardar refresh token en tokens_acceso
+    const refreshExpiresAt = new Date(Date.now() + parseJwtExpToMs(JWT_REFRESH_EXPIRATION));
+    guardarRefreshToken({
+      usuario_id: usuario.id,
+      token_hash: hashToken(refreshToken),
+      jti,
+      client_ip: ip_address,
+      user_agent,
+      expires_at: refreshExpiresAt,
+    });
+
+    // ✅ Crear sesión activa en sesiones
+    crearSesion({
+      usuario_id: usuario.id,
+      session_id: crypto.randomUUID(),
+      ip_address,
+      user_agent,
+      device_type: detectarDispositivo(user_agent),
+      expires_at: refreshExpiresAt,
+      is_current: 1,
+    });
 
     // ==========================================
     // RESPUESTA EXITOSA
@@ -730,7 +848,20 @@ export const refreshToken = async (req, res) => {
       });
     }
 
-    // TODO: Verificar que el refresh token exista en tokens_acceso y no esté revocado
+    // ✅ Verificar que el refresh token no esté revocado en tokens_acceso
+    // Solo aplica a tokens emitidos después de Sprint 1 (llevan jti en el payload)
+    if (decoded.jti) {
+      const tokenRecord = await TokenAcceso.findOne({
+        where: { jti: decoded.jti, revoked_at: null },
+      });
+      if (!tokenRecord) {
+        console.log(`⛔ Refresh token revocado o no registrado — jti: ${decoded.jti}`);
+        return res.status(401).json({
+          success: false,
+          message: "Refresh token revocado o inválido",
+        });
+      }
+    }
 
     // ==========================================
     // GENERAR NUEVO ACCESS TOKEN
@@ -798,13 +929,45 @@ export const refreshToken = async (req, res) => {
  */
 export const logout = async (req, res) => {
   try {
-    const userId = req.usuario.userId;
+    // El middleware verificarToken setea req.user (compatibilidad con patrón legacy req.usuario)
+    const userId = req.user?.id || req.usuario?.userId || req.usuario?.id;
 
     console.log(`👋 Logout de usuario ID: ${userId}`);
 
-    // TODO: Revocar tokens en la tabla tokens_acceso
-    // TODO: Eliminar sesión activa en la tabla sesiones
-    // TODO: Registrar logout en auditoria_acciones
+    // ✅ Revocar todos los refresh tokens activos del usuario
+    try {
+      const revocados = await TokenAcceso.update(
+        {
+          revoked_at: new Date(),
+          revocation_reason: "logout",
+        },
+        {
+          where: {
+            usuario_id: userId,
+            revoked_at: null,
+          },
+        }
+      );
+      console.log(`🔒 Tokens revocados: ${revocados[0]} registro(s)`);
+    } catch (err) {
+      console.error("⚠️  Error al revocar tokens:", err.message);
+    }
+
+    // ✅ Cerrar todas las sesiones activas del usuario
+    try {
+      const cerradas = await Sesion.update(
+        { is_current: 0 },
+        {
+          where: {
+            usuario_id: userId,
+            is_current: 1,
+          },
+        }
+      );
+      console.log(`🚪 Sesiones cerradas: ${cerradas[0]} registro(s)`);
+    } catch (err) {
+      console.error("⚠️  Error al cerrar sesiones:", err.message);
+    }
 
     res.json({
       success: true,
