@@ -10,11 +10,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const FROM = process.env.EMAIL_FROM || process.env.SMTP_USER;
+// FROM configurable — permite usar Resend (onboarding@resend.dev en free tier)
+// o cualquier cuenta SMTP. Cambiar en Railway → Variables sin tocar código.
+const FROM_EMAIL =
+  process.env.RESEND_FROM_EMAIL ||
+  process.env.EMAIL_FROM ||
+  process.env.SMTP_USER ||
+  "noreply@citysecure.com";
+
+const FROM_NAME = process.env.RESEND_FROM_NAME || "CitySecure";
 
 export const enviarEmailRecuperacionPassword = async ({ email, username, resetLink }) => {
   await transporter.sendMail({
-    from: `"CitySecure" <${FROM}>`,
+    from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
     to: email,
     subject: "Recuperación de contraseña — CitySecure",
     html: `

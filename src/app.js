@@ -57,6 +57,79 @@ const MAX_BODY_SIZE = process.env.MAX_BODY_SIZE || "10mb";
 
 const app = express();
 
+// ============================================
+// CORS OPTIONS — definición centralizada
+// ============================================
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Postman, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // Allow any *.railway.app origin in production
+    if (origin && origin.includes(".railway.app")) {
+      return callback(null, true);
+    }
+
+    // Allow any localhost or 127.0.0.1 origin (dev proxies, etc.)
+    if (
+      origin &&
+      (origin.includes("localhost") || origin.includes("127.0.0.1"))
+    ) {
+      return callback(null, true);
+    }
+
+    // TEMPORARY: Allow any origin in production for development
+    if (process.env.NODE_ENV === "production") {
+      console.log(`CORS allowing origin (temp): ${origin}`);
+      return callback(null, true);
+    }
+
+    const whitelist = [
+      process.env.FRONTEND_URL,
+      process.env.CORS_ORIGIN,
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:4200",
+      "http://127.0.0.1:5173",
+    ].filter(Boolean);
+
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(new Error("No permitido por CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+    "Origin",
+  ],
+  exposedHeaders: ["Content-Range", "X-Content-Range"],
+  maxAge: 86400,
+  optionsSuccessStatus: 204,
+};
+
+// ============================================
+// MIDDLEWARE 0: CORS — PRIMERO DE TODO
+// Debe estar antes de Swagger, Helmet y rutas
+// para garantizar cabeceras en preflight OPTIONS
+// ============================================
+
+app.options("*", cors(corsOptions)); // preflight explícito para TODAS las rutas
+app.use(cors(corsOptions));
+
+// ============================================
+// SWAGGER
+// ============================================
+
 import swaggerUI from "swagger-ui-express";
 import fs from "fs";
 import YAML from "yamljs";
@@ -122,68 +195,6 @@ app.use(
     },
   })
 );
-
-// ============================================
-// MIDDLEWARE 2: SEGURIDAD - CORS
-// ============================================
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, Postman, etc.)
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    // Allow any *.railway.app origin in production
-    if (origin && origin.includes(".railway.app")) {
-      return callback(null, true);
-    }
-
-    // Allow any localhost or 127.0.0.1 origin (dev proxies, etc.)
-    if (
-      origin &&
-      (origin.includes("localhost") || origin.includes("127.0.0.1"))
-    ) {
-      return callback(null, true);
-    }
-
-    // TEMPORARY: Allow any origin in production for development
-    if (process.env.NODE_ENV === "production") {
-      console.log(`CORS allowing origin (temp): ${origin}`);
-      return callback(null, true);
-    }
-
-    const whitelist = [
-      process.env.FRONTEND_URL,
-      process.env.CORS_ORIGIN,
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://localhost:4200",
-      "http://127.0.0.1:5173",
-    ].filter(Boolean);
-
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS blocked origin: ${origin}`);
-      callback(new Error("No permitido por CORS"));
-    }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "Accept",
-    "Origin",
-  ],
-  exposedHeaders: ["Content-Range", "X-Content-Range"],
-  maxAge: 86400,
-  optionsSuccessStatus: 204,
-};
-
-app.use(cors(corsOptions));
 
 // ============================================
 // MIDDLEWARE 3: PARSERS
@@ -300,12 +311,6 @@ app.use((req, res) => {
     suggestion: `Verifique la documentación en /api/${API_VERSION}`,
   });
 });
-
-// // ============================================
-// MIDDLEWARE 4: REGISTRO DE RUTAS ✨ NUEVO
-// ============================================
-
-app.use(`/api/${API_VERSION}`, indexRoutes);
 
 // ============================================
 // MIDDLEWARE 5: MANEJO DE ERRORES
