@@ -15,6 +15,7 @@ import {
   changePasswordRequired,
   getMe,
   forgotPassword,
+  resetPassword,
 } from "../controllers/authController.js";
 import { verificarToken as authenticate } from "../middlewares/authMiddleware.js";
 
@@ -201,6 +202,15 @@ router.get("/debug/token", (req, res, next) => {
   // #swagger.summary = 'Debug token (dev)'
   // #swagger.responses[200] = { description: 'OK' }
   return debugToken(req, res, next);
+});
+
+/**
+ * @route   POST /api/auth/reset-password
+ * @desc    Restablecer contraseña usando token de recuperación
+ * @access  Público
+ */
+router.post("/reset-password", (req, res, next) => {
+  return resetPassword(req, res, next);
 });
 
 /**

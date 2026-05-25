@@ -40,6 +40,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { Usuario, Rol, Permiso, UsuarioRol, LoginIntento, TokenAcceso, Sesion } from "../models/index.js";
+import PasswordReset from "../models/PasswordReset.js";
+import PasswordHistorial from "../models/PasswordHistorial.js";
+import { enviarEmailRecuperacionPassword } from "../services/emailService.js";
 import { Op } from "sequelize";
 
 // ==========================================
@@ -1112,8 +1115,22 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    // TODO: Verificar que la nueva contraseña no esté en el historial
-    // (consultar password_historial)
+    // Verificar que la nueva contraseña no esté en el historial (últimas 5)
+    const HISTORIAL_LIMITE = 5;
+    const historial = await PasswordHistorial.findAll({
+      where: { usuario_id: userId },
+      order: [["created_at", "DESC"]],
+      limit: HISTORIAL_LIMITE,
+    });
+    for (const h of historial) {
+      const repetida = await bcrypt.compare(newPassword, h.password_hash);
+      if (repetida) {
+        return res.status(400).json({
+          success: false,
+          message: `La nueva contraseña no puede ser igual a las últimas ${HISTORIAL_LIMITE} contraseñas usadas`,
+        });
+      }
+    }
 
     // ==========================================
     // ACTUALIZAR CONTRASEÑA
@@ -1130,6 +1147,9 @@ export const changePassword = async (req, res) => {
       require_password_change: false,
       updated_by: userId,
     });
+
+    // Guardar en historial (fire-and-forget)
+    PasswordHistorial.create({ usuario_id: userId, password_hash: newPasswordHash }).catch(() => {});
 
     console.log(`🔐 Contraseña cambiada para usuario: ${usuario.username}`);
 
@@ -1423,9 +1443,37 @@ export const forgotPassword = async (req, res) => {
       `📧 Solicitud de recuperación de contraseña para: ${usuario.username}`
     );
 
-    // TODO: Generar token de recuperación
-    // TODO: Guardar en password_resets
-    // TODO: Enviar email con el link de recuperación
+    // Invalidar tokens previos no usados
+    await PasswordReset.update(
+      { used_at: new Date() },
+      { where: { email: usuario.email, used_at: null } }
+    );
+
+    // Generar token seguro
+    const tokenPlain = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(tokenPlain).digest("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    await PasswordReset.create({
+      email: usuario.email,
+      token_hash: tokenHash,
+      expires_at: expiresAt,
+      ip_address: req.ip,
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const resetLink = `${frontendUrl}/reset-password?token=${tokenPlain}&email=${encodeURIComponent(usuario.email)}`;
+
+    try {
+      await enviarEmailRecuperacionPassword({
+        email: usuario.email,
+        username: usuario.username,
+        resetLink,
+      });
+      console.log(`✅ Email de recuperación enviado a: ${usuario.email}`);
+    } catch (emailErr) {
+      console.error("❌ Error al enviar email de recuperación:", emailErr.message);
+    }
 
     res.json({
       success: true,
@@ -1548,6 +1596,72 @@ export const debugToken = async (req, res) => {
 };
 
 // ==========================================
+// RESET PASSWORD (consumir token de recuperación)
+// ==========================================
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, email, newPassword } = req.body;
+
+    if (!token || !email || !newPassword) {
+      return res.status(400).json({ success: false, message: "Token, email y nueva contraseña son requeridos" });
+    }
+
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      return res.status(400).json({ success: false, message: `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres` });
+    }
+
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const registro = await PasswordReset.findOne({
+      where: {
+        email: normalizarCredencial(email),
+        token_hash: tokenHash,
+        used_at: null,
+        expires_at: { [Op.gt]: new Date() },
+      },
+    });
+
+    if (!registro) {
+      return res.status(400).json({ success: false, message: "Token inválido o expirado" });
+    }
+
+    const usuario = await Usuario.findOne({ where: { email: normalizarCredencial(email) } });
+    if (!usuario) {
+      return res.status(404).json({ success: false, message: "Usuario no encontrado" });
+    }
+
+    // Verificar que no coincida con contraseña actual
+    const mismaActual = await bcrypt.compare(newPassword, usuario.password_hash);
+    if (mismaActual) {
+      return res.status(400).json({ success: false, message: "La nueva contraseña debe ser diferente a la actual" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+    await usuario.update({
+      password_hash: newPasswordHash,
+      password_changed_at: new Date(),
+      require_password_change: false,
+    });
+
+    // Marcar token como usado
+    await registro.update({ used_at: new Date() });
+
+    // Guardar en historial (fire-and-forget)
+    PasswordHistorial.create({ usuario_id: usuario.id, password_hash: newPasswordHash }).catch(() => {});
+
+    console.log(`🔐 Contraseña restablecida via token para: ${usuario.username}`);
+
+    res.json({ success: true, message: "Contraseña restablecida correctamente. Ya puedes iniciar sesión." });
+  } catch (error) {
+    console.error("❌ Error en resetPassword:", error);
+    res.status(500).json({ success: false, message: "Error al restablecer contraseña" });
+  }
+};
+
+// ==========================================
 // EXPORTACIONES
 // ==========================================
 
@@ -1559,5 +1673,6 @@ export default {
   changePassword,
   getMe,
   forgotPassword,
+  resetPassword,
   debugToken,
 };
