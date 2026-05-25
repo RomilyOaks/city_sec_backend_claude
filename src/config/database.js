@@ -42,11 +42,13 @@ const DB_PASSWORD = process.env.DB_PASSWORD || "";
 const DB_NAME = process.env.DB_NAME || "citizen_security_v2";
 const DB_NAME_TEST = process.env.DB_NAME_TEST || "citizen_security_test";
 
-// Pool de conexiones (desde .env) - Optimizado para desarrollo
+// Pool de conexiones (desde .env)
+// POOL_MIN debe ser 0: Sequelize intenta abrir conexiones al instanciar si min > 0,
+// lo que bloquea el import del módulo cuando MySQL tarda en arrancar (ej. Railway cold-start).
+// Con min=0 el pool es lazy — abre conexiones solo cuando hay una query real.
 const POOL_MAX =
   parseInt(process.env.DB_POOL_MAX) || (NODE_ENV === "production" ? 20 : 5);
-const POOL_MIN =
-  parseInt(process.env.DB_POOL_MIN) || (NODE_ENV === "production" ? 5 : 1);
+const POOL_MIN = 0; // Siempre 0 — lazy pool, no connections at startup
 const POOL_ACQUIRE = parseInt(process.env.DB_POOL_ACQUIRE) || 30000; // 30 segundos (reducido)
 const POOL_IDLE = parseInt(process.env.DB_POOL_IDLE) || 5000; // 5 segundos (reducido)
 const POOL_EVICT = parseInt(process.env.DB_POOL_EVICT) || 5000; // 5 segundos (aumentado)
