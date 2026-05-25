@@ -45,10 +45,29 @@ import sequelize from "./config/database.js";
 import indexRoutes from "./routes/index.routes.js";
 
 // ============================================
+// MANEJADORES DE ERRORES NO CAPTURADOS
+// Deben registrarse LO ANTES POSIBLE para que
+// cualquier excepción síncrona en el setup quede
+// capturada y no mate el proceso silenciosamente.
+// ============================================
+
+process.on("uncaughtException", (error) => {
+  console.error("\n❌ UNCAUGHT EXCEPTION:", error.message);
+  console.error(error.stack);
+  // No process.exit() — Railway sigue monitoreando el healthcheck
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("\n❌ UNHANDLED REJECTION:", reason);
+  // No process.exit() — Railway sigue monitoreando el healthcheck
+});
+
+// ============================================
 // CONFIGURACIÓN INICIAL
 // ============================================
 
 dotenv.config();
+console.log("🔍 [init] dotenv loaded — NODE_ENV:", process.env.NODE_ENV || "development");
 
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || "development";
@@ -127,52 +146,61 @@ app.options("*", cors(corsOptions)); // preflight explícito para TODAS las ruta
 app.use(cors(corsOptions));
 
 // ============================================
-// SWAGGER
+// SWAGGER (setup no-fatal — si falla, continúa)
 // ============================================
 
 import swaggerUI from "swagger-ui-express";
 import fs from "fs";
 import YAML from "yamljs";
 
-const swaggerDocument = JSON.parse(
-  fs.readFileSync(new URL("../swagger_output.json", import.meta.url))
-);
+console.log("🔍 [swagger] iniciando setup...");
+try {
+  const swaggerDocument = JSON.parse(
+    fs.readFileSync(new URL("../swagger_output.json", import.meta.url))
+  );
+  console.log("🔍 [swagger] JSON leído OK, paths:", Object.keys(swaggerDocument.paths || {}).length);
 
-if (swaggerDocument?.paths && typeof swaggerDocument.paths === "object") {
-  const resolvedPaths = {};
-  for (const [pathKey, pathValue] of Object.entries(swaggerDocument.paths)) {
-    const newKey = pathKey.replaceAll("${API_VERSION}", API_VERSION);
-    resolvedPaths[newKey] = pathValue;
+  if (swaggerDocument?.paths && typeof swaggerDocument.paths === "object") {
+    const resolvedPaths = {};
+    for (const [pathKey, pathValue] of Object.entries(swaggerDocument.paths)) {
+      const newKey = pathKey.replaceAll("${API_VERSION}", API_VERSION);
+      resolvedPaths[newKey] = pathValue;
+    }
+    swaggerDocument.paths = resolvedPaths;
   }
-  swaggerDocument.paths = resolvedPaths;
+
+  if (process.env.SWAGGER_SERVER_URL) {
+    swaggerDocument.servers = [
+      {
+        url: process.env.SWAGGER_SERVER_URL,
+        description: NODE_ENV,
+      },
+    ];
+  } else {
+    delete swaggerDocument.servers;
+  }
+
+  app.use(
+    `/api/${API_VERSION}/docs`,
+    swaggerUI.serve,
+    swaggerUI.setup(swaggerDocument)
+  );
+
+  app.get(`/api/${API_VERSION}/docs.json`, (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.status(200).send(swaggerDocument);
+  });
+
+  app.get(`/api/${API_VERSION}/docs.yaml`, (req, res) => {
+    res.setHeader("Content-Type", "application/yaml");
+    res.status(200).send(YAML.stringify(swaggerDocument, 12));
+  });
+
+  console.log("✅ [swagger] configurado correctamente");
+} catch (swaggerErr) {
+  console.error("⚠️  [swagger] setup falló (no fatal):", swaggerErr.message);
+  // La app sigue funcionando — solo sin la UI de Swagger
 }
-
-if (process.env.SWAGGER_SERVER_URL) {
-  swaggerDocument.servers = [
-    {
-      url: process.env.SWAGGER_SERVER_URL,
-      description: NODE_ENV,
-    },
-  ];
-} else {
-  delete swaggerDocument.servers;
-}
-
-app.use(
-  `/api/${API_VERSION}/docs`,
-  swaggerUI.serve,
-  swaggerUI.setup(swaggerDocument)
-);
-
-app.get(`/api/${API_VERSION}/docs.json`, (req, res) => {
-  res.setHeader("Content-Type", "application/json");
-  res.status(200).send(swaggerDocument);
-});
-
-app.get(`/api/${API_VERSION}/docs.yaml`, (req, res) => {
-  res.setHeader("Content-Type", "application/yaml");
-  res.status(200).send(YAML.stringify(swaggerDocument, 12));
-});
 
 // ============================================
 // MIDDLEWARE 1: SEGURIDAD - HELMET
@@ -433,23 +461,6 @@ const gracefulShutdown = (signal) => {
 
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-
-// ============================================
-// MANEJO DE ERRORES NO CAPTURADOS
-// ─ En producción logueamos pero NO salimos
-// ─ (un error en un endpoint no debe matar el servidor)
-// ============================================
-
-process.on("uncaughtException", (error) => {
-  console.error("\n❌ UNCAUGHT EXCEPTION:", error.message);
-  console.error(error.stack);
-  // No process.exit() — Railway sigue monitoreando el healthcheck
-});
-
-process.on("unhandledRejection", (reason) => {
-  console.error("\n❌ UNHANDLED REJECTION:", reason);
-  // No process.exit() — Railway sigue monitoreando el healthcheck
-});
 
 // ============================================
 // ARRANQUE DEL SERVIDOR HTTP
