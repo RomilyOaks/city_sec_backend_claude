@@ -61,6 +61,13 @@ Los permisos son aditivos: un rol hereda sus permisos base y puede recibir permi
 
 **Regla especial:** `super_admin` tiene bypass completo en todas las verificaciones de permisos de campo (field-level RBAC). No requiere slugs individuales asignados en BD.
 
+**Consultar slugs vigentes en BD** (usar antes de implementar cualquier `canPerformAction` o `requirePermission`):
+```sql
+SELECT slug, descripcion FROM permisos ORDER BY slug;
+-- filtrar por módulo:
+SELECT slug, descripcion FROM permisos WHERE slug LIKE 'vehiculos.%' ORDER BY slug;
+```
+
 ### 2.3 Permisos granulares de adjuntos (v2.5.0)
 
 Control de acceso a nivel de campo sobre los adjuntos multimedia de novedades (fotos y audio originados desde la app vecino alerta):
