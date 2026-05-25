@@ -142,7 +142,7 @@ const corsOptions = {
 // para garantizar cabeceras en preflight OPTIONS
 // ============================================
 
-app.options("*", cors(corsOptions)); // preflight explícito para TODAS las rutas
+app.options(/(.*)/, cors(corsOptions)); // preflight explícito para TODAS las rutas (Express 5: no acepta "*" literal)
 app.use(cors(corsOptions));
 
 // ============================================
