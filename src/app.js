@@ -421,93 +421,14 @@ app.use((err, req, res, next) => {
 });
 
 // ============================================
-// FUNCIÓN PARA INICIAR EL SERVIDOR
-// ============================================
-
-const startServer = async () => {
-  console.log("\n🔄 Iniciando servidor...\n");
-
-  // ─────────────────────────────────────────────────────────────────────
-  // PASO 1: levantar el servidor HTTP PRIMERO
-  // El healthcheck de Railway llega segundos después del deploy.
-  // Si esperamos a que la DB conecte antes de app.listen(), el servidor
-  // nunca arranca a tiempo y el healthcheck falla con "service unavailable".
-  // ─────────────────────────────────────────────────────────────────────
-  app.listen(PORT, () => {
-    console.log("┌─────────────────────────────────────────────────┐");
-    console.log("│                                                 │");
-    console.log("│  🚀 Servidor HTTP iniciado (DB pendiente)       │");
-    console.log("│                                                 │");
-    console.log(`│  🌐 URL: http://localhost:${PORT}                  │`);
-    console.log(
-      `│  📚 API: http://localhost:${PORT}/api/${API_VERSION}           │`
-    );
-    console.log(
-      `│  ❤️  Health: http://localhost:${PORT}/health              │`
-    );
-    console.log(
-      `│  📖 Docs: http://localhost:${PORT}/api/${API_VERSION}/docs     │`
-    );
-    console.log("│                                                 │");
-    console.log(`│  🔐 Ambiente: ${NODE_ENV.padEnd(28)}      │`);
-    console.log(`│  📦 Versión API: ${API_VERSION.padEnd(24)}       │`);
-    console.log("│                                                 │");
-    console.log("└─────────────────────────────────────────────────┘\n");
-
-    if (NODE_ENV === "development") {
-      console.log("⚠️  MODO DESARROLLO:");
-      console.log("  - Logs detallados habilitados");
-      console.log("  - CORS permite requests sin origin");
-      console.log("  - Stack traces en errores\n");
-    }
-  });
-
-  // ─────────────────────────────────────────────────────────────────────
-  // PASO 2: conectar la DB de forma asíncrona (no bloquea el servidor)
-  // ─────────────────────────────────────────────────────────────────────
-  try {
-    console.log("📊 Conectando a la base de datos...");
-    await sequelize.authenticate();
-    console.log("✅ Conexión a la base de datos establecida correctamente\n");
-
-    if (NODE_ENV === "development" && process.env.SYNC_DB === "true") {
-      console.log("🔄 Sincronizando modelos con la base de datos...");
-      await sequelize.sync({ alter: false });
-      console.log("✅ Modelos sincronizados\n");
-    }
-
-    console.log("💡 Endpoints principales:");
-    console.log(`  • POST   /api/${API_VERSION}/auth/login`);
-    console.log(`  • GET    /api/${API_VERSION}/personal`);
-    console.log(`  • GET    /api/${API_VERSION}/vehiculos`);
-    console.log(`  • GET    /api/${API_VERSION}/novedades`);
-    console.log(`📝 Documentación completa en /api/${API_VERSION}\n`);
-  } catch (error) {
-    console.error("\n❌ Error al conectar la base de datos:");
-    console.error("═══════════════════════════════════");
-    console.error(error);
-    console.error("═══════════════════════════════════\n");
-    // No hacemos process.exit(1) — el servidor HTTP sigue corriendo.
-    // Railway detectará el healthcheck OK pero los endpoints de DB fallarán
-    // hasta que la conexión se recupere.
-  }
-};
-
-// ============================================
 // MANEJO DE SEÑALES DE TERMINACIÓN
 // ============================================
 
-const gracefulShutdown = async (signal) => {
+const gracefulShutdown = (signal) => {
   console.log(`\n🛑 ${signal} recibido. Cerrando servidor gracefully...\n`);
-
-  try {
-    await sequelize.close();
-    console.log("✅ Conexión a la base de datos cerrada\n");
-    process.exit(0);
-  } catch (error) {
-    console.error("❌ Error durante el cierre:", error);
-    process.exit(1);
-  }
+  sequelize.close()
+    .then(() => { console.log("✅ DB cerrada\n"); process.exit(0); })
+    .catch(() => process.exit(0));
 };
 
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
@@ -515,39 +436,61 @@ process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
 // ============================================
 // MANEJO DE ERRORES NO CAPTURADOS
+// ─ En producción logueamos pero NO salimos
+// ─ (un error en un endpoint no debe matar el servidor)
 // ============================================
 
 process.on("uncaughtException", (error) => {
-  console.error("\n❌ UNCAUGHT EXCEPTION:");
-  console.error("═══════════════════════════════════");
-  console.error(error);
-  console.error("═══════════════════════════════════\n");
-
-  if (NODE_ENV === "production") {
-    gracefulShutdown("UNCAUGHT_EXCEPTION");
-  } else {
-    process.exit(1);
-  }
+  console.error("\n❌ UNCAUGHT EXCEPTION:", error.message);
+  console.error(error.stack);
+  // No process.exit() — Railway sigue monitoreando el healthcheck
 });
 
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("\n❌ UNHANDLED PROMISE REJECTION:");
-  console.error("═══════════════════════════════════");
-  console.error("Promesa:", promise);
-  console.error("Razón:", reason);
-  console.error("═══════════════════════════════════\n");
-
-  if (NODE_ENV === "production") {
-    gracefulShutdown("UNHANDLED_REJECTION");
-  }
+process.on("unhandledRejection", (reason) => {
+  console.error("\n❌ UNHANDLED REJECTION:", reason);
+  // No process.exit() — Railway sigue monitoreando el healthcheck
 });
 
 // ============================================
-// INICIAR SERVIDOR
+// ARRANQUE DEL SERVIDOR HTTP
+//
+// app.listen() a nivel de módulo (sin async wrapper):
+//   • Se ejecuta inmediatamente al cargar el módulo
+//   • Captura errores de bind con server.on('error')
+//   • NO depende de la conexión a DB
 // ============================================
 
 if (NODE_ENV !== "test") {
-  startServer();
+  console.log(`\n🔄 Arrancando servidor en puerto ${PORT}...`);
+
+  const httpServer = app.listen(PORT, () => {
+    console.log(`🚀 HTTP server escuchando en puerto ${PORT}`);
+    console.log(`❤️  Health: http://localhost:${PORT}/health`);
+    console.log(`📚 API:    http://localhost:${PORT}/api/${API_VERSION}`);
+    console.log(`🔐 Env:    ${NODE_ENV}\n`);
+  });
+
+  // Error explícito de bind (EADDRINUSE, etc.) — sin este handler sería
+  // un uncaughtException que mataría el proceso en producción
+  httpServer.on("error", (err) => {
+    console.error(`❌ Error al iniciar servidor HTTP: ${err.message}`);
+    process.exit(1);
+  });
+
+  // Conectar DB de forma asíncrona — no bloquea el servidor HTTP
+  console.log("📊 Conectando a la base de datos (async)...");
+  sequelize
+    .authenticate()
+    .then(() => {
+      console.log("✅ Base de datos conectada correctamente\n");
+      if (NODE_ENV === "development" && process.env.SYNC_DB === "true") {
+        return sequelize.sync({ alter: false });
+      }
+    })
+    .catch((err) => {
+      // Solo logueamos — el HTTP server sigue respondiendo al healthcheck
+      console.error("⚠️  DB no disponible (reintentará en cada query):", err.message);
+    });
 }
 
 // ============================================
