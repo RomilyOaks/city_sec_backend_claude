@@ -1461,8 +1461,13 @@ export const forgotPassword = async (req, res) => {
       ip_address: req.ip,
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    const resetLink = `${frontendUrl}/reset-password?token=${tokenPlain}&email=${encodeURIComponent(usuario.email)}`;
+    // FRONTEND_PUBLIC_URL → URL pública accesible desde el navegador del usuario (emails)
+    // FRONTEND_URL        → puede ser .railway.internal (tráfico interno), NO usar en emails
+    const frontendPublicUrl =
+      process.env.FRONTEND_PUBLIC_URL ||
+      process.env.FRONTEND_URL ||
+      "http://localhost:5173";
+    const resetLink = `${frontendPublicUrl}/reset-password?token=${tokenPlain}&email=${encodeURIComponent(usuario.email)}`;
 
     try {
       await enviarEmailRecuperacionPassword({
