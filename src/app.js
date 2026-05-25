@@ -270,6 +270,15 @@ app.use((req, res, next) => {
 });
 
 // ============================================================================
+// HEALTHCHECK LIVIANO — Railway lo llama durante el deploy
+// Debe responder ANTES de que la DB esté lista → sin dependencias
+// ============================================================================
+
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
+// ============================================================================
 // REGISTRO DE RUTAS CENTRALIZADO ✨ NUEVO v2.4.0
 // ============================================================================
 
