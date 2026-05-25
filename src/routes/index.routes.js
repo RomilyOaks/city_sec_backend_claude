@@ -118,6 +118,7 @@ import cuadranteVehiculoAsignadoRoutes from "./cuadranteVehiculoAsignado.routes.
 import estadosOperativoRecursoRoutes from "./estados-operativo-recurso.routes.js";
 import tiposCopilotoRoutes from "./tipos-copiloto.routes.js";
 import horariosTurnosRoutes from "./horariosTurnos.routes.js";
+import talleresRoutes from "./talleres.routes.js";
 
 // 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
@@ -306,6 +307,13 @@ router.use("/vehiculos", vehiculosRoutes);
  * @access  Operador, Supervisor, Admin
  */
 router.use("/mantenimientos", mantenimientosRoutes);
+
+/**
+ * @route   /talleres
+ * @desc    Gestión de talleres mecánicos
+ * @access  Operador, Supervisor, Admin
+ */
+router.use("/talleres", talleresRoutes);
 
 /**
  * @route   /abastecimientos
