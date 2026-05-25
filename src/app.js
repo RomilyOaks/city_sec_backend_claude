@@ -425,9 +425,47 @@ app.use((err, req, res, next) => {
 // ============================================
 
 const startServer = async () => {
-  try {
-    console.log("\n🔄 Iniciando servidor...\n");
+  console.log("\n🔄 Iniciando servidor...\n");
 
+  // ─────────────────────────────────────────────────────────────────────
+  // PASO 1: levantar el servidor HTTP PRIMERO
+  // El healthcheck de Railway llega segundos después del deploy.
+  // Si esperamos a que la DB conecte antes de app.listen(), el servidor
+  // nunca arranca a tiempo y el healthcheck falla con "service unavailable".
+  // ─────────────────────────────────────────────────────────────────────
+  app.listen(PORT, () => {
+    console.log("┌─────────────────────────────────────────────────┐");
+    console.log("│                                                 │");
+    console.log("│  🚀 Servidor HTTP iniciado (DB pendiente)       │");
+    console.log("│                                                 │");
+    console.log(`│  🌐 URL: http://localhost:${PORT}                  │`);
+    console.log(
+      `│  📚 API: http://localhost:${PORT}/api/${API_VERSION}           │`
+    );
+    console.log(
+      `│  ❤️  Health: http://localhost:${PORT}/health              │`
+    );
+    console.log(
+      `│  📖 Docs: http://localhost:${PORT}/api/${API_VERSION}/docs     │`
+    );
+    console.log("│                                                 │");
+    console.log(`│  🔐 Ambiente: ${NODE_ENV.padEnd(28)}      │`);
+    console.log(`│  📦 Versión API: ${API_VERSION.padEnd(24)}       │`);
+    console.log("│                                                 │");
+    console.log("└─────────────────────────────────────────────────┘\n");
+
+    if (NODE_ENV === "development") {
+      console.log("⚠️  MODO DESARROLLO:");
+      console.log("  - Logs detallados habilitados");
+      console.log("  - CORS permite requests sin origin");
+      console.log("  - Stack traces en errores\n");
+    }
+  });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // PASO 2: conectar la DB de forma asíncrona (no bloquea el servidor)
+  // ─────────────────────────────────────────────────────────────────────
+  try {
     console.log("📊 Conectando a la base de datos...");
     await sequelize.authenticate();
     console.log("✅ Conexión a la base de datos establecida correctamente\n");
@@ -438,61 +476,20 @@ const startServer = async () => {
       console.log("✅ Modelos sincronizados\n");
     }
 
-    app.listen(PORT, () => {
-      console.log("┌─────────────────────────────────────────────────┐");
-      console.log("│                                                 │");
-      console.log("│  🚀 Servidor iniciado exitosamente              │");
-      console.log("│                                                 │");
-      console.log(`│  🌐 URL: http://localhost:${PORT}                  │`);
-      console.log(
-        `│  📚 API: http://localhost:${PORT}/api/${API_VERSION}           │`
-      );
-      console.log(
-        `│  ❤️  Health: http://localhost:${PORT}/api/${API_VERSION}/health │`
-      );
-      console.log(
-        `│  📖 Docs: http://localhost:${PORT}/api/${API_VERSION}/docs     │`
-      );
-      console.log("│                                                 │");
-      console.log(`│  🔐 Ambiente: ${NODE_ENV.padEnd(28)}      │`);
-      console.log(`│  📦 Versión API: ${API_VERSION.padEnd(24)}       │`);
-      console.log("│                                                 │");
-      console.log("└─────────────────────────────────────────────────┘\n");
-
-      console.log("💡 Endpoints principales:");
-      console.log(`  • POST   /api/${API_VERSION}/auth/login`);
-      console.log(`  • GET    /api/${API_VERSION}/personal`);
-      console.log(`  • GET    /api/${API_VERSION}/cargos`);
-      console.log(`  • GET    /api/${API_VERSION}/tipos-novedad`);
-      console.log(`  • GET    /api/${API_VERSION}/subtipos-novedad`);
-      console.log(`  • GET    /api/${API_VERSION}/vehiculos`);
-      console.log(`  • GET    /api/${API_VERSION}/novedades`);
-      console.log("");
-      console.log("📍 Módulo Calles y Direcciones:");
-      console.log(`  • GET    /api/${API_VERSION}/tipos-via/activos`);
-      console.log(`  • GET    /api/${API_VERSION}/calles`);
-      console.log(`  • GET    /api/${API_VERSION}/direcciones`);
-      console.log("");
-      console.log("📋 Módulo Catálogos:");
-      console.log(`  • GET    /api/${API_VERSION}/radios-tetra`);
-      console.log(`  • GET    /api/${API_VERSION}/unidades-oficina`);
-      console.log(`  • GET    /api/${API_VERSION}/cuadrantes-vehiculos-asignados`);
-      console.log("");
-      console.log(`📝 Documentación completa en /api/${API_VERSION}\n`);
-
-      if (NODE_ENV === "development") {
-        console.log("⚠️  MODO DESARROLLO:");
-        console.log("  - Logs detallados habilitados");
-        console.log("  - CORS permite requests sin origin");
-        console.log("  - Stack traces en errores\n");
-      }
-    });
+    console.log("💡 Endpoints principales:");
+    console.log(`  • POST   /api/${API_VERSION}/auth/login`);
+    console.log(`  • GET    /api/${API_VERSION}/personal`);
+    console.log(`  • GET    /api/${API_VERSION}/vehiculos`);
+    console.log(`  • GET    /api/${API_VERSION}/novedades`);
+    console.log(`📝 Documentación completa en /api/${API_VERSION}\n`);
   } catch (error) {
-    console.error("\n❌ Error al iniciar el servidor:");
+    console.error("\n❌ Error al conectar la base de datos:");
     console.error("═══════════════════════════════════");
     console.error(error);
     console.error("═══════════════════════════════════\n");
-    process.exit(1);
+    // No hacemos process.exit(1) — el servidor HTTP sigue corriendo.
+    // Railway detectará el healthcheck OK pero los endpoints de DB fallarán
+    // hasta que la conexión se recupere.
   }
 };
 
