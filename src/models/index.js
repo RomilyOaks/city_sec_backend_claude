@@ -213,6 +213,8 @@ import Taller from "./Taller.js";
  * @type {Model}
  */
 import MantenimientoVehiculo from "./MantenimientoVehiculo.js";
+import CatalogoDesperfectos from "./CatalogoDesperfectos.js";
+import HistorialDesperfectosVehiculo from "./HistorialDesperfectosVehiculo.js";
 
 /**
  * Modelo OperativosVehiculosCuadrantes
@@ -1554,6 +1556,14 @@ Taller.belongsTo(Usuario, {
   as: "eliminadorTaller",
 });
 
+// HistorialDesperfectosVehiculo
+Vehiculo.hasMany(HistorialDesperfectosVehiculo, { foreignKey: "vehiculo_id", as: "historialDesperfectos" });
+HistorialDesperfectosVehiculo.belongsTo(Vehiculo, { foreignKey: "vehiculo_id", as: "vehiculo" });
+CatalogoDesperfectos.hasMany(HistorialDesperfectosVehiculo, { foreignKey: "desperfecto_id", as: "historialDesperfectos" });
+HistorialDesperfectosVehiculo.belongsTo(CatalogoDesperfectos, { foreignKey: "desperfecto_id", as: "desperfecto" });
+MantenimientoVehiculo.hasMany(HistorialDesperfectosVehiculo, { foreignKey: "mantenimiento_id", as: "desperfectos" });
+HistorialDesperfectosVehiculo.belongsTo(MantenimientoVehiculo, { foreignKey: "mantenimiento_id", as: "mantenimiento" });
+
 // MantenimientoVehiculo
 MantenimientoVehiculo.belongsTo(Usuario, {
   foreignKey: "created_by",
@@ -1971,6 +1981,8 @@ const models = {
   AbastecimientoCombustible,
   Taller,
   MantenimientoVehiculo,
+  CatalogoDesperfectos,
+  HistorialDesperfectosVehiculo,
   OperativosVehiculosCuadrantes,
   OperativosVehiculosNovedades,
   Sector,
@@ -2058,6 +2070,8 @@ export {
   AbastecimientoCombustible,
   Taller,
   MantenimientoVehiculo,
+  CatalogoDesperfectos,
+  HistorialDesperfectosVehiculo,
   OperativosVehiculosCuadrantes,
   OperativosVehiculosNovedades,
   Sector,

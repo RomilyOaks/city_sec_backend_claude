@@ -119,6 +119,8 @@ import estadosOperativoRecursoRoutes from "./estados-operativo-recurso.routes.js
 import tiposCopilotoRoutes from "./tipos-copiloto.routes.js";
 import horariosTurnosRoutes from "./horariosTurnos.routes.js";
 import talleresRoutes from "./talleres.routes.js";
+import { getCatalogoDesperfectos } from "../controllers/desperfectosController.js";
+import { verificarToken, verificarRolesOPermisos } from "../middlewares/authMiddleware.js";
 
 // 📊 Auditoría y Reportes
 import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
@@ -314,6 +316,20 @@ router.use("/mantenimientos", mantenimientosRoutes);
  * @access  Operador, Supervisor, Admin
  */
 router.use("/talleres", talleresRoutes);
+
+/**
+ * @route   GET /catalogo-desperfectos
+ * @desc    Catálogo de tipos de desperfectos vehiculares
+ */
+router.get(
+  "/catalogo-desperfectos",
+  verificarToken,
+  verificarRolesOPermisos(
+    ["super_admin", "admin", "supervisor", "operador", "consulta"],
+    ["vehiculos.vehiculos.read"]
+  ),
+  (req, res, next) => getCatalogoDesperfectos(req, res, next)
+);
 
 /**
  * @route   /abastecimientos

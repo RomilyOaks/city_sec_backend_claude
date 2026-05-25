@@ -89,6 +89,7 @@ import { registrarAuditoria } from "../middlewares/auditoriaAccionMiddleware.js"
 // IMPORTAR RATE LIMITING (TEMPORAL ANTI-BUCLE)
 // ==========================================
 import { catalogRateLimit } from "../middlewares/rateLimitMiddleware.js";
+import { getDesperfectosByVehiculo } from "../controllers/desperfectosController.js";
 
 // ==========================================
 // RUTAS ESPECIALES (ANTES DE /:id)
@@ -437,6 +438,21 @@ router.delete(
     // #swagger.responses[404] = { description: 'No encontrado', schema: { $ref: "#/components/schemas/ErrorResponse" } }
     return vehiculosController.deleteVehiculo(req, res, next);
   }
+);
+
+/**
+ * @route   GET /api/v1/vehiculos/:id/desperfectos
+ * @desc    Historial de desperfectos de un vehículo
+ * @access  Autenticado con permiso vehiculos.vehiculos.read
+ */
+router.get(
+  "/:id/desperfectos",
+  verificarToken,
+  verificarRolesOPermisos(
+    ["super_admin", "admin", "supervisor", "operador", "consulta"],
+    ["vehiculos.vehiculos.read"]
+  ),
+  (req, res, next) => getDesperfectosByVehiculo(req, res, next)
 );
 
 export default router;
