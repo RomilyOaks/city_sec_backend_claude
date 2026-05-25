@@ -8,11 +8,24 @@ Guía para Claude Code al trabajar en este repositorio.
 
 **CitySecure Backend** — API REST principal del sistema de seguridad ciudadana para la municipalidad de Chorrillos. Sirve al dashboard de serenazgo (`city_sec_frontend_v2`) y recibe novedades desde el Voice Gateway (`city_sec_voice_gateway`).
 
-- **Puerto:** 3000
+- **Puerto local:** 3000 (dev) · Railway asigna dinámicamente via `$PORT` (producción: 8080)
 - **Versión app:** 2.4.0
 - **Deploy:** Railway (auto-deploy en push a `main`)
-- **Swagger:** `GET /api-docs` (generado con `npm run swagger`)
+- **Swagger UI:** `GET /api/v1/docs`
+- **Swagger JSON:** `GET /api/v1/docs.json`
+- **Health check:** `GET /health` (responde `{ status: "ok" }` sin depender de la DB)
 - **Repositorio:** https://github.com/RomilyOaks/city_sec_backend_claude
+
+### URLs de Railway (producción)
+
+| Ruta | Descripción |
+|---|---|
+| `GET /health` | Healthcheck liviano — Railway lo llama al deployar |
+| `GET /api/v1` | Info general de la API |
+| `GET /api/v1/health` | Health check con estado de la DB |
+| `GET /api/v1/docs` | Swagger UI interactivo |
+| `GET /api/v1/docs.json` | Spec OpenAPI en JSON |
+| `GET /api/v1/docs.yaml` | Spec OpenAPI en YAML |
 
 ---
 
@@ -106,31 +119,49 @@ src/
 ## Variables de Entorno
 
 ```env
+# Servidor
+PORT=3000                     # Railway sobreescribe con su puerto asignado
+NODE_ENV=development          # o production en Railway
+API_VERSION=v1
+MAX_BODY_SIZE=10mb
+
 # Base de datos
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=...
 DB_NAME=citizen_security_v2
 DB_PORT=3306
+DB_POOL_MAX=5                 # 20 en producción vía env var
+# DB_POOL_MIN siempre es 0 en el código (hardcoded) — ver nota de deploy
 
 # JWT
 JWT_SECRET=...
 JWT_REFRESH_SECRET=...
-
-# Servidor
-PORT=3000
-NODE_ENV=development          # o production en Railway
-API_VERSION=v1
-MAX_BODY_SIZE=10mb
+JWT_ACCESS_EXPIRATION=1h
+JWT_REFRESH_EXPIRATION=7d
 
 # Swagger (producción)
-SWAGGER_SERVER_URL=https://...
+SWAGGER_SERVER_URL=https://tu-app.railway.app/api/v1
 
-# Correo (nodemailer)
-MAIL_HOST=...
-MAIL_PORT=...
-MAIL_USER=...
-MAIL_PASS=...
+# CORS
+FRONTEND_URL=http://localhost:5173
+CORS_ORIGIN=*
+
+# Correo (recuperación de contraseña)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=tu_cuenta@gmail.com
+SMTP_PASSWORD=tu_app_password
+RESEND_FROM_EMAIL=onboarding@resend.dev   # Resend free tier
+RESEND_FROM_NAME=CitySecure
+
+# Bcrypt / seguridad
+BCRYPT_ROUNDS=10
+MAX_LOGIN_ATTEMPTS=5
+LOCK_TIME=15m
+
+# 2FA
+TWO_FACTOR_APP_NAME=Seguridad Ciudadana
 ```
 
 ---
@@ -277,6 +308,113 @@ Docs:    Documentación
 | `src/utils/sse-manager.js` | Server-Sent Events (actualizaciones en tiempo real) |
 | `src/seeders/seedRBAC.js` | Roles, permisos y usuario admin inicial |
 | `swagger_output.json` | Spec Swagger generada (regenerar con `npm run swagger`) |
+
+---
+
+## Trampas Conocidas — Express 5 + Railway
+
+Lecciones aprendidas en producción. **Leer antes de tocar `app.js` o el deploy.**
+
+### 🚨 Express 5 + path-to-regexp v8: Wildcards con nombre obligatorio
+
+Express 5 usa `path-to-regexp` v8 que ya **no acepta `"*"` suelto** en rutas.
+Esto lanza un `TypeError` síncrono durante la carga del módulo, matando el servidor.
+
+```js
+// ❌ Express 4 — ROMPE en Express 5
+app.options("*", cors(corsOptions));
+app.get("*", handler);
+app.use("*", handler);
+
+// ✅ Express 5 — usar regex
+app.options(/(.*)/, cors(corsOptions));
+
+// ✅ Express 5 — o named wildcard
+app.get("/{*name}", handler);
+```
+
+Aplica a `app.options`, `app.get`, `app.post`, `app.use`, etc. y a todos los routers.
+
+---
+
+### 🚨 Sequelize: `pool.min` siempre debe ser `0`
+
+Si `pool.min > 0`, Sequelize intenta abrir conexiones TCP **al instanciar** (`new Sequelize()`).
+En Railway cold-start la DB no está lista → el import del módulo se **bloquea** → el servidor HTTP
+nunca arranca → el healthcheck falla con "service unavailable".
+
+```js
+// ✅ En database.js — hardcodeado, no configurable vía .env
+const POOL_MIN = 0; // Lazy pool — abre conexiones solo cuando hay una query real
+```
+
+---
+
+### 🚨 `process.on("uncaughtException")` debe registrarse AL INICIO del archivo
+
+Si se registra al final (línea 400+) y una excepción ocurre en el setup (swagger, cors, helmet),
+el proceso muere **silenciosamente** — Railway solo muestra dos líneas de dotenv y nada más.
+
+```js
+// ✅ Inmediatamente después de los imports, ANTES de cualquier setup
+process.on("uncaughtException", (error) => {
+  console.error("❌ UNCAUGHT EXCEPTION:", error.message, error.stack);
+  // No llamar process.exit() — Railway sigue monitoreando el healthcheck
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("❌ UNHANDLED REJECTION:", reason);
+});
+```
+
+---
+
+### 🚨 Swagger: envolver setup en `try/catch`
+
+`fs.readFileSync(swagger_output.json)` puede fallar si el archivo no existe o está corrupto.
+Ese error síncrono mata el proceso. Con `try/catch`, la app arranca igual (sin Swagger).
+
+```js
+try {
+  const swaggerDocument = JSON.parse(fs.readFileSync(...));
+  app.use(`/api/${API_VERSION}/docs`, swaggerUI.serve, swaggerUI.setup(swaggerDocument));
+} catch (err) {
+  console.error("⚠️ Swagger setup falló (no fatal):", err.message);
+}
+```
+
+---
+
+### 🚨 Railway healthcheck: usar `/health` liviano ANTES de las rutas
+
+El healthcheck de Railway se dispara durante el deploy. Si apunta a `/api/v1/health`
+(que pasa por middlewares, DB, etc.) puede fallar por timeout.
+
+```toml
+# railway.toml
+[deploy]
+healthcheckPath = "/health"         # ruta liviana, SIN dependencias
+healthcheckTimeout = 120            # dar tiempo al cold start (Docker + DB)
+restartPolicyType = "on_failure"    # NO reiniciar en process.exit(0)
+restartPolicyMaxRetries = 3
+```
+
+```js
+// En app.js — ANTES de app.use('/api/v1', indexRoutes)
+app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
+```
+
+---
+
+### 🚨 `app.listen()` no debe depender de la conexión a DB
+
+```js
+// ✅ Patrón correcto — HTTP server arranca primero, DB conecta async
+const httpServer = app.listen(PORT, () => console.log("🚀 puerto", PORT));
+sequelize.authenticate()
+  .then(() => console.log("✅ DB conectada"))
+  .catch((err) => console.error("⚠️ DB no disponible:", err.message));
+  // La app sigue respondiendo — Railway no la mata
+```
 
 ---
 

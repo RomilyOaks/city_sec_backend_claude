@@ -67,7 +67,6 @@ process.on("unhandledRejection", (reason) => {
 // ============================================
 
 dotenv.config();
-console.log("🔍 [init] dotenv loaded — NODE_ENV:", process.env.NODE_ENV || "development");
 
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || "development";
@@ -153,12 +152,10 @@ import swaggerUI from "swagger-ui-express";
 import fs from "fs";
 import YAML from "yamljs";
 
-console.log("🔍 [swagger] iniciando setup...");
 try {
   const swaggerDocument = JSON.parse(
     fs.readFileSync(new URL("../swagger_output.json", import.meta.url))
   );
-  console.log("🔍 [swagger] JSON leído OK, paths:", Object.keys(swaggerDocument.paths || {}).length);
 
   if (swaggerDocument?.paths && typeof swaggerDocument.paths === "object") {
     const resolvedPaths = {};
@@ -196,9 +193,8 @@ try {
     res.status(200).send(YAML.stringify(swaggerDocument, 12));
   });
 
-  console.log("✅ [swagger] configurado correctamente");
 } catch (swaggerErr) {
-  console.error("⚠️  [swagger] setup falló (no fatal):", swaggerErr.message);
+  console.error("⚠️  Swagger setup falló (no fatal):", swaggerErr.message);
   // La app sigue funcionando — solo sin la UI de Swagger
 }
 
