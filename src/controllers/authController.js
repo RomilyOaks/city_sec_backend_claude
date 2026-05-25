@@ -626,9 +626,27 @@ export const login = async (req, res) => {
         datosActualizacion.locked_until = new Date(Date.now() + duracionMs);
         datosActualizacion.bloqueos_acumulados = bloqueoActual + 1;
         datosActualizacion.failed_login_attempts = 0; // reinicia ciclo de intentos
+
+        await usuario.update(datosActualizacion);
+
         console.log(
           `🔒 Usuario ${credencial} bloqueado por ${formatearTiempoRestante(duracionMs)} (bloqueo #${bloqueoActual + 1})`
         );
+
+        registrarIntentoLogin({
+          username_or_email: credencial,
+          ip_address,
+          user_agent,
+          intento_exitoso: 0,
+          razon_fallo: "password_incorrecto",
+          usuario_id: usuario.id,
+        });
+
+        return res.status(403).json({
+          success: false,
+          message: `Acceso bloqueado por demasiados intentos fallidos. Intente nuevamente en ${formatearTiempoRestante(duracionMs)}.`,
+          lockout_count: bloqueoActual + 1,
+        });
       }
 
       await usuario.update(datosActualizacion);
@@ -646,14 +664,10 @@ export const login = async (req, res) => {
         usuario_id: usuario.id,
       });
 
-      const intentosRestantes = nuevosIntentos >= MAX_LOGIN_ATTEMPTS
-        ? 0
-        : MAX_LOGIN_ATTEMPTS - nuevosIntentos;
-
       return res.status(401).json({
         success: false,
         message: "Credenciales incorrectas",
-        intentosRestantes,
+        intentosRestantes: MAX_LOGIN_ATTEMPTS - nuevosIntentos,
       });
     }
 
