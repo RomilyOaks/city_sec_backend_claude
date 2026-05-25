@@ -710,4 +710,77 @@ router.get(
   }
 );
 
+/**
+ * @route   GET /api/usuarios/:id/historial
+ * @desc    Historial de cambios de un usuario (auditoría)
+ * @access  Super Admin, Admin
+ * @query   page, limit, accion
+ */
+router.get(
+  "/:id/historial",
+  verificarToken,
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.usuarios.read"]),
+  [
+    param("id").isInt({ min: 1 }).withMessage("ID de usuario inválido"),
+    query("page").optional().isInt({ min: 1 }),
+    query("limit").optional().isInt({ min: 1, max: 100 }),
+    handleValidationErrors,
+  ],
+  async (req, res) => {
+    try {
+      const { HistorialUsuario, Usuario } = await import("../models/index.js");
+
+      const usuarioId = req.params.id;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 20;
+      const offset = (page - 1) * limit;
+
+      const where = { usuario_id: usuarioId };
+      if (req.query.accion) where.accion = req.query.accion;
+
+      const usuarioExiste = await Usuario.findByPk(usuarioId, {
+        attributes: ["id", "username"],
+      });
+      if (!usuarioExiste) {
+        return res.status(404).json({ success: false, message: "Usuario no encontrado" });
+      }
+
+      const { count, rows } = await HistorialUsuario.findAndCountAll({
+        where,
+        include: [
+          {
+            model: Usuario,
+            as: "realizadoPor",
+            attributes: ["id", "username", "nombres", "apellidos"],
+          },
+        ],
+        order: [["fecha_hora", "DESC"]],
+        limit,
+        offset,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          usuario: usuarioExiste,
+          historial: rows,
+          pagination: {
+            total: count,
+            page,
+            limit,
+            totalPages: Math.ceil(count / limit),
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Error al obtener historial:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener historial del usuario",
+        error: error.message,
+      });
+    }
+  }
+);
+
 export default router;

@@ -170,6 +170,34 @@ const crearSesion = async (data) => {
   }
 };
 
+/**
+ * Calcula la duración del bloqueo según cuántas veces ha sido bloqueado el usuario.
+ * Bloqueo progresivo: 5m → 15m → 1h → 24h
+ * @param {number} bloqueoCount - Valor actual de bloqueos_acumulados (antes de incrementar)
+ * @returns {number} Duración en milisegundos
+ */
+const calcularDuracionBloqueo = (bloqueoCount) => {
+  const duraciones = [
+    5 * 60 * 1000,       // 1er bloqueo: 5 min
+    15 * 60 * 1000,      // 2do: 15 min
+    60 * 60 * 1000,      // 3ro: 1 hora
+    24 * 60 * 60 * 1000, // 4to en adelante: 24 horas
+  ];
+  return duraciones[Math.min(bloqueoCount, duraciones.length - 1)];
+};
+
+/**
+ * Formatea milisegundos restantes en texto legible para el usuario
+ * @param {number} ms
+ * @returns {string}
+ */
+const formatearTiempoRestante = (ms) => {
+  const minutos = Math.ceil(ms / 60000);
+  if (minutos < 60) return `${minutos} minuto${minutos !== 1 ? "s" : ""}`;
+  const horas = Math.ceil(minutos / 60);
+  return `${horas} hora${horas !== 1 ? "s" : ""}`;
+};
+
 // ==========================================
 // FUNCIONES AUXILIARES
 // ==========================================
@@ -555,12 +583,11 @@ export const login = async (req, res) => {
 
     // Verificar si el usuario está bloqueado temporalmente
     if (usuario.locked_until && new Date() < new Date(usuario.locked_until)) {
-      const minutosRestantes = Math.ceil(
-        (new Date(usuario.locked_until) - new Date()) / 60000
-      );
+      const msRestantes = new Date(usuario.locked_until) - new Date();
       return res.status(403).json({
         success: false,
-        message: `Usuario bloqueado temporalmente. Intente nuevamente en ${minutosRestantes} minutos.`,
+        message: `Usuario bloqueado temporalmente. Intente nuevamente en ${formatearTiempoRestante(msRestantes)}.`,
+        lockout_count: usuario.bloqueos_acumulados || 0,
       });
     }
 
@@ -592,10 +619,16 @@ export const login = async (req, res) => {
         failed_login_attempts: nuevosIntentos,
       };
 
-      // Bloquear después de MAX_LOGIN_ATTEMPTS intentos
+      // Bloqueo progresivo al alcanzar MAX_LOGIN_ATTEMPTS
       if (nuevosIntentos >= MAX_LOGIN_ATTEMPTS) {
-        const lockTimeMs = parseTimeToMilliseconds(LOCK_TIME);
-        datosActualizacion.locked_until = new Date(Date.now() + lockTimeMs);
+        const bloqueoActual = usuario.bloqueos_acumulados || 0;
+        const duracionMs = calcularDuracionBloqueo(bloqueoActual);
+        datosActualizacion.locked_until = new Date(Date.now() + duracionMs);
+        datosActualizacion.bloqueos_acumulados = bloqueoActual + 1;
+        datosActualizacion.failed_login_attempts = 0; // reinicia ciclo de intentos
+        console.log(
+          `🔒 Usuario ${credencial} bloqueado por ${formatearTiempoRestante(duracionMs)} (bloqueo #${bloqueoActual + 1})`
+        );
       }
 
       await usuario.update(datosActualizacion);
@@ -613,13 +646,14 @@ export const login = async (req, res) => {
         usuario_id: usuario.id,
       });
 
+      const intentosRestantes = nuevosIntentos >= MAX_LOGIN_ATTEMPTS
+        ? 0
+        : MAX_LOGIN_ATTEMPTS - nuevosIntentos;
+
       return res.status(401).json({
         success: false,
         message: "Credenciales incorrectas",
-        intentosRestantes:
-          nuevosIntentos >= MAX_LOGIN_ATTEMPTS
-            ? 0
-            : MAX_LOGIN_ATTEMPTS - nuevosIntentos,
+        intentosRestantes,
       });
     }
 
@@ -627,10 +661,11 @@ export const login = async (req, res) => {
     // LOGIN EXITOSO
     // ==========================================
 
-    // Resetear intentos fallidos y actualizar última conexión
+    // Resetear intentos fallidos, bloqueo progresivo y actualizar última conexión
     await usuario.update({
       failed_login_attempts: 0,
       locked_until: null,
+      bloqueos_acumulados: 0,
       last_login_at: new Date(),
       last_login_ip: ip_address,
       last_activity_at: new Date(),

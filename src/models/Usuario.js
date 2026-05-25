@@ -221,6 +221,12 @@ const Usuario = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
       comment: "Bloqueo temporal por intentos fallidos",
+    },
+
+    bloqueos_acumulados: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: "Contador de bloqueos historicos para duracion progresiva (5m->15m->1h->24h)",
     }, // Autenticación de dos factores (2FA)
 
     two_factor_enabled: {
