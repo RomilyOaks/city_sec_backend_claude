@@ -1,9 +1,9 @@
 # PRD — Sistema de Seguridad Ciudadana (CitySec Backend)
 
-**Versión:** 2.5.0  
-**Fecha:** 2026-05-21  
-**Estado:** Producción activa — desarrollo incremental  
-**Stakeholders primarios:** Área de Tecnología Municipal, Coordinación de Serenazgo  
+**Versión:** 2.6.0
+**Fecha:** 2026-05-25
+**Estado:** Producción activa — desarrollo incremental
+**Stakeholders primarios:** Área de Tecnología Municipal, Coordinación de Serenazgo
 **Deploy:** `https://citysecbackendclaude-production.up.railway.app`
 
 ---
@@ -32,6 +32,8 @@ Una API centralizada y estructurada que actúa como sistema de registro único (
 - Dirección normalizada con asignación automática de cobertura geográfica
 - Reportes y métricas operacionales exportables
 - Control de acceso granular por rol
+- Recuperación de contraseña via email (Resend SDK)
+- Auditoría completa de acciones del sistema
 
 ---
 
@@ -43,7 +45,7 @@ Una API centralizada y estructurada que actúa como sistema de registro único (
 |-----|-------|-------------|---------------|
 | `super_admin` | 5 | Administrador de plataforma | Todo, incluyendo configuración de sistema |
 | `admin` | 4 | Jefe de Serenazgo / TI municipal | Gestión completa de recursos y usuarios |
-| `supervisor` | 3 | Supervisor de turno | Operativos, novedades, reportes |
+| `supervisor` | 3 | Supervisor de turno | Operativos, novedades, reportes, auditoría |
 | `operador` | 2 | Central de comunicaciones | Registro de novedades, consulta de recursos |
 | `consulta` | 1 | Analista / auditor | Solo lectura de datos y reportes |
 | `usuario_basico` | 0 | Ciudadano / portal externo | Acceso mínimo (futuro) |
@@ -61,22 +63,22 @@ Los permisos son aditivos: un rol hereda sus permisos base y puede recibir permi
 
 **Regla especial:** `super_admin` tiene bypass completo en todas las verificaciones de permisos de campo (field-level RBAC). No requiere slugs individuales asignados en BD.
 
-**Consultar slugs vigentes en BD** (usar antes de implementar cualquier `canPerformAction` o `requirePermission`):
+**Consultar slugs vigentes en BD** (usar antes de implementar cualquier `requirePermission`):
 ```sql
-SELECT slug, descripcion FROM permisos ORDER BY slug;
+SELECT slug, descripcion FROM railway.permisos ORDER BY slug;
 -- filtrar por módulo:
-SELECT slug, descripcion FROM permisos WHERE slug LIKE 'vehiculos.%' ORDER BY slug;
+SELECT slug, descripcion FROM railway.permisos WHERE slug LIKE 'vehiculos.%' ORDER BY slug;
 ```
 
 ### 2.3 Permisos granulares de adjuntos (v2.5.0)
 
-Control de acceso a nivel de campo sobre los adjuntos multimedia de novedades (fotos y audio originados desde la app vecino alerta):
+Control de acceso a nivel de campo sobre los adjuntos multimedia de novedades:
 
-| Slug | Recurso | Acción | Efecto en backend |
-|------|---------|--------|-------------------|
-| `novedades.fotos.viewer` | Fotos | Ver | Expone `fotos_adjuntas` en la respuesta JSON |
-| `novedades.fotos.downloader` | Fotos | Descargar | Solo frontend — controla botón descarga |
-| `novedades.audio.player` | Audio | Reproducir | Expone `parte_adjuntos` en la respuesta JSON |
+| Slug | Recurso | Efecto en backend |
+|------|---------|-------------------|
+| `novedades.fotos.viewer` | Fotos | Expone `fotos_adjuntas` en la respuesta JSON |
+| `novedades.fotos.downloader` | Fotos | Solo frontend — controla botón descarga |
+| `novedades.audio.player` | Audio | Expone `parte_adjuntos` en la respuesta JSON |
 
 **Política por rol:**
 
@@ -108,6 +110,7 @@ Recursos:
   PersonalSeguridad
   Vehiculo
   RadioTetra
+  Taller
 
 Operaciones:
   OperativosTurno (turno de patrullaje)
@@ -118,6 +121,10 @@ Incidentes:
   TipoNovedad → SubtipoNovedad
   Novedad → HistorialEstadoNovedad
 
+Seguridad y auditoría:
+  AuditoriaAccion  (registro de todas las acciones del sistema)
+  PasswordReset    (tokens de recuperación de contraseña)
+
 Soporte operacional:
   AbastecimientoCombustible / Grifo
   MantenimientoVehiculo / Taller
@@ -127,13 +134,7 @@ Soporte operacional:
 
 ### 3.2 Jerarquía geográfica
 
-La unidad operacional mínima es el **Cuadrante**. Todo incidente, vehículo y efectivo es asignado a un cuadrante. Los cuadrantes se agrupan en sectores para reportes y planificación de cobertura.
-
-El **sistema de direcciones dual** permite registrar tanto:
-- Direcciones municipales: `Av. Ejército 450`
-- Sistemas informales: `Mz M Lote 15`
-
-La dirección se valida contra la tabla `CallesCuadrantes` (rangos de numeración por tramo) para asignación automática de cuadrante y sector.
+La unidad operacional mínima es el **Cuadrante**. Todo incidente, vehículo y efectivo es asignado a un cuadrante.
 
 ### 3.3 Ciclo de vida de una novedad (incidente)
 
@@ -145,26 +146,9 @@ PENDIENTE/REPORTADA → DESPACHADA → EN RUTA → EN LUGAR → EN ATENCIÓN →
                                                                          CANCELADA
 ```
 
-La transición entre estados está restringida por rol via `RolEstadoNovedad`. Un `operador` puede reportar y poner en proceso, pero solo un `supervisor` puede cerrar o derivar.
+La transición entre estados está restringida por rol via `RolEstadoNovedad`.
 
-**Clasificación para reportes (v2.5.0):**
-
-| Estado | Clasificación | Aparece en "No Atendidas" |
-|--------|--------------|--------------------------|
-| PENDIENTE / REPORTADA (`es_inicial = 1`) | No atendida | ✅ Sí |
-| DESPACHADA y superiores | En atención / Atendida | ❌ No |
-
-> El criterio es por `estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = 1)`. No se usa presencia/ausencia en tablas de operativos como criterio, ya que generaba falsos positivos.
-
-### 3.4 Estructura de un Operativo
-
-Un `OperativosTurno` agrupa todos los recursos desplegados en un turno:
-
-1. Se crea el turno (fecha, horario, supervisor responsable)
-2. Se asignan vehículos → a cada vehículo se le asignan cuadrantes
-3. Se asigna personal peatonal → a cada efectivo se le asignan cuadrantes
-4. Las novedades (incidentes) se vinculan al recurso que las atendió
-5. Al cierre del turno se generan métricas: incidentes atendidos, cobertura, tiempos
+**Criterio "No Atendidas":** `estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = 1)`. No se usa presencia/ausencia en tablas de operativos.
 
 ---
 
@@ -177,44 +161,19 @@ Un `OperativosTurno` agrupa todos los recursos desplegados en un turno:
 | Runtime | Node.js ≥ 18.0.0 (ES Modules) |
 | Framework | Express.js 5.x |
 | ORM | Sequelize 6.x |
-| Base de datos | MySQL 8.0+ |
+| Base de datos | MySQL 8.0+ (Railway) |
 | Autenticación | JWT (access token 1h + refresh token 7d) |
 | Hashing | bcryptjs |
-| OAuth2 | Passport.js (Google, Microsoft) |
-| 2FA | Speakeasy (TOTP) |
+| Email | Resend SDK (primario) + Nodemailer SMTP (fallback) |
 | Validación | express-validator |
-| Documentación | Swagger UI (swagger-jsdoc) |
+| Documentación | Swagger UI |
 | Logging | Winston + Morgan |
 | Exportación | ExcelJS |
 | Seguridad HTTP | Helmet |
 | Testing | Jest + Supertest |
 | Deploy | Railway (railway.toml) |
 
-### 4.2 Estructura de directorios
-
-```
-src/
-├── app.js                    # Entry point, middleware stack, route loader
-├── config/
-│   └── database.js           # Sequelize config (dev/test/prod), pooling, retry
-├── models/                   # 45+ modelos Sequelize
-├── controllers/              # Lógica de negocio por recurso (45+)
-├── routes/                   # Definición de rutas por módulo (45+)
-│   └── index.routes.js       # Registro centralizado de todas las rutas
-├── services/
-│   ├── geocodingService.js   # Manejo de coordenadas GPS
-│   ├── operativosHelperService.js
-│   └── reportesOperativosService.js
-├── middlewares/
-│   ├── auth.middleware.js    # Verificación JWT
-│   └── permission.middleware.js # Verificación RBAC
-├── validators/               # Esquemas express-validator por recurso
-├── utils/                    # Helpers compartidos
-├── constants/                # Constantes de dominio
-└── seeders/                  # Datos iniciales (roles, permisos, admin)
-```
-
-### 4.3 Variables de entorno requeridas
+### 4.2 Variables de entorno requeridas
 
 ```env
 NODE_ENV=development|production
@@ -227,7 +186,6 @@ DB_USER=
 DB_PASSWORD=
 DB_NAME=citizen_security_v2
 DB_PORT=3306
-DB_LOGGING=false
 
 # JWT
 JWT_SECRET=
@@ -235,52 +193,47 @@ JWT_REFRESH_SECRET=
 JWT_ACCESS_EXPIRATION=1h
 JWT_REFRESH_EXPIRATION=7d
 
-# CORS
-CORS_ORIGIN=http://localhost:5173
+# CORS / Frontend
+FRONTEND_URL=http://localhost:5173          # URL interna (puede ser .railway.internal)
+FRONTEND_PUBLIC_URL=https://mi-app.com     # URL pública para links en emails — OBLIGATORIA
+
+# Email — Resend SDK (preferido en Railway; SMTP está bloqueado)
+RESEND_API_KEY=re_xxxx
+RESEND_FROM_EMAIL=notificaciones@midominio.com
+RESEND_FROM_NAME=CitySecure
+
+# Email — Fallback SMTP (si no hay RESEND_API_KEY)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASSWORD=
 
 # Auth
 BCRYPT_ROUNDS=10
-TWO_FACTOR_APP_NAME=Seguridad Ciudadana
-
-# OAuth (opcional)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-MICROSOFT_CLIENT_ID=
-MICROSOFT_CLIENT_SECRET=
-
-# Frontend
-FRONTEND_URL=http://localhost:5173
 ```
 
-### 4.4 Patrones de implementación establecidos
+### 4.3 Trampas conocidas de producción (Railway + Express 5)
 
-**Soft deletes:** Todas las entidades operacionales tienen `deleted_at` y pueden ser restauradas. Nunca usar `DELETE` físico en producción.
+> Ver sección completa en `CLAUDE.md`. Resumen:
 
-**Auditoría:** Toda acción de escritura se registra en `AuditoriaAccion` con usuario, IP, entidad y payload diferencial.
+| Trampa | Causa | Fix |
+|---|---|---|
+| Express 5 wildcard `"*"` | `path-to-regexp` v8 no acepta wildcard sin nombre | Usar `/(.*)/` o `/{*name}` |
+| `pool.min > 0` | Sequelize abre TCP al importar; DB no lista en cold start | Hardcodear `POOL_MIN = 0` |
+| `uncaughtException` al final | Si hay throw antes del handler, muere silencioso | Mover a las primeras líneas después de imports |
+| Swagger sin try/catch | `readFileSync` puede fallar sincrónicamente | Envolver en try/catch |
+| `app.listen()` dentro de async | El healthcheck falla si se espera a la DB para levantar HTTP | Levantar HTTP primero; DB conecta async |
+| SMTP bloqueado en Railway | Railway bloquea puertos 25/465/587 | Usar Resend SDK (HTTPS 443) |
+| `FRONTEND_URL` interno | `.railway.internal` no es accesible desde emails | Usar `FRONTEND_PUBLIC_URL` para links en emails |
 
-**Paginación estándar:** Todos los endpoints de listado aceptan `?page=1&limit=20` y responden con `{ data: [], total, page, totalPages }`.
+### 4.4 railway.toml
 
-**Respuesta de error estándar:**
-```json
-{
-  "success": false,
-  "message": "Descripción del error",
-  "errors": []
-}
-```
-
-**Respuesta de éxito estándar:**
-```json
-{
-  "success": true,
-  "data": {},
-  "message": "Operación exitosa"
-}
-```
-
-**Middleware de permisos:**
-```js
-router.get('/', authenticate, authorize('modulo.recurso.read'), controller.list)
+```toml
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 120
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
 ```
 
 ---
@@ -291,7 +244,7 @@ router.get('/', authenticate, authorize('modulo.recurso.read'), controller.list)
 
 | Módulo | Base URL | Descripción |
 |--------|----------|-------------|
-| Autenticación | `/api/v1/auth` | Login, registro, tokens, 2FA |
+| Autenticación | `/api/v1/auth` | Login, tokens, recuperación de contraseña |
 | Usuarios | `/api/v1/usuarios` | Gestión de cuentas de sistema |
 | Roles | `/api/v1/roles` | RBAC roles |
 | Permisos | `/api/v1/permisos` | RBAC permisos granulares |
@@ -305,31 +258,60 @@ router.get('/', authenticate, authorize('modulo.recurso.read'), controller.list)
 | Calles | `/api/v1/calles` | Maestro de vías |
 | Calles-Cuadrantes | `/api/v1/calles-cuadrantes` | Tramos de calle por cuadrante |
 | Direcciones | `/api/v1/direcciones` | Direcciones normalizadas |
-| Operativos (turnos) | `/api/v1/operativos` | Turnos de patrullaje |
+| Operativos (turnos) | `/api/v1/operativos-turno` | Turnos de patrullaje |
 | Operativos vehiculares | `/api/v1/operativos-vehiculos` | Vehículos por operativo |
 | Operativos personal | `/api/v1/operativos-personal` | Personal por operativo |
-| Reportes | `/api/v1/reportes-operativos` | Métricas y exportaciones |
+| Reportes operativos | `/api/v1/reportes-operativos` | Métricas y exportaciones |
 | Catálogos | `/api/v1/catalogos` | Datos maestros varios |
 | Radios TETRA | `/api/v1/radios-tetra` | Equipos de radiocomunicación |
 | Abastecimientos | `/api/v1/abastecimientos` | Registro de combustible |
 | Grifos | `/api/v1/grifos` | Proveedores de combustible |
 | Mantenimientos | `/api/v1/mantenimientos` | Mantenimiento vehicular |
 | Talleres | `/api/v1/talleres` | Talleres mecánicos |
-| Ubigeo | `/api/v1/ubigeo` | Geografía Perú |
-| Auditoría | `/api/v1/auditoria` | Logs de acciones |
-| Configuración | `/api/v1/config` | Configuración del sistema |
+| Ubigeo | `/api/v1/ubigeo` | Geografía Perú (1,875 registros) |
+| Auditoría | `/api/v1/auditoria` | Logs de acciones del sistema |
 | Horarios de turno | `/api/v1/horarios-turnos` | Horarios disponibles |
 
 ### 5.2 Endpoints críticos de negocio
 
 #### Autenticación
 ```
-POST /api/v1/auth/login          → { accessToken, refreshToken, user }
-POST /api/v1/auth/refresh         → { accessToken }
+POST /api/v1/auth/login                → { accessToken, refreshToken, user }
+POST /api/v1/auth/refresh              → { accessToken }
 POST /api/v1/auth/logout
-POST /api/v1/auth/forgot-password
+POST /api/v1/auth/forgot-password      → Envía email con link de reset (Resend SDK)
+POST /api/v1/auth/reset-password       → Valida token + actualiza contraseña
 GET  /api/v1/auth/profile
 ```
+
+**Flujo recuperación de contraseña:**
+1. Frontend POST `/auth/forgot-password` con `{ email }`
+2. Backend busca usuario, genera token en `password_resets`, envía email via Resend SDK
+3. Email incluye link `FRONTEND_PUBLIC_URL/reset-password?token=xxx&email=yyy`
+4. Frontend POST `/auth/reset-password` con `{ token, email, newPassword }`
+5. Backend valida token, actualiza contraseña, invalida token
+
+El backend **siempre responde 200** aunque el email no exista (no revelar existencia).
+
+#### Auditoría
+```
+GET /api/v1/auditoria                        → Lista paginada con filtros
+GET /api/v1/auditoria/stats                  → Estadísticas agregadas
+GET /api/v1/auditoria/mi-actividad           → Actividad del usuario actual
+GET /api/v1/auditoria/export/csv             → CSV hasta 10,000 registros
+GET /api/v1/auditoria/entidad/:entidad/:id   → Historial de una entidad
+GET /api/v1/auditoria/:id                    → Registro individual
+```
+
+**Acceso:** `supervisor`, `admin`, `super_admin`
+
+**Filtros disponibles en `GET /api/v1/auditoria`:**
+`fecha_inicio`, `fecha_fin`, `usuario_id`, `accion`, `entidad_tipo`, `modulo`, `severidad`, `resultado`, `page`, `limit` (máx 100)
+
+**Valores válidos:**
+- `accion`: CREATE | UPDATE | DELETE | LOGIN | LOGOUT | LOGIN_FAILED | PASSWORD_CHANGE | EXPORT | IMPORT | VIEW
+- `severidad`: BAJA | MEDIA | ALTA | CRITICA
+- `resultado`: EXITO | FALLO | DENEGADO *(nota: el enum en BD usa estos valores, no EXITOSO/FALLIDO/PARCIAL)*
 
 #### Novedades (core del negocio)
 ```
@@ -339,91 +321,30 @@ GET    /api/v1/novedades/:id                      → Detalle con historial de e
 POST   /api/v1/novedades                          → Crear incidente
 PUT    /api/v1/novedades/:id                      → Actualizar
 POST   /api/v1/novedades/:id/cambiar-estado       → Transición de estado (RBAC)
-POST   /api/v1/novedades/:id/asignar-recursos     → Asignar personal/vehículo
 GET    /api/v1/novedades/:id/historial-estados    → Trazabilidad completa
 DELETE /api/v1/novedades/:id                      → Soft delete
 ```
 
 #### Operativos
 ```
-POST /api/v1/operativos                                               → Crear turno
-GET  /api/v1/operativos/combinados                                    → Vista unificada
-POST /api/v1/operativos/:turnoId/vehiculos                            → Asignar vehículo
-POST /api/v1/operativos/:turnoId/vehiculos/:vId/cuadrantes            → Asignar cuadrante
-POST /api/v1/operativos/:turnoId/vehiculos/:vId/cuadrantes/:cId/novedades → Vincular novedad
-POST /api/v1/operativos/:turnoId/personal                             → Asignar efectivo
-POST /api/v1/operativos/:turnoId/personal/:pId/cuadrantes             → Asignar cuadrante
-```
-
-#### Direcciones (módulo v2.4.0)
-```
-POST /api/v1/direcciones/validar          → Validar sin persistir
-POST /api/v1/calles-cuadrantes/buscar-cuadrante → Auto-asignación por número
-GET  /api/v1/calles/autocomplete?q=       → Sugerencias de calle
-GET  /api/v1/direcciones/stats/mas-usadas → Hot spots
-PATCH /api/v1/direcciones/:id/geocodificar → Actualizar coordenadas GPS
+POST /api/v1/operativos-turno
+GET  /api/v1/operativos-turno/combinados
+POST /api/v1/operativos-vehiculos/:turnoId/vehiculos
+POST /api/v1/operativos-vehiculos/:turnoId/vehiculos/:vId/cuadrantes
+POST /api/v1/operativos-personal/:turnoId/personal
+POST /api/v1/operativos-personal/:turnoId/personal/:pId/cuadrantes
 ```
 
 #### Reportes
 ```
-GET /api/v1/reportes-operativos/vehiculares                  → Listado de operativos vehiculares
-GET /api/v1/reportes-operativos/vehiculares/resumen          → Estadísticas agregadas
-GET /api/v1/reportes-operativos/vehiculares/exportar         → Descarga Excel/CSV vehiculares
-GET /api/v1/reportes-operativos/vehiculares/estadisticas     → Analytics avanzados
-GET /api/v1/reportes-operativos/vehiculares/metrics          → KPIs de rendimiento
-GET /api/v1/reportes-operativos/combinados                   → Vista combinada (vehicular + pie + no atendidas)
-GET /api/v1/reportes-operativos/combinados/exportar          → Excel/CSV combinado (roles: admin, supervisor, super_admin)
-GET /api/v1/reportes-operativos/novedades-no-atendidas       → Solo novedades en estado PENDIENTE
-GET /api/v1/reportes-operativos/dashboard                    → KPIs integrados de todos los operativos
+GET /api/v1/reportes-operativos/vehiculares
+GET /api/v1/reportes-operativos/vehiculares/resumen
+GET /api/v1/reportes-operativos/vehiculares/exportar
+GET /api/v1/reportes-operativos/combinados
+GET /api/v1/reportes-operativos/combinados/exportar
+GET /api/v1/reportes-operativos/novedades-no-atendidas
+GET /api/v1/reportes-operativos/dashboard
 ```
-
-**Parámetros del exportar combinado:**
-```
-?fecha_inicio=2026-05-15&fecha_fin=2026-05-22&formato=excel&limit=1000
-```
-Responde blob `.xlsx` con columnas en orden fijo: `TIPO OPERATIVO | ID_TURNO | NOVEDAD CODE | NOVEDAD ID | ...resto`
-
----
-
-## 5b. Adjuntos Multimedia en Novedades (v2.5.0)
-
-### Campos en `novedades_incidentes`
-
-| Campo | Tipo BD | Descripción |
-|-------|---------|-------------|
-| `fotos_adjuntas` | JSON | Array de objetos `{ url, nombre, tipo, tamaño_bytes }` |
-| `parte_adjuntos` | JSON | Array de objetos `{ url, nombre, tipo, tamaño_bytes, duracion_seg }` — incluye audios |
-| `videos_adjuntos` | JSON | Reservado para uso futuro |
-
-### Flujo de ingesta (app vecino alerta)
-
-```
-city_sec_alert (app móvil)
-    │  graba fotos + audio
-    ▼
-Supabase Storage  ←── URLs públicas permanentes (bucket: denuncias, path: YYYY/MM/DD/*)
-    │  retorna URLs
-    ▼
-voice_gateway  ←── transcribe voz con Wispr Flow + Claude AI → construye payload
-    │  POST /api/v1/novedades
-    ▼
-CitySec Backend  ←── persiste fotos_adjuntas y parte_adjuntos como JSON
-```
-
-`origen_llamada` para este flujo: `BOTON_DENUNCIA_VECINO_ALERTA`
-
-### Comportamiento de campo-level RBAC
-
-El controlador aplica `filtrarAdjuntosPorPermiso()` en `getAllNovedades` y `getNovedadById`:
-- Sin `novedades.fotos.viewer` → `fotos_adjuntas: null` en la respuesta
-- Sin `novedades.audio.player` → `parte_adjuntos: null` en la respuesta
-- Con rol `super_admin` → bypass total, siempre devuelve los campos
-
-### Documentación relacionada
-
-- `docs/VOICE_GATEWAY_ADJUNTOS_NOVEDADES.md` — spec de integración para voice_gateway
-- `docs/FRONTEND_Adjuntos_Novedades.md` — cómo renderizar fotos y audio en frontend
-- `docs/FRONTEND_RBAC_Adjuntos_Novedades.md` — política RBAC y código de ejemplo por rol
 
 ---
 
@@ -431,225 +352,112 @@ El controlador aplica `filtrarAdjuntosPorPermiso()` en `getAllNovedades` y `getN
 
 ### 6.1 Seguridad
 
-- Todas las rutas (excepto `/auth/login`, `/auth/register`, `/health`, catálogos públicos) requieren JWT válido
-- Tokens de acceso expiran en 1h; refresh tokens en 7d
+- Todas las rutas requieren JWT válido (excepto `/auth/login`, `/auth/forgot-password`, `/auth/reset-password`, `/health`, catálogos públicos)
+- Tokens de acceso: 1h; refresh: 7d
 - Contraseñas hasheadas con bcryptjs (10 rounds mínimo)
-- Rate limiting implícito via middleware de timeout (30s por request)
 - Headers de seguridad via Helmet
-- CORS restringido a origins whitelistados
-- Registro de intentos de login fallidos en `LoginIntento`
-- 2FA via TOTP disponible pero opcional
+- CORS restringido a origins configurados
+- `AuditoriaAccion` registra toda acción de escritura con usuario, IP, entidad y payload diferencial
+- Railway bloquea puertos SMTP — usar Resend SDK para emails
 
 ### 6.2 Performance
 
-- Connection pooling configurado en `database.js`
-- Compresión de respuestas habilitada
-- Índices de base de datos en campos de búsqueda frecuente (fecha, sector, estado)
+- `pool.min = 0` hardcodeado (lazy pool — no abre TCP en import)
 - Paginación obligatoria en endpoints de listado
+- Índices en `auditoria_acciones`: `created_at`, `usuario_id`, `accion`, `modulo`, `severidad`, `resultado`, `(entidad_tipo, entidad_id)`, `(usuario_id, created_at)`
 
 ### 6.3 Observabilidad
 
 - Logs de requests via Morgan
-- Logs de aplicación via Winston (niveles: error, warn, info, debug)
-- Endpoint de health check: `GET /api/v1/health` → `{ status, db, uptime, memory }`
+- Logs de aplicación via Winston
+- `GET /health` — respuesta liviana sin DB, usado por Railway healthcheck
+- `GET /api/v1/health` — con estado de DB
 - Audit trail completo en `AuditoriaAccion`
 
-### 6.4 Disponibilidad
+### 6.4 Deploy (Railway)
 
-- Graceful shutdown en SIGTERM/SIGINT
-- Retry logic en conexión a base de datos (máx 3 intentos)
-- Timeout de 30s por request (SSE excluido)
+- HTTP server levanta **antes** que la conexión a DB (healthcheck no depende de DB)
+- `process.on("uncaughtException")` al inicio del `app.js` (antes de cualquier setup)
+- Swagger en try/catch (no fatal si falla)
+- `railway.toml` con healthcheckPath `/health`, timeout 120s
 
 ---
 
-## 7. Especificaciones por Módulo para Desarrollo
+## 7. Bugs conocidos / corregidos
 
-### 7.1 Convenciones para nuevos módulos
+### v2.6.0 (2026-05-25)
 
-Todo nuevo módulo debe seguir el patrón:
-
-```
-src/routes/[nombre].routes.js          → Definición de rutas con Swagger JSDoc
-src/controllers/[nombre]Controller.js  → Lógica de negocio
-src/models/[Nombre].js                 → Modelo Sequelize con timestamps y paranoid
-src/validators/[nombre].validators.js  → Esquemas express-validator
-```
-
-Registro en `src/routes/index.routes.js`:
-```js
-import [nombre]Routes from './[nombre].routes.js'
-router.use('/[nombre]', [nombre]Routes)
-```
-
-### 7.2 Plantilla de modelo Sequelize
-
-```js
-import { DataTypes } from 'sequelize'
-import sequelize from '../config/database.js'
-
-const NombreModelo = sequelize.define('NombreModelo', {
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  // ... campos
-  estado: { type: DataTypes.BOOLEAN, defaultValue: true },
-  created_by: { type: DataTypes.INTEGER },
-  updated_by: { type: DataTypes.INTEGER },
-}, {
-  tableName: 'nombre_tabla',
-  paranoid: true,        // soft delete via deletedAt
-  timestamps: true,      // createdAt, updatedAt, deletedAt
-  underscored: true,     // snake_case en BD
-})
-
-export default NombreModelo
-```
-
-### 7.3 Plantilla de controlador
-
-```js
-export const list = async (req, res) => {
-  try {
-    const { page = 1, limit = 20, ...filters } = req.query
-    const offset = (page - 1) * limit
-    const { count, rows } = await Modelo.findAndCountAll({
-      where: buildWhereClause(filters),
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      order: [['created_at', 'DESC']],
-    })
-    return res.json({
-      success: true,
-      data: rows,
-      total: count,
-      page: parseInt(page),
-      totalPages: Math.ceil(count / limit),
-    })
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message })
-  }
-}
-```
-
-### 7.4 Plantilla de ruta
-
-```js
-import { Router } from 'express'
-import { authenticate } from '../middlewares/auth.middleware.js'
-import { authorize } from '../middlewares/permission.middleware.js'
-import * as controller from '../controllers/nombreController.js'
-
-const router = Router()
-
-/**
- * @swagger
- * /api/v1/nombre:
- *   get:
- *     tags: [Nombre]
- *     summary: Listar recursos
- *     security:
- *       - bearerAuth: []
- */
-router.get('/', authenticate, authorize('modulo.recurso.read'), controller.list)
-
-export default router
-```
+| Bug | Causa | Fix |
+|---|---|---|
+| `GET /auditoria/:id` devuelve 500 | `const AuditoriaAccion = await AuditoriaAccion.findByPk(...)` — variable shadowing causa ReferenceError (Temporal Dead Zone) | Renombrada a `const registro` en `auditoriaAccionController.js` |
+| Email de reset apunta a URL interna | `FRONTEND_URL` en Railway apunta a `.railway.internal` | Nueva variable `FRONTEND_PUBLIC_URL` para links en emails |
+| Email 30s timeout | Puertos SMTP bloqueados en Railway; nodemailer espera 30s antes de tirar error | Migración a Resend SDK (HTTPS 443) + timeouts explícitos en nodemailer como fallback |
+| Deploy crashea silenciosamente | `app.options("*")` lanza TypeError en Express 5 (`path-to-regexp` v8 no acepta wildcard suelto) | `app.options(/(.*)/,  cors(corsOptions))` |
 
 ---
 
 ## 8. Roadmap y Features Pendientes
 
-### 8.1 Estado actual (v2.5.0)
+### 8.1 Estado actual (v2.6.0)
 
 - [x] RBAC completo con permisos granulares
 - [x] Gestión de novedades con workflow de estados
 - [x] Operativos vehiculares y peatonales
 - [x] Sistema de direcciones dual (municipal + Mz/Lote)
-- [x] Auto-asignación de cuadrante por dirección
-- [x] Reportes de operativos vehiculares (fase 1)
+- [x] Reportes de operativos vehiculares
 - [x] Exportación Excel/CSV
-- [x] Auditoría de acciones
+- [x] Auditoría de acciones (`AuditoriaAccion`) con panel de consulta en frontend
 - [x] Gestión de combustible y mantenimientos
 - [x] TETRA radio management
 - [x] Swagger UI
-- [x] Health check endpoint
-- [x] **Adjuntos multimedia en novedades** — fotos y audio desde app vecino alerta via Supabase
-- [x] **RBAC field-level para adjuntos** — viewer / downloader / player por rol
-- [x] **Integración voice_gateway** — flujo city_sec_alert → Supabase → voice_gateway → CitySec
-- [x] **Reporte combinado exportar** — Excel con vehiculares + pie + no atendidas en un archivo
-- [x] **Fix criterio novedades no atendidas** — solo estado PENDIENTE (es_inicial=1)
+- [x] Health check endpoint (liviano, sin DB)
+- [x] Adjuntos multimedia en novedades (fotos y audio desde app vecino alerta)
+- [x] RBAC field-level para adjuntos
+- [x] Integración voice_gateway
+- [x] Reporte combinado exportar
+- [x] Fix criterio novedades no atendidas (solo estado PENDIENTE)
+- [x] **Recuperación de contraseña** — forgot-password + reset-password + email via Resend SDK
+- [x] **Fix deploy Railway** — Express 5 wildcard, pool.min=0, uncaughtException al inicio, swagger try/catch
 
 ### 8.2 Features identificadas para implementar
 
-#### Fase 2 — Reportes ampliados
-- [x] Reporte combinado exportar: vehicular + pie + no atendidas
+#### Seguridad (alta prioridad)
+- [ ] Registro de intentos de login fallidos en `login_intentos` (3 TODOs en `authController.js`)
+- [ ] Refresh token persistido en `tokens_acceso` (3 TODOs en `authController.js`)
+- [ ] Sesión eliminada al logout en tabla `sesiones` (TODO en `authController.js`)
+- [ ] Historial de contraseñas en `password_historial` (evitar reutilización)
+
+#### Reportes ampliados
 - [ ] Dashboard de cobertura geográfica (heatmap por cuadrante)
 - [ ] Reporte de tiempos de respuesta por tipo de novedad
 - [ ] Métricas de efectivo: novedades atendidas, horas operativas
 
-#### Fase 3 — Tiempo real
-- [x] Notificaciones SSE para despacho de novedades (evento `nueva_novedad`)
+#### Tiempo real
+- [x] Notificaciones SSE para despacho de novedades
 - [ ] Tracking de posición de vehículos en tiempo real
-- [ ] Alertas automáticas por tipo de novedad crítica
 - [ ] WebSocket para actualización de estado de operativos
 
-#### Fase 4 — Integraciones externas
-- [x] Integración voice_gateway — recepción de denuncias con fotos y audio desde app vecino
-- [ ] Integración con sistema PNP (derivación de novedades)
-- [ ] Integración con Bomberos (novedades de emergencia)
-- [ ] API pública ciudadana (portal de denuncias)
-- [ ] Integración con cámaras de videovigilancia
-
-#### Fase 5 — Analytics
-- [ ] Predicción de zonas de riesgo (ML)
-- [ ] Optimización de cobertura por cuadrante
-- [ ] Historial de incidentes por dirección (reincidencia)
-- [ ] Correlación novedad-tiempo-clima
+#### Integraciones externas
+- [x] Integración voice_gateway
+- [ ] Integración con sistema PNP
+- [ ] API pública ciudadana
 
 ### 8.3 Deuda técnica conocida
 
 - [ ] Tests unitarios e integración: cobertura parcial
-- [ ] Migración a TypeScript (consideración a largo plazo)
-- [ ] Documentación Swagger incompleta en algunos endpoints nuevos
-- [ ] Validadores pendientes para módulo de calles v2.4.0
-- [ ] Índices de BD no revisados para queries de reportes complejos
-- [ ] Seeder `seedRBAC.js` debe re-ejecutarse en BD de producción para asignar los 3 nuevos slugs de adjuntos a roles distintos de `super_admin`
+- [ ] Swagger desactualizado en endpoints nuevos (forgot-password, reset-password, auditoría)
+- [ ] Validador de `resultado` en `GET /auditoria` acepta EXITOSO/FALLIDO/PARCIAL pero el ENUM de BD es EXITO/FALLO/DENEGADO — inconsistencia sin impacto actual (todos los registros son EXITO)
+- [ ] Seeder `seedRBAC.js` debe re-ejecutarse en BD de producción para los 3 slugs de adjuntos
 
 ---
 
-## 9. Spec-Driven Development — Guía de Implementación
+## 9. Historial de versiones
 
-### 9.1 Proceso para nuevos features
-
-1. **Spec primero:** Definir el endpoint en este PRD (sección 5 o 8) antes de codificar
-2. **Modelo:** Crear o extender modelos Sequelize con migración
-3. **Validador:** Definir reglas de validación en `/validators`
-4. **Controlador:** Implementar lógica de negocio con manejo de errores estándar
-5. **Ruta:** Registrar con middleware de auth/permisos + JSDoc Swagger
-6. **Tests:** Escribir test de integración contra BD de test
-7. **Actualizar PRD:** Marcar el feature como completado y actualizar el endpoint si cambió
-
-### 9.2 Checklist para cada endpoint nuevo
-
-- [ ] Autenticación requerida (`authenticate`)
-- [ ] Permiso RBAC definido (`authorize('modulo.recurso.accion')`)
-- [ ] Validación de input con express-validator
-- [ ] Paginación si es listado
-- [ ] Soft delete si aplica (no hard delete)
-- [ ] Registro en AuditoriaAccion para escrituras
-- [ ] Respuesta en formato estándar `{ success, data, message }`
-- [ ] Swagger JSDoc documentado
-- [ ] Test de integración
-
-### 9.3 Naming conventions
-
-| Elemento | Convención | Ejemplo |
-|----------|-----------|---------|
-| Tabla BD | snake_case plural | `operativos_vehiculos` |
-| Modelo Sequelize | PascalCase singular | `OperativosVehiculos` |
-| Archivo modelo | PascalCase.js | `OperativosVehiculos.js` |
-| Archivo controlador | camelCaseController.js | `operativosVehiculosController.js` |
-| Archivo ruta | kebab-case.routes.js | `operativos-vehiculos.routes.js` |
-| URL de endpoint | kebab-case plural | `/api/v1/operativos-vehiculos` |
-| Permiso RBAC | dot.notation | `operativos.vehiculos.read` |
+| Versión | Fecha | Cambios principales |
+|---------|-------|---------------------|
+| 2.6.0 | 2026-05-25 | Recuperación de contraseña (forgot + reset) con Resend SDK; fix crítico deploy Railway (Express 5 wildcard, pool.min, uncaughtException); fix 500 en GET /auditoria/:id (variable shadowing); nueva variable FRONTEND_PUBLIC_URL |
+| 2.5.0 | 2026-05-21 | Adjuntos multimedia en novedades; RBAC field-level; integración voice_gateway; reporte combinado exportar; fix novedades no atendidas |
+| 2.4.x | 2026-05-13 | Sistema de direcciones dual; módulo calles/cuadrantes v2; SSE tiempo real; reportes operativos fase 1 |
 
 ---
 
@@ -658,16 +466,17 @@ export default router
 ### Admin inicial (seed)
 ```
 username: admin
-email: admin@citysec.com
+email:    admin@citysec.com
 password: Admin123!
-rol: super_admin
+rol:      super_admin
 ```
 
-### Endpoint de documentación
+### Endpoints de referencia
 ```
-GET /api/v1/docs    → Swagger UI
-GET /api/v1/health  → Health check
-GET /api/v1/        → Info API y módulos disponibles
+GET /health          → Healthcheck liviano (Railway)
+GET /api/v1/health   → Health con estado de DB
+GET /api/v1/docs     → Swagger UI
+GET /api/v1/         → Info API y módulos
 ```
 
 ---
@@ -687,17 +496,4 @@ GET /api/v1/        → Info API y módulos disponibles
 | Ubigeo | Código geográfico del Perú (INEI) |
 | Cargo | Puesto o posición laboral del efectivo |
 | Unidad Oficina | Institución operacional (SERENAZGO, PNP, BOMBEROS, AMBULANCIA) |
-| Subsector | Subdivisión de sector para granularidad operativa |
-
----
-
----
-
-## 12. Historial de versiones
-
-| Versión | Fecha | Cambios principales |
-|---------|-------|---------------------|
-| 2.5.0 | 2026-05-21 | Adjuntos multimedia (fotos+audio) en novedades; RBAC field-level; integración voice_gateway; reporte combinado exportar; fix novedades no atendidas (criterio PENDIENTE) |
-| 2.4.x | 2026-05-13 | Sistema de direcciones dual; módulo calles/cuadrantes v2; SSE tiempo real; reportes operativos fase 1 |
-
-*Mantener actualizado con cada release.*
+| Auditoría | Registro automático de toda acción del sistema en `auditoria_acciones` |
