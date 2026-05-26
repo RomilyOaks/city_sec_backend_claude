@@ -107,7 +107,7 @@ export const getAuditoriaAccionById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const AuditoriaAccion = await AuditoriaAccion.findByPk(id, {
+    const registro = await AuditoriaAccion.findByPk(id, {
       include: [
         {
           model: Usuario,
@@ -117,7 +117,7 @@ export const getAuditoriaAccionById = async (req, res) => {
       ],
     });
 
-    if (!AuditoriaAccion) {
+    if (!registro) {
       return res.status(404).json({
         success: false,
         message: "Registro de auditoría no encontrado",
@@ -126,7 +126,7 @@ export const getAuditoriaAccionById = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: AuditoriaAccion,
+      data: registro,
     });
   } catch (error) {
     console.error("Error al obtener auditoría:", error);
