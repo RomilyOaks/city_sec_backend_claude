@@ -5,13 +5,14 @@
  *
  * Ruta: src/routes/novedades.routes.js
  *
- * VERSIÓN: 2.0.0
- * FECHA: 2025-12-14
+ * VERSIÓN: 2.1.0
+ * FECHA: 2026-05-27
  *
  * CAMBIOS EN ESTA VERSIÓN:
- * ✅ Actualizado import de validadores a validators/
- * ✅ Arquitectura consistente con personal.routes.js
- * ✅ Documentación mejorada
+ * ✅ v2.1.0: Documentado evento SSE 'vehiculo:posicion' (Tracking GPS)
+ *            con catálogo completo de eventos y snippet para el frontend
+ * ✅ v2.0.0: Actualizado import de validadores a validators/
+ * ✅ v2.0.0: Arquitectura consistente con personal.routes.js
  *
  * Descripción:
  * Define los endpoints REST para gestión de novedades e incidentes
@@ -115,12 +116,55 @@ router.get(
   }
 );
 
-/**@@
+/**
  * @route   GET /api/v1/novedades/stream
- * @desc    Endpoint SSE — mantiene conexión abierta y emite eventos en tiempo real.
- * El frontend se conecta una sola vez y recibe actualizaciones instantáneas.
+ * @desc    Endpoint SSE — canal unificado de eventos en tiempo real.
+ *          El dashboard se conecta UNA SOLA VEZ y recibe todos los eventos
+ *          del servidor mediante Server-Sent Events.
  *
- * Requiere autenticación JWT igual que el resto de endpoints.
+ * @access  Cualquier usuario autenticado (JWT vía header Authorization o
+ *          query param ?token=<jwt> para clientes que no pueden enviar headers)
+ *
+ * CATÁLOGO DE EVENTOS EMITIDOS:
+ * ─────────────────────────────────────────────────────────────────────
+ * event: connected
+ *   → Confirmación de conexión exitosa
+ *   data: { message, clientId, timestamp }
+ *
+ * event: nueva_novedad
+ *   → Nuevo incidente registrado (desde la app ciudadana o el dashboard)
+ *   data: { id, tipo, subtipo, descripcion, latitud, longitud, ... }
+ *
+ * event: estado_novedad
+ *   → Cambio de estado en una novedad existente
+ *   data: { novedad_id, estado_anterior, estado_nuevo, ... }
+ *
+ * event: vehiculo:posicion       ← TRACKING GPS (v1.0.0)
+ *   → Posición GPS actualizada de un vehículo de patrullaje.
+ *     Emitido por POST /api/v1/tracking/ubicacion cada vez que
+ *     la app "CitySecure Tracking Patrol Units" envía una nueva posición.
+ *   data: {
+ *     vehiculo_id: number,   // ID del vehículo
+ *     placa:       string,   // Ej: "ABC-123"
+ *     lat:         number,   // Latitud GPS (decimal)
+ *     lng:         number,   // Longitud GPS (decimal)
+ *     velocidad:   number|null, // km/h (null si no disponible)
+ *     timestamp:   string,   // ISO 8601 UTC
+ *   }
+ *
+ * NOTAS PARA EL FRONTEND (uso de EventSource):
+ * ─────────────────────────────────────────────────────────────────────
+ *   const es = new EventSource('/api/v1/novedades/stream?token=<jwt>');
+ *
+ *   es.addEventListener('nueva_novedad',     (e) => { ... JSON.parse(e.data) ... });
+ *   es.addEventListener('estado_novedad',    (e) => { ... });
+ *   es.addEventListener('vehiculo:posicion', (e) => {
+ *     const { vehiculo_id, placa, lat, lng, velocidad, timestamp } = JSON.parse(e.data);
+ *     // Actualizar marcador en el mapa del dashboard
+ *   });
+ *
+ * Heartbeat: el servidor envía ": heartbeat\n\n" cada 30 s para
+ * mantener la conexión viva en proxies (Railway/Nginx).
  */
 router.get("/stream", (req, res) => {
   // ── Configurar headers SSE ──────────────────────────────────────────────────
