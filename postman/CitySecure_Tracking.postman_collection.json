@@ -1,0 +1,585 @@
+{
+  "info": {
+    "_postman_id": "cs-tracking-gps-v1-2026",
+    "name": "CitySecure - Tracking GPS",
+    "description": "Colección de endpoints del módulo de rastreo GPS en tiempo real de vehículos de patrullaje.\n\n**App origen:** CitySecure Tracking Patrol Units (app móvil de serenos)\n\n**Flujo básico:**\n1. Obtener token vía `POST /auth/login`\n2. Copiar el accessToken en la variable `{{token}}`\n3. Ejecutar los requests en orden\n\n**Coordenadas de prueba:** Distrito de Chorrillos, Lima, Perú\n- `lat: -12.1628`, `lng: -77.0135`\n\n**Documentación completa:** `TRACKING_SETUP.md` en la raíz del proyecto.\n\n**Permisos RBAC requeridos:**\n- `tracking.vehiculos.update` → POST /ubicacion\n- `tracking.vehiculos.read`  → GET activos / ruta / vehiculos-cercanos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string",
+      "description": "URL base de la API. Cambiar a la URL de Railway para producción."
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT de acceso. Obtener con POST /auth/login y pegar el accessToken aquí."
+    },
+    {
+      "key": "vehiculo_id",
+      "value": "1",
+      "type": "string",
+      "description": "ID del vehículo de prueba"
+    },
+    {
+      "key": "novedad_id",
+      "value": "1",
+      "type": "string",
+      "description": "ID de la novedad de prueba para calcular vehículos cercanos"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Actualizar posición GPS",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"vehiculo_id\": 1,\n  \"lat\": -12.1628,\n  \"lng\": -77.0135,\n  \"velocidad\": 35.5,\n  \"precision_gps\": 4.2,\n  \"bateria_dispositivo\": 85\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/tracking/ubicacion",
+          "host": ["{{base_url}}"],
+          "path": ["tracking", "ubicacion"]
+        },
+        "description": "Recibe y persiste la posición GPS actual de un vehículo de patrullaje.\n\n**Acciones:**\n- UPSERT en `tracking_vehiculos` (snapshot de última posición)\n- INSERT en `tracking_historial` (registro histórico)\n- Emite evento SSE `vehiculo:posicion` al dashboard\n\n**Rate limit:** 1 request cada 3 segundos por `vehiculo_id`\n\n**Permiso requerido:** `tracking.vehiculos.update`\n\n**Campos opcionales:** `velocidad`, `precision_gps`, `bateria_dispositivo`"
+      },
+      "response": [
+        {
+          "name": "200 — Posición actualizada (primer registro)",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Posición actualizada correctamente\",\n  \"data\": {\n    \"vehiculo_id\": 1,\n    \"placa\": \"ABC-123\",\n    \"lat\": -12.1628,\n    \"lng\": -77.0135,\n    \"updated_at\": \"2026-05-27T10:30:00.000Z\"\n  }\n}",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Content-Type",  "value": "application/json",  "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehiculo_id\": 1,\n  \"lat\": -12.1628,\n  \"lng\": -77.0135,\n  \"velocidad\": 35.5,\n  \"precision_gps\": 4.2,\n  \"bateria_dispositivo\": 85\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tracking/ubicacion",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "ubicacion"]
+            }
+          }
+        },
+        {
+          "name": "429 — Rate limit excedido",
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"Demasiadas solicitudes para el vehículo 1. Espere 2 segundo(s).\",\n  \"data\": {\n    \"retryAfter\": 2\n  }\n}",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Content-Type",  "value": "application/json",  "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehiculo_id\": 1,\n  \"lat\": -12.1628,\n  \"lng\": -77.0135\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tracking/ubicacion",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "ubicacion"]
+            }
+          }
+        },
+        {
+          "name": "400 — Validación fallida (lat fuera de rango)",
+          "status": "Bad Request",
+          "code": 400,
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"Error de validación\",\n  \"errors\": [\n    {\n      \"field\": \"lat\",\n      \"message\": \"La latitud debe estar entre -90 y 90\"\n    }\n  ]\n}",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Content-Type",  "value": "application/json",  "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehiculo_id\": 1,\n  \"lat\": 999,\n  \"lng\": -77.0135\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tracking/ubicacion",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "ubicacion"]
+            }
+          }
+        }
+      ],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response tiene success = true', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.success).to.be.true;",
+              "});",
+              "",
+              "pm.test('Response contiene vehiculo_id, placa, lat, lng', function () {",
+              "    const data = pm.response.json().data;",
+              "    pm.expect(data).to.have.property('vehiculo_id');",
+              "    pm.expect(data).to.have.property('placa');",
+              "    pm.expect(data).to.have.property('lat');",
+              "    pm.expect(data).to.have.property('lng');",
+              "    pm.expect(data).to.have.property('updated_at');",
+              "});",
+              "",
+              "pm.test('Lat y lng son números', function () {",
+              "    const data = pm.response.json().data;",
+              "    pm.expect(data.lat).to.be.a('number');",
+              "    pm.expect(data.lng).to.be.a('number');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Listar vehículos activos",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/tracking/activos",
+          "host": ["{{base_url}}"],
+          "path": ["tracking", "activos"]
+        },
+        "description": "Devuelve todos los vehículos con posición GPS actualizada en los **últimos 10 minutos**.\n\nIncluye datos del vehículo, tipo, personal conductor y operativo/turno activo.\n\n**Permiso requerido:** `tracking.vehiculos.read`\n\n**Tip:** Para que aparezcan vehículos, primero ejecutar el request \"1. Actualizar posición GPS\" (el vehículo queda activo durante 10 minutos)."
+      },
+      "response": [
+        {
+          "name": "200 — Vehículos activos",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Vehículos activos obtenidos correctamente\",\n  \"data\": {\n    \"total\": 2,\n    \"vehiculos\": [\n      {\n        \"vehiculo_id\": 1,\n        \"placa\": \"ABC-123\",\n        \"tipo\": \"Patrullero\",\n        \"lat\": -12.1628,\n        \"lng\": -77.0135,\n        \"velocidad\": 35.5,\n        \"precision_gps\": 4.2,\n        \"bateria_dispositivo\": 85,\n        \"personal\": {\n          \"id\": 5,\n          \"nombre\": \"Juan Pérez\"\n        },\n        \"operativo\": {\n          \"id\": 101,\n          \"turno\": \"MAÑANA\",\n          \"fecha\": \"2026-05-27\"\n        },\n        \"ultima_actualizacion\": \"2026-05-27T10:30:00.000Z\",\n        \"minutos_sin_actualizar\": 2\n      },\n      {\n        \"vehiculo_id\": 3,\n        \"placa\": \"XYZ-789\",\n        \"tipo\": \"Motocicleta\",\n        \"lat\": -12.1701,\n        \"lng\": -77.0198,\n        \"velocidad\": 0,\n        \"precision_gps\": 6.1,\n        \"bateria_dispositivo\": 62,\n        \"personal\": null,\n        \"operativo\": null,\n        \"ultima_actualizacion\": \"2026-05-27T10:28:00.000Z\",\n        \"minutos_sin_actualizar\": 4\n      }\n    ]\n  }\n}",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/activos",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "activos"]
+            }
+          }
+        },
+        {
+          "name": "200 — Sin vehículos activos",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Vehículos activos obtenidos correctamente\",\n  \"data\": {\n    \"total\": 0,\n    \"vehiculos\": []\n  }\n}",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/activos",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "activos"]
+            }
+          }
+        }
+      ],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response tiene success = true', function () {",
+              "    pm.expect(pm.response.json().success).to.be.true;",
+              "});",
+              "",
+              "pm.test('data.vehiculos es un array', function () {",
+              "    const data = pm.response.json().data;",
+              "    pm.expect(data.vehiculos).to.be.an('array');",
+              "    pm.expect(data).to.have.property('total');",
+              "});",
+              "",
+              "pm.test('Cada vehículo tiene lat, lng y placa', function () {",
+              "    const vehiculos = pm.response.json().data.vehiculos;",
+              "    vehiculos.forEach(v => {",
+              "        pm.expect(v).to.have.property('lat');",
+              "        pm.expect(v).to.have.property('lng');",
+              "        pm.expect(v).to.have.property('placa');",
+              "        pm.expect(v).to.have.property('minutos_sin_actualizar');",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Historial de ruta de un vehículo",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/tracking/vehiculo/{{vehiculo_id}}/ruta?fecha_inicio=2026-05-27T06:00:00.000Z&fecha_fin=2026-05-27T14:00:00.000Z&limit=500",
+          "host": ["{{base_url}}"],
+          "path": ["tracking", "vehiculo", "{{vehiculo_id}}", "ruta"],
+          "query": [
+            {
+              "key": "fecha_inicio",
+              "value": "2026-05-27T06:00:00.000Z",
+              "description": "Inicio del rango en ISO 8601 UTC. Turno mañana: 06:00."
+            },
+            {
+              "key": "fecha_fin",
+              "value": "2026-05-27T14:00:00.000Z",
+              "description": "Fin del rango en ISO 8601 UTC. Turno mañana: 14:00."
+            },
+            {
+              "key": "limit",
+              "value": "500",
+              "description": "Máximo de puntos a devolver (1–500). Default 500."
+            }
+          ]
+        },
+        "description": "Devuelve el historial cronológico de posiciones GPS de un vehículo en un rango de tiempo.\n\nÚtil para **reconstruir la ruta patrullada** durante un turno completo.\n\n**Permiso requerido:** `tracking.vehiculos.read`\n\n**Límite:** 500 puntos por consulta (máximo).\n\n**Nota sobre timestamps:**\n- `registrado_at`: timestamp del DISPOSITIVO (usar para orden cronológico real)\n- `created_at`: timestamp del SERVIDOR (cuando se recibió la señal)\n\n**Política de retención:** Los datos se purgan automáticamente a los 30 días."
+      },
+      "response": [
+        {
+          "name": "200 — Ruta con puntos GPS",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Ruta obtenida: 287 punto(s)\",\n  \"data\": {\n    \"vehiculo\": {\n      \"id\": 1,\n      \"placa\": \"ABC-123\"\n    },\n    \"fecha_inicio\": \"2026-05-27T06:00:00.000Z\",\n    \"fecha_fin\": \"2026-05-27T14:00:00.000Z\",\n    \"total_puntos\": 287,\n    \"limit_aplicado\": 500,\n    \"ruta\": [\n      {\n        \"id\": 10042,\n        \"lat\": -12.1628,\n        \"lng\": -77.0135,\n        \"velocidad\": 0,\n        \"registrado_at\": \"2026-05-27T06:00:10.000Z\",\n        \"created_at\": \"2026-05-27T06:00:11.000Z\"\n      },\n      {\n        \"id\": 10043,\n        \"lat\": -12.1635,\n        \"lng\": -77.0142,\n        \"velocidad\": 28.3,\n        \"registrado_at\": \"2026-05-27T06:00:20.000Z\",\n        \"created_at\": \"2026-05-27T06:00:21.000Z\"\n      },\n      {\n        \"id\": 10044,\n        \"lat\": -12.1642,\n        \"lng\": -77.0150,\n        \"velocidad\": 35.5,\n        \"registrado_at\": \"2026-05-27T06:00:30.000Z\",\n        \"created_at\": \"2026-05-27T06:00:31.000Z\"\n      }\n    ]\n  }\n}",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/vehiculo/1/ruta?fecha_inicio=2026-05-27T06:00:00.000Z&fecha_fin=2026-05-27T14:00:00.000Z&limit=500",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "vehiculo", "1", "ruta"],
+              "query": [
+                { "key": "fecha_inicio", "value": "2026-05-27T06:00:00.000Z" },
+                { "key": "fecha_fin",    "value": "2026-05-27T14:00:00.000Z" },
+                { "key": "limit",        "value": "500" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "200 — Sin puntos en el rango solicitado",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Ruta obtenida: 0 punto(s)\",\n  \"data\": {\n    \"vehiculo\": { \"id\": 1, \"placa\": \"ABC-123\" },\n    \"fecha_inicio\": \"2026-05-27T06:00:00.000Z\",\n    \"fecha_fin\": \"2026-05-27T14:00:00.000Z\",\n    \"total_puntos\": 0,\n    \"limit_aplicado\": 500,\n    \"ruta\": []\n  }\n}",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/vehiculo/1/ruta?fecha_inicio=2026-05-27T06:00:00.000Z&fecha_fin=2026-05-27T14:00:00.000Z",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "vehiculo", "1", "ruta"],
+              "query": [
+                { "key": "fecha_inicio", "value": "2026-05-27T06:00:00.000Z" },
+                { "key": "fecha_fin",    "value": "2026-05-27T14:00:00.000Z" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "404 — Vehículo no encontrado",
+          "status": "Not Found",
+          "code": 404,
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"Vehículo con ID 999 no encontrado\"\n}",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/vehiculo/999/ruta?fecha_inicio=2026-05-27T06:00:00.000Z&fecha_fin=2026-05-27T14:00:00.000Z",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "vehiculo", "999", "ruta"],
+              "query": [
+                { "key": "fecha_inicio", "value": "2026-05-27T06:00:00.000Z" },
+                { "key": "fecha_fin",    "value": "2026-05-27T14:00:00.000Z" }
+              ]
+            }
+          }
+        }
+      ],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response tiene success = true', function () {",
+              "    pm.expect(pm.response.json().success).to.be.true;",
+              "});",
+              "",
+              "pm.test('data tiene vehiculo, total_puntos y ruta', function () {",
+              "    const data = pm.response.json().data;",
+              "    pm.expect(data).to.have.property('vehiculo');",
+              "    pm.expect(data).to.have.property('total_puntos');",
+              "    pm.expect(data).to.have.property('ruta');",
+              "    pm.expect(data.ruta).to.be.an('array');",
+              "    pm.expect(data.total_puntos).to.equal(data.ruta.length);",
+              "});",
+              "",
+              "pm.test('Cada punto tiene id, lat, lng y registrado_at', function () {",
+              "    const ruta = pm.response.json().data.ruta;",
+              "    ruta.forEach(punto => {",
+              "        pm.expect(punto).to.have.property('id');",
+              "        pm.expect(punto).to.have.property('lat');",
+              "        pm.expect(punto).to.have.property('lng');",
+              "        pm.expect(punto).to.have.property('registrado_at');",
+              "    });",
+              "});"
+            ]
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Calcular fechas dinámicas: hoy, turno mañana (06:00 - 14:00 UTC-5 = 11:00 - 19:00 UTC)",
+              "const hoy = new Date();",
+              "const inicio = new Date(hoy);",
+              "inicio.setUTCHours(11, 0, 0, 0);",
+              "const fin = new Date(hoy);",
+              "fin.setUTCHours(19, 0, 0, 0);",
+              "",
+              "// Descomenta estas líneas para usar fechas dinámicas en lugar de las hardcodeadas:",
+              "// pm.variables.set('fecha_inicio_dyn', inicio.toISOString());",
+              "// pm.variables.set('fecha_fin_dyn', fin.toISOString());"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Vehículos cercanos a una novedad",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/tracking/novedad/{{novedad_id}}/vehiculos-cercanos",
+          "host": ["{{base_url}}"],
+          "path": ["tracking", "novedad", "{{novedad_id}}", "vehiculos-cercanos"]
+        },
+        "description": "Calcula los vehículos de patrullaje **activos más próximos** a una novedad usando la fórmula Haversine en SQL.\n\n**Retorna:** Máximo 5 unidades ordenadas por distancia, con ETA estimado.\n\n**Criterio de \"activo\":** Vehículo con posición recibida en los últimos 10 minutos.\n\n**ETA:** Calculado con velocidad promedio de 40 km/h.\n`tiempo_estimado_minutos = (distancia_km / 40) × 60`\n\n**Permiso requerido:** `tracking.vehiculos.read`\n\n**Caso de uso:** Al abrir el detalle de una novedad en el dashboard, mostrar las unidades que pueden responder más rápido.\n\n**Requisitos:** La novedad debe tener `latitud` y `longitud` registradas. Si no las tiene, responde con `422`."
+      },
+      "response": [
+        {
+          "name": "200 — Vehículos cercanos con ETA",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"3 vehículo(s) cercano(s) encontrado(s)\",\n  \"data\": {\n    \"novedad_id\": 1,\n    \"coordenadas_novedad\": {\n      \"lat\": -12.1628,\n      \"lng\": -77.0135\n    },\n    \"total\": 3,\n    \"vehiculos_cercanos\": [\n      {\n        \"vehiculo_id\": 2,\n        \"placa\": \"DEF-456\",\n        \"tipo\": \"Patrullero\",\n        \"distancia_km\": 0.87,\n        \"tiempo_estimado_minutos\": 1.3,\n        \"lat\": -12.1558,\n        \"lng\": -77.0112,\n        \"velocidad\": 0,\n        \"ultima_actualizacion\": \"2026-05-27T10:29:30.000Z\",\n        \"personal\": {\n          \"id\": 8,\n          \"nombre\": \"Carlos Ríos\"\n        }\n      },\n      {\n        \"vehiculo_id\": 1,\n        \"placa\": \"ABC-123\",\n        \"tipo\": \"Patrullero\",\n        \"distancia_km\": 1.24,\n        \"tiempo_estimado_minutos\": 1.9,\n        \"lat\": -12.1628,\n        \"lng\": -77.0135,\n        \"velocidad\": 35.5,\n        \"ultima_actualizacion\": \"2026-05-27T10:30:00.000Z\",\n        \"personal\": {\n          \"id\": 5,\n          \"nombre\": \"Juan Pérez\"\n        }\n      },\n      {\n        \"vehiculo_id\": 3,\n        \"placa\": \"XYZ-789\",\n        \"tipo\": \"Motocicleta\",\n        \"distancia_km\": 2.15,\n        \"tiempo_estimado_minutos\": 3.2,\n        \"lat\": -12.1701,\n        \"lng\": -77.0198,\n        \"velocidad\": 0,\n        \"ultima_actualizacion\": \"2026-05-27T10:28:00.000Z\",\n        \"personal\": null\n      }\n    ]\n  }\n}",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/novedad/1/vehiculos-cercanos",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "novedad", "1", "vehiculos-cercanos"]
+            }
+          }
+        },
+        {
+          "name": "200 — Sin vehículos activos en radio",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"0 vehículo(s) cercano(s) encontrado(s)\",\n  \"data\": {\n    \"novedad_id\": 1,\n    \"coordenadas_novedad\": { \"lat\": -12.1628, \"lng\": -77.0135 },\n    \"total\": 0,\n    \"vehiculos_cercanos\": []\n  }\n}",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/novedad/1/vehiculos-cercanos",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "novedad", "1", "vehiculos-cercanos"]
+            }
+          }
+        },
+        {
+          "name": "422 — Novedad sin coordenadas GPS",
+          "status": "Unprocessable Entity",
+          "code": 422,
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"La novedad no tiene coordenadas GPS registradas. No es posible calcular distancias.\"\n}",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/novedad/5/vehiculos-cercanos",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "novedad", "5", "vehiculos-cercanos"]
+            }
+          }
+        },
+        {
+          "name": "404 — Novedad no encontrada",
+          "status": "Not Found",
+          "code": 404,
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"Novedad con ID 999 no encontrada\"\n}",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/novedad/999/vehiculos-cercanos",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "novedad", "999", "vehiculos-cercanos"]
+            }
+          }
+        }
+      ],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response tiene success = true', function () {",
+              "    pm.expect(pm.response.json().success).to.be.true;",
+              "});",
+              "",
+              "pm.test('data tiene novedad_id, coordenadas y vehiculos_cercanos', function () {",
+              "    const data = pm.response.json().data;",
+              "    pm.expect(data).to.have.property('novedad_id');",
+              "    pm.expect(data).to.have.property('coordenadas_novedad');",
+              "    pm.expect(data).to.have.property('vehiculos_cercanos');",
+              "    pm.expect(data.vehiculos_cercanos).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Máximo 5 vehículos devueltos', function () {",
+              "    const vehiculos = pm.response.json().data.vehiculos_cercanos;",
+              "    pm.expect(vehiculos.length).to.be.at.most(5);",
+              "});",
+              "",
+              "pm.test('Cada vehículo tiene distancia_km y tiempo_estimado_minutos', function () {",
+              "    const vehiculos = pm.response.json().data.vehiculos_cercanos;",
+              "    vehiculos.forEach(v => {",
+              "        pm.expect(v).to.have.property('distancia_km');",
+              "        pm.expect(v).to.have.property('tiempo_estimado_minutos');",
+              "        pm.expect(v.distancia_km).to.be.a('number');",
+              "    });",
+              "});",
+              "",
+              "pm.test('Vehículos ordenados por distancia ascendente', function () {",
+              "    const vehiculos = pm.response.json().data.vehiculos_cercanos;",
+              "    for (let i = 1; i < vehiculos.length; i++) {",
+              "        pm.expect(vehiculos[i].distancia_km).to.be.at.least(vehiculos[i-1].distancia_km);",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
