@@ -25,6 +25,7 @@ const endpointsFiles = [
   "./src/routes/subtipo-novedad.routes.js",
   "./src/routes/estado-novedad.routes.js",
   "./src/routes/unidad-oficina.routes.js",
+  "./src/routes/tracking.routes.js",
 ];
 
 const swaggerServerUrl = process.env.SWAGGER_SERVER_URL;
@@ -425,6 +426,140 @@ const doc = {
           observaciones_cambio_estado: { type: "string", nullable: true },
         },
       },
+      // ── TRACKING GPS ──────────────────────────────────────────────────────────
+      TrackingUbicacionRequest: {
+        type: "object",
+        required: ["vehiculo_id", "lat", "lng"],
+        properties: {
+          vehiculo_id:          { type: "integer",  example: 1,            description: "ID del vehículo de patrullaje" },
+          lat:                  { type: "number",   example: -12.1167,     description: "Latitud GPS (-90 a 90)" },
+          lng:                  { type: "number",   example: -76.9836,     description: "Longitud GPS (-180 a 180)" },
+          velocidad:            { type: "number",   example: 35.5,         description: "Velocidad en km/h (0-300)", nullable: true },
+          precision_gps:        { type: "number",   example: 4.2,          description: "Precisión GPS en metros", nullable: true },
+          bateria_dispositivo:  { type: "integer",  example: 82,           description: "Batería del dispositivo móvil (0-100)", nullable: true },
+        },
+      },
+      TrackingUbicacionResponse: {
+        type: "object",
+        properties: {
+          success:  { type: "boolean", example: true },
+          message:  { type: "string",  example: "Posición actualizada correctamente" },
+          data: {
+            type: "object",
+            properties: {
+              vehiculo_id: { type: "integer", example: 1 },
+              placa:       { type: "string",  example: "ABC-123" },
+              lat:         { type: "number",  example: -12.1167 },
+              lng:         { type: "number",  example: -76.9836 },
+              updated_at:  { type: "string",  example: "2026-05-27T10:30:00.000Z" },
+            },
+          },
+        },
+      },
+      TrackingActivosResponse: {
+        type: "object",
+        properties: {
+          success: { type: "boolean", example: true },
+          data: {
+            type: "object",
+            properties: {
+              total: { type: "integer", example: 4 },
+              vehiculos: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    vehiculo_id:           { type: "integer", example: 1 },
+                    placa:                 { type: "string",  example: "ABC-123" },
+                    tipo:                  { type: "string",  example: "Patrullero", nullable: true },
+                    lat:                   { type: "number",  example: -12.1167 },
+                    lng:                   { type: "number",  example: -76.9836 },
+                    velocidad:             { type: "number",  example: 35.5,  nullable: true },
+                    precision_gps:         { type: "number",  example: 4.2,   nullable: true },
+                    bateria_dispositivo:   { type: "integer", example: 82,    nullable: true },
+                    personal:              { type: "object",  nullable: true,
+                      properties: { id: { type: "integer" }, nombre: { type: "string" } },
+                    },
+                    operativo:             { type: "object",  nullable: true,
+                      properties: { id: { type: "integer" }, turno: { type: "string" }, fecha: { type: "string" } },
+                    },
+                    ultima_actualizacion:     { type: "string",  example: "2026-05-27T10:30:00.000Z" },
+                    minutos_sin_actualizar:   { type: "integer", example: 2 },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      TrackingRutaResponse: {
+        type: "object",
+        properties: {
+          success: { type: "boolean", example: true },
+          data: {
+            type: "object",
+            properties: {
+              vehiculo:      { type: "object", properties: { id: { type: "integer" }, placa: { type: "string" } } },
+              fecha_inicio:  { type: "string", example: "2026-05-27T06:00:00.000Z" },
+              fecha_fin:     { type: "string", example: "2026-05-27T14:00:00.000Z" },
+              total_puntos:  { type: "integer", example: 287 },
+              limit_aplicado:{ type: "integer", example: 500 },
+              ruta: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id:           { type: "integer", example: 10042 },
+                    lat:          { type: "number",  example: -12.1167 },
+                    lng:          { type: "number",  example: -76.9836 },
+                    velocidad:    { type: "number",  example: 35.5, nullable: true },
+                    registrado_at:{ type: "string",  example: "2026-05-27T06:00:10.000Z" },
+                    created_at:   { type: "string",  example: "2026-05-27T06:00:11.000Z" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      TrackingVehiculosCercanosResponse: {
+        type: "object",
+        properties: {
+          success: { type: "boolean", example: true },
+          data: {
+            type: "object",
+            properties: {
+              novedad_id:          { type: "integer", example: 42 },
+              coordenadas_novedad: { type: "object",
+                properties: { lat: { type: "number", example: -12.118 }, lng: { type: "number", example: -76.985 } },
+              },
+              total: { type: "integer", example: 3 },
+              vehiculos_cercanos: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    vehiculo_id:               { type: "integer", example: 2 },
+                    placa:                     { type: "string",  example: "XYZ-789" },
+                    tipo:                      { type: "string",  example: "Patrullero", nullable: true },
+                    distancia_km:              { type: "number",  example: 1.24 },
+                    tiempo_estimado_minutos:   { type: "number",  example: 1.9 },
+                    lat:                       { type: "number",  example: -12.109 },
+                    lng:                       { type: "number",  example: -76.991 },
+                    velocidad:                 { type: "number",  example: 0, nullable: true },
+                    ultima_actualizacion:      { type: "string",  example: "2026-05-27T10:28:00.000Z" },
+                    personal:                  { type: "object",  nullable: true,
+                      properties: { id: { type: "integer" }, nombre: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      // ── FIN TRACKING GPS ──────────────────────────────────────────────────────
+
       NovedadAsignarRecursosRequest: {
         type: "object",
         properties: {
