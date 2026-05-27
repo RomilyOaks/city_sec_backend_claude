@@ -9,7 +9,7 @@
  * 3. Asignación de permisos a roles
  * 4. Usuario administrador inicial
  *
- * VERSIÓN: 2.3.0 (Incluye permisos específicos para Reportes Operativos)
+ * VERSIÓN: 2.4.0 (Incluye permisos de Tracking GPS de vehículos de patrullaje)
  * EJECUTAR CON: npm run seed:rbac
  */
 
@@ -1050,6 +1050,26 @@ async function seedRBAC() {
         descripcion: "Reproducir audio adjunto en novedades (URLs Supabase)",
         es_sistema: true,
       },
+
+      // ============================================
+      // MÓDULO: TRACKING GPS (v2.4.0)
+      // Sistema de rastreo de vehículos de patrullaje en tiempo real.
+      // App: "CitySecure Tracking Patrol Units"
+      // ============================================
+      {
+        modulo: "tracking",
+        recurso: "vehiculos",
+        accion: "update",
+        descripcion: "Enviar posición GPS de vehículo de patrullaje (app móvil serenos)",
+        es_sistema: true,
+      },
+      {
+        modulo: "tracking",
+        recurso: "vehiculos",
+        accion: "read",
+        descripcion: "Ver posiciones y tracking en tiempo real de vehículos (dashboard)",
+        es_sistema: true,
+      },
     ];
 
     // Crear permisos uno por uno
@@ -1277,6 +1297,66 @@ async function seedRBAC() {
     }
 
     // ========================================
+    // ASIGNAR PERMISOS DE TRACKING GPS A ROLES (v2.4.0)
+    // Política:
+    //   tracking.vehiculos.update → super_admin, admin, supervisor, operador
+    //     (serenos que envían GPS desde la app móvil)
+    //   tracking.vehiculos.read  → super_admin, admin, supervisor, operador, consulta
+    //     (dashboard que visualiza la flota en tiempo real)
+    // Nota: super_admin los recibe también por el bloque "todos los permisos"
+    //       pero se asignan aquí igualmente via ignoreDuplicates para mayor claridad.
+    // ========================================
+    console.log("\n🔗 Asignando permisos de tracking GPS a roles...");
+
+    // — tracking.vehiculos.update → roles con escritura —
+    const rolesTrackingUpdate = await Rol.findAll({
+      where: {
+        slug: { [sequelize.Op.in]: ["super_admin", "admin", "supervisor", "operador"] },
+      },
+      transaction,
+    });
+
+    const permisoTrackingUpdate = await Permiso.findAll({
+      where: { modulo: "tracking", recurso: "vehiculos", accion: "update" },
+      transaction,
+    });
+
+    if (rolesTrackingUpdate.length > 0 && permisoTrackingUpdate.length > 0) {
+      const asignacionesUpdate = [];
+      for (const rol of rolesTrackingUpdate) {
+        for (const permiso of permisoTrackingUpdate) {
+          asignacionesUpdate.push({ rol_id: rol.id, permiso_id: permiso.id, created_by: 13, updated_by: 13 });
+        }
+      }
+      await RolPermiso.bulkCreate(asignacionesUpdate, { transaction, ignoreDuplicates: true });
+      console.log(`   ✓ tracking.vehiculos.update asignado a ${rolesTrackingUpdate.length} roles (super_admin, admin, supervisor, operador)`);
+    }
+
+    // — tracking.vehiculos.read → roles con lectura (incluyendo consulta) —
+    const rolesTrackingRead = await Rol.findAll({
+      where: {
+        slug: { [sequelize.Op.in]: ["super_admin", "admin", "supervisor", "operador", "consulta"] },
+      },
+      transaction,
+    });
+
+    const permisoTrackingRead = await Permiso.findAll({
+      where: { modulo: "tracking", recurso: "vehiculos", accion: "read" },
+      transaction,
+    });
+
+    if (rolesTrackingRead.length > 0 && permisoTrackingRead.length > 0) {
+      const asignacionesRead = [];
+      for (const rol of rolesTrackingRead) {
+        for (const permiso of permisoTrackingRead) {
+          asignacionesRead.push({ rol_id: rol.id, permiso_id: permiso.id, created_by: 13, updated_by: 13 });
+        }
+      }
+      await RolPermiso.bulkCreate(asignacionesRead, { transaction, ignoreDuplicates: true });
+      console.log(`   ✓ tracking.vehiculos.read asignado a ${rolesTrackingRead.length} roles (super_admin, admin, supervisor, operador, consulta)`);
+    }
+
+    // ========================================
     // 4. CREAR USUARIO ADMINISTRADOR INICIAL
     // ========================================
     console.log("\n👤 Verificando usuario administrador...");
@@ -1371,6 +1451,11 @@ async function seedRBAC() {
               modulo: "reportes",
               accion: "read",
             },
+            // Permisos de tracking GPS (lectura) — v2.4.0
+            {
+              modulo: "tracking",
+              accion: "read",
+            },
           ],
         },
         transaction,
@@ -1434,13 +1519,14 @@ async function seedRBAC() {
     console.log("   Email: admin@citysec.com");
     console.log("   Password: Admin123!");
 
-    console.log("\n✨ NUEVO EN v2.2.1:");
-    console.log("   ✓ 17 permisos del módulo Calles y Direcciones");
-    console.log("   ✓ Permisos organizados por recurso:");
-    console.log("     - tipos_via (4 permisos)");
-    console.log("     - calles (4 permisos)");
-    console.log("     - calles_cuadrantes (4 permisos)");
-    console.log("     - direcciones (5 permisos)");
+    console.log("\n✨ NUEVO EN v2.4.0:");
+    console.log("   ✓ 2 permisos del módulo Tracking GPS:");
+    console.log("     - tracking.vehiculos.update → super_admin, admin, supervisor, operador");
+    console.log("     - tracking.vehiculos.read   → super_admin, admin, supervisor, operador, consulta");
+    console.log("\n✨ HISTORIAL DE VERSIONES:");
+    console.log("   v2.2.1: 17 permisos de Calles y Direcciones");
+    console.log("   v2.3.0: Permisos de Reportes Operativos");
+    console.log("   v2.4.0: Permisos de Tracking GPS (esta versión)");
 
     console.log("\n⚠️  IMPORTANTE:");
     console.log("   - Cambiar esta contraseña después del primer login");
