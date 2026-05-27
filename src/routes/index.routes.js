@@ -103,6 +103,9 @@ import operativosPersonalRoutes from "./operativos-personal.routes.js";
 import operativosPersonalGeneralRoutes from "./operativos-personal-general.routes.js";
 import operativosPersonalNovedadesRoutes from "./operativos-personal-novedades.routes.js";
 
+// 📍 Tracking GPS de Vehículos de Patrullaje ✅ v2.2.3
+import trackingRoutes from "./tracking.routes.js";
+
 // 📚 Catálogos y Configuración
 import catalogosRoutes from "./catalogos.routes.js";
 import cargosRoutes from "./cargos.routes.js";
@@ -679,6 +682,24 @@ router.use("/estados-operativo-recurso", estadosOperativoRecursoRoutes);
  *   - Filtros avanzados
  */
 router.use("/auditoria", auditoriaAccionRoutes);
+
+/**
+ * @route   /tracking
+ * @desc    Tracking GPS en tiempo real de vehículos de patrullaje
+ * @access  Mixto (update: operador+; read: consulta+)
+ * @version 1.0.0 ✅ v2.2.3
+ * @features
+ *   - Recepción de posiciones GPS desde app CitySecure Tracking Patrol Units
+ *   - Snapshot de última posición (UPSERT) + historial completo
+ *   - Difusión en tiempo real al dashboard via SSE (evento: vehiculo:posicion)
+ *   - Vehículos cercanos a novedad con cálculo Haversine y ETA
+ * @endpoints (4)
+ *   - POST  /tracking/ubicacion                            → Actualizar posición GPS
+ *   - GET   /tracking/activos                              → Vehículos activos (últimos 10 min)
+ *   - GET   /tracking/vehiculo/:vehiculoId/ruta            → Historial de ruta por turno
+ *   - GET   /tracking/novedad/:novedadId/vehiculos-cercanos → Unidades más próximas
+ */
+router.use("/tracking", trackingRoutes);
 
 /**
  * @route   /reportes-operativos
@@ -1274,6 +1295,10 @@ router.use((req, res) => {
       "/operativos/:turnoId/personal", // 🚶 ✅ v2.2.2
       "/operativos/:turnoId/personal/:personalId/cuadrantes", // 🚶 ✅ v2.2.2
       "/operativos/:turnoId/personal/:personalId/cuadrantes/:cuadranteId/novedades", // 🚶 ✅ v2.2.2
+      "/tracking/ubicacion",               // 📍 ✅ v2.2.3
+      "/tracking/activos",                 // 📍 ✅ v2.2.3
+      "/tracking/vehiculo/:id/ruta",       // 📍 ✅ v2.2.3
+      "/tracking/novedad/:id/vehiculos-cercanos", // 📍 ✅ v2.2.3
       "/roles",
       "/permisos",
       "/auditoria",

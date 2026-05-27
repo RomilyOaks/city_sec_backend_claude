@@ -259,6 +259,26 @@ import OperativosPersonalCuadrantes from "./OperativosPersonalCuadrantes.js";
  */
 import OperativosPersonalNovedades from "./OperativosPersonalNovedades.js";
 
+//=============================================
+// IMPORTAR MODELOS - TRACKING GPS (v2.2.3)
+//=============================================
+
+/**
+ * Modelo TrackingVehiculo
+ * Snapshot de la última posición GPS conocida de cada vehículo.
+ * Una sola fila por vehículo — siempre UPSERT.
+ * @type {Model}
+ */
+import TrackingVehiculo from "./TrackingVehiculo.js";
+
+/**
+ * Modelo TrackingHistorial
+ * Historial completo de posiciones GPS para reconstrucción de rutas.
+ * Retención: 30 días.
+ * @type {Model}
+ */
+import TrackingHistorial from "./TrackingHistorial.js";
+
 /**
  * Modelo EstadoOperativoRecurso
  * Catálogo de estados operativos para recursos (vehículos, personal)
@@ -1876,6 +1896,80 @@ EstadoNovedad.hasMany(RolEstadoNovedad, {
 // NOTA: SubtipoNovedad, TipoVehiculo y UnidadOficina ya tienen sus relaciones
 // de auditoría definidas anteriormente en este archivo (líneas 1030-1080)
 
+//=============================================
+// ASOCIACIONES: TRACKING GPS (v2.2.3)
+//=============================================
+
+/**
+ * Relación: Vehiculo -> TrackingVehiculo (One-to-One)
+ * Un vehículo tiene como máximo una posición activa (UNIQUE vehiculo_id).
+ */
+Vehiculo.hasOne(TrackingVehiculo, {
+  foreignKey: "vehiculo_id",
+  as: "tracking",
+});
+
+/**
+ * Relación: TrackingVehiculo -> Vehiculo (Many-to-One)
+ */
+TrackingVehiculo.belongsTo(Vehiculo, {
+  foreignKey: "vehiculo_id",
+  as: "vehiculo",
+});
+
+/**
+ * Relación: PersonalSeguridad -> TrackingVehiculo (One-to-Many)
+ * Un sereno puede conducir diferentes vehículos a lo largo del tiempo.
+ */
+PersonalSeguridad.hasMany(TrackingVehiculo, {
+  foreignKey: "personal_id",
+  as: "trackingComoCondutor",
+});
+
+/**
+ * Relación: TrackingVehiculo -> PersonalSeguridad (Many-to-One)
+ * Conductor activo del vehículo en este momento.
+ */
+TrackingVehiculo.belongsTo(PersonalSeguridad, {
+  foreignKey: "personal_id",
+  as: "personal",
+});
+
+/**
+ * Relación: OperativosTurno -> TrackingVehiculo (One-to-Many)
+ * Un turno puede tener múltiples vehículos en tracking.
+ */
+OperativosTurno.hasMany(TrackingVehiculo, {
+  foreignKey: "operativo_id",
+  as: "vehiculosTracking",
+});
+
+/**
+ * Relación: TrackingVehiculo -> OperativosTurno (Many-to-One)
+ * Turno activo en el que opera el vehículo.
+ */
+TrackingVehiculo.belongsTo(OperativosTurno, {
+  foreignKey: "operativo_id",
+  as: "operativo",
+});
+
+/**
+ * Relación: Vehiculo -> TrackingHistorial (One-to-Many)
+ * Un vehículo tiene muchos registros históricos de posición.
+ */
+Vehiculo.hasMany(TrackingHistorial, {
+  foreignKey: "vehiculo_id",
+  as: "historialTracking",
+});
+
+/**
+ * Relación: TrackingHistorial -> Vehiculo (Many-to-One)
+ */
+TrackingHistorial.belongsTo(Vehiculo, {
+  foreignKey: "vehiculo_id",
+  as: "vehiculo",
+});
+
 // ============================================================================
 // ASOCIACIONES DEL MODELO RADIO TETRA
 // ============================================================================
@@ -1998,6 +2092,10 @@ const models = {
   OperativosPersonalCuadrantes,
   OperativosPersonalNovedades,
 
+  // Tracking GPS (Patrullaje en tiempo real) ✅ NEW 2.2.3
+  TrackingVehiculo,
+  TrackingHistorial,
+
   // Novedades
   Novedad,
   HistorialEstadoNovedad,
@@ -2111,4 +2209,7 @@ export {
   OperativosPersonal,
   OperativosPersonalCuadrantes,
   OperativosPersonalNovedades,
+  // Tracking GPS (✅ v2.2.3)
+  TrackingVehiculo,
+  TrackingHistorial,
 };
