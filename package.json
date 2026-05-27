@@ -18,7 +18,13 @@
     "db:seed:estados": "node src/seeders/runSeeders.js estados",
     "db:seed:turnos": "node src/seeders/runSeeders.js turnos",
     "db:migrate": "sequelize-cli db:migrate",
-    "db:migrate:undo": "sequelize-cli db:migrate:undo"
+    "db:migrate:undo": "sequelize-cli db:migrate:undo",
+    "railway:seed": "railway run node src/seeders/runSeeders.js",
+    "railway:seed:rbac": "railway run node src/seeders/runSeeders.js rbac",
+    "railway:seed:estados": "railway run node src/seeders/runSeeders.js estados",
+    "railway:seed:turnos": "railway run node src/seeders/runSeeders.js turnos",
+    "railway:migrate": "railway run sequelize-cli db:migrate",
+    "railway:migrate:undo": "railway run sequelize-cli db:migrate:undo"
   },
   "keywords": [
     "api",

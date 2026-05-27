@@ -57,11 +57,20 @@ npm test             # Jest + coverage
 npm run lint         # ESLint src/**/*.js
 npm run lint:fix     # ESLint con autofix
 npm run swagger      # Regenera swagger_output.json
-npm run db:seed      # Ejecuta todos los seeders
-npm run seed:rbac    # Solo seeds de roles y permisos
-npm run seed:estados # Solo seeds de estados de novedad
-npm run db:migrate   # Aplica migraciones Sequelize
-npm run db:migrate:undo  # Revierte última migración
+npm run db:seed          # Ejecuta todos los seeders (LOCAL)
+npm run db:seed:rbac     # Solo seeds de roles y permisos (LOCAL)
+npm run db:seed:estados  # Solo seeds de estados de novedad (LOCAL)
+npm run db:seed:turnos   # Solo seeds de turnos operativos (LOCAL)
+npm run db:migrate       # Aplica migraciones Sequelize (LOCAL)
+npm run db:migrate:undo  # Revierte última migración (LOCAL)
+
+# ─── Railway (producción) — requiere railway CLI + estar vinculado al proyecto ───
+npm run railway:seed          # Ejecuta todos los seeders en Railway
+npm run railway:seed:rbac     # Solo RBAC en Railway
+npm run railway:seed:estados  # Solo estados en Railway
+npm run railway:seed:turnos   # Solo turnos en Railway
+npm run railway:migrate       # Aplica migraciones en Railway
+npm run railway:migrate:undo  # Revierte última migración en Railway
 ```
 
 ---
