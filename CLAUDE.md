@@ -35,7 +35,8 @@ Guía para Claude Code al trabajar en este repositorio.
 |---|---|
 | Runtime | Node.js ≥18 · ES Modules (`"type": "module"`) |
 | Framework | Express 5.2.1 |
-| ORM | Sequelize 6 → MySQL 8.0 |
+| ORM | Sequelize 6 → MySQL 8.0 (producción) · PostgreSQL 15 (Supabase, alternativo) |
+| Driver PG | `pg` — requerido cuando `DB_DIALECT=postgres` |
 | Auth | JWT propio (`jsonwebtoken`) + RBAC |
 | Seguridad | Helmet · CORS · express-rate-limit · bcryptjs |
 | Validación | express-validator (por módulo en `src/validators/`) |
@@ -309,14 +310,298 @@ Docs:    Documentación
 |---|---|
 | `src/app.js` | Entry point — middlewares, Swagger, rutas, sync Sequelize |
 | `src/routes/index.routes.js` | Registro centralizado de todas las rutas |
-| `src/config/database.js` | Conexión Sequelize (MySQL) |
+| `src/config/database.js` | Conexión Sequelize — dual dialecto MySQL/PostgreSQL controlado por `DB_DIALECT` |
 | `src/config/auth.js` | JWT secrets y duración de tokens |
 | `src/models/index.js` | Todas las asociaciones entre modelos |
 | `src/middlewares/authMiddleware.js` | `authenticate`, `requireRole`, `requirePermission` |
 | `src/utils/responseFormatter.js` | Formato estándar de respuestas |
 | `src/utils/sse-manager.js` | Server-Sent Events (actualizaciones en tiempo real) |
 | `src/seeders/seedRBAC.js` | Roles, permisos y usuario admin inicial |
+| `src/scripts/test-db-connection.js` | Verifica conexión + existencia de tablas en MySQL o PostgreSQL |
 | `swagger_output.json` | Spec Swagger generada (regenerar con `npm run swagger`) |
+| `supabase/migrations/001_citysecure_schema.sql` | 52 tablas + triggers PL/pgSQL + índices para Supabase |
+| `supabase/migrations/002_citysecure_seeds.sql` | 6 roles + 122 permisos + usuario admin para Supabase |
+| `supabase/migrations/SUPABASE_SETUP.md` | Guía completa para conectar a Supabase |
+
+---
+
+## Soporte Dual Dialecto (MySQL + PostgreSQL)
+
+El backend corre sobre MySQL en Railway (producción) y puede conectarse a PostgreSQL/Supabase cambiando tres variables de entorno. El dialecto se detecta **una sola vez al cargar el módulo** y configura toda la capa de persistencia automáticamente.
+
+### Variables de control
+
+```env
+DB_DIALECT=mysql        # o "postgres"
+DB_SCHEMA=public        # ignorado en MySQL; "citysecure" para Supabase
+DB_SSL=false            # true para Supabase (activa rejectUnauthorized: false)
+```
+
+### Exports de database.js
+
+```js
+import sequelize, { DB_DIALECT, DB_SCHEMA, IS_POSTGRES } from "../config/database.js";
+// IS_POSTGRES = (DB_DIALECT === "postgres")  — usar en guards dialect-específicos
+```
+
+### Todos los modelos deben declarar schema
+
+```js
+// ✅ En las opciones de todo modelo Sequelize
+const MyModel = sequelize.define("MyModel", { ...fields }, {
+  tableName: "my_table",
+  schema: DB_SCHEMA,   // ignorado en MySQL, enruta al schema correcto en PostgreSQL
+  ...
+});
+```
+
+Si se agrega un modelo nuevo y no lleva `schema: DB_SCHEMA`, sus queries en PostgreSQL irán al schema `public` en vez de `citysecure`. Esto no produce error inmediato — falla silenciosamente con "table not found".
+
+### Verificar la conexión activa
+
+```bash
+node src/scripts/test-db-connection.js
+```
+
+---
+
+## Trampas Conocidas — PostgreSQL / Supabase
+
+Errores reales encontrados al migrar de MySQL a PostgreSQL. **Leer antes de tocar cualquier modelo, seeder o script SQL.**
+
+---
+
+### 🚨 `ADD CONSTRAINT IF NOT EXISTS` no existe en PostgreSQL
+
+PostgreSQL 14 y anteriores (incluido el que usa Supabase) **no soportan** esta sintaxis para ALTER TABLE. Se usa para FKs circulares que no pueden declararse en el CREATE TABLE inicial.
+
+```sql
+-- ❌ Error: syntax error at or near "NOT"  (PostgreSQL)
+ALTER TABLE personal_seguridad
+  ADD CONSTRAINT IF NOT EXISTS fk_personal_vehiculo
+  FOREIGN KEY (vehiculo_asignado_id) REFERENCES vehiculos(id);
+
+-- ✅ Patrón idempotente correcto para PostgreSQL
+DO $$ BEGIN
+  ALTER TABLE personal_seguridad
+    ADD CONSTRAINT fk_personal_vehiculo
+    FOREIGN KEY (vehiculo_asignado_id) REFERENCES vehiculos(id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+```
+
+Aplica a las 4 FK circulares del esquema: `personal_seguridad`, `novedades_incidentes`, `operativos_turno`, `tracking_vehiculos`.
+
+---
+
+### 🚨 Commit prematuro de transacción en seeders
+
+Si se llama `transaction.commit()` inmediatamente después de `sequelize.transaction()` y luego se pasan esa misma variable `transaction` a operaciones posteriores, **MySQL lo ignora silenciosamente pero PostgreSQL falla** con `cannot run INSERT in a transaction that has already been committed`.
+
+```js
+// ❌ Bug sutil — la transacción se cierra antes de usarse
+const transaction = await sequelize.transaction();
+await transaction.commit(); // ← NUNCA aquí
+const [rol] = await Rol.findOrCreate({ ..., transaction }); // falla en PostgreSQL
+
+// ✅ Correcto — un solo commit, al final de todas las operaciones
+const transaction = await sequelize.transaction();
+try {
+  const [rol] = await Rol.findOrCreate({ ..., transaction });
+  // ... todas las operaciones ...
+  await transaction.commit(); // ← solo aquí
+} catch (err) {
+  await transaction.rollback();
+  throw err;
+}
+```
+
+---
+
+### 🚨 `sequelize.Op` no existe — importar `Op` directamente
+
+Acceder a los operadores como `sequelize.Op.in` o `sequelize.Op.or` no funciona en Sequelize 6 con ES Modules. En MySQL falla en silencio o produce queries incorrectas; en PostgreSQL lanza error.
+
+```js
+// ❌ Nunca
+where: { id: { [sequelize.Op.in]: ids } }
+
+// ✅ Siempre importar Op por separado
+import { Op } from "sequelize";
+where: { id: { [Op.in]: ids } }
+```
+
+---
+
+### 🚨 `BIGINT.UNSIGNED` e `INTEGER.UNSIGNED` no existen en PostgreSQL
+
+PostgreSQL no tiene tipos sin signo. Sequelize lanza error al sincronizar o al generar DDL.
+
+```js
+// ❌ Solo MySQL
+type: DataTypes.BIGINT.UNSIGNED
+type: DataTypes.INTEGER.UNSIGNED
+
+// ✅ Compatible en ambos dialectos
+type: DataTypes.BIGINT
+type: DataTypes.INTEGER
+```
+
+El cambio es retrocompatible con MySQL — los valores no negativos funcionan igual.
+
+---
+
+### 🚨 FK type mismatch — PostgreSQL requiere tipos exactamente iguales
+
+MySQL acepta FK de `BIGINT` apuntando a `INTEGER`. PostgreSQL lanza error de tipo incompatible.
+
+```
+ERROR: foreign key constraint cannot be implemented
+DETAIL: Key columns "operativo_turno_id" (integer) and "id" (bigint) are of incompatible types.
+```
+
+Solución: la PK y todas sus FKs deben ser el **mismo tipo exacto**. Si hay duda, usar `BIGINT`/`BIGSERIAL` en la PK cuando las FKs referencian con `BIGINT`.
+
+Tabla afectada en este proyecto: `operativos_turno.id` debía ser `BIGSERIAL` (no `SERIAL`/`INTEGER`) porque `operativos_personal.operativo_turno_id` es `BIGINT`.
+
+---
+
+### 🚨 `CURDATE()` es MySQL-only — usar `CURRENT_DATE`
+
+```js
+// ❌ Solo MySQL
+sequelize.fn("CURDATE")
+
+// ✅ Estándar SQL — funciona en MySQL y PostgreSQL
+sequelize.fn("CURRENT_DATE")
+```
+
+---
+
+### 🚨 `FIELD()` es MySQL-only — usar `CASE WHEN` en PostgreSQL
+
+```js
+// ❌ Solo MySQL
+sequelize.literal("FIELD(prioridad, 'ALTA', 'MEDIA', 'BAJA')")
+
+// ✅ Dual dialecto
+const orderExpr = IS_POSTGRES
+  ? sequelize.literal("CASE WHEN prioridad='ALTA' THEN 1 WHEN prioridad='MEDIA' THEN 2 ELSE 3 END")
+  : sequelize.literal("FIELD(prioridad, 'ALTA', 'MEDIA', 'BAJA')");
+```
+
+---
+
+### 🚨 `Op.like` es case-sensitive en PostgreSQL — usar `Op.iLike`
+
+En MySQL `LIKE` es case-insensitive por defecto (collation `utf8mb4_0900_ai_ci`). En PostgreSQL `LIKE` distingue mayúsculas; `ILIKE` no.
+
+```js
+// ❌ En PostgreSQL filtra por case — comportamiento distinto al esperado
+where: { nombre: { [Op.like]: `%${q}%` } }
+
+// ✅ Dual dialecto
+where: { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${q}%` } }
+```
+
+Archivos afectados: `Calle.js`, `PersonalSeguridad.js`, `Ubigeo.js`.
+
+---
+
+### 🚨 Comparaciones booleanas difieren entre MySQL y PostgreSQL
+
+MySQL almacena `BOOLEAN` como `TINYINT(1)` — las comparaciones con literales `1`/`0` funcionan.
+PostgreSQL almacena `BOOLEAN` real — las comparaciones deben usar `true`/`false`.
+
+```js
+// ❌ Solo MySQL (falla silenciosamente en PostgreSQL — devuelve resultados incorrectos)
+sequelize.literal("CASE WHEN activo_24h = 1 THEN 1 ELSE 0 END")
+estado: 1
+
+// ✅ Dual dialecto
+sequelize.literal(IS_POSTGRES
+  ? "CASE WHEN activo_24h = true THEN 1 ELSE 0 END"
+  : "CASE WHEN activo_24h = 1 THEN 1 ELSE 0 END")
+estado: true  // también funciona en MySQL con Sequelize (castea automáticamente)
+```
+
+En los seeders, usar siempre `estado: true` — Sequelize lo castea correctamente en ambos dialectos.
+
+---
+
+### 🚨 GROUP BY estricto en PostgreSQL
+
+MySQL en modo no-strict permite seleccionar columnas no-agregadas sin incluirlas en `GROUP BY`.
+PostgreSQL requiere que **todas** las columnas del SELECT no-agregadas aparezcan en `GROUP BY`.
+
+```js
+// ❌ Error en PostgreSQL: "column must appear in GROUP BY clause"
+{
+  attributes: ["id", "nombre", "color_hex"],
+  include: [{ model: Novedad, attributes: [[fn("COUNT", ...), "total"]] }],
+  group: ["id"],   // ← falta nombre y color_hex
+}
+
+// ✅ Listar todas las columnas no-agregadas
+{
+  group: ["EstadoNovedad.id", "EstadoNovedad.nombre", "EstadoNovedad.color_hex",
+          "EstadoNovedad.icono", "EstadoNovedad.orden"],
+}
+```
+
+Modelos afectados: `EstadoNovedad.js`, `Sector.js`, `TipoNovedad.js`, `TipoVehiculo.js`.
+
+---
+
+### 🚨 Opciones MySQL-only en modelos Sequelize
+
+Las opciones `charset`, `collate` y `engine` en el objeto de opciones del modelo son **ignoradas silenciosamente en PostgreSQL** pero pueden contaminar el DDL generado. Removerlas de todos los modelos.
+
+```js
+// ❌ Solo MySQL — remover si existen
+{
+  tableName: "mi_tabla",
+  charset: "utf8mb4",
+  collate: "utf8mb4_0900_ai_ci",
+  engine: "InnoDB",
+}
+
+// ✅ Sin opciones de dialecto
+{
+  tableName: "mi_tabla",
+  schema: DB_SCHEMA,
+}
+```
+
+---
+
+### 🚨 SQL crudo con funciones MySQL — reemplazar con JS cuando sea posible
+
+Queries raw que usan `CAST(... AS UNSIGNED)`, `SUBSTRING_INDEX`, `IF()` u otras funciones MySQL-only deben reemplazarse con lógica JavaScript para mantener compatibilidad.
+
+Ejemplo en `Vehiculo.js` (hook `beforeCreate`):
+
+```js
+// ❌ MySQL-only
+const [rows] = await sequelize.query(
+  `SELECT MAX(CAST(SUBSTRING(codigo_vehiculo, ${prefijo.length + 2}) AS UNSIGNED)) AS max_num
+   FROM vehiculos WHERE codigo_vehiculo LIKE '${prefijo}-%'`
+);
+
+// ✅ Puro JS — compatible en ambos dialectos
+const vehiculos = await Vehiculo.findAll({
+  where: { codigo_vehiculo: { [Op.like]: `${prefijo}-%` } },
+  attributes: ["codigo_vehiculo"],
+  transaction: options.transaction,
+});
+const ultimo = vehiculos.length
+  ? vehiculos.reduce((max, v) => {
+      const n = parseInt((v.codigo_vehiculo || "").split("-")[1]) || 0;
+      const m = parseInt((max.codigo_vehiculo || "").split("-")[1]) || 0;
+      return n > m ? v : max;
+    })
+  : null;
+```
 
 ---
 
