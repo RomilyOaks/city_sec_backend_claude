@@ -182,7 +182,7 @@ async function main() {
     tablasFaltantes.forEach(t => console.log(`       - ${t}`));
     console.log();
     if (IS_POSTGRES) {
-      console.log("  Ejecutar en Supabase SQL Editor:");
+      console.log("  Ejecutar en Supabase SQL Editor (ver supabase/migrations/SUPABASE_SETUP.md):");
       console.log("  → supabase/migrations/001_citysecure_schema.sql");
     } else {
       console.log("  Ejecutar: npm run db:migrate");
