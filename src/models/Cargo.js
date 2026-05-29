@@ -28,7 +28,7 @@
  */
 
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const Cargo = sequelize.define(
   "Cargo",
@@ -265,6 +265,7 @@ const Cargo = sequelize.define(
     // ==========================================
 
     tableName: "cargos",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",

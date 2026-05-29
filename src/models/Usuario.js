@@ -10,7 +10,7 @@ import { DataTypes } from "sequelize";
 // Importar el modelo de historial para usar en los hooks
 import HistorialUsuario from "./HistorialUsuario.js";
 
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 // ===============================================
 // FUNCIONES DE UTILIDAD PARA AUDITORÍA
@@ -276,6 +276,7 @@ const Usuario = sequelize.define(
   {
     // Configuración del modelo
     tableName: "usuarios",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",

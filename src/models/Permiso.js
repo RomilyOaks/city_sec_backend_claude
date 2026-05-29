@@ -25,8 +25,7 @@
 
 import { DataTypes } from "sequelize";
 
-//import sequelize from "../config/database.js";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 /**
  * Definición del modelo Permiso
@@ -156,6 +155,7 @@ const Permiso = sequelize.define(
     // ============================================
 
     tableName: "permisos",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at", // Ahora sí se actualiza para auditoría

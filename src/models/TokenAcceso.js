@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const TokenAcceso = sequelize.define(
   "TokenAcceso",
@@ -58,6 +58,7 @@ const TokenAcceso = sequelize.define(
   },
   {
     tableName: "tokens_acceso",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: false,

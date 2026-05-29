@@ -41,7 +41,7 @@
 
 // ORM COnfiguration
 import { DataTypes, Op } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA, IS_POSTGRES } from "../config/database.js";
 // App Models
 ////import Cuadrante from "./Cuadrante.js";
 ////import Sector from "./Sector.js";
@@ -336,10 +336,11 @@ const CallesCuadrantes = sequelize.define(
     // ============================================================================
     sequelize,
     tableName: "calles_cuadrantes",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
-    paranoid: true, // Habilita soft delete
+    paranoid: true,
     deletedAt: "deleted_at",
     comment: "Relación de calles con cuadrantes (M:N)",
 

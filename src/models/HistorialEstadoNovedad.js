@@ -7,7 +7,7 @@
 
 import { DataTypes } from "sequelize";
 // Importar la instancia de Sequelize configurada
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const HistorialEstadoNovedad = sequelize.define(
   "HistorialEstadoNovedad",
@@ -79,6 +79,7 @@ const HistorialEstadoNovedad = sequelize.define(
   },
   {
     tableName: "historial_estado_novedades",
+    schema: DB_SCHEMA,
     freezeTableName: true,
     timestamps: true,
     createdAt: "created_at",

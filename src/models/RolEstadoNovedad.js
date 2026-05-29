@@ -7,7 +7,7 @@
  */
 
 import { DataTypes, Model } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 class RolEstadoNovedad extends Model {}
 
@@ -64,6 +64,7 @@ RolEstadoNovedad.init(
   {
     sequelize,
     tableName: "rol_estados_novedad",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",

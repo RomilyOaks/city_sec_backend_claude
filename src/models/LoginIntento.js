@@ -9,13 +9,13 @@
  */
 
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const LoginIntento = sequelize.define(
   "LoginIntento",
   {
     id: {
-      type: DataTypes.BIGINT.UNSIGNED,
+      type: DataTypes.BIGINT,
       primaryKey: true,
       autoIncrement: true,
     },
@@ -60,6 +60,7 @@ const LoginIntento = sequelize.define(
   },
   {
     tableName: "login_intentos",
+    schema: DB_SCHEMA,
 
     timestamps: true,
     updatedAt: false,

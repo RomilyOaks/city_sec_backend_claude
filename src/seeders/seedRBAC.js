@@ -13,9 +13,14 @@
  * EJECUTAR CON: npm run seed:rbac
  */
 
+import { Op } from "sequelize";
 import { sequelize } from "../models/index.js";
 import models from "../models/index.js";
 import bcrypt from "bcryptjs";
+// IS_POSTGRES se importa para que el seeder sea consciente del dialecto activo.
+// Actualmente todas las operaciones son via ORM (dialect-agnostic), pero el import
+// documenta la dependencia y permite condicionales futuros si fueran necesarios.
+import { IS_POSTGRES } from "../config/database.js";
 
 // Destructurar los modelos necesarios
 const { Usuario, Rol, Permiso, UsuarioRol } = models;
@@ -31,13 +36,12 @@ async function seedRBAC() {
     await sequelize.authenticate();
 
     // Iniciar transacción
+    // NOTA: la transacción abarca TODA la operación del seeder.
+    // No hacer commit prematuro — PostgreSQL lanzaría error al usar
+    // una transacción ya cerrada en los findOrCreate/bulkCreate posteriores.
     console.log("🔒 Iniciando transacción...");
     const transaction = await sequelize.transaction();
     console.log("✅ Transacción iniciada");
-
-    // Confirmar transacción
-    await transaction.commit();
-    console.log("✅ Transacción confirmada");
 
     // ========================================
     // 1. CREAR ROLES DEL SISTEMA
@@ -1146,7 +1150,7 @@ async function seedRBAC() {
     // Asignar permisos de operativos a Administrador y Supervisor
     const rolesParaOperativos = await Rol.findAll({
       where: {
-        slug: { [sequelize.Op.in]: ["admin", "supervisor"] },
+        slug: { [Op.in]: ["admin", "supervisor"] },
       },
       transaction,
     });
@@ -1156,7 +1160,7 @@ async function seedRBAC() {
         where: {
           modulo: "operativos",
           recurso: {
-            [sequelize.Op.in]: [
+            [Op.in]: [
               "turnos",
               "vehiculos",
               "vehiculos_cuadrantes",
@@ -1165,7 +1169,7 @@ async function seedRBAC() {
               "personal",
             ],
           },
-          accion: { [sequelize.Op.in]: ["create", "read", "update", "delete", "export"] },
+          accion: { [Op.in]: ["create", "read", "update", "delete", "export"] },
         },
         transaction,
       });
@@ -1198,7 +1202,7 @@ async function seedRBAC() {
     // Asignar permisos de novedades a roles que pueden ver reportes
     const rolesParaNovedades = await Rol.findAll({
       where: {
-        slug: { [sequelize.Op.in]: ["super_admin", "admin", "supervisor", "operador", "consulta"] },
+        slug: { [Op.in]: ["super_admin", "admin", "supervisor", "operador", "consulta"] },
       },
       transaction,
     });
@@ -1249,13 +1253,13 @@ async function seedRBAC() {
 
     // Roles que pueden VER fotos y REPRODUCIR audio
     const rolesViewerPlayer = await Rol.findAll({
-      where: { slug: { [sequelize.Op.in]: ["admin", "supervisor", "operador", "consulta"] } },
+      where: { slug: { [Op.in]: ["admin", "supervisor", "operador", "consulta"] } },
       transaction,
     });
 
     const permisosViewerPlayer = await Permiso.findAll({
       where: {
-        [sequelize.Op.or]: [
+        [Op.or]: [
           { modulo: "novedades", recurso: "fotos",  accion: "viewer" },
           { modulo: "novedades", recurso: "audio",  accion: "player" },
         ],
@@ -1276,7 +1280,7 @@ async function seedRBAC() {
 
     // Roles que además pueden DESCARGAR fotos
     const rolesDownloader = await Rol.findAll({
-      where: { slug: { [sequelize.Op.in]: ["admin", "supervisor"] } },
+      where: { slug: { [Op.in]: ["admin", "supervisor"] } },
       transaction,
     });
 
@@ -1311,7 +1315,7 @@ async function seedRBAC() {
     // — tracking.vehiculos.update → roles con escritura —
     const rolesTrackingUpdate = await Rol.findAll({
       where: {
-        slug: { [sequelize.Op.in]: ["super_admin", "admin", "supervisor", "operador"] },
+        slug: { [Op.in]: ["super_admin", "admin", "supervisor", "operador"] },
       },
       transaction,
     });
@@ -1335,7 +1339,7 @@ async function seedRBAC() {
     // — tracking.vehiculos.read → roles con lectura (incluyendo consulta) —
     const rolesTrackingRead = await Rol.findAll({
       where: {
-        slug: { [sequelize.Op.in]: ["super_admin", "admin", "supervisor", "operador", "consulta"] },
+        slug: { [Op.in]: ["super_admin", "admin", "supervisor", "operador", "consulta"] },
       },
       transaction,
     });
@@ -1425,7 +1429,7 @@ async function seedRBAC() {
       // Permisos de lectura para el rol consulta
       const permisosConsulta = await Permiso.findAll({
         where: {
-          [sequelize.Op.or]: [
+          [Op.or]: [
             // Permisos de novedades (lectura)
             {
               modulo: "novedades",

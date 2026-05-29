@@ -8,6 +8,7 @@
  */
 
 import sequelize from "../config/database.js";
+import { IS_POSTGRES } from "../config/database.js"; // eslint-disable-line no-unused-vars
 import models from "../models/index.js";
 import { Op } from "sequelize";
 

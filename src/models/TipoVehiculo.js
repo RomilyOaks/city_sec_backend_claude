@@ -51,8 +51,7 @@
 
 import { DataTypes } from "sequelize";
 
-//import sequelize from "../config/database.js";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const TipoVehiculo = sequelize.define(
   "TipoVehiculo",
@@ -124,6 +123,7 @@ const TipoVehiculo = sequelize.define(
   },
   {
     tableName: "tipos_vehiculo",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
@@ -228,7 +228,8 @@ TipoVehiculo.getEstadisticas = async function () {
       estado: true,
       deleted_at: null,
     },
-    group: ["TipoVehiculo.id"],
+    // PostgreSQL strict mode: todas las columnas no-agregadas en GROUP BY
+    group: ["TipoVehiculo.id", "TipoVehiculo.nombre"],
     order: [[sequelize.literal("cantidad_vehiculos"), "DESC"]],
     raw: false,
   });

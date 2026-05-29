@@ -11,7 +11,7 @@
  */
 
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const MantenimientoVehiculo = sequelize.define(
   "MantenimientoVehiculo",
@@ -197,6 +197,7 @@ const MantenimientoVehiculo = sequelize.define(
     sequelize,
     modelName: "MantenimientoVehiculo",
     tableName: "mantenimiento_vehiculos",
+    schema: DB_SCHEMA,
     freezeTableName: true,
     timestamps: true,
     createdAt: "created_at",

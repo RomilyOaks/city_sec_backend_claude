@@ -7,8 +7,7 @@
 
 import { DataTypes } from "sequelize";
 
-//import sequelize from "../config/database.js";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const EstadoNovedad = sequelize.define(
   "estadoNovedad",
@@ -99,7 +98,7 @@ const EstadoNovedad = sequelize.define(
       comment: "Fecha de eliminación lógica",
     },
     deleted_by: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: true,
       comment: "Usuario que eliminó",
     },
@@ -118,6 +117,7 @@ const EstadoNovedad = sequelize.define(
   },
   {
     tableName: "estados_novedad",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
@@ -317,6 +317,7 @@ EstadoNovedad.contarNovedadesPorEstado = async function () {
       "nombre",
       "color_hex",
       "icono",
+      "orden",
       [sequelize.fn("COUNT", sequelize.col("novedades.id")), "cantidad"],
     ],
     include: [
@@ -334,7 +335,8 @@ EstadoNovedad.contarNovedadesPorEstado = async function () {
       estado: true,
       deleted_at: null,
     },
-    group: ["EstadoNovedad.id"],
+    // GROUP BY incluye todas las columnas no-agregadas (requerido en PostgreSQL strict mode)
+    group: ["EstadoNovedad.id", "EstadoNovedad.nombre", "EstadoNovedad.color_hex", "EstadoNovedad.icono", "EstadoNovedad.orden"],
     order: [["orden", "ASC"]],
     raw: true,
   });

@@ -36,7 +36,7 @@
  */
 
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 /**
  * @typedef {Object} TipoVia
@@ -241,7 +241,8 @@ const TipoVia = sequelize.define(
     // CONFIGURACIÓN DEL MODELO
     // ============================================================================
     sequelize, // Instancia de Sequelize
-    tableName: "tipos_via", // Nombre exacto de la tabla en la base de datos
+    tableName: "tipos_via",
+    schema: DB_SCHEMA,
     timestamps: true, // Habilita manejo automático de created_at y updated_at
     paranoid: true, // Habilita soft-delete (no elimina físicamente los registros)
     createdAt: "created_at", // Mapeo del campo createdAt

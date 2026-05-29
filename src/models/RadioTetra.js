@@ -27,7 +27,7 @@
  */
 
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const RadioTetra = sequelize.define(
   "RadioTetra",
@@ -124,6 +124,7 @@ const RadioTetra = sequelize.define(
   },
   {
     tableName: "radios_tetra",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",

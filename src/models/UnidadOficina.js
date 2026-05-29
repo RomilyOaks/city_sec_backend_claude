@@ -67,7 +67,7 @@
 
 import { DataTypes } from "sequelize";
 
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA, IS_POSTGRES } from "../config/database.js";
 
 const UnidadOficina = sequelize.define(
   "UnidadOficina",
@@ -220,6 +220,7 @@ const UnidadOficina = sequelize.define(
   },
   {
     tableName: "unidades_oficina",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
@@ -422,7 +423,10 @@ UnidadOficina.getEstadisticasPorTipo = async function () {
       [
         sequelize.fn(
           "SUM",
-          sequelize.literal("CASE WHEN activo_24h = 1 THEN 1 ELSE 0 END")
+          // En PostgreSQL BOOLEAN se compara con true/false, no con 1/0
+          sequelize.literal(IS_POSTGRES
+            ? "CASE WHEN activo_24h = true THEN 1 ELSE 0 END"
+            : "CASE WHEN activo_24h = 1 THEN 1 ELSE 0 END")
         ),
         "unidades_24h",
       ],

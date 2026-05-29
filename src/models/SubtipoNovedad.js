@@ -7,8 +7,7 @@
 
 import { DataTypes } from "sequelize";
 
-//import sequelize from "../config/database.js";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA, IS_POSTGRES } from "../config/database.js";
 
 const SubtipoNovedad = sequelize.define(
   "SubtipoNovedad",
@@ -135,6 +134,7 @@ const SubtipoNovedad = sequelize.define(
   },
   {
     tableName: "subtipos_novedad",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
@@ -337,6 +337,11 @@ SubtipoNovedad.getCatalogoCompleto = async function () {
 
 // Obtener estadísticas por prioridad
 SubtipoNovedad.getEstadisticasPorPrioridad = async function () {
+  // FIELD() es MySQL-only. En PostgreSQL se usa CASE WHEN para ordenar por prioridad.
+  const orderExpr = IS_POSTGRES
+    ? sequelize.literal("CASE WHEN prioridad='ALTA' THEN 1 WHEN prioridad='MEDIA' THEN 2 ELSE 3 END")
+    : sequelize.literal("FIELD(prioridad, 'ALTA', 'MEDIA', 'BAJA')");
+
   return await SubtipoNovedad.findAll({
     attributes: [
       "prioridad",
@@ -351,7 +356,7 @@ SubtipoNovedad.getEstadisticasPorPrioridad = async function () {
       deleted_at: null,
     },
     group: ["prioridad"],
-    order: [[sequelize.literal("FIELD(prioridad, 'ALTA', 'MEDIA', 'BAJA')")]],
+    order: [[orderExpr]],
     raw: true,
   });
 };

@@ -27,7 +27,7 @@
  */
 
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 import Usuario from "./Usuario.js";
 
 /**
@@ -144,14 +144,13 @@ const HorariosTurnos = sequelize.define(
   {
     // Nombre de la tabla en la base de datos
     tableName: "horarios_turnos",
+    schema: DB_SCHEMA,
 
-    // Configuración adicional
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
-    paranoid: false, // Desactivar paranoid - manejaremos soft delete manualmente
+    paranoid: false,
 
-    // Índices para optimización
     indexes: [
       {
         unique: true,
@@ -172,12 +171,6 @@ const HorariosTurnos = sequelize.define(
       },
     ],
 
-    // Configuración del motor y charset
-    engine: "InnoDB",
-    charset: "utf8mb4",
-    collate: "utf8mb4_0900_ai_ci",
-
-    // Comentario de la tabla
     comment: "Catálogo de horarios para operativos de patrullaje",
 
     // Hooks para validaciones y acciones automáticas

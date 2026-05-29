@@ -8,6 +8,7 @@
  */
 
 import EstadoNovedad from "../models/EstadoNovedad.js";
+import { IS_POSTGRES } from "../config/database.js"; // eslint-disable-line no-unused-vars
 
 const estadosNovedad = [
   {
@@ -19,7 +20,7 @@ const estadosNovedad = [
     es_inicial: true,
     es_final: false,
     requiere_unidad: false,
-    estado: 1,
+    estado: true,
   },
   {
     nombre: "Asignado",
@@ -30,7 +31,7 @@ const estadosNovedad = [
     es_inicial: false,
     es_final: false,
     requiere_unidad: true,
-    estado: 1,
+    estado: true,
   },
   {
     nombre: "En Camino",
@@ -41,7 +42,7 @@ const estadosNovedad = [
     es_inicial: false,
     es_final: false,
     requiere_unidad: true,
-    estado: 1,
+    estado: true,
   },
   {
     nombre: "En Sitio",
@@ -52,7 +53,7 @@ const estadosNovedad = [
     es_inicial: false,
     es_final: false,
     requiere_unidad: true,
-    estado: 1,
+    estado: true,
   },
   {
     nombre: "En Atención",
@@ -63,7 +64,7 @@ const estadosNovedad = [
     es_inicial: false,
     es_final: false,
     requiere_unidad: true,
-    estado: 1,
+    estado: true,
   },
   {
     nombre: "Resuelto",
@@ -74,7 +75,7 @@ const estadosNovedad = [
     es_inicial: false,
     es_final: true,
     requiere_unidad: false,
-    estado: 1,
+    estado: true,
   },
   {
     nombre: "Cerrado",
@@ -85,7 +86,7 @@ const estadosNovedad = [
     es_inicial: false,
     es_final: true,
     requiere_unidad: false,
-    estado: 1,
+    estado: true,
   },
   {
     nombre: "Cancelado",
@@ -96,7 +97,7 @@ const estadosNovedad = [
     es_inicial: false,
     es_final: true,
     requiere_unidad: false,
-    estado: 1,
+    estado: true,
   },
 ];
 
@@ -152,7 +153,7 @@ export async function seedEstadosNovedad() {
 
   // Verificar que existe el estado inicial
   const estadoInicial = await EstadoNovedad.findOne({
-    where: { es_inicial: true, estado: 1 },
+    where: { es_inicial: true, estado: true },
   });
 
   if (estadoInicial) {

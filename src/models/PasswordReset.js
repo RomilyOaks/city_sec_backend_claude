@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const PasswordReset = sequelize.define(
   "PasswordReset",
@@ -33,6 +33,7 @@ const PasswordReset = sequelize.define(
   },
   {
     tableName: "password_resets",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: false,

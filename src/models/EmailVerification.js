@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const EmailVerification = sequelize.define(
   "EmailVerification",
@@ -33,6 +33,7 @@ const EmailVerification = sequelize.define(
   },
   {
     tableName: "email_verifications",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: false,

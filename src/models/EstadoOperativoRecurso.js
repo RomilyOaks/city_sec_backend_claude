@@ -12,7 +12,7 @@
  */
 
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const EstadoOperativoRecurso = sequelize.define(
   "EstadoOperativoRecurso",
@@ -69,6 +69,7 @@ const EstadoOperativoRecurso = sequelize.define(
   },
   {
     tableName: "estados_operativo_recurso",
+    schema: DB_SCHEMA,
     timestamps: true,
     paranoid: true,
     createdAt: "created_at",

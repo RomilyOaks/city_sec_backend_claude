@@ -1,11 +1,13 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const OperativosTurno = sequelize.define(
   "OperativosTurno",
   {
     id: {
-      type: DataTypes.INTEGER,
+      // BIGINT: alineado con operativos_personal.operativo_turno_id (BIGINT)
+      // Era INTEGER en MySQL — PostgreSQL rechaza FK de BIGINT → INTEGER
+      type: DataTypes.BIGINT,
       primaryKey: true,
       autoIncrement: true,
       allowNull: false,
@@ -106,6 +108,7 @@ const OperativosTurno = sequelize.define(
   },
   {
     tableName: "operativos_turno",
+    schema: DB_SCHEMA,
     timestamps: true,
     paranoid: true,
     createdAt: "created_at",

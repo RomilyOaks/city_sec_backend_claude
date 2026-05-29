@@ -1,17 +1,17 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const OperativosVehiculosNovedades = sequelize.define(
   "OperativosVehiculosNovedades",
   {
     id: {
-      type: DataTypes.BIGINT.UNSIGNED,
+      type: DataTypes.BIGINT,
       primaryKey: true,
       autoIncrement: true,
       allowNull: false,
     },
     operativo_vehiculo_cuadrante_id: {
-      type: DataTypes.BIGINT.UNSIGNED,
+      type: DataTypes.BIGINT,
       allowNull: false,
       references: {
         model: "operativos_vehiculos_cuadrantes",
@@ -102,6 +102,7 @@ const OperativosVehiculosNovedades = sequelize.define(
   },
   {
     tableName: "operativos_vehiculos_novedades",
+    schema: DB_SCHEMA,
     timestamps: true,
     paranoid: true,
     createdAt: "created_at",

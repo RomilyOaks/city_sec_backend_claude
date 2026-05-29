@@ -12,7 +12,7 @@
  */
 
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const TipoCopiloto = sequelize.define(
   "TipoCopiloto",
@@ -69,6 +69,7 @@ const TipoCopiloto = sequelize.define(
   },
   {
     tableName: "tipos_copiloto",
+    schema: DB_SCHEMA,
     timestamps: true,
     paranoid: true,
     createdAt: "created_at",

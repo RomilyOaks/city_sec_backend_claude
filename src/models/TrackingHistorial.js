@@ -36,7 +36,7 @@
  */
 
 import { DataTypes, Model } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 class TrackingHistorial extends Model {
   // Asociaciones definidas en src/models/index.js (sección TRACKING GPS v2.2.3)
@@ -96,6 +96,7 @@ TrackingHistorial.init(
     sequelize,
     modelName: "TrackingHistorial",
     tableName: "tracking_historial",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: false, // Solo INSERT — los registros históricos nunca se modifican

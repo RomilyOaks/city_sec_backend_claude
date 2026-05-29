@@ -8,7 +8,7 @@
 
 import { DataTypes } from "sequelize";
 // Importamos la conexión a la base de datos configurada
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const UsuarioRol = sequelize.define(
   "UsuarioRol",
@@ -106,7 +106,8 @@ const UsuarioRol = sequelize.define(
   },
   {
     // === Opciones del Modelo ===
-    tableName: "usuario_roles", // Nombre real de la tabla en la base de datos
+    tableName: "usuario_roles",
+    schema: DB_SCHEMA,
     timestamps: true, // Activamos timestamps para auditoría
     createdAt: "created_at",
     updatedAt: "updated_at",

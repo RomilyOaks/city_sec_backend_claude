@@ -12,7 +12,7 @@
  */
 
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 import Cuadrante from "./Cuadrante.js";
 import Vehiculo from "./Vehiculo.js";
 import Usuario from "./Usuario.js";
@@ -124,6 +124,7 @@ const CuadranteVehiculoAsignado = sequelize.define(
   },
   {
     tableName: "cuadrantes_vehiculo_asignado",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
@@ -150,9 +151,6 @@ const CuadranteVehiculoAsignado = sequelize.define(
       },
     ],
 
-    // Configuración adicional
-    charset: "utf8mb4",
-    collate: "utf8mb4_0900_ai_ci",
     comment: "Asignación de vehículos a cuadrantes específicos",
   }
 );

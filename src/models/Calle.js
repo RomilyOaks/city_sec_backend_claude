@@ -37,7 +37,7 @@
  */
 
 import { DataTypes, Op } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA, IS_POSTGRES } from "../config/database.js";
 
 /**
  * @typedef {Object} Calle
@@ -392,6 +392,7 @@ const Calle = sequelize.define(
     // ============================================================================
     sequelize,
     tableName: "calles",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
@@ -489,7 +490,8 @@ Calle.buscarPorNombre = async function (query, limit = 20) {
   return await this.findAll({
     where: {
       nombre_via: {
-        [Op.like]: `%${query}%`,
+        // iLike en PostgreSQL (case-insensitive); like en MySQL
+        [IS_POSTGRES ? Op.iLike : Op.like]: `%${query}%`,
       },
       estado: 1,
       deleted_at: null,
@@ -518,7 +520,7 @@ Calle.porUrbanizacion = async function (urbanizacion) {
   return await this.findAll({
     where: {
       urbanizacion: {
-        [Op.like]: `%${urbanizacion}%`, // ✅ Búsqueda flexible
+        [IS_POSTGRES ? Op.iLike : Op.like]: `%${urbanizacion}%`,
       },
       estado: 1,
       deleted_at: null,

@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const CatalogoDesperfectos = sequelize.define(
   "CatalogoDesperfectos",
@@ -12,6 +12,7 @@ const CatalogoDesperfectos = sequelize.define(
   },
   {
     tableName: "catalogo_desperfectos",
+    schema: DB_SCHEMA,
     timestamps: false,
   }
 );

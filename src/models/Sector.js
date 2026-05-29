@@ -38,8 +38,7 @@
 
 import { DataTypes } from "sequelize";
 
-//import sequelize from "../config/database.js";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const Sector = sequelize.define(
   "Sector",
@@ -148,6 +147,7 @@ const Sector = sequelize.define(
   },
   {
     tableName: "sectores",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
@@ -350,7 +350,8 @@ Sector.getEstadisticas = async function () {
       estado: true,
       deleted_at: null,
     },
-    group: ["Sector.id"],
+    // PostgreSQL strict mode requiere todas las columnas no-agregadas en GROUP BY
+    group: ["Sector.id", "Sector.sector_code", "Sector.nombre"],
     order: [["sector_code", "ASC"]],
     raw: false,
   });

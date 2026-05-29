@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const UsuarioPermiso = sequelize.define(
   "UsuarioPermiso",
@@ -61,6 +61,7 @@ const UsuarioPermiso = sequelize.define(
   },
   {
     tableName: "usuario_permisos",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",

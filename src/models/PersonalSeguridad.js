@@ -49,7 +49,7 @@
  */
 
 import { DataTypes, Op } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA, IS_POSTGRES } from "../config/database.js";
 
 const PersonalSeguridad = sequelize.define(
   "PersonalSeguridad",
@@ -633,6 +633,7 @@ const PersonalSeguridad = sequelize.define(
     // ==========================================
 
     tableName: "personal_seguridad",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
@@ -855,7 +856,8 @@ const PersonalSeguridad = sequelize.define(
                 const ultimoPersonal = await PersonalSeguridad.findOne({
                   where: {
                     codigo_acceso: {
-                      [Op.like]: `${prefijo}-%`,
+                      // iLike en PostgreSQL (case-insensitive); like en MySQL
+                      [IS_POSTGRES ? Op.iLike : Op.like]: `${prefijo}-%`,
                     },
                   },
                   order: [["codigo_acceso", "DESC"]],
@@ -930,7 +932,8 @@ const PersonalSeguridad = sequelize.define(
         where: {
           licencia: { [Op.ne]: null },
           vigencia: {
-            [Op.gte]: sequelize.fn("CURDATE"),
+            // CURDATE() es MySQL-only; CURRENT_DATE es estándar SQL (ambos dialectos)
+            [Op.gte]: sequelize.fn("CURRENT_DATE"),
           },
           status: "Activo",
           estado: true,
@@ -1106,7 +1109,7 @@ PersonalSeguridad.getEstadisticas = async function () {
   const con_licencia_vigente = await PersonalSeguridad.count({
     where: {
       licencia: { [Op.ne]: null },
-      vigencia: { [Op.gte]: sequelize.fn("CURDATE") },
+      vigencia: { [Op.gte]: sequelize.fn("CURRENT_DATE") },
       status: "Activo",
       deleted_at: null,
     },

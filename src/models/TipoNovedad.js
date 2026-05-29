@@ -7,7 +7,7 @@
 
 import { DataTypes, Op } from "sequelize";
 
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const TipoNovedad = sequelize.define(
   "TipoNovedad",
@@ -108,6 +108,7 @@ const TipoNovedad = sequelize.define(
   },
   {
     tableName: "tipos_novedad",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
@@ -273,6 +274,7 @@ TipoNovedad.getEstadisticas = async function () {
       "tipo_code",
       "nombre",
       "color_hex",
+      "orden",
       [
         sequelize.fn("COUNT", sequelize.col("subtipos.id")),
         "cantidad_subtipos",
@@ -293,7 +295,8 @@ TipoNovedad.getEstadisticas = async function () {
       estado: true,
       deleted_at: null,
     },
-    group: ["TipoNovedad.id"],
+    // PostgreSQL strict mode: todas las columnas SELECT en GROUP BY
+    group: ["TipoNovedad.id", "TipoNovedad.tipo_code", "TipoNovedad.nombre", "TipoNovedad.color_hex", "TipoNovedad.orden"],
     order: [["orden", "ASC"]],
     raw: false,
   });

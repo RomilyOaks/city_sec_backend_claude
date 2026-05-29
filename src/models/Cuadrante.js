@@ -52,8 +52,7 @@
 
 import { DataTypes } from "sequelize";
 
-//import sequelize from "../config/database.js";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 /**
  * Definición del modelo Cuadrante
@@ -321,7 +320,8 @@ const Cuadrante = sequelize.define(
     // CONFIGURACIÓN DEL MODELO
     // ============================================
 
-    tableName: "cuadrantes", // Nombre de la tabla en la BD
+    tableName: "cuadrantes",
+    schema: DB_SCHEMA,
     timestamps: true, // Habilita created_at y updated_at
     createdAt: "created_at", // Personalizar nombre de la columna
     updatedAt: "updated_at", // Personalizar nombre de la columna

@@ -30,7 +30,7 @@
  */
 
 import { DataTypes, Model } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 class TrackingVehiculo extends Model {
   // Asociaciones definidas en src/models/index.js (sección TRACKING GPS v2.2.3)
@@ -70,13 +70,13 @@ TrackingVehiculo.init(
     },
 
     operativo_id: {
-      type: DataTypes.BIGINT.UNSIGNED, // operativos_turno.id es BIGINT UNSIGNED
+      type: DataTypes.BIGINT, // FK a operativos_turno.id (BIGINT)
       allowNull: true,
       references: {
         model: "operativos_turno",
         key: "id",
       },
-      comment: "FK a operativos_turno.id — turno activo (NULL fuera de turno). BIGINT UNSIGNED para coincidir con PK de operativos_turno",
+      comment: "FK a operativos_turno.id (BIGINT) — turno activo (NULL fuera de turno)",
     },
 
     lat: {
@@ -123,6 +123,7 @@ TrackingVehiculo.init(
     sequelize,
     modelName: "TrackingVehiculo",
     tableName: "tracking_vehiculos",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",

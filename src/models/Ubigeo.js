@@ -7,8 +7,7 @@
 
 import { DataTypes } from "sequelize";
 
-//import sequelize from "../config/database.js";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA, IS_POSTGRES } from "../config/database.js";
 
 const Ubigeo = sequelize.define(
   "Ubigeo",
@@ -44,7 +43,8 @@ const Ubigeo = sequelize.define(
   },
   {
     tableName: "ubigeo",
-    timestamps: false, // Esta tabla no necesita timestamps
+    schema: DB_SCHEMA,
+    timestamps: false,
 
     // Índices
     indexes: [
@@ -128,10 +128,11 @@ Ubigeo.findByUbicacion = async function (departamento, provincia, distrito) {
 
 // Buscar distritos por nombre (búsqueda parcial)
 Ubigeo.searchDistritos = async function (searchTerm) {
+  const { Op } = sequelize.Sequelize;
   return await Ubigeo.findAll({
     where: {
       distrito: {
-        [sequelize.Sequelize.Op.like]: `%${searchTerm}%`,
+        [IS_POSTGRES ? Op.iLike : Op.like]: `%${searchTerm}%`,
       },
     },
     order: [

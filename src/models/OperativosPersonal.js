@@ -36,7 +36,7 @@
  */
 
 import { DataTypes, Model } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 /**
  * Clase OperativosPersonal
@@ -68,7 +68,7 @@ OperativosPersonal.init(
     // CAMPO: id (PRIMARY KEY)
     // =========================================
     id: {
-      type: DataTypes.BIGINT.UNSIGNED,
+      type: DataTypes.BIGINT,
       primaryKey: true,
       autoIncrement: true,
       comment: "Identificador único del registro",
@@ -78,7 +78,7 @@ OperativosPersonal.init(
     // CAMPO: operativo_turno_id (FK)
     // =========================================
     operativo_turno_id: {
-      type: DataTypes.BIGINT.UNSIGNED,
+      type: DataTypes.BIGINT,
       allowNull: false,
       references: {
         model: "operativos_turno",
@@ -269,6 +269,7 @@ OperativosPersonal.init(
     sequelize,
     modelName: "OperativosPersonal",
     tableName: "operativos_personal",
+    schema: DB_SCHEMA,
     timestamps: true, // Habilita created_at y updated_at
     paranoid: true, // Habilita soft delete con deleted_at
     createdAt: "created_at",

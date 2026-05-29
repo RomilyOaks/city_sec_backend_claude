@@ -37,7 +37,7 @@
  */
 
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const Subsector = sequelize.define(
   "Subsector",
@@ -175,6 +175,7 @@ const Subsector = sequelize.define(
   },
   {
     tableName: "subsectores",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",

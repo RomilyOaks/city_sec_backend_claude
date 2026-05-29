@@ -38,7 +38,7 @@
  */
 
 import { DataTypes, Model } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA, IS_POSTGRES } from "../config/database.js";
 
 class Vehiculo extends Model {
   /**
@@ -228,7 +228,7 @@ Vehiculo.init(
       comment: "Fecha de eliminación (soft delete)",
     },
     deleted_by: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: true,
       comment: "Usuario que eliminó",
     },
@@ -263,6 +263,7 @@ Vehiculo.init(
     sequelize,
     modelName: "Vehiculo",
     tableName: "vehiculos",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
@@ -287,18 +288,25 @@ Vehiculo.init(
             const usarNuevoFormato = tipo.prefijo !== null && tipo.prefijo !== undefined && tipo.prefijo.trim() !== "";
             const prefijo = usarNuevoFormato ? tipo.prefijo.trim().toUpperCase() : tipo.nombre.substring(0, 1).toUpperCase();
 
-            // Buscar el último código con ese prefijo
-            const ultimoVehiculo = await Vehiculo.findOne({
+            // Buscar el último código con ese prefijo.
+            // La extracción numérica se hace en JS (parseInt) en lugar de raw SQL
+            // para ser compatible con MySQL y PostgreSQL sin CAST...AS UNSIGNED.
+            const vehiculosConPrefijo = await Vehiculo.findAll({
               where: {
                 codigo_vehiculo: {
                   [sequelize.Sequelize.Op.like]: `${prefijo}-%`,
                 },
               },
-              order: [
-                [sequelize.literal(`CAST(SUBSTRING(codigo_vehiculo, ${prefijo.length + 2}) AS UNSIGNED)`), "DESC"],
-              ],
+              attributes: ["codigo_vehiculo"],
               transaction: options.transaction,
             });
+            const ultimoVehiculo = vehiculosConPrefijo.length
+              ? vehiculosConPrefijo.reduce((max, v) => {
+                  const n = parseInt((v.codigo_vehiculo || "").split("-")[1]) || 0;
+                  const m = parseInt((max.codigo_vehiculo || "").split("-")[1]) || 0;
+                  return n > m ? v : max;
+                })
+              : null;
 
             let nuevoNumero = 1;
             if (ultimoVehiculo && ultimoVehiculo.codigo_vehiculo) {

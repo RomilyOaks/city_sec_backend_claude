@@ -17,7 +17,7 @@
  */
 
 import { DataTypes, Model } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 class OperativosVehiculos extends Model {
   static associate(models) {
@@ -89,12 +89,12 @@ class OperativosVehiculos extends Model {
 OperativosVehiculos.init(
   {
     id: {
-      type: DataTypes.BIGINT.UNSIGNED,
+      type: DataTypes.BIGINT,
       primaryKey: true,
       autoIncrement: true,
     },
     operativo_turno_id: {
-      type: DataTypes.BIGINT.UNSIGNED,
+      type: DataTypes.BIGINT,
       allowNull: false,
       references: {
         model: "operativos_turno",
@@ -232,6 +232,7 @@ OperativosVehiculos.init(
     sequelize,
     modelName: "OperativosVehiculos",
     tableName: "operativos_vehiculos",
+    schema: DB_SCHEMA,
     timestamps: true,
     paranoid: true,
     createdAt: "created_at",

@@ -11,7 +11,7 @@
  */
 
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const Taller = sequelize.define(
   "Taller",
@@ -107,6 +107,7 @@ const Taller = sequelize.define(
     sequelize,
     modelName: "Taller",
     tableName: "talleres",
+    schema: DB_SCHEMA,
     freezeTableName: true,
     timestamps: true,
     createdAt: "created_at",

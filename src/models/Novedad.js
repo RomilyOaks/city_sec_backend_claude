@@ -7,7 +7,7 @@
  */
 
 import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { DB_SCHEMA } from "../config/database.js";
 
 const Novedad = sequelize.define(
   "Novedad",
@@ -260,6 +260,7 @@ const Novedad = sequelize.define(
   },
   {
     tableName: "novedades_incidentes",
+    schema: DB_SCHEMA,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
