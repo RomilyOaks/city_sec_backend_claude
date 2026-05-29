@@ -21,7 +21,7 @@
  *
  * Variables de entorno nuevas:
  *   DB_DIALECT = mysql | postgres   (default: mysql)
- *   DB_SCHEMA  = public | citysecure (default: public)
+ *   DB_SCHEMA  = citysecure         (solo aplica cuando DB_DIALECT=postgres; ignorado en MySQL)
  *   DB_SSL     = true | false        (default: false)
  */
 
@@ -40,8 +40,10 @@ const NODE_ENV   = process.env.NODE_ENV   || "development";
 export const DB_DIALECT   = process.env.DB_DIALECT || "mysql";
 export const IS_POSTGRES  = DB_DIALECT === "postgres";
 
-// Schema PostgreSQL: 'citysecure' para Supabase, 'public' para MySQL (se ignora)
-export const DB_SCHEMA    = process.env.DB_SCHEMA  || "public";
+// Schema PostgreSQL: 'citysecure' para Supabase.
+// MySQL no usa schemas — se exporta undefined para que schema:DB_SCHEMA en modelos
+// quede como schema:undefined, que Sequelize ignora al construir queries MySQL.
+export const DB_SCHEMA = IS_POSTGRES ? (process.env.DB_SCHEMA || "citysecure") : undefined;
 
 // SSL — activa en ambos dialectos cuando DB_SSL=true
 const DB_SSL = process.env.DB_SSL === "true";
@@ -247,7 +249,7 @@ export const testConnection = async () => {
     console.log(`✅ Conexión a DB exitosa — Entorno: ${NODE_ENV.toUpperCase()}`);
     console.log(`   📊 Database: ${dbConfig.database}`);
     console.log(`   🖥️  Host: ${dbConfig.host}:${dbConfig.port}`);
-    console.log(`   🔌 Dialect: ${DB_DIALECT.toUpperCase()} | Schema: ${DB_SCHEMA}`);
+    console.log(`   🔌 Dialect: ${DB_DIALECT.toUpperCase()} | Schema: ${DB_SCHEMA ?? "(MySQL — sin schema)"}`);
     console.log(`   🏊 Pool: max=${dbConfig.pool.max}, min=${dbConfig.pool.min}`);
     return true;
   } catch (error) {
