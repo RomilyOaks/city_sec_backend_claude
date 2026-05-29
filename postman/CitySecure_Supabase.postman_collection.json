@@ -1,0 +1,519 @@
+{
+  "info": {
+    "_postman_id": "cs-supabase-backend-v1-2026",
+    "name": "CitySecure — Supabase (Production)",
+    "description": "Colección para probar el backend de CitySecure apuntando a Railway + Supabase.\n\n**URL base:** `https://citysecbackendclaude-production.up.railway.app/api/v1`\n\n**Dialecto activo:** PostgreSQL (Supabase) — variable `DB_DIALECT=postgres` en Railway\n\n**Flujo básico:**\n1. Ejecutar `POST /auth/login` — el token se guarda automáticamente en `{{token}}`\n2. Usar el resto de carpetas directamente (ya llevan `Authorization: Bearer {{token}}`)\n\n**Coordenadas de prueba:** Chorrillos, Lima\n- `lat: -12.1628`, `lng: -77.0135`\n\n**Permisos RBAC requeridos:**\n- `tracking.vehiculos.update` → POST /tracking/ubicacion\n- `tracking.vehiculos.read`  → GET /tracking/activos y vehiculos-cercanos\n- `novedades.incidentes.read` → GET /novedades",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://citysecbackendclaude-production.up.railway.app/api/v1",
+      "type": "string",
+      "description": "URL base de la API incluyendo versión. Apunta a Railway (producción con Supabase)."
+    },
+    {
+      "key": "host",
+      "value": "https://citysecbackendclaude-production.up.railway.app",
+      "type": "string",
+      "description": "Host base sin path. Usado para el healthcheck liviano GET /health."
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT de acceso. Se llena automáticamente al ejecutar POST /auth/login."
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "description": "Autenticación JWT. Ejecutar primero — el token se guarda automáticamente.",
+      "item": [
+        {
+          "name": "Login (guarda token automáticamente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login responde 200', function () {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "let json = {};",
+                  "try { json = pm.response.json(); } catch (e) {}",
+                  "",
+                  "const token = json?.data?.accessToken || json?.accessToken || json?.data?.token || json?.token;",
+                  "",
+                  "if (token) {",
+                  "  pm.environment.set('token', token);",
+                  "  pm.collectionVariables.set('token', token);",
+                  "  pm.test('Token guardado correctamente', function () {",
+                  "    pm.expect(token).to.be.a('string').and.not.empty;",
+                  "  });",
+                  "  console.log('✅ Token guardado:', token.substring(0, 40) + '...');",
+                  "} else {",
+                  "  pm.test('Token presente en respuesta', function () {",
+                  "    pm.expect.fail('No se encontró accessToken en la respuesta');",
+                  "  });",
+                  "  console.error('❌ Respuesta sin token:', JSON.stringify(json));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"admin@citysec.com\",\n  \"password\": \"Admin123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Inicia sesión y guarda el `accessToken` en `{{token}}` automáticamente vía script post-request.\n\nCredenciales por defecto tras el seed RBAC:\n- email: `admin@citysec.com`\n- password: `Admin123!`"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Tracking GPS",
+      "description": "Endpoints del módulo de rastreo GPS en tiempo real.\n\nPermisos necesarios:\n- `tracking.vehiculos.update` → POST /ubicacion\n- `tracking.vehiculos.read`  → GET activos / vehiculos-cercanos / ruta",
+      "item": [
+        {
+          "name": "Actualizar posición GPS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('Retorna vehiculo_id y coordenadas', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data).to.have.property('vehiculo_id');",
+                  "  pm.expect(json.data).to.have.property('lat');",
+                  "  pm.expect(json.data).to.have.property('lng');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehiculo_id\": 1,\n  \"lat\": -12.1628,\n  \"lng\": -77.0135,\n  \"velocidad\": 35.5,\n  \"precision_gps\": 4.2,\n  \"bateria_dispositivo\": 85\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/tracking/ubicacion",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "ubicacion"]
+            },
+            "description": "Recibe y persiste la posición GPS actual de un vehículo de patrullaje.\n\nHace UPSERT en `tracking_vehiculos` e INSERT en `tracking_historial`.\nEmite evento SSE `vehiculo:posicion` al dashboard.\n\n**Rate limit:** 1 req / 3 s por `vehiculo_id`\n\n**Permiso RBAC:** `tracking.vehiculos.update`\n\n**Coordenadas usadas:** Chorrillos, Lima (lat: -12.1628, lng: -77.0135)"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar vehículos activos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('Retorna array de vehiculos', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data).to.have.property('vehiculos');",
+                  "  pm.expect(json.data.vehiculos).to.be.an('array');",
+                  "  console.log('Vehículos activos:', json.data.total || json.data.vehiculos.length);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/activos",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "activos"]
+            },
+            "description": "Lista todos los vehículos con posición GPS actualizada en los **últimos 10 minutos**.\n\nIncluye datos del vehículo, personal conductor y operativo/turno activo.\n\n**Permiso RBAC:** `tracking.vehiculos.read`"
+          },
+          "response": []
+        },
+        {
+          "name": "Vehículos cercanos a novedad",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 o 404/422', function () {",
+                  "  pm.expect([200, 404, 422]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Retorna vehiculos_cercanos', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data).to.have.property('vehiculos_cercanos');",
+                  "    console.log('Vehículos cercanos encontrados:', json.data.vehiculos_cercanos.length);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/novedad/1/vehiculos-cercanos",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "novedad", "1", "vehiculos-cercanos"]
+            },
+            "description": "Calcula los vehículos de patrullaje activos más próximos a la novedad ID=1 usando la fórmula Haversine.\n\nDevuelve máximo **5 unidades** ordenadas por distancia con ETA estimado.\nSolo considera vehículos con posición en los **últimos 10 minutos**.\n\n404 si la novedad no existe. 422 si la novedad no tiene coordenadas GPS.\n\n**Permiso RBAC:** `tracking.vehiculos.read`"
+          },
+          "response": []
+        },
+        {
+          "name": "Historial de ruta del vehículo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 o 404', function () {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Retorna ruta con puntos GPS', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data).to.have.property('ruta');",
+                  "    console.log('Puntos de ruta:', json.data.total_puntos);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracking/vehiculo/1/ruta?fecha_inicio=2026-05-29T00:00:00.000Z&fecha_fin=2026-05-29T23:59:59.000Z&limit=500",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "vehiculo", "1", "ruta"],
+              "query": [
+                {
+                  "key": "fecha_inicio",
+                  "value": "2026-05-29T00:00:00.000Z",
+                  "description": "Inicio del rango en ISO 8601 (UTC)"
+                },
+                {
+                  "key": "fecha_fin",
+                  "value": "2026-05-29T23:59:59.000Z",
+                  "description": "Fin del rango en ISO 8601 (UTC)"
+                },
+                {
+                  "key": "limit",
+                  "value": "500",
+                  "description": "Máximo 500 puntos por consulta"
+                }
+              ]
+            },
+            "description": "Devuelve el historial de posiciones GPS del vehículo ID=1 en el rango de fechas indicado.\n\nÚtil para reconstruir la ruta patrullada durante un turno.\n\n**Permiso RBAC:** `tracking.vehiculos.read`"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Novedades",
+      "description": "Consulta de novedades/incidentes registrados en el sistema.\n\nPermiso necesario: `novedades.incidentes.read`",
+      "item": [
+        {
+          "name": "Listar novedades",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('Retorna lista paginada', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  const items = json.data?.novedades || json.data?.rows || json.data;",
+                  "  pm.expect(items).to.be.an('array');",
+                  "  console.log('Novedades encontradas:', items.length);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/novedades?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["novedades"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista todas las novedades/incidentes con paginación.\n\n**Permiso RBAC:** `novedades.incidentes.read`"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener novedad por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 o 404', function () {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Novedad tiene id y tipo', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data).to.have.property('id');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/novedades/1",
+              "host": ["{{base_url}}"],
+              "path": ["novedades", "1"]
+            },
+            "description": "Obtiene el detalle completo de la novedad con ID=1.\n\n**Permiso RBAC:** `novedades.incidentes.read`"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Verificación Supabase",
+      "description": "Endpoints para verificar que el backend está activo y la conexión a Supabase funciona.",
+      "item": [
+        {
+          "name": "Health check (liviano)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('Status ok', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.equal('ok');",
+                  "});",
+                  "",
+                  "pm.test('Tiempo de respuesta < 2000ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/health",
+              "host": ["{{host}}"],
+              "path": ["health"]
+            },
+            "description": "Healthcheck liviano — no depende de la base de datos.\n\nRuta a nivel raíz (`/health`, fuera de `/api/v1`). Railway la usa al deployar.\n\nNo requiere `Authorization`."
+          },
+          "response": []
+        },
+        {
+          "name": "Health check con DB (Supabase)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('Base de datos conectada', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  const dbOk = json.data?.database === 'connected' || json.data?.db === 'ok' || json.status === 'ok';",
+                  "  pm.expect(dbOk, 'DB debe estar conectada').to.be.true;",
+                  "  if (json.data?.dialect) {",
+                  "    console.log('Dialecto activo:', json.data.dialect);",
+                  "    pm.test('Dialecto es postgres', function () {",
+                  "      pm.expect(json.data.dialect).to.equal('postgres');",
+                  "    });",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check completo que verifica la conexión a la base de datos (Supabase).\n\nA diferencia de `GET /health`, este endpoint sí consulta la DB.\n\n**Permiso:** solo autenticación básica (no requiere permiso específico)."
+          },
+          "response": []
+        },
+        {
+          "name": "Info general de la API",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('Retorna info de la API', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an('object');",
+                  "  console.log('Versión API:', json.version || json.data?.version || '(no expuesta)');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}",
+              "host": ["{{base_url}}"],
+              "path": []
+            },
+            "description": "Devuelve información general de la API: nombre, versión, entorno.\n\nNo requiere `Authorization`."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
