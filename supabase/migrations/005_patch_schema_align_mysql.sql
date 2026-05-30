@@ -11,6 +11,7 @@
 --   A) deleted_by faltante en cargos, roles, personal_seguridad, sectores
 --   B) catalogo_desperfectos — columnas extras del MySQL no declaradas en PG
 --   C) horarios_turnos — created_by era NOT NULL, debe ser nullable
+--   D) BOOLEAN/SMALLINT NOT NULL → nullable (datos MySQL pueden ser NULL)
 -- ============================================================
 
 SET search_path TO citysecure;
@@ -76,18 +77,60 @@ ALTER TABLE horarios_turnos
   ALTER COLUMN created_by DROP NOT NULL;
 
 -- ============================================================
--- Verificación final — muestra columnas de las tablas patched
+-- D) DROP NOT NULL en BOOLEAN/SMALLINT con DEFAULT
+--
+-- En MySQL los registros antiguos pueden tener NULL en columnas
+-- que en PostgreSQL se declararon NOT NULL DEFAULT <valor>.
+-- DROP NOT NULL no elimina el DEFAULT — nuevos registros siguen
+-- recibiendo el valor por defecto; solo la migración puede pasar NULL.
+-- ============================================================
+
+-- BOOLEAN NOT NULL → nullable (conserva DEFAULT)
+ALTER TABLE tipos_vehiculo        ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE catalogo_desperfectos ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE estados_novedad       ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE tipos_novedad         ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE cargos                ALTER COLUMN requiere_licencia DROP NOT NULL;
+ALTER TABLE cargos                ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE unidades_oficina      ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE subtipos_novedad      ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE sectores              ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE cuadrantes            ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE personal_seguridad    ALTER COLUMN estado           DROP NOT NULL;
+
+-- SMALLINT NOT NULL → nullable (conserva DEFAULT)
+ALTER TABLE tipos_via             ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE tipos_copiloto        ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE horarios_turnos       ALTER COLUMN cruza_medianoche DROP NOT NULL;
+ALTER TABLE horarios_turnos       ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE subsectores           ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE calles                ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE calles_cuadrantes     ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE direcciones           ALTER COLUMN estado           DROP NOT NULL;
+ALTER TABLE estados_novedad       ALTER COLUMN estado           DROP NOT NULL; -- spacing fix
+
+-- ============================================================
+-- Verificación final
 -- ============================================================
 
 SELECT
   table_name,
   column_name,
   data_type,
-  is_nullable
+  is_nullable,
+  column_default
 FROM information_schema.columns
 WHERE table_schema = 'citysecure'
-  AND table_name   IN ('cargos','roles','personal_seguridad','sectores',
-                       'catalogo_desperfectos','horarios_turnos')
-  AND column_name  IN ('deleted_by','estado','codigo','prioridad',
-                       'tiempo_estimado_reparacion','created_by')
+  AND (
+    (table_name IN ('cargos','roles','personal_seguridad','sectores',
+                    'catalogo_desperfectos','horarios_turnos')
+     AND column_name IN ('deleted_by','estado','codigo','prioridad',
+                         'tiempo_estimado_reparacion','created_by','requiere_licencia'))
+    OR
+    (column_name = 'estado'
+     AND table_name IN ('tipos_via','tipos_vehiculo','tipos_copiloto',
+                        'estados_novedad','tipos_novedad','subtipos_novedad',
+                        'unidades_oficina','sectores','subsectores','cuadrantes',
+                        'calles','calles_cuadrantes','direcciones'))
+  )
 ORDER BY table_name, column_name;
