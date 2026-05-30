@@ -1,7 +1,7 @@
 # SUPABASE_SETUP.md — CitySecure Backend en Supabase
 
 Guía para conectar CitySecure Backend a PostgreSQL/Supabase como base de datos alternativa a MySQL.
-Leer junto con `MIGRATION_AUDIT.md` (en `/mnt/d/Project/city_sec_docs/`) para contexto completo.
+Leer junto con `MIGRATION_AUDIT.md` (mismo directorio) para el historial completo de incompatibilidades y correcciones.
 
 ---
 
@@ -188,6 +188,9 @@ El script muestra el dialecto activo, el schema y reporta el estado de cada tabl
 |---|---|
 | `supabase/migrations/001_citysecure_schema.sql` | 52 tablas + triggers + índices (1.800+ líneas) |
 | `supabase/migrations/002_citysecure_seeds.sql` | 6 roles + 122 permisos + usuario admin |
+| `supabase/migrations/003_tracking_tables.sql` | Tablas de tracking GPS de vehículos |
+| `supabase/migrations/004_seed_data_from_mysql.sql` | Datos de catálogo exportados desde MySQL Railway (generado por `scripts/export-mysql-to-supabase.js`) |
+| `supabase/migrations/005_patch_schema_align_mysql.sql` | Patch idempotente — alinea schema con MySQL para instancias anteriores al 2026-05-30 |
 
 ---
 
@@ -205,3 +208,73 @@ Los cambios son **completamente retrocompatibles** con MySQL:
 | `BIGINT.UNSIGNED` | Eliminado → `BIGINT` (compatible en MySQL) | ✅ |
 
 La aplicación detecta el dialecto en tiempo de carga del módulo y configura todo automáticamente.
+
+---
+
+## Correcciones aplicadas post-deploy
+
+### 2026-05-30 — Comparaciones boolean = integer en controladores
+
+**Problema detectado:** Múltiples endpoints devolvían HTTP 500 con el mensaje:
+```
+operator does not exist: boolean = integer
+```
+
+**Causa raíz:** MySQL acepta `WHERE activo = 1` para columnas BOOLEAN (las almacena internamente como TINYINT). PostgreSQL tiene un tipo BOOLEAN estricto y rechaza la comparación con entero.
+
+**Columnas afectadas (tipo BOOLEAN en PG):**
+
+| Tabla | Columnas |
+|---|---|
+| `personal_seguridad` | `estado` |
+| `sectores` | `estado` |
+| `cuadrantes` | `estado` |
+| `roles` | `estado` |
+| `estados_novedad` | `estado`, `es_inicial`, `es_final`, `requiere_unidad` |
+| `tipos_novedad` | `estado`, `requiere_unidad` |
+| `subtipos_novedad` | `estado`, `requiere_ambulancia`, `requiere_bomberos`, `requiere_pnp` |
+| `tipos_vehiculo` | `estado` |
+| `catalogo_desperfectos` | `estado`, `activo` |
+| `cargos` | `estado`, `requiere_licencia` |
+| `permisos` | `estado`, `es_sistema` |
+| `unidades_oficina` | `estado`, `activo_24h` |
+| `radios_tetra` | `estado` |
+| `tracking_vehiculos` | `activo` |
+
+**Columnas NO afectadas (tipo SMALLINT en PG — aceptan enteros):**
+
+`vehiculos.estado`, `novedades_incidentes.estado`, `subsectores.estado`, `calles.estado`, `calles_cuadrantes.estado`, `direcciones.estado`, `horarios_turnos.estado`, `tipos_via.estado`, `tipos_copiloto.estado`, `rol_estados_novedad.estado`, `abastecimiento_combustible.estado`, `mantenimiento_vehiculos.estado`
+
+**Solución aplicada (commit `98d3f8f`):**
+
+Se importó `IS_POSTGRES` desde `src/config/database.js` en cada controlador afectado y se reemplazaron las comparaciones:
+
+```js
+// ANTES (falla en PostgreSQL)
+where: { estado: 1 }
+
+// DESPUÉS (retrocompatible con MySQL)
+where: { estado: IS_POSTGRES ? true : 1 }
+```
+
+`IS_POSTGRES = false` cuando `DB_DIALECT=mysql`, por lo que el cambio es **100% retrocompatible**.
+
+**Controladores corregidos (9):**
+
+| Controlador | Tablas corregidas |
+|---|---|
+| `catalogosController.js` | TipoNovedad, SubtipoNovedad, EstadoNovedad, TipoVehiculo, Cargo, UnidadOficina |
+| `rolEstadosNovedadController.js` | Rol, EstadoNovedad |
+| `sectoresController.js` | Sector, Cuadrante, PersonalSeguridad |
+| `personalController.js` | PersonalSeguridad (18 ocurrencias) |
+| `novedadesController.js` | EstadoNovedad |
+| `subsectoresController.js` | Cuadrante, Sector, PersonalSeguridad |
+| `cuadrantesController.js` | Cuadrante |
+| `abastecimientosController.js` | PersonalSeguridad |
+| `trackingController.js` | tracking_vehiculos (raw SQL) |
+
+**Endpoints que fallaban y ahora funcionan:**
+- `GET /api/v1/catalogos/unidades`
+- `GET /api/v1/sectores`
+- `GET /api/v1/personal/stats`
+- `GET /api/v1/rol-estados-novedad/rol/:rolId/estados`
