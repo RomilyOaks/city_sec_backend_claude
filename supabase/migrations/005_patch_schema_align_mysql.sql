@@ -98,6 +98,18 @@ ALTER TABLE sectores              ALTER COLUMN estado           DROP NOT NULL;
 ALTER TABLE cuadrantes            ALTER COLUMN estado           DROP NOT NULL;
 ALTER TABLE personal_seguridad    ALTER COLUMN estado           DROP NOT NULL;
 
+-- ============================================================
+-- E) permisos — columnas de auditoría faltantes
+--
+-- MySQL tiene created_by, deleted_by, deleted_at en permisos
+-- pero el schema original de PG no las tenía.
+-- ============================================================
+
+ALTER TABLE permisos
+  ADD COLUMN IF NOT EXISTS created_by INTEGER,
+  ADD COLUMN IF NOT EXISTS deleted_by INTEGER,
+  ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
 -- SMALLINT NOT NULL → nullable (conserva DEFAULT)
 ALTER TABLE tipos_via             ALTER COLUMN estado           DROP NOT NULL;
 ALTER TABLE tipos_copiloto        ALTER COLUMN estado           DROP NOT NULL;

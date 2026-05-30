@@ -73,7 +73,7 @@ const NULL_FK = {
   tipos_novedad:        ["created_by", "updated_by", "deleted_by"],
   subtipos_novedad:     ["created_by", "updated_by", "deleted_by"],
   cargos:               ["created_by", "updated_by", "deleted_by"],
-  permisos:             ["updated_by"],                   // solo tiene updated_by
+  permisos:             ["created_by", "updated_by", "deleted_by"],
   unidades_oficina:     ["created_by", "updated_by", "deleted_by"],
   sectores:             ["supervisor_id", "created_by", "updated_by", "deleted_by"],
   subsectores:          ["personal_supervisor_id", "created_by", "updated_by", "deleted_by"],
