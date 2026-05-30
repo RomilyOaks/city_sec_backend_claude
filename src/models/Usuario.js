@@ -23,10 +23,14 @@ import sequelize, { DB_SCHEMA } from "../config/database.js";
  * @returns {object} Datos de auditoría.
  */
 function getAuditData(options) {
-  // Estas variables deben ser pasadas desde el controlador/servicio
-  const userId = options.currentUser || options.updated_by || null;
-  const ipAddress = options.ipAddress || null;
-  const userAgent = options.userAgent || null;
+  // Soporta dos formas de pasar el contexto:
+  // 1) spread en raíz: { transaction, currentUser, ipAddress, userAgent }
+  // 2) objeto anidado: { transaction, auditOptions: { currentUser, ... } }
+  const auditOpts = options.auditOptions || {};
+  const userId =
+    options.currentUser || auditOpts.currentUser || options.updated_by || null;
+  const ipAddress = options.ipAddress || auditOpts.ipAddress || null;
+  const userAgent = options.userAgent || auditOpts.userAgent || null;
 
   return {
     realizado_por: userId,
@@ -363,6 +367,9 @@ const Usuario = sequelize.define(
             const auditRecords = changes.map((change) => ({
               ...change,
               ...auditData,
+              // Fallback: si no hay usuario autenticado (ej. proceso interno),
+              // usar el ID del propio usuario modificado para satisfacer NOT NULL.
+              realizado_por: auditData.realizado_por ?? usuario.id,
             }));
 
             // Crear múltiples registros de historial en una sola operación
@@ -379,6 +386,7 @@ const Usuario = sequelize.define(
                 accion: "eliminacion",
                 descripcion: `Usuario eliminado lógicamente. Eliminado por ID: ${usuario.deleted_by}`,
                 ...auditData,
+                realizado_por: auditData.realizado_por ?? usuario.id,
               },
               { transaction: options.transaction }
             );

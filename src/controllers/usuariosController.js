@@ -306,7 +306,7 @@ export const createUsuario = async (req, res) => {
         email_verified_at: new Date(), // Auto-verificado por admin
         created_by,
       },
-      { transaction: t, auditOptions }
+      { transaction: t, ...auditOptions }
     );
     // Asignar roles si se especificaron
     if (roles && roles.length > 0) {
@@ -467,7 +467,7 @@ export const updateUsuario = async (req, res) => {
       datosActualizar.personal_seguridad_id = personal_seguridad_id;
     }
 
-    await usuario.update(datosActualizar, { transaction: t, auditOptions });
+    await usuario.update(datosActualizar, { transaction: t, ...auditOptions });
 
     // Actualizar roles si se especificaron
     if (roles !== undefined && Array.isArray(roles)) {
@@ -620,7 +620,7 @@ export const deleteUsuario = async (req, res) => {
       },
       {
         transaction: t,
-        auditOptions, // Pasa el contexto y habilita hooks
+        ...auditOptions,
       }
     );
 
@@ -693,7 +693,7 @@ export const resetPassword = async (req, res) => {
       },
       {
         transaction: t,
-        auditOptions, // Pasa el contexto y habilita hooks
+        ...auditOptions,
       }
     );
 
@@ -766,7 +766,7 @@ export const cambiarEstado = async (req, res) => {
         estado: estadoNormalizado,
         updated_by,
       },
-      { transaction: t, auditOptions }
+      { transaction: t, ...auditOptions }
     );
 
     await t.commit();
@@ -834,7 +834,7 @@ export const restoreUsuario = async (req, res) => {
         estado: "ACTIVO",
         updated_by: restored_by,
       },
-      { transaction: t, auditOptions }
+      { transaction: t, ...auditOptions }
     );
 
     await t.commit();
