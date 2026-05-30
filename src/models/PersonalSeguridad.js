@@ -1109,7 +1109,7 @@ PersonalSeguridad.getEstadisticas = async function () {
   const con_licencia_vigente = await PersonalSeguridad.count({
     where: {
       licencia: { [Op.ne]: null },
-      vigencia: { [Op.gte]: sequelize.fn("CURRENT_DATE") },
+      vigencia: { [Op.gte]: sequelize.literal("CURRENT_DATE") },
       status: "Activo",
       deleted_at: null,
     },

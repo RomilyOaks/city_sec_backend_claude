@@ -859,10 +859,10 @@ export const getEstadisticasPersonal = async (req, res) => {
         {
           model: Cargo,
           as: "PersonalSeguridadCargo",
-          attributes: ["nombre"],
+          attributes: ["id", "nombre"],
         },
       ],
-      group: ["cargo_id", "PersonalSeguridadCargo.id"],
+      group: ["cargo_id", "PersonalSeguridadCargo.id", "PersonalSeguridadCargo.nombre"],
     });
 
     const hoy = new Date();
