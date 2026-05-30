@@ -24,27 +24,27 @@ Antes de ejecutar cualquier script, los siguientes pasos deben estar completos:
 ### Desde el Dashboard de Supabase:
 
 1. Ir a **Settings → Database** en el menú lateral izquierdo.
-2. En la sección **Connection parameters**, copiar los valores para el perfil que necesites:
+2. En la sección **Connection parameters**, copiar los valores del **Transaction Pooler (IPv4)**:
 
 | Parámetro Supabase | Variable de entorno | Ejemplo |
 |---|---|---|
-| **Host** (Session pooler) | `DB_HOST` | `aws-0-us-east-1.pooler.supabase.com` |
-| **Port** | `DB_PORT` | `5432` (direct) o `6543` (transaction pooler) |
-| **User** | `DB_USER` | `postgres.xxxxxxxxxxxxxxxxxxxxxxxx` |
+| **Host** (Transaction pooler) | `DB_HOST` | `aws-1-us-east-1.pooler.supabase.com` |
+| **Port** | `DB_PORT` | `6543` — **NO usar 5432** |
+| **User** | `DB_USER` | `postgres.{project_ref}` |
 | **Password** | `DB_PASSWORD` | Tu "Database Password" del dashboard |
 | **Database** | `DB_NAME` | `postgres` (siempre así en Supabase) |
 
-> **Importante — prefijo del usuario:** Supabase usa el formato `postgres.<project_ref>` en el pooler. El Project Ref es el código único de tu proyecto (aparece en Settings → General).
+> **Formato del usuario:** Supabase usa `postgres.{project_ref}` en el pooler (no solo `postgres`). El Project Ref aparece en Settings → General.
 
 ### Modos de conexión disponibles:
 
 | Modo | Host/Puerto | Cuándo usar |
 |---|---|---|
-| **Direct** | `db.<project_ref>.supabase.co:5432` | Desarrollo local, migraciones |
-| **Session pooler** | `<region>.pooler.supabase.co:5432` | Railway (persistente, recomendado) |
-| **Transaction pooler** | `<region>.pooler.supabase.co:6543` | Serverless / Edge Functions |
+| **Direct** | `db.<project_ref>.supabase.co:5432` | Desarrollo local con IPv6, migraciones |
+| **Session pooler** | `<region>.pooler.supabase.co:5432` | No usar en Railway (ver advertencia abajo) |
+| **Transaction pooler** | `<region>.pooler.supabase.co:6543` | **Railway — SIEMPRE usar este** |
 
-Para Railway se recomienda **Session pooler** (`port 5432`) porque Sequelize mantiene conexiones persistentes.
+> ⚠️ **Railway no soporta IPv6.** El Direct Connection (`db.<ref>.supabase.co:5432`) y el Session pooler (`<region>.pooler.supabase.co:5432`) pueden devolver una IP IPv6 según la región — Railway los rechaza con `ECONNREFUSED`. Usar **siempre el Transaction Pooler (puerto 6543)**, que resuelve a IPv4.
 
 ---
 
@@ -115,10 +115,10 @@ DB_DIALECT=postgres
 DB_SCHEMA=citysecure
 DB_SSL=true
 
-# ── Conexión Supabase (Session pooler recomendado) ─────────
-DB_HOST=aws-0-us-east-1.pooler.supabase.com
-DB_PORT=5432
-DB_USER=postgres.tu_project_ref
+# ── Conexión Supabase (Transaction Pooler IPv4 — requerido para Railway) ──
+DB_HOST=aws-1-us-east-1.pooler.supabase.com   # Transaction Pooler, no Direct
+DB_PORT=6543                                   # 6543, NO 5432
+DB_USER=postgres.tu_project_ref                # formato: postgres.{project_ref}
 DB_PASSWORD=tu_database_password_de_supabase
 DB_NAME=postgres
 
@@ -161,14 +161,14 @@ DB_PASSWORD=tu_password_local
 DB_NAME=citizen_security_v2
 ```
 
-### Activar PostgreSQL/Supabase:
+### Activar PostgreSQL/Supabase (Transaction Pooler — IPv4):
 ```env
 DB_DIALECT=postgres
 DB_SCHEMA=citysecure
 DB_SSL=true
-DB_HOST=aws-0-us-east-1.pooler.supabase.com
-DB_PORT=5432
-DB_USER=postgres.tu_project_ref
+DB_HOST=aws-1-us-east-1.pooler.supabase.com   # Transaction Pooler IPv4
+DB_PORT=6543                                   # NO 5432
+DB_USER=postgres.tu_project_ref                # formato: postgres.{project_ref}
 DB_PASSWORD=tu_database_password_de_supabase
 DB_NAME=postgres
 ```
