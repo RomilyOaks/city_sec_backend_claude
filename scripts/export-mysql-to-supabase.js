@@ -67,7 +67,7 @@ const NULL_FK = {
   tipos_via:            ["created_by", "updated_by", "deleted_by"],
   tipos_vehiculo:       ["created_by", "updated_by", "deleted_by"],
   tipos_copiloto:       ["created_by", "updated_by", "deleted_by"],
-  catalogo_desperfectos: [],                              // no tiene audit columns
+  catalogo_desperfectos: ["created_by", "updated_by", "deleted_by"],
   estados_novedad:      ["created_by", "updated_by", "deleted_by"],
   horarios_turnos:      ["created_by", "updated_by", "deleted_by"],
   tipos_novedad:        ["created_by", "updated_by", "deleted_by"],
@@ -89,7 +89,7 @@ const NULL_FK = {
 // NO están aquí — se exportan como entero y PG las acepta sin conversión.
 const BOOLEAN_COLS = {
   tipos_vehiculo:        ["estado"],
-  catalogo_desperfectos: ["activo"],
+  catalogo_desperfectos: ["activo", "estado"],
   estados_novedad:       ["estado", "es_inicial", "es_final", "requiere_unidad"],
   tipos_novedad:         ["estado", "requiere_unidad"],
   subtipos_novedad:      ["estado", "requiere_ambulancia", "requiere_bomberos", "requiere_pnp"],

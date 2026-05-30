@@ -132,12 +132,23 @@ CREATE TABLE IF NOT EXISTS tipos_novedad (
 -- catalogo_desperfectos
 -- ----------------------------------------------------------
 CREATE TABLE IF NOT EXISTS catalogo_desperfectos (
-    id          SERIAL       NOT NULL,
-    nombre      VARCHAR(100) NOT NULL,
-    categoria   VARCHAR(50),
-    descripcion TEXT,
-    activo      BOOLEAN      DEFAULT TRUE,
-    CONSTRAINT pk_catalogo_desperfectos PRIMARY KEY (id)
+    id                          SERIAL       NOT NULL,
+    codigo                      VARCHAR(20),
+    nombre                      VARCHAR(100) NOT NULL,
+    categoria                   VARCHAR(50),
+    descripcion                 TEXT,
+    prioridad                   VARCHAR(10)  DEFAULT 'MEDIA',
+    tiempo_estimado_reparacion  INTEGER,
+    activo                      BOOLEAN      DEFAULT TRUE,
+    estado                      BOOLEAN      NOT NULL DEFAULT TRUE,
+    deleted_at                  TIMESTAMPTZ,
+    deleted_by                  INTEGER,
+    created_by                  INTEGER,
+    created_at                  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_by                  INTEGER,
+    updated_at                  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CONSTRAINT pk_catalogo_desperfectos PRIMARY KEY (id),
+    CONSTRAINT chk_catalogo_prioridad   CHECK (prioridad IN ('ALTA','MEDIA','BAJA') OR prioridad IS NULL)
 );
 
 -- ----------------------------------------------------------
