@@ -33,6 +33,7 @@
 
 import { SubtipoNovedad, TipoNovedad, Novedad, Usuario } from "../models/index.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 // Configuración común de includes para auditoría
 const auditoriaIncludes = [
@@ -79,8 +80,8 @@ const getAll = async (req, res) => {
     // Búsqueda por nombre o código
     if (search) {
       whereClause[Op.or] = [
-        { nombre: { [Op.like]: `%${search}%` } },
-        { subtipo_code: { [Op.like]: `%${search}%` } },
+        { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { subtipo_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 
@@ -457,8 +458,8 @@ const getEliminados = async (req, res) => {
     // Búsqueda por nombre o código
     if (search) {
       whereClause[Op.or] = [
-        { nombre: { [Op.like]: `%${search}%` } },
-        { subtipo_code: { [Op.like]: `%${search}%` } },
+        { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { subtipo_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

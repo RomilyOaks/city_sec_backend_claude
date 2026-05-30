@@ -80,11 +80,11 @@ export const getAllPersonal = async (req, res) => {
 
     if (search) {
       whereClause[Op.or] = [
-        { nombres: { [Op.like]: `%${search}%` } },
-        { apellido_paterno: { [Op.like]: `%${search}%` } },
-        { apellido_materno: { [Op.like]: `%${search}%` } },
-        { doc_numero: { [Op.like]: `%${search}%` } },
-        { codigo_acceso: { [Op.like]: `%${search}%` } },
+        { nombres: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { apellido_paterno: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { apellido_materno: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { doc_numero: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { codigo_acceso: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 
@@ -1712,7 +1712,7 @@ export const generarCodigoAcceso = async (req, res) => {
     const ultimoPersonal = await PersonalSeguridad.findOne({
       where: {
         codigo_acceso: {
-          [Op.like]: `${prefijo}-%`,
+          [IS_POSTGRES ? Op.iLike : Op.like]: `${prefijo}-%`,
         },
       },
       order: [["codigo_acceso", "DESC"]],
@@ -2010,23 +2010,23 @@ export const buscarPersonalParaDropdown = async (req, res) => {
     if (searchTerms.length === 1) {
       // Búsqueda simple por un término
       searchConditions.push(
-        { apellido_paterno: { [Op.like]: `${searchTerms[0]}%` } },
-        { apellido_materno: { [Op.like]: `${searchTerms[0]}%` } },
-        { nombres: { [Op.like]: `${searchTerms[0]}%` } }
+        { apellido_paterno: { [IS_POSTGRES ? Op.iLike : Op.like]: `${searchTerms[0]}%` } },
+        { apellido_materno: { [IS_POSTGRES ? Op.iLike : Op.like]: `${searchTerms[0]}%` } },
+        { nombres: { [IS_POSTGRES ? Op.iLike : Op.like]: `${searchTerms[0]}%` } }
       );
     } else if (searchTerms.length === 2) {
       // Búsqueda por dos términos (probablemente apellido paterno + materno)
       searchConditions.push(
         {
           [Op.and]: [
-            { apellido_paterno: { [Op.like]: `${searchTerms[0]}%` } },
-            { apellido_materno: { [Op.like]: `${searchTerms[1]}%` } }
+            { apellido_paterno: { [IS_POSTGRES ? Op.iLike : Op.like]: `${searchTerms[0]}%` } },
+            { apellido_materno: { [IS_POSTGRES ? Op.iLike : Op.like]: `${searchTerms[1]}%` } }
           ]
         },
         {
           [Op.and]: [
-            { apellido_paterno: { [Op.like]: `${searchTerms[0]}%` } },
-            { nombres: { [Op.like]: `${searchTerms[1]}%` } }
+            { apellido_paterno: { [IS_POSTGRES ? Op.iLike : Op.like]: `${searchTerms[0]}%` } },
+            { nombres: { [IS_POSTGRES ? Op.iLike : Op.like]: `${searchTerms[1]}%` } }
           ]
         }
       );
@@ -2035,9 +2035,9 @@ export const buscarPersonalParaDropdown = async (req, res) => {
       searchConditions.push(
         {
           [Op.and]: [
-            { apellido_paterno: { [Op.like]: `${searchTerms[0]}%` } },
-            { apellido_materno: { [Op.like]: `${searchTerms[1]}%` } },
-            { nombres: { [Op.like]: `${searchTerms.slice(2).join(" ")}%` } }
+            { apellido_paterno: { [IS_POSTGRES ? Op.iLike : Op.like]: `${searchTerms[0]}%` } },
+            { apellido_materno: { [IS_POSTGRES ? Op.iLike : Op.like]: `${searchTerms[1]}%` } },
+            { nombres: { [IS_POSTGRES ? Op.iLike : Op.like]: `${searchTerms.slice(2).join(" ")}%` } }
           ]
         }
       );

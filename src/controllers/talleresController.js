@@ -1,5 +1,6 @@
 import { Taller, MantenimientoVehiculo } from "../models/index.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 export const getAllTalleres = async (req, res) => {
   try {
@@ -17,8 +18,8 @@ export const getAllTalleres = async (req, res) => {
 
     if (search) {
       where[Op.or] = [
-        { nombre: { [Op.like]: `%${search}%` } },
-        { ruc: { [Op.like]: `%${search}%` } },
+        { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { ruc: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

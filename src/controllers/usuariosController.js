@@ -16,6 +16,7 @@ import {
 } from "../models/index.js";
 import { sequelize } from "../models/index.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 /**
  * GET /api/usuarios
@@ -59,10 +60,10 @@ export const getUsuarios = async (req, res) => {
     // Filtro por búsqueda (username, email, nombres, apellidos)
     if (search) {
       whereConditions[Op.or] = [
-        { username: { [Op.like]: `%${search}%` } },
-        { email: { [Op.like]: `%${search}%` } },
-        { nombres: { [Op.like]: `%${search}%` } },
-        { apellidos: { [Op.like]: `%${search}%` } },
+        { username: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { email: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { nombres: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { apellidos: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

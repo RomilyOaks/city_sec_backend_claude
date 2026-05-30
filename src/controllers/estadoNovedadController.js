@@ -14,6 +14,7 @@
 
 import { EstadoNovedad } from "../models/index.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 // ==========================================
 // LISTAR ESTADOS (GET /)
@@ -37,7 +38,7 @@ const getAll = async (req, res) => {
 
     // Búsqueda por nombre
     if (search) {
-      whereClause.nombre = { [Op.like]: `%${search}%` };
+      whereClause.nombre = { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` };
     }
 
     const items = await EstadoNovedad.findAll({

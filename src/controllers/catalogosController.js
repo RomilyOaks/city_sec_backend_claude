@@ -600,9 +600,9 @@ const buscarUbigeo = async (req, res) => {
 
     if (search) {
       whereClause[Op.or] = [
-        { distrito: { [Op.like]: `%${search}%` } },
-        { provincia: { [Op.like]: `%${search}%` } },
-        { departamento: { [Op.like]: `%${search}%` } },
+        { distrito: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { provincia: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { departamento: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

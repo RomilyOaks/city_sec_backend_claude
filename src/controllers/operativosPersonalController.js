@@ -44,6 +44,7 @@ const {
 } = models;
 import { Op } from "sequelize";
 import { obtenerRadioDelPersonal } from "../services/operativosHelperService.js";
+import { IS_POSTGRES } from "../config/database.js";
 
 /**
  * Obtener todos los registros de personal operativo con filtros y paginación
@@ -81,12 +82,12 @@ export const getAllPersonal = async (req, res) => {
     // Búsqueda por texto en nombre del personal o sereno
     if (search) {
       whereClause[Op.or] = [
-        { "$personal.nombres$": { [Op.like]: `%${search}%` } },
-        { "$personal.apellido_paterno$": { [Op.like]: `%${search}%` } },
-        { "$personal.apellido_materno$": { [Op.like]: `%${search}%` } },
-        { "$sereno.nombres$": { [Op.like]: `%${search}%` } },
-        { "$sereno.apellido_paterno$": { [Op.like]: `%${search}%` } },
-        { "$sereno.apellido_materno$": { [Op.like]: `%${search}%` } },
+        { "$personal.nombres$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { "$personal.apellido_paterno$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { "$personal.apellido_materno$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { "$sereno.nombres$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { "$sereno.apellido_paterno$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { "$sereno.apellido_materno$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

@@ -5,6 +5,7 @@
 
 import { Op } from "sequelize";
 import Ubigeo from "../models/Ubigeo.js";
+import { IS_POSTGRES } from "../config/database.js";
 
 /**
  * Buscar ubigeos por texto (departamento, provincia o distrito)
@@ -18,10 +19,10 @@ export const getUbigeos = async (req, res) => {
 
     if (search && search.length >= 2) {
       whereConditions[Op.or] = [
-        { departamento: { [Op.like]: `%${search}%` } },
-        { provincia: { [Op.like]: `%${search}%` } },
-        { distrito: { [Op.like]: `%${search}%` } },
-        { ubigeo_code: { [Op.like]: `%${search}%` } },
+        { departamento: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { provincia: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { distrito: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { ubigeo_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

@@ -70,7 +70,7 @@ import {
   Taller,
 } from "../models/index.js";
 import { Op } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { IS_POSTGRES } from "../config/database.js";
 
 /**
  * Obtener todos los vehículos con filtros
@@ -107,11 +107,11 @@ export const getAllVehiculos = async (req, res) => {
 
     if (search) {
       whereClause[Op.or] = [
-        { codigo_vehiculo: { [Op.like]: `%${search}%` } },
-        { placa: { [Op.like]: `%${search}%` } },
-        { marca: { [Op.like]: `%${search}%` } },
-        { modelo_vehiculo: { [Op.like]: `%${search}%` } },
-        { nombre: { [Op.like]: `%${search}%` } },
+        { codigo_vehiculo: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { placa: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { marca: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { modelo_vehiculo: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

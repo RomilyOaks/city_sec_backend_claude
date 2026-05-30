@@ -45,6 +45,7 @@ import Sector from "../models/Sector.js";
 import Direccion from "../models/Direccion.js";
 import Usuario from "../models/Usuario.js";
 import { Op, Sequelize } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 /**
  * ============================================================================
@@ -198,15 +199,15 @@ const callesController = {
 
       if (search) {
         whereConditions[Op.or] = [
-          { nombre_via: { [Op.like]: `%${search}%` } },
-          { nombre_completo: { [Op.like]: `%${search}%` } },
-          { calle_code: { [Op.like]: `%${search}%` } },
+          { nombre_via: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+          { nombre_completo: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+          { calle_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
         ];
       }
 
       if (tipo_via_id) whereConditions.tipo_via_id = tipo_via_id;
       if (urbanizacion)
-        whereConditions.urbanizacion = { [Op.like]: `%${urbanizacion}%` };
+        whereConditions.urbanizacion = { [IS_POSTGRES ? Op.iLike : Op.like]: `%${urbanizacion}%` };
       if (es_principal !== null) whereConditions.es_principal = es_principal;
 
       // Consulta con relaciones

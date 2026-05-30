@@ -29,6 +29,7 @@
 import RadioTetra from "../models/RadioTetra.js";
 import PersonalSeguridad from "../models/PersonalSeguridad.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 import {
   formatResponse,
   formatErrorResponse,
@@ -68,8 +69,8 @@ const radioTetraController = {
       // Filtro por búsqueda (código o descripción)
       if (search) {
         whereConditions[Op.or] = [
-          { radio_tetra_code: { [Op.like]: `%${search}%` } },
-          { descripcion: { [Op.like]: `%${search}%` } },
+          { radio_tetra_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+          { descripcion: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
         ];
       }
 

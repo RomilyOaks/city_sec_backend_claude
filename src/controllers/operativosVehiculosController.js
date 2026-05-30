@@ -36,6 +36,7 @@ const {
 import { Op } from "sequelize";
 import { obtenerRadioDelPersonal } from "../services/operativosHelperService.js";
 import { convertToTimezone } from "../utils/dateHelper.js";
+import { IS_POSTGRES } from "../config/database.js";
 
 /**
  * Obtener un vehículo operativo por ID (general)
@@ -185,14 +186,14 @@ export const getAllVehiculos = async (req, res) => {
     // Búsqueda por texto en placa de vehículo O nombre de conductor O copiloto
     if (search) {
       whereClause[Op.or] = [
-        { "$vehiculo.placa$": { [Op.like]: `%${search}%` } },
-        { "$vehiculo.marca$": { [Op.like]: `%${search}%` } },
-        { "$conductor.nombres$": { [Op.like]: `%${search}%` } },
-        { "$conductor.apellido_paterno$": { [Op.like]: `%${search}%` } },
-        { "$conductor.apellido_materno$": { [Op.like]: `%${search}%` } },
-        { "$copiloto.nombres$": { [Op.like]: `%${search}%` } },
-        { "$copiloto.apellido_paterno$": { [Op.like]: `%${search}%` } },
-        { "$copiloto.apellido_materno$": { [Op.like]: `%${search}%` } },
+        { "$vehiculo.placa$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { "$vehiculo.marca$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { "$conductor.nombres$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { "$conductor.apellido_paterno$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { "$conductor.apellido_materno$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { "$copiloto.nombres$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { "$copiloto.apellido_paterno$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { "$copiloto.apellido_materno$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

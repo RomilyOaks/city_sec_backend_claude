@@ -136,21 +136,21 @@ export const getAllNovedades = async (req, res) => {
 
     if (search) {
       whereClause[Op.or] = [
-        { novedad_code: { [Op.like]: `%${search}%` } },
-        { descripcion: { [Op.like]: `%${search}%` } },
-        { localizacion: { [Op.like]: `%${search}%` } },
-        { reportante_nombre: { [Op.like]: `%${search}%` } },
-        { reportante_telefono: { [Op.like]: `%${search}%` } },
-        { reportante_doc_identidad: { [Op.like]: `%${search}%` } },
+        { novedad_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { descripcion: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { localizacion: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { reportante_nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { reportante_telefono: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { reportante_doc_identidad: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 
     const creadorFilter = created_by_username
-      ? { username: { [Op.like]: `%${created_by_username}%` } }
+      ? { username: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${created_by_username}%` } }
       : null;
 
     const despachoFilter = usuario_despacho_username
-      ? { username: { [Op.like]: `%${usuario_despacho_username}%` } }
+      ? { username: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${usuario_despacho_username}%` } }
       : null;
 
     const offset = (page - 1) * limit;

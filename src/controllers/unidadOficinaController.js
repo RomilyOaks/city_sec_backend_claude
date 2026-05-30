@@ -18,6 +18,7 @@
 
 import { UnidadOficina, Ubigeo } from "../models/index.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 // ==========================================
 // LISTAR UNIDADES (GET /)
@@ -52,8 +53,8 @@ const getAll = async (req, res) => {
     // Búsqueda por nombre o código
     if (search) {
       whereClause[Op.or] = [
-        { nombre: { [Op.like]: `%${search}%` } },
-        { codigo: { [Op.like]: `%${search}%` } },
+        { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { codigo: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

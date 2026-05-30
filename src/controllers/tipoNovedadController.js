@@ -26,6 +26,7 @@
 
 import { TipoNovedad, SubtipoNovedad, Usuario } from "../models/index.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 // Configuración común de includes para auditoría
 const auditoriaIncludes = [
@@ -59,8 +60,8 @@ const getAll = async (req, res) => {
 
     if (search) {
       whereClause[Op.or] = [
-        { nombre: { [Op.like]: `%${search}%` } },
-        { tipo_code: { [Op.like]: `%${search}%` } },
+        { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { tipo_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 
@@ -318,8 +319,8 @@ const getEliminadas = async (req, res) => {
 
     if (search) {
       whereClause[Op.or] = [
-        { nombre: { [Op.like]: `%${search}%` } },
-        { tipo_code: { [Op.like]: `%${search}%` } },
+        { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { tipo_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

@@ -26,6 +26,7 @@ import TipoVia from "../models/TipoVia.js";
 import Calle from "../models/Calle.js";
 import Usuario from "../models/Usuario.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 /**
  * ============================================================================
@@ -110,9 +111,9 @@ const tiposViaController = {
         // Normalizar búsqueda para que sea case-insensitive
         const searchUpper = search.toUpperCase();
         where[Op.or] = [
-          { codigo: { [Op.like]: `%${searchUpper}%` } },
-          { nombre: { [Op.like]: `%${search}%` } },
-          { abreviatura: { [Op.like]: `%${search}%` } },
+          { codigo: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${searchUpper}%` } },
+          { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+          { abreviatura: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
         ];
       }
 

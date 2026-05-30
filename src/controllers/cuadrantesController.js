@@ -120,8 +120,8 @@ export const getCuadrantes = async (req, res) => {
     // Filtro de búsqueda por nombre o código
     if (search) {
       whereConditions[Op.or] = [
-        { nombre: { [Op.like]: `%${search}%` } },
-        { cuadrante_code: { [Op.like]: `%${search}%` } },
+        { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { cuadrante_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

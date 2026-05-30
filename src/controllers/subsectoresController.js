@@ -103,8 +103,8 @@ const getAllSubsectores = async (req, res) => {
 
     if (search && search.trim().length > 0) {
       whereClause[Op.or] = [
-        { subsector_code: { [Op.like]: `%${search}%` } },
-        { nombre: { [Op.like]: `%${search}%` } },
+        { subsector_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

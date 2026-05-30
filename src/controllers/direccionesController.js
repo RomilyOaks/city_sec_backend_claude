@@ -49,6 +49,7 @@ import Usuario from "../models/Usuario.js";
 import Novedad from "../models/Novedad.js";
 import { Op } from "sequelize";
 import { geocodificarDireccion } from "../services/geocodingService.js";
+import { IS_POSTGRES } from "../config/database.js";
 
 /**
  * ============================================================================
@@ -285,11 +286,11 @@ const direccionesController = {
 
       if (search) {
         whereConditions[Op.or] = [
-          { direccion_completa: { [Op.like]: `%${search}%` } },
-          { direccion_code: { [Op.like]: `%${search}%` } },
-          { numero_municipal: { [Op.like]: `%${search}%` } },
-          { manzana: { [Op.like]: `%${search}%` } },
-          { lote: { [Op.like]: `%${search}%` } },
+          { direccion_completa: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+          { direccion_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+          { numero_municipal: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+          { manzana: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+          { lote: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
         ];
       }
 
@@ -453,8 +454,8 @@ const direccionesController = {
           as: "calle",
           where: {
             [Op.or]: [
-              { nombre_via: { [Op.like]: `%${calle}%` } },
-              { nombre_completo: { [Op.like]: `%${calle}%` } },
+              { nombre_via: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${calle}%` } },
+              { nombre_completo: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${calle}%` } },
             ],
           },
           include: [
@@ -475,14 +476,14 @@ const direccionesController = {
       // Filtrar por número
       if (numero) {
         whereConditions[Op.or] = [
-          { numero_municipal: { [Op.like]: `%${numero}%` } },
-          { lote: { [Op.like]: `%${numero}%` } },
+          { numero_municipal: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${numero}%` } },
+          { lote: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${numero}%` } },
         ];
       }
 
       // Filtrar por urbanización
       if (urbanizacion) {
-        whereConditions.urbanizacion = { [Op.like]: `%${urbanizacion}%` };
+        whereConditions.urbanizacion = { [IS_POSTGRES ? Op.iLike : Op.like]: `%${urbanizacion}%` };
       }
 
       const resultados = await Direccion.findAll({
@@ -1303,8 +1304,8 @@ const direccionesController = {
         const calles = await Calle.findAll({
           where: {
             [Op.or]: [
-              { nombre_via: { [Op.like]: `%${resultado.parsed.streetName}%` } },
-              { nombre_completo: { [Op.like]: `%${resultado.parsed.streetName}%` } },
+              { nombre_via: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${resultado.parsed.streetName}%` } },
+              { nombre_completo: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${resultado.parsed.streetName}%` } },
             ],
             estado: 1,
           },

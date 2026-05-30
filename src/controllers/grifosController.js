@@ -18,7 +18,7 @@
 
 import { AbastecimientoCombustible } from "../models/index.js";
 import { Op } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { IS_POSTGRES } from "../config/database.js";
 
 /**
  * GET /api/v1/grifos
@@ -41,12 +41,12 @@ export const getGrifos = async (req, res) => {
       where[Op.or] = [
         {
           grifo_nombre: {
-            [Op.like]: `%${searchUpper}%`
+            [IS_POSTGRES ? Op.iLike : Op.like]: `%${searchUpper}%`
           }
         },
         {
           grifo_ruc: {
-            [Op.like]: `%${searchUpper}%`
+            [IS_POSTGRES ? Op.iLike : Op.like]: `%${searchUpper}%`
           }
         }
       ];
@@ -131,12 +131,12 @@ export const getSugerenciasGrifos = async (req, res) => {
         [Op.or]: [
           {
             grifo_nombre: {
-              [Op.like]: `%${qUpper}%`
+              [IS_POSTGRES ? Op.iLike : Op.like]: `%${qUpper}%`
             }
           },
           {
             grifo_ruc: {
-              [Op.like]: `%${qUpper}%`
+              [IS_POSTGRES ? Op.iLike : Op.like]: `%${qUpper}%`
             }
           }
         ]

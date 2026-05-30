@@ -19,6 +19,7 @@ import Vehiculo from "../models/Vehiculo.js";
 import TipoVehiculo from "../models/TipoVehiculo.js";
 import Usuario from "../models/Usuario.js";
 import Sector from "../models/Sector.js";
+import { IS_POSTGRES } from "../config/database.js";
 
 /**
  * Obtener todas las asignaciones con paginación y filtros
@@ -64,7 +65,7 @@ export const getAllAsignaciones = async (req, res) => {
     // Búsqueda por observaciones o datos relacionados
     if (search) {
       whereClause[Op.or] = [
-        { observaciones: { [Op.like]: `%${search}%` } },
+        { observaciones: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 
@@ -719,7 +720,7 @@ export const getAsignacionesEliminadas = async (req, res) => {
 
     if (search) {
       whereClause[Op.or] = [
-        { observaciones: { [Op.like]: `%${search}%` } },
+        { observaciones: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

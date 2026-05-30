@@ -22,6 +22,7 @@ import models from "../models/index.js";
 const { OperativosTurno, PersonalSeguridad, Usuario, Sector, HorariosTurnos } = models;
 import { Op } from "sequelize";
 import { getTimeInTimezone, getDateInTimezone } from "../utils/dateHelper.js";
+import { IS_POSTGRES } from "../config/database.js";
 
 // ==========================================
 // CRUD BÁSICO
@@ -68,22 +69,22 @@ export const getAllTurnos = async (req, res) => {
     if (search) {
       whereClause[Op.or] = [
         {
-          "$operador.nombres$": { [Op.like]: `%${search}%` },
+          "$operador.nombres$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` },
         },
         {
-          "$operador.apellido_paterno$": { [Op.like]: `%${search}%` },
+          "$operador.apellido_paterno$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` },
         },
         {
-          "$operador.apellido_materno$": { [Op.like]: `%${search}%` },
+          "$operador.apellido_materno$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` },
         },
         {
-          "$supervisor.nombres$": { [Op.like]: `%${search}%` },
+          "$supervisor.nombres$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` },
         },
         {
-          "$supervisor.apellido_paterno$": { [Op.like]: `%${search}%` },
+          "$supervisor.apellido_paterno$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` },
         },
         {
-          "$supervisor.apellido_materno$": { [Op.like]: `%${search}%` },
+          "$supervisor.apellido_materno$": { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` },
         },
       ];
     }

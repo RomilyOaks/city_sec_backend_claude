@@ -19,6 +19,7 @@
 
 import { Rol, Permiso, Usuario, RolPermiso } from "../models/index.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 /**
  * GET /api/v1/roles
@@ -46,8 +47,8 @@ export const getRoles = async (req, res) => {
 
     if (search) {
       whereConditions[Op.or] = [
-        { nombre: { [Op.like]: `%${search}%` } },
-        { slug: { [Op.like]: `%${search}%` } },
+        { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { slug: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 

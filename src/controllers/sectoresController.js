@@ -142,9 +142,9 @@ const getAllSectores = async (req, res) => {
     // Búsqueda por texto en sector_code, nombre o zona_code
     if (search && search.trim().length > 0) {
       whereClause[Op.or] = [
-        { sector_code: { [Op.like]: `%${search}%` } },
-        { nombre: { [Op.like]: `%${search}%` } },
-        { zona_code: { [Op.like]: `%${search}%` } },
+        { sector_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { zona_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 
@@ -476,8 +476,8 @@ const getAllCuadrantes = async (req, res) => {
 
     if (search && search.trim().length > 0) {
       whereClause[Op.or] = [
-        { cuadrante_code: { [Op.like]: `%${search}%` } },
-        { nombre: { [Op.like]: `%${search}%` } },
+        { cuadrante_code: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
+        { nombre: { [IS_POSTGRES ? Op.iLike : Op.like]: `%${search}%` } },
       ];
     }
 
