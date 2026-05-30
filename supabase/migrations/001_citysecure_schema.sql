@@ -846,7 +846,7 @@ CREATE TABLE IF NOT EXISTS horarios_turnos (
     cruza_medianoche SMALLINT     NOT NULL DEFAULT 0,
     nro_orden        INTEGER,
     estado           SMALLINT     NOT NULL DEFAULT 1,
-    created_by       INTEGER      NOT NULL,
+    created_by       INTEGER,
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_by       INTEGER,
     updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
