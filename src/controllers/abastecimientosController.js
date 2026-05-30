@@ -30,7 +30,7 @@
 
 import { AbastecimientoCombustible, Vehiculo, PersonalSeguridad, TipoVehiculo } from "../models/index.js";
 import { Op } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { IS_POSTGRES } from "../config/database.js";
 import { convertToTimezone, rawDate } from "../utils/dateHelper.js";
 
 /**
@@ -259,7 +259,7 @@ export const createAbastecimiento = async (req, res) => {
 
     // 3) Validar que el personal exista y esté activo
     const personal = await PersonalSeguridad.findOne({
-      where: { id: personalIdFinal, estado: 1, deleted_at: null },
+      where: { id: personalIdFinal, estado: IS_POSTGRES ? true : 1, deleted_at: null },
       transaction,
     });
 

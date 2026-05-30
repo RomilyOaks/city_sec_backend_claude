@@ -21,6 +21,7 @@ import {
   sequelize,
 } from "../models/index.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 // ==================== TIPOS DE NOVEDAD ====================
 
@@ -38,14 +39,14 @@ const getTiposNovedad = async (req, res) => {
           {
             model: SubtipoNovedad,
             as: "tipoNovedadSubtipoNovedad",
-            where: { estado: 1, deleted_at: null },
+            where: { estado: IS_POSTGRES ? true : 1, deleted_at: null },
             required: false,
           },
         ]
         : [];
 
     const tipos = await TipoNovedad.findAll({
-      where: { estado: 1, deleted_at: null },
+      where: { estado: IS_POSTGRES ? true : 1, deleted_at: null },
       include,
       order: [
         ["orden", "ASC"],
@@ -140,7 +141,7 @@ const getSubtiposNovedad = async (req, res) => {
     const { tipo_id, prioridad } = req.query;
 
     const whereClause = {
-      estado: 1,
+      estado: IS_POSTGRES ? true : 1,
       deleted_at: null,
     };
 
@@ -271,7 +272,7 @@ const createSubtipoNovedad = async (req, res) => {
 const getEstadosNovedad = async (req, res) => {
   try {
     const estados = await EstadoNovedad.findAll({
-      where: { estado: 1, deleted_at: null },
+      where: { estado: IS_POSTGRES ? true : 1, deleted_at: null },
       order: [["orden", "ASC"]],
     });
 
@@ -317,8 +318,8 @@ const createEstadoNovedad = async (req, res) => {
     // Si es inicial, desactivar otros estados iniciales
     if (es_inicial) {
       await EstadoNovedad.update(
-        { es_inicial: 0 },
-        { where: { es_inicial: 1 } }
+        { es_inicial: IS_POSTGRES ? false : 0 },
+        { where: { es_inicial: IS_POSTGRES ? true : 1 } }
       );
     }
 
@@ -358,7 +359,7 @@ const createEstadoNovedad = async (req, res) => {
 const getTiposVehiculo = async (req, res) => {
   try {
     const tipos = await TipoVehiculo.findAll({
-      where: { estado: 1, deleted_at: null },
+      where: { estado: IS_POSTGRES ? true : 1, deleted_at: null },
       order: [["nombre", "ASC"]],
     });
 
@@ -422,7 +423,7 @@ const createTipoVehiculo = async (req, res) => {
 const getCargos = async (req, res) => {
   try {
     const cargos = await Cargo.findAll({
-      where: { estado: 1 },
+      where: { estado: IS_POSTGRES ? true : 1 },
       order: [["nombre", "ASC"]],
     });
 
@@ -487,7 +488,7 @@ const getUnidades = async (req, res) => {
     const { tipo_unidad } = req.query;
 
     const whereClause = {
-      estado: 1,
+      estado: IS_POSTGRES ? true : 1,
       deleted_at: null,
     };
 

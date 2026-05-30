@@ -34,6 +34,7 @@ import {
   PersonalSeguridad,
 } from "../models/index.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 // ==================== CONSTANTES ====================
 
@@ -121,7 +122,7 @@ const getAllSubsectores = async (req, res) => {
         {
           model: Cuadrante,
           as: "cuadrantes",
-          where: { estado: 1, deleted_at: null },
+          where: { estado: IS_POSTGRES ? true : 1, deleted_at: null },
           required: false,
           attributes: ["id", "cuadrante_code", "nombre", "color_mapa"],
         },
@@ -168,7 +169,7 @@ const getSubsectorById = async (req, res) => {
         {
           model: Cuadrante,
           as: "cuadrantes",
-          where: { estado: 1, deleted_at: null },
+          where: { estado: IS_POSTGRES ? true : 1, deleted_at: null },
           required: false,
           attributes: [
             "id",
@@ -244,7 +245,7 @@ const getSubsectoresBySector = async (req, res) => {
         {
           model: Cuadrante,
           as: "cuadrantes",
-          where: { estado: 1, deleted_at: null },
+          where: { estado: IS_POSTGRES ? true : 1, deleted_at: null },
           required: false,
           attributes: ["id", "cuadrante_code", "nombre"],
         },
@@ -308,7 +309,7 @@ const createSubsector = async (req, res) => {
 
     // Verificar que el sector existe
     const sector = await Sector.findOne({
-      where: { id: sector_id, estado: 1, deleted_at: null },
+      where: { id: sector_id, estado: IS_POSTGRES ? true : 1, deleted_at: null },
     });
 
     if (!sector) {
@@ -338,7 +339,7 @@ const createSubsector = async (req, res) => {
     // Verificar supervisor si hay uno definido
     if (supervisorFinal) {
       const supervisor = await PersonalSeguridad.findOne({
-        where: { id: supervisorFinal, estado: 1, deleted_at: null },
+        where: { id: supervisorFinal, estado: IS_POSTGRES ? true : 1, deleted_at: null },
       });
 
       if (!supervisor) {
@@ -432,7 +433,7 @@ const updateSubsector = async (req, res) => {
       const sector = await Sector.findOne({
         where: {
           id: datosActualizacion.sector_id,
-          estado: 1,
+          estado: IS_POSTGRES ? true : 1,
           deleted_at: null,
         },
       });
@@ -454,7 +455,7 @@ const updateSubsector = async (req, res) => {
       const supervisor = await PersonalSeguridad.findOne({
         where: {
           id: datosActualizacion.personal_supervisor_id,
-          estado: 1,
+          estado: IS_POSTGRES ? true : 1,
           deleted_at: null,
         },
       });
@@ -480,7 +481,7 @@ const updateSubsector = async (req, res) => {
         {
           model: Cuadrante,
           as: "cuadrantes",
-          where: { estado: 1, deleted_at: null },
+          where: { estado: IS_POSTGRES ? true : 1, deleted_at: null },
           required: false,
         },
       ],
@@ -524,7 +525,7 @@ const deleteSubsector = async (req, res) => {
     const cuadrantesActivos = await Cuadrante.count({
       where: {
         subsector_id: id,
-        estado: 1,
+        estado: IS_POSTGRES ? true : 1,
         deleted_at: null,
       },
     });

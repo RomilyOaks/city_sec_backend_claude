@@ -45,7 +45,7 @@ import {
   HistorialEstadoNovedad,
   Usuario,
 } from "../models/index.js";
-import sequelize from "../config/database.js";
+import sequelize, { IS_POSTGRES } from "../config/database.js";
 import { Op } from "sequelize";
 import { DEFAULT_UBIGEO_CODE } from "../config/constants.js";
 import { broadcastEvent } from "../utils/sse-manager.js";
@@ -384,7 +384,7 @@ export const createNovedad = async (req, res) => {
     } = req.body;
 
     const estadoInicial = await EstadoNovedad.findOne({
-      where: { es_inicial: 1, estado: 1 },
+      where: { es_inicial: IS_POSTGRES ? true : 1, estado: IS_POSTGRES ? true : 1 },
       transaction,
     });
 
@@ -693,7 +693,7 @@ export const asignarRecursos = async (req, res) => {
     const estadoDespacho = await EstadoNovedad.findOne({
       where: {
         nombre: { [Op.in]: ["EN RUTA", "DESPACHADO", "Asignado"] },
-        estado: 1,
+        estado: IS_POSTGRES ? true : 1,
       },
       transaction,
     });

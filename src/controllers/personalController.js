@@ -46,7 +46,7 @@ import {
   RadioTetra,
 } from "../models/index.js";
 import { Op } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { IS_POSTGRES } from "../config/database.js";
 
 // ==========================================
 // CRUD BÁSICO
@@ -74,7 +74,7 @@ export const getAllPersonal = async (req, res) => {
     } = req.query;
 
     const whereClause = {
-      estado: 1,
+      estado: IS_POSTGRES ? true : 1,
       deleted_at: null,
     };
 
@@ -184,7 +184,7 @@ export const getPersonalById = async (req, res) => {
     const personal = await PersonalSeguridad.findOne({
       where: {
         id,
-        estado: 1,
+        estado: IS_POSTGRES ? true : 1,
         deleted_at: null,
       },
       include: [
@@ -266,7 +266,7 @@ export const createPersonal = async (req, res) => {
       where: {
         doc_tipo: datosPersonal.doc_tipo,
         doc_numero: datosPersonal.doc_numero,
-        estado: 1,
+        estado: IS_POSTGRES ? true : 1,
         deleted_at: null,
       },
       transaction,
@@ -438,7 +438,7 @@ export const updatePersonal = async (req, res) => {
     const datosActualizacion = req.body;
 
     const personal = await PersonalSeguridad.findOne({
-      where: { id, estado: 1, deleted_at: null },
+      where: { id, estado: IS_POSTGRES ? true : 1, deleted_at: null },
       transaction,
       lock: transaction.LOCK.UPDATE,
     });
@@ -519,7 +519,7 @@ export const updatePersonal = async (req, res) => {
           where: {
             vehiculo_id: datosActualizacion.vehiculo_id,
             id: { [Op.ne]: id },
-            estado: 1,
+            estado: IS_POSTGRES ? true : 1,
             deleted_at: null,
           },
           transaction,
@@ -688,7 +688,7 @@ export const deletePersonal = async (req, res) => {
     const { id } = req.params;
 
     const personal = await PersonalSeguridad.findOne({
-      where: { id, estado: 1, deleted_at: null },
+      where: { id, estado: IS_POSTGRES ? true : 1, deleted_at: null },
     });
 
     if (!personal) {
@@ -799,7 +799,7 @@ export const getPersonalSelector = async (req, res) => {
   try {
     const personal = await PersonalSeguridad.findAll({
       where: {
-        estado: 1,
+        estado: IS_POSTGRES ? true : 1,
         deleted_at: null,
       },
       attributes: [
@@ -852,7 +852,7 @@ export const getEstadisticasPersonal = async (req, res) => {
       ],
       where: {
         status: "Activo",
-        estado: 1,
+        estado: IS_POSTGRES ? true : 1,
         deleted_at: null,
       },
       include: [
@@ -876,7 +876,7 @@ export const getEstadisticasPersonal = async (req, res) => {
         },
         licencia: { [Op.ne]: null },
         status: "Activo",
-        estado: 1,
+        estado: IS_POSTGRES ? true : 1,
         deleted_at: null,
       },
     });
@@ -888,7 +888,7 @@ export const getEstadisticasPersonal = async (req, res) => {
         },
         licencia: { [Op.ne]: null },
         status: "Activo",
-        estado: 1,
+        estado: IS_POSTGRES ? true : 1,
         deleted_at: null,
       },
     });
@@ -1215,7 +1215,7 @@ export const getPersonalPorStatus = async (req, res) => {
     const { count, rows } = await PersonalSeguridad.findAndCountAll({
       where: {
         status,
-        estado: 1,
+        estado: IS_POSTGRES ? true : 1,
         deleted_at: null,
       },
       include: [
@@ -1274,7 +1274,7 @@ export const cambiarStatus = async (req, res) => {
     }
 
     const personal = await PersonalSeguridad.findOne({
-      where: { id, estado: 1, deleted_at: null },
+      where: { id, estado: IS_POSTGRES ? true : 1, deleted_at: null },
     });
 
     if (!personal) {
@@ -1508,7 +1508,7 @@ export const desasignarVehiculo = async (req, res) => {
     const { id } = req.params;
 
     const personal = await PersonalSeguridad.findOne({
-      where: { id, estado: 1, deleted_at: null },
+      where: { id, estado: IS_POSTGRES ? true : 1, deleted_at: null },
       transaction,
       lock: transaction.LOCK.UPDATE,
     });
@@ -1595,7 +1595,7 @@ export const actualizarLicencia = async (req, res) => {
     const { licencia, categoria, vigencia } = req.body;
 
     const personal = await PersonalSeguridad.findOne({
-      where: { id, estado: 1, deleted_at: null },
+      where: { id, estado: IS_POSTGRES ? true : 1, deleted_at: null },
       transaction,
       lock: transaction.LOCK.UPDATE,
     });
@@ -1667,7 +1667,7 @@ export const generarCodigoAcceso = async (req, res) => {
     const { id } = req.params;
 
     const personal = await PersonalSeguridad.findOne({
-      where: { id, estado: 1, deleted_at: null },
+      where: { id, estado: IS_POSTGRES ? true : 1, deleted_at: null },
       include: [
         {
           model: Cargo,
@@ -1774,7 +1774,7 @@ export const verificarLicenciaVigente = async (req, res) => {
     const { id } = req.params;
 
     const personal = await PersonalSeguridad.findOne({
-      where: { id, estado: 1, deleted_at: null },
+      where: { id, estado: IS_POSTGRES ? true : 1, deleted_at: null },
     });
 
     if (!personal) {
@@ -1845,7 +1845,7 @@ export const getHistorialNovedades = async (req, res) => {
     const { limit = 50 } = req.query;
 
     const personal = await PersonalSeguridad.findOne({
-      where: { id, estado: 1, deleted_at: null },
+      where: { id, estado: IS_POSTGRES ? true : 1, deleted_at: null },
     });
 
     if (!personal) {
@@ -1928,7 +1928,7 @@ export const getLicenciasPorVencer = async (req, res) => {
           [Op.between]: [hoy, fechaLimite],
         },
         status: "Activo",
-        estado: 1,
+        estado: IS_POSTGRES ? true : 1,
         deleted_at: null,
       },
       include: [

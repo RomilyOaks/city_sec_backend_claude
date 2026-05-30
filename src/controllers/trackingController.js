@@ -37,7 +37,7 @@ const {
 } = models;
 
 import { Op } from "sequelize";
-import sequelize from "../config/database.js";
+import sequelize, { IS_POSTGRES } from "../config/database.js";
 import { broadcastEvent } from "../utils/sse-manager.js";
 import logger from "../utils/logger.js";
 import { formatResponse, formatErrorResponse } from "../utils/responseFormatter.js";
@@ -447,7 +447,7 @@ export const getVehiculosCercanos = async (req, res) => {
       LEFT  JOIN tipos_vehiculo  tt ON tt.id = v.tipo_id
       LEFT  JOIN personal_seguridad ps ON ps.id = tv.personal_id
       WHERE tv.updated_at > NOW() - INTERVAL 10 MINUTE
-        AND tv.activo = 1
+        AND tv.activo = ${IS_POSTGRES ? "true" : "1"}
       ORDER BY distancia_km ASC
       LIMIT 5
       `,

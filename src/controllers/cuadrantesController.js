@@ -41,6 +41,7 @@ import {
   PersonalSeguridad,
 } from "../models/index.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 /**
  * Include para auditoría de Cuadrantes
@@ -346,7 +347,7 @@ export const getCuadrantesBySubsector = async (req, res) => {
     const { count, rows: cuadrantes } = await Cuadrante.findAndCountAll({
       where: {
         subsector_id: subsectorId,
-        estado: 1,
+        estado: IS_POSTGRES ? true : 1,
         deleted_at: null,
       },
       include: [

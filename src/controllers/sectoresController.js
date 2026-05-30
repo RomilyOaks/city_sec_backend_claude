@@ -45,6 +45,7 @@ import {
   PersonalSeguridad,
 } from "../models/index.js";
 import { Op } from "sequelize";
+import { IS_POSTGRES } from "../config/database.js";
 
 // ==================== CONSTANTES ====================
 
@@ -167,7 +168,7 @@ const getAllSectores = async (req, res) => {
         {
           model: Cuadrante,
           as: "cuadrantes",
-          where: { estado: 1, deleted_at: null },
+          where: { estado: IS_POSTGRES ? true : 1, deleted_at: null },
           required: false, // LEFT JOIN para incluir sectores sin cuadrantes
         },
         ...sectorAuditInclude, // Incluir usuarios de auditoría
@@ -217,7 +218,7 @@ const getSectorById = async (req, res) => {
         {
           model: Cuadrante,
           as: "cuadrantes",
-          where: { estado: 1, deleted_at: null },
+          where: { estado: IS_POSTGRES ? true : 1, deleted_at: null },
           required: false,
         },
         ...sectorAuditInclude, // Incluir usuarios de auditoría
@@ -413,7 +414,7 @@ const deleteSector = async (req, res) => {
     const cuadrantesActivos = await Cuadrante.count({
       where: {
         sector_id: id,
-        estado: 1,
+        estado: IS_POSTGRES ? true : 1,
         deleted_at: null,
       },
     });
@@ -428,7 +429,7 @@ const deleteSector = async (req, res) => {
 
     // Soft delete
     await sector.update({
-      estado: 0,
+      estado: IS_POSTGRES ? false : 0,
       deleted_at: new Date(),
       deleted_by: req.user.id,
     });
@@ -643,7 +644,7 @@ const createCuadrante = async (req, res) => {
 
     // Verificar que el sector existe
     const sector = await Sector.findOne({
-      where: { id: sector_id, estado: 1, deleted_at: null },
+      where: { id: sector_id, estado: IS_POSTGRES ? true : 1, deleted_at: null },
     });
 
     if (!sector) {
@@ -676,7 +677,7 @@ const createCuadrante = async (req, res) => {
     // Verificar supervisor si hay uno definido
     if (supervisorFinal) {
       const supervisor = await PersonalSeguridad.findOne({
-        where: { id: supervisorFinal, estado: 1, deleted_at: null },
+        where: { id: supervisorFinal, estado: IS_POSTGRES ? true : 1, deleted_at: null },
       });
 
       if (!supervisor) {
@@ -815,7 +816,7 @@ const updateCuadrante = async (req, res) => {
       const supervisor = await PersonalSeguridad.findOne({
         where: {
           id: datosActualizacion.personal_supervisor_id,
-          estado: 1,
+          estado: IS_POSTGRES ? true : 1,
           deleted_at: null,
         },
       });
@@ -891,7 +892,7 @@ const deleteCuadrante = async (req, res) => {
 
     // Soft delete
     await cuadrante.update({
-      estado: 0,
+      estado: IS_POSTGRES ? false : 0,
       deleted_at: new Date(),
       deleted_by: req.user.id,
     });

@@ -9,6 +9,7 @@ import {
   EstadoNovedad,
   Usuario,
 } from "../models/index.js";
+import { IS_POSTGRES } from "../config/database.js";
 
 const auditoriaIncludes = [
   {
@@ -117,7 +118,7 @@ export const getEstadosByRol = async (req, res) => {
   try {
     const { rolId } = req.params;
 
-    const rol = await Rol.findOne({ where: { id: rolId, estado: 1 } });
+    const rol = await Rol.findOne({ where: { id: rolId, estado: IS_POSTGRES ? true : 1 } });
     if (!rol) {
       return res.status(404).json({
         success: false,
@@ -132,7 +133,7 @@ export const getEstadosByRol = async (req, res) => {
           model: EstadoNovedad,
           as: "estadoNovedadRolEstadoNovedad",
           attributes: ["id", "nombre", "color_hex", "es_final", "es_inicial", "requiere_unidad"],
-          where: { estado: 1 },
+          where: { estado: IS_POSTGRES ? true : 1 },
         },
       ],
       order: [
