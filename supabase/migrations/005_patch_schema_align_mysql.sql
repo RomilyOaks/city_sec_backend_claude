@@ -77,6 +77,16 @@ ALTER TABLE horarios_turnos
   ALTER COLUMN created_by DROP NOT NULL;
 
 -- ============================================================
+-- F) direcciones — columnas ajustado_en_mapa y fecha_ajuste_mapa
+--
+-- MySQL tiene estas dos columnas que el schema PG no tenía.
+-- ============================================================
+
+ALTER TABLE direcciones
+  ADD COLUMN IF NOT EXISTS ajustado_en_mapa  SMALLINT  DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS fecha_ajuste_mapa TIMESTAMPTZ;
+
+-- ============================================================
 -- D) DROP NOT NULL en BOOLEAN/SMALLINT con DEFAULT
 --
 -- En MySQL los registros antiguos pueden tener NULL en columnas

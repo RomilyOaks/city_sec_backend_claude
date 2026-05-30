@@ -920,6 +920,8 @@ CREATE TABLE IF NOT EXISTS direcciones (
     fuente_geocodificacion VARCHAR(50),
     verificada            SMALLINT     DEFAULT 0,
     fecha_verificacion    DATE,
+    ajustado_en_mapa      SMALLINT     DEFAULT 0,
+    fecha_ajuste_mapa     TIMESTAMPTZ,
     veces_usada           INTEGER      DEFAULT 0,
     ultima_vez_usada      TIMESTAMPTZ,
     observaciones         TEXT,
