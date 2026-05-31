@@ -149,7 +149,7 @@ router.post(
   verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador"], ["operativos.turnos.create"]),
   validateTurno,
   handleValidationErrors,
-  registrarAuditoria("Creación de turno"),
+  registrarAuditoria({ modulo: "Operativos", entidad: "OperativosTurno", descripcion: "Creación de turno" }),
   turnosController.createTurno
 );
 
@@ -160,7 +160,7 @@ router.put(
   param("id").isInt().withMessage("El ID debe ser un número entero."),
   validateUpdateTurno,
   handleValidationErrors,
-  registrarAuditoria("Actualización de turno"),
+  registrarAuditoria({ modulo: "Operativos", entidad: "OperativosTurno", descripcion: "Actualización de turno" }),
   turnosController.updateTurno
 );
 
@@ -170,7 +170,7 @@ router.delete(
   verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["operativos.turnos.delete"]),
   param("id").isInt().withMessage("El ID debe ser un número entero."),
   handleValidationErrors,
-  registrarAuditoria("Eliminación de turno"),
+  registrarAuditoria({ modulo: "Operativos", entidad: "OperativosTurno", descripcion: "Eliminación de turno" }),
   turnosController.deleteTurno
 );
 

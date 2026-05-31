@@ -128,7 +128,7 @@ router.post(
   verificarRolesOPermisos(["super_admin", "admin"], [permisos.create]),
   validateCreate,
   handleValidationErrors,
-  registrarAuditoria("Creación de subtipo de novedad"),
+  registrarAuditoria({ modulo: "Novedades", entidad: "SubtipoNovedad", descripcion: "Creación de subtipo de novedad" }),
   (req, res, next) => {
     // #swagger.tags = ['Subtipos Novedad']
     // #swagger.summary = 'Crear subtipo de novedad'
@@ -152,7 +152,7 @@ router.put(
   validateId,
   validateUpdate,
   handleValidationErrors,
-  registrarAuditoria("Actualización de subtipo de novedad"),
+  registrarAuditoria({ modulo: "Novedades", entidad: "SubtipoNovedad", descripcion: "Actualización de subtipo de novedad" }),
   (req, res, next) => {
     // #swagger.tags = ['Subtipos Novedad']
     // #swagger.summary = 'Actualizar subtipo de novedad'
@@ -177,7 +177,7 @@ router.delete(
   verificarRolesOPermisos(["super_admin", "admin"], [permisos.delete]),
   validateId,
   handleValidationErrors,
-  registrarAuditoria("Eliminación de subtipo de novedad"),
+  registrarAuditoria({ modulo: "Novedades", entidad: "SubtipoNovedad", descripcion: "Eliminación de subtipo de novedad" }),
   (req, res, next) => {
     // #swagger.tags = ['Subtipos Novedad']
     // #swagger.summary = 'Eliminar subtipo de novedad'
@@ -201,7 +201,7 @@ router.patch(
   verificarRolesOPermisos(["super_admin", "admin"], [permisos.update]),
   validateId,
   handleValidationErrors,
-  registrarAuditoria("Reactivación de subtipo de novedad"),
+  registrarAuditoria({ modulo: "Novedades", entidad: "SubtipoNovedad", descripcion: "Reactivación de subtipo de novedad" }),
   (req, res, next) => {
     // #swagger.tags = ['Subtipos Novedad']
     // #swagger.summary = 'Reactivar subtipo de novedad'

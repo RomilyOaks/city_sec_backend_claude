@@ -101,7 +101,7 @@ router.post(
       .withMessage("El resultado debe ser PENDIENTE, RESUELTO, ESCALADO o CANCELADO."),
   ],
   handleValidationErrors,
-  registrarAuditoria("Registro de novedad atendida en cuadrante de vehículo operativo"),
+  registrarAuditoria({ modulo: "Operativos", entidad: "OperativosVehiculosNovedades", descripcion: "Registro de novedad atendida en cuadrante de vehículo operativo" }),
   createNovedadInCuadrante
 );
 
@@ -150,7 +150,7 @@ router.put(
       .withMessage("El resultado debe ser PENDIENTE, RESUELTO, ESCALADO o CANCELADO."),
   ],
   handleValidationErrors,
-  registrarAuditoria("Actualización de novedad atendida en cuadrante de vehículo operativo"),
+  registrarAuditoria({ modulo: "Operativos", entidad: "OperativosVehiculosNovedades", descripcion: "Actualización de novedad atendida en cuadrante de vehículo operativo" }),
   updateNovedadInCuadrante
 );
 
@@ -165,7 +165,7 @@ router.delete(
       .withMessage("El ID de la novedad debe ser un número entero positivo."),
   ],
   handleValidationErrors,
-  registrarAuditoria("Eliminación de novedad atendida en cuadrante de vehículo operativo"),
+  registrarAuditoria({ modulo: "Operativos", entidad: "OperativosVehiculosNovedades", descripcion: "Eliminación de novedad atendida en cuadrante de vehículo operativo" }),
   deleteNovedadInCuadrante
 );
 

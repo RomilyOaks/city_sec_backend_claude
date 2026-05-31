@@ -122,7 +122,7 @@ router.post(
   verificarRolesOPermisos(["super_admin", "admin"], [permisos.create]),
   validateCreate,
   handleValidationErrors,
-  registrarAuditoria("Creación de tipo de novedad"),
+  registrarAuditoria({ modulo: "Novedades", entidad: "TipoNovedad", descripcion: "Creación de tipo de novedad" }),
   (req, res, next) => {
     // #swagger.tags = ['Tipos Novedad']
     // #swagger.summary = 'Crear tipo de novedad'
@@ -146,7 +146,7 @@ router.put(
   validateId,
   validateUpdate,
   handleValidationErrors,
-  registrarAuditoria("Actualización de tipo de novedad"),
+  registrarAuditoria({ modulo: "Novedades", entidad: "TipoNovedad", descripcion: "Actualización de tipo de novedad" }),
   (req, res, next) => {
     // #swagger.tags = ['Tipos Novedad']
     // #swagger.summary = 'Actualizar tipo de novedad'
@@ -171,7 +171,7 @@ router.delete(
   verificarRolesOPermisos(["super_admin", "admin"], [permisos.delete]),
   validateId,
   handleValidationErrors,
-  registrarAuditoria("Eliminación de tipo de novedad"),
+  registrarAuditoria({ modulo: "Novedades", entidad: "TipoNovedad", descripcion: "Eliminación de tipo de novedad" }),
   (req, res, next) => {
     // #swagger.tags = ['Tipos Novedad']
     // #swagger.summary = 'Eliminar tipo de novedad'
@@ -195,7 +195,7 @@ router.patch(
   verificarRolesOPermisos(["super_admin", "admin"], [permisos.update]),
   validateId,
   handleValidationErrors,
-  registrarAuditoria("Reactivación de tipo de novedad"),
+  registrarAuditoria({ modulo: "Novedades", entidad: "TipoNovedad", descripcion: "Reactivación de tipo de novedad" }),
   (req, res, next) => {
     // #swagger.tags = ['Tipos Novedad']
     // #swagger.summary = 'Reactivar tipo de novedad'
