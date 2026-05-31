@@ -605,6 +605,35 @@ const ultimo = vehiculos.length
 
 ---
 
+### 🚨 `search_path` no configurado — queries raw fallan con "relation does not exist"
+
+Sequelize ORM resuelve el schema automáticamente vía `schema: DB_SCHEMA` en cada modelo.
+**Las queries SQL raw (`sequelize.query()`) no llevan ese contexto** — PostgreSQL busca en
+`public` por defecto y lanza `ERROR: relation "tabla" does not exist`.
+
+La solución está en `src/config/database.js`: `pgDialectOptions` incluye
+`options: -c search_path=${DB_SCHEMA},public` que configura el `search_path` en cada
+conexión del pool al momento de crearla. Esto cubre automáticamente todo SQL raw sin
+necesidad de prefijar nombres de tabla.
+
+```js
+// ✅ En database.js — ya aplicado (no modificar)
+const pgDialectOptions = {
+  ...(sslConfig && { ssl: sslConfig }),
+  ...(DB_SCHEMA && { options: `-c search_path=${DB_SCHEMA},public` }),
+};
+```
+
+Archivos con SQL raw que se benefician de este fix:
+- `src/services/reportesOperativosService.js`
+- `src/controllers/personalController.js`
+- `src/controllers/trackingController.js`
+
+Si se agrega un nuevo archivo con `sequelize.query()` raw, **no hace falta hacer nada** —
+el `search_path` ya está activo en la conexión.
+
+---
+
 ## Trampas Conocidas — Express 5 + Railway
 
 Lecciones aprendidas en producción. **Leer antes de tocar `app.js` o el deploy.**
