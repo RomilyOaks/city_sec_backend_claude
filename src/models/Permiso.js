@@ -219,10 +219,10 @@ const Permiso = sequelize.define(
        * Solo letras minúsculas y guiones bajos
        */
       validSlug() {
-        const slugPattern = /^[a-z_]+\.[a-z_]+\.[a-z_]+$/;
+        const slugPattern = /^[a-z_]+(\.[a-z_]+){2,3}$/;
         if (this.slug && !slugPattern.test(this.slug)) {
           throw new Error(
-            "El slug debe tener el formato: modulo.recurso.accion (solo minúsculas y guiones bajos)"
+            "El slug debe tener el formato: modulo.recurso.accion o modulo.recurso.subrecurso.accion"
           );
         }
       },

@@ -23,10 +23,10 @@
  * - DELETE /api/calles-cuadrantes/:id                - Eliminar
  *
  * PERMISOS UTILIZADOS (según seedRBAC.js):
- * - calles.calles_cuadrantes.read: Ver relaciones
- * - calles.calles_cuadrantes.create: Crear relaciones
- * - calles.calles_cuadrantes.update: Actualizar relaciones
- * - calles.calles_cuadrantes.delete: Eliminar relaciones
+ * - calles.calles.cuadrantes.read: Ver relaciones
+ * - calles.calles.cuadrantes.create: Crear relaciones
+ * - calles.calles.cuadrantes.update: Actualizar relaciones
+ * - calles.calles.cuadrantes.delete: Eliminar relaciones
  *
  * @author Claude AI
  * @date 2025-12-23
@@ -90,7 +90,7 @@ router.use(verificarToken);
 router.post(
   "/buscar-cuadrante",
   verificarToken,
-  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles_cuadrantes.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.cuadrantes.read"]),
   validateBuscarCuadrante,
   (req, res, next) => {
     // #swagger.tags = ['Calles-Cuadrantes']
@@ -112,7 +112,7 @@ router.post(
 router.get(
   "/calle/:id",
   verificarToken,
-  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles_cuadrantes.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.cuadrantes.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Calles-Cuadrantes']
     // #swagger.summary = 'Relaciones de una calle'
@@ -131,7 +131,7 @@ router.get(
 router.get(
   "/cuadrante/:id",
   verificarToken,
-  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles_cuadrantes.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.cuadrantes.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Calles-Cuadrantes']
     // #swagger.summary = 'Relaciones de un cuadrante'
@@ -155,7 +155,7 @@ router.get(
 router.get(
   "/",
   verificarToken,
-  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles_cuadrantes.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.cuadrantes.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Calles-Cuadrantes']
     // #swagger.summary = 'Listar relaciones calle-cuadrante'
@@ -177,7 +177,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles_cuadrantes.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.calles.cuadrantes.read"]),
   validateCallesCuadrantesId,
   (req, res, next) => {
     // #swagger.tags = ['Calles-Cuadrantes']
@@ -198,7 +198,7 @@ router.get(
  */
 router.post(
   "/",
-  verificarRolesOPermisos(["operador", "supervisor", "super_admin"], ["calles.calles_cuadrantes.create"]),
+  verificarRolesOPermisos(["operador", "supervisor", "super_admin"], ["calles.calles.cuadrantes.create"]),
   validateCreateCallesCuadrantes,
   registrarAuditoria({
     entidad: "CallesCuadrantes",
@@ -225,7 +225,7 @@ router.post(
  */
 router.put(
   "/:id",
-  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.calles_cuadrantes.update"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.calles.cuadrantes.update"]),
   validateUpdateCallesCuadrantes,
   registrarAuditoria({
     entidad: "CallesCuadrantes",
@@ -252,7 +252,7 @@ router.put(
  */
 router.delete(
   "/:id",
-  verificarRolesOPermisos(["super_admin"], ["calles.calles_cuadrantes.delete"]),
+  verificarRolesOPermisos(["super_admin"], ["calles.calles.cuadrantes.delete"]),
   validateCallesCuadrantesId,
   registrarAuditoria({
     entidad: "CallesCuadrantes",
@@ -279,13 +279,13 @@ export default router;
  * CAMBIOS EN v2.2.2:
  *
  * ✅ PERMISOS ACTUALIZADOS CON SLUGS CORRECTOS:
- * - calles_cuadrantes.view      → calles.calles_cuadrantes.read
- * - calles_cuadrantes.create    → calles.calles_cuadrantes.create
- * - calles_cuadrantes.update    → calles.calles_cuadrantes.update
- * - calles_cuadrantes.delete    → calles.calles_cuadrantes.delete
+ * - calles_cuadrantes.view      → calles.calles.cuadrantes.read
+ * - calles_cuadrantes.create    → calles.calles.cuadrantes.create
+ * - calles_cuadrantes.update    → calles.calles.cuadrantes.update
+ * - calles_cuadrantes.delete    → calles.calles.cuadrantes.delete
  *
  * ✅ PERMISO ESPECIAL PARA BUSCAR-CUADRANTE:
- * - Permite tanto calles.calles_cuadrantes.read como calles.direcciones.create
+ * - Permite tanto calles.calles.cuadrantes.read como calles.direcciones.create
  * - Usado por el módulo de direcciones para auto-asignar cuadrante/sector
  *
  * Los slugs ahora coinciden exactamente con los generados por seedRBAC.js:
@@ -296,10 +296,10 @@ export default router;
  * NOTAS DE INTEGRACIÓN:
  *
  * 1. PERMISOS EN BD:
- *    - calles.calles_cuadrantes.read
- *    - calles.calles_cuadrantes.create
- *    - calles.calles_cuadrantes.update
- *    - calles.calles_cuadrantes.delete
+ *    - calles.calles.cuadrantes.read
+ *    - calles.calles.cuadrantes.create
+ *    - calles.calles.cuadrantes.update
+ *    - calles.calles.cuadrantes.delete
  *    - calles.direcciones.create (para buscar-cuadrante)
  *
  * 2. ROLES CON ACCESO:

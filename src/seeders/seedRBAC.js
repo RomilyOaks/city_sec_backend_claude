@@ -794,28 +794,28 @@ async function seedRBAC() {
       // --- CALLES-CUADRANTES ---
       {
         modulo: "calles",
-        recurso: "calles_cuadrantes",
+        recurso: "calles.cuadrantes",
         accion: "read",
         descripcion: "Ver relaciones calle-cuadrante",
         es_sistema: true,
       },
       {
         modulo: "calles",
-        recurso: "calles_cuadrantes",
+        recurso: "calles.cuadrantes",
         accion: "create",
         descripcion: "Asignar calles a cuadrantes",
         es_sistema: true,
       },
       {
         modulo: "calles",
-        recurso: "calles_cuadrantes",
+        recurso: "calles.cuadrantes",
         accion: "update",
         descripcion: "Actualizar rangos de numeración",
         es_sistema: true,
       },
       {
         modulo: "calles",
-        recurso: "calles_cuadrantes",
+        recurso: "calles.cuadrantes",
         accion: "delete",
         descripcion: "Eliminar relaciones calle-cuadrante",
         es_sistema: true,
