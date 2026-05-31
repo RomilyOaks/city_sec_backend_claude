@@ -634,6 +634,45 @@ el `search_path` ya está activo en la conexión.
 
 ---
 
+### 🚨 `COUNT(*)` y agregados SQL raw devuelven **string**, no número
+
+El driver `pg` (PostgreSQL) retorna `COUNT(*)`, `COUNT(DISTINCT ...)` y `SUM(...)` como
+**string** para evitar overflow de enteros JavaScript. `mysql2` hace lo mismo.
+
+Al acumular sin castear con `+`, JavaScript concatena en lugar de sumar:
+
+```js
+// ❌ Concatenación silenciosa — aplica tanto a MySQL como PostgreSQL
+0 + "1" + "2" + "1"  // = "0121"  →  parseInt("0121") = 121  (bug)
+
+// ✅ Castear antes de acumular
+parseInt(valor, 10) || 0        // enteros (COUNT, SUM de enteros)
+parseFloat(valor) || 0          // decimales (AVG, SUM de decimales)
+```
+
+**Regla:** cualquier campo numérico que venga de `sequelize.query()` con
+`QueryTypes.SELECT` debe castearse antes de usarlo en operaciones aritméticas.
+
+```js
+// ✅ Patrón correcto en acumuladores
+acumulador = (acumulador || 0) + (parseInt(dato.total, 10) || 0);
+
+// ✅ En valores de retorno de funciones de resumen
+total_novedades: parseInt(totalNovedades[0]?.total, 10) || 0,
+promedio_tiempo: parseFloat(resumen.promedio_tiempo_respuesta) || 0,
+```
+
+Síntoma en el dashboard: KPI "Total Novedades" mostraba `231` (2+3+1 concatenados)
+en lugar de `6`; gráfico de turnos mostraba `12` en lugar de `3`; tendencias `121`
+en lugar de `4`.
+
+Archivos corregidos (2026-05-31):
+- `src/services/reportesOperativosService.js` — `getDashboardOperativos`,
+  `getResumenVehicular`, `getResumenPie`, `getResumenNovedadesNoAtendidas`,
+  `combinarAnalisisTurnos`, `combinarAnalisisPrioridad`, `combinarTendencias`
+
+---
+
 ## Trampas Conocidas — Express 5 + Railway
 
 Lecciones aprendidas en producción. **Leer antes de tocar `app.js` o el deploy.**
