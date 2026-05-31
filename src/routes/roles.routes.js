@@ -296,7 +296,7 @@ router.delete("/:id", verificarRolesOPermisos(["super_admin", "admin"], ["usuari
 // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.post(
   "/:id/permisos",
-  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles_permisos.assign"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles.permisos.assign"]),
   (req, res, next) => {
     // #swagger.tags = ['Roles']
     // #swagger.summary = 'Asignar permisos a rol (reemplaza actuales)'
@@ -325,7 +325,7 @@ router.post(
 // #swagger.responses[400] = { description: 'Validación', schema: { $ref: "#/components/schemas/ErrorResponse" } }
 router.delete(
   "/:id/permisos/:permisoId",
-  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles_permisos.assign"]),
+  verificarRolesOPermisos(["super_admin", "admin"], ["usuarios.roles.permisos.assign"]),
   (req, res, next) => {
     // #swagger.tags = ['Roles']
     // #swagger.summary = 'Quitar permiso de un rol'

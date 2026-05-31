@@ -171,7 +171,7 @@ async function seedRBAC() {
       },
       {
         modulo: "usuarios",
-        recurso: "roles_permisos",
+        recurso: "roles.permisos",
         accion: "assign",
         descripcion: "Asignar permisos a roles",
         es_sistema: true,
@@ -192,23 +192,9 @@ async function seedRBAC() {
       },
       {
         modulo: "usuarios",
-        recurso: "reset_password",
-        accion: "execute",
-        descripcion: "Resetear contraseña de usuarios",
-        es_sistema: true,
-      },
-      {
-        modulo: "usuarios",
         recurso: "usuarios",
         accion: "reset_password",
         descripcion: "Resetear contraseña de un usuario",
-        es_sistema: true,
-      },
-      {
-        modulo: "usuarios",
-        recurso: "update_estado",
-        accion: "execute",
-        descripcion: "Cambiar estado de usuario",
         es_sistema: true,
       },
       {
