@@ -155,7 +155,7 @@ export const exportarOperativosVehiculares = async (req, res) => {
     }
     
     // 1. Primero obtener el JSON completo (como en dashboard)
-    const exportQuery = { ...req.query, limit: 10000, page: 1 };
+    const exportQuery = { ...req.query, limit: 10000, page: 1, export_mode: true };
     const result = await reportesOperativosService.getOperativosVehiculares(exportQuery);
     
     if (!result.success || result.data.length === 0) {
@@ -576,7 +576,7 @@ export const exportarReportesCombinados = async (req, res) => {
     }
 
     // 1. Obtener datos brutos de cada servicio individualmente
-    const exportQuery = { ...req.query, limit: 10000, page: 1 };
+    const exportQuery = { ...req.query, limit: 10000, page: 1, export_mode: true };
 
     // Obtener operativos vehiculares
     const vehicularesResult = await reportesOperativosService.getOperativosVehiculares(exportQuery);
