@@ -2469,13 +2469,13 @@ const combinarAnalisisTurnos = (datosVehiculares, datosPie) => {
   // Procesar datos vehiculares
   datosVehiculares.forEach(dato => {
     const turno = dato.turno || "SIN_TURNO";
-    turnosCombinados[turno] = (turnosCombinados[turno] || 0) + (dato.total || 0);
+    turnosCombinados[turno] = (turnosCombinados[turno] || 0) + (parseInt(dato.total, 10) || 0);
   });
   
   // Procesar datos de pie
   datosPie.forEach(dato => {
     const turno = dato.turno || "SIN_TURNO";
-    turnosCombinados[turno] = (turnosCombinados[turno] || 0) + (dato.total || 0);
+    turnosCombinados[turno] = (turnosCombinados[turno] || 0) + (parseInt(dato.total, 10) || 0);
   });
   
   // Calcular total general para porcentajes
@@ -2501,7 +2501,8 @@ const combinarAnalisisPrioridad = (datosVehiculares, datosPie, datosNoAtendidas)
   // Procesar todas las fuentes
   [...datosVehiculares, ...datosPie, ...datosNoAtendidas].forEach(dato => {
     const prioridad = dato.prioridad_actual || dato.prioridad || "SIN_PRIORIDAD";
-    prioridadesCombinadas[prioridad] = (prioridadesCombinadas[prioridad] || 0) + (dato.cantidad || dato.total || 0);
+    prioridadesCombinadas[prioridad] = (prioridadesCombinadas[prioridad] || 0) +
+      (parseInt(dato.cantidad !== undefined ? dato.cantidad : dato.total, 10) || 0);
   });
   
   // Calcular total general para porcentajes
@@ -2604,17 +2605,17 @@ const combinarTendencias = async (queryParams = {}) => {
     
     // Procesar datos vehiculares
     tendenciasVehiculares.forEach(item => {
-      tendenciasCombinadas[item.fecha] = (tendenciasCombinadas[item.fecha] || 0) + item.cantidad;
+      tendenciasCombinadas[item.fecha] = (tendenciasCombinadas[item.fecha] || 0) + (parseInt(item.cantidad, 10) || 0);
     });
     
     // Procesar datos de pie
     tendenciasPie.forEach(item => {
-      tendenciasCombinadas[item.fecha] = (tendenciasCombinadas[item.fecha] || 0) + item.cantidad;
+      tendenciasCombinadas[item.fecha] = (tendenciasCombinadas[item.fecha] || 0) + (parseInt(item.cantidad, 10) || 0);
     });
     
     // Procesar datos no atendidas
     tendenciasNoAtendidas.forEach(item => {
-      tendenciasCombinadas[item.fecha] = (tendenciasCombinadas[item.fecha] || 0) + item.cantidad;
+      tendenciasCombinadas[item.fecha] = (tendenciasCombinadas[item.fecha] || 0) + (parseInt(item.cantidad, 10) || 0);
     });
     
     // Generar rango completo de fechas para asegurar que todos los días estén representados
