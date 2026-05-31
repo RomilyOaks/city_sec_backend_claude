@@ -1745,7 +1745,7 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
         AND DATE(ni.fecha_hora_ocurrencia) BETWEEN '${fecha_inicio}' AND '${fecha_fin}'
         AND ${estado_novedad_id
     ? `ni.estado_novedad_id = ${estado_novedad_id}`
-    : "ni.estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = 1 LIMIT 1)"}
+    : "ni.estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = true LIMIT 1)"}
         ${prioridad ? `AND stn.prioridad = '${prioridad}'` : ""}
         ${sector_id ? `AND ni.sector_id = ${sector_id}` : ""}
         ${cuadrante_id ? `AND ni.cuadrante_id = ${cuadrante_id}` : ""}
@@ -1845,7 +1845,7 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
         WHERE ni.estado = 1 AND ni.deleted_at IS NULL
         AND ${estado_novedad_id
     ? `ni.estado_novedad_id = ${estado_novedad_id}`
-    : "ni.estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = 1 LIMIT 1)"}
+    : "ni.estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = true LIMIT 1)"}
         ${prioridad ? `AND stn.prioridad = '${prioridad}'` : ""}
         ${sector_id ? `AND ni.sector_id = ${sector_id}` : ""}
         ${cuadrante_id ? `AND ni.cuadrante_id = ${cuadrante_id}` : ""}
@@ -1888,7 +1888,7 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
           AND DATE(ni.fecha_hora_ocurrencia) BETWEEN '${fecha_inicio}' AND '${fecha_fin}'
           AND ${estado_novedad_id
     ? `ni.estado_novedad_id = ${estado_novedad_id}`
-    : "ni.estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = 1 LIMIT 1)"}
+    : "ni.estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = true LIMIT 1)"}
           ${prioridad ? `AND stn.prioridad = '${prioridad}'` : ""}
           ${sector_id ? `AND ni.sector_id = ${sector_id}` : ""}
           ${cuadrante_id ? `AND ni.cuadrante_id = ${cuadrante_id}` : ""}
@@ -1907,7 +1907,7 @@ export const getNovedadesNoAtendidas = async (queryParams = {}) => {
           AND ni.deleted_at IS NULL
           AND ${estado_novedad_id
     ? `ni.estado_novedad_id = ${estado_novedad_id}`
-    : "ni.estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = 1 LIMIT 1)"}
+    : "ni.estado_novedad_id = (SELECT id FROM estados_novedad WHERE es_inicial = true LIMIT 1)"}
           ${prioridad ? `AND stn.prioridad = '${prioridad}'` : ""}
           ${sector_id ? `AND ni.sector_id = ${sector_id}` : ""}
           ${cuadrante_id ? `AND ni.cuadrante_id = ${cuadrante_id}` : ""}
