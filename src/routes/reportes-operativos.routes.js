@@ -230,6 +230,33 @@ router.get(
 );
 
 /**
+ * GET /api/v1/reportes-operativos/pie/exportar
+ * Exportar operativos a pie a Excel o CSV
+ *
+ * @query {string} fecha_inicio - Fecha de inicio del rango (YYYY-MM-DD) [opcional]
+ * @query {string} fecha_fin - Fecha de fin del rango (YYYY-MM-DD) [opcional]
+ * @query {string} turno - Tipo de turno (MAÑANA, TARDE, NOCHE) [opcional]
+ * @query {number} sector_id - ID del sector [opcional]
+ * @query {number} personal_id - ID del personal [opcional]
+ * @query {number} cuadrante_id - ID del cuadrante [opcional]
+ * @query {string} prioridad - Prioridad (BAJA, MEDIA, ALTA, CRÍTICA) [opcional]
+ * @query {string} formato - Formato de exportación (excel, csv) [opcional]
+ *
+ * @access Private
+ * @roles super_admin, admin, supervisor
+ * @permissions reportes.operativos_personales.export
+ */
+router.get(
+  "/pie/exportar",
+  verificarToken,
+  verificarRolesOPermisos(
+    ["super_admin", "admin", "supervisor"],
+    ["reportes.operativos_personales.export"]
+  ),
+  reportesOperativosController.exportarOperativosPie
+);
+
+/**
  * GET /api/v1/reportes-operativos/pie/resumen
  * Obtener resumen estadístico de operativos a pie
  * 

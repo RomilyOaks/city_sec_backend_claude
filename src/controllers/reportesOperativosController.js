@@ -874,6 +874,194 @@ const procesarDatosPorSectores = (datos) => {
   };
 };
 
+export const exportarOperativosPie = async (req, res) => {
+  try {
+    const formato = req.query.formato?.toLowerCase() || "excel";
+
+    if (!["excel", "csv"].includes(formato)) {
+      return res.status(400).json(buildResponse(
+        false,
+        "Formato no válido. Use 'excel' o 'csv'",
+        null,
+        { formatos_validos: ["excel", "csv"] }
+      ));
+    }
+
+    const exportQuery = { ...req.query, limit: 10000, page: 1, export_mode: true };
+    const result = await reportesOperativosService.getOperativosPie(exportQuery);
+
+    if (!result.success || result.data.length === 0) {
+      return res.status(404).json(buildResponse(
+        false,
+        "No hay datos para exportar con los filtros seleccionados"
+      ));
+    }
+
+    const datos = result.data;
+    const datosParaExportar = datos.map(item => ({
+      // Turno
+      "fecha_turno": item.fecha_turno || "",
+      "nro_orden_turno": item.nro_orden_turno || "",
+      "turno": item.turno || "",
+      "turno_horario_inicio": item.turno_horario_inicio || "",
+      "turno_horario_fin": item.turno_horario_fin || "",
+      "inicio_operativo_sector": item.inicio_operativo_sector || "",
+      "fin_operativo_sector": item.fin_operativo_sector || "",
+      "operador_id": item.operador_id || "",
+      "Usuario_Operador_Sistema": item.Usuario_Operador_Sistema || "",
+      "Cargo_Usuario_Operador": item.Cargo_Usuario_Operador || "",
+      "sector_id": item.sector_id || "",
+      "sector_code": item.sector_code || "",
+      "nombre_sector": item.nombre_sector || "",
+      "supervisor_id": item.supervisor_id || "",
+      "Supervisor_Sector": item.Supervisor_Sector || "",
+      "Cargo_Supervisor": item.Cargo_Supervisor || "",
+      "observaciones_turno": item.observaciones_turno || "",
+      "estado_operativo_sector": item.estado_operativo_sector || "",
+      "Usuario_Actualizador_Turno": item.Usuario_Actualizador_Turno || "",
+      "Cargo_Actualizador_Turno": item.Cargo_Actualizador_Turno || "",
+      "Fecha_Actualizador_Turno": item.Fecha_Actualizador_Turno || "",
+      // Personal asignado
+      "doc_tipo": item.doc_tipo || "",
+      "doc_numero": item.doc_numero || "",
+      "Personal_asignado": item.Personal_asignado || "",
+      "Cargo_Personal_Asignado": item.Cargo_Personal_Asignado || "",
+      "nacionalidad": item.nacionalidad || "",
+      "estado_personal_asignado": item.estado_personal_asignado || "",
+      "regimen": item.regimen || "",
+      // Personal auxiliar
+      "Personal_Auxiliar": item.Personal_Auxiliar || "",
+      "Nombres_Personal_Auxiliar": item.Nombres_Personal_Auxiliar || "",
+      "Cargo_Personal_Auxiliar": item.Cargo_Personal_Auxiliar || "",
+      // Operativo a pie
+      "radio_tetra_id": item.radio_tetra_id || "",
+      "radio_tetra_code": item.radio_tetra_code || "",
+      "Descripcion_Radio_Tetra": item.Descripcion_Radio_Tetra || "",
+      "estado_operativo_id": item.estado_operativo_id || "",
+      "estado_patrullaje_Pie": item.estado_patrullaje_Pie || "",
+      "tipo_patrullaje": item.tipo_patrullaje || "",
+      "chaleco_balistico": item.chaleco_balistico || "",
+      "porra_policial": item.porra_policial || "",
+      "esposas": item.esposas || "",
+      "linterna": item.linterna || "",
+      "kit_primeros_auxilios": item.kit_primeros_auxilios || "",
+      "hora_inicio_operativo": item.hora_inicio_operativo || "",
+      "hora_fin_operativo": item.hora_fin_operativo || "",
+      "observaciones_operativo_pie": item.observaciones_operativo_pie || "",
+      "estado_operativo_pie": item.estado_operativo_pie || "",
+      "Usuario_Actualizador_Patrullaje_Pie": item.Usuario_Actualizador_Patrullaje_Pie || "",
+      "Cargo_Actualizador_Patrullaje_Pie": item.Cargo_Actualizador_Patrullaje_Pie || "",
+      "Fecha_Actualizado_Patrullaje_Pie": item.Fecha_Actualizado_Patrullaje_Pie || "",
+      // Cuadrante
+      "cuadrante_id": item.cuadrante_id || "",
+      "cuadrante_code": item.cuadrante_code || "",
+      "nombre_cuadrante": item.nombre_cuadrante || "",
+      "zona_code": item.zona_code || "",
+      "hora_ingreso": item.hora_ingreso || "",
+      "hora_salida": item.hora_salida || "",
+      "tiempo_minutos": item.tiempo_minutos || "",
+      "observaciones_operativo_cuadrante": item.observaciones_operativo_cuadrante || "",
+      "incidentes_reportados": item.incidentes_reportados || "",
+      // Atención
+      "reportado": item.reportado || "",
+      "atendido": item.atendido || "",
+      "resultado": item.resultado || "",
+      "prioridad": item.prioridad || "",
+      "observaciones_operativo_novedad": item.observaciones_operativo_novedad || "",
+      "Usuario_Actualizador_Novedad": item.Usuario_Actualizador_Novedad || "",
+      "Cargo_Actualizador_Novedad": item.Cargo_Actualizador_Novedad || "",
+      "Fecha_Actualizador_Novedad": item.Fecha_Actualizador_Novedad || "",
+      "acciones_tomadas": item.acciones_tomadas || "",
+      // Novedad
+      "novedad_id": item.novedad_id || "",
+      "novedad_code": item.novedad_code || "",
+      "fecha_hora_ocurrencia": item.fecha_hora_ocurrencia || "",
+      "tipo_novedad_nombre": item.tipo_novedad_nombre || "",
+      "sub_tipo_novedad_nombre": item.sub_tipo_novedad_nombre || "",
+      "descripcion_novedad": item.descripcion_novedad || "",
+      "estado_novedad": item.estado_novedad || "",
+      "origen_llamada": item.origen_llamada || "",
+      "direccion_id": item.direccion_id || "",
+      "localizacion": item.localizacion || "",
+      "referencia_ubicacion": item.referencia_ubicacion || "",
+      "latitud": item.latitud || "",
+      "longitud": item.longitud || "",
+      "ajustado_en_mapa": item.ajustado_en_mapa || "",
+      "fecha_ajuste_mapa": item.fecha_ajuste_mapa || "",
+      "es_anonimo": item.es_anonimo || "",
+      "reportante_nombre": item.reportante_nombre || "",
+      "reportante_telefono": item.reportante_telefono || "",
+      "reportante_doc_identidad": item.reportante_doc_identidad || "",
+      "observaciones_novedad": item.observaciones_novedad || "",
+      "personal_cargo_id": item.personal_cargo_id || "",
+      "Nombres_Personal_a_Cargo": item.Nombres_Personal_a_Cargo || "",
+      "Cargo_Personal": item.Cargo_Personal || "",
+      "fecha_despacho": item.fecha_despacho || "",
+      "usuario_despacho": item.usuario_despacho || "",
+      "nombre_usuario_despacho": item.nombre_usuario_despacho || "",
+      "Cargo_Despachador": item.Cargo_Despachador || "",
+      "fecha_llegada": item.fecha_llegada || "",
+      "fecha_cierre": item.fecha_cierre || "",
+      "usuario_cierre": item.usuario_cierre || "",
+      "nombre_usuario_cierre": item.nombre_usuario_cierre || "",
+      "Cargo_Usuario_Cierre": item.Cargo_Usuario_Cierre || "",
+      "km_inicial": item.km_inicial || "",
+      "km_final": item.km_final || "",
+      "Base_Tiempo_Minimo": item.Base_Tiempo_Minimo || "",
+      "tiempo_respuesta_min": item.tiempo_respuesta_min || "",
+      "tiempo_respuesta_min_operativo": item.tiempo_respuesta_min_operativo || "",
+      "prioridad_actual": item.prioridad_actual || "",
+      "requiere_seguimiento": item.requiere_seguimiento || "",
+      "fecha_proxima_revision": item.fecha_proxima_revision || "",
+      "num_personas_afectadas": item.num_personas_afectadas || "",
+      "perdidas_materiales_estimadas": item.perdidas_materiales_estimadas || "",
+      "estado_novedad_id": item.estado_novedad_id || "",
+      "estado_novedad_actual": item.estado_novedad_actual || ""
+    }));
+
+    if (formato === "excel") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Operativos a Pie");
+
+      if (datosParaExportar.length > 0) {
+        const columnas = Object.keys(datosParaExportar[0]);
+        worksheet.columns = columnas.map(col => ({ header: col, key: col, width: 20 }));
+        worksheet.addRows(datosParaExportar);
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE6B8" } };
+      }
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename=operativos-pie-${new Date().toISOString().split("T")[0]}.xlsx`);
+      const buffer = await workbook.xlsx.writeBuffer();
+      return res.send(buffer);
+    } else {
+      if (datosParaExportar.length === 0) {
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename=operativos-pie-${new Date().toISOString().split("T")[0]}.csv`);
+        return res.send("");
+      }
+      const columnas = Object.keys(datosParaExportar[0]);
+      const csvHeader = columnas.join(",") + "\n";
+      const csvRows = datosParaExportar.map(row =>
+        columnas.map(col => `"${row[col] || ""}"`).join(",")
+      ).join("\n");
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=operativos-pie-${new Date().toISOString().split("T")[0]}.csv`);
+      return res.send(csvHeader + csvRows);
+    }
+
+  } catch (error) {
+    console.error("❌ Error en exportarOperativosPie:", error);
+    return res.status(500).json(buildResponse(
+      false,
+      "Error interno al exportar operativos a pie",
+      null,
+      { error: error.message }
+    ));
+  }
+};
+
 export default {
   getOperativosVehiculares,
   getResumenVehicular,
@@ -881,6 +1069,7 @@ export default {
   getEstadisticasVehiculares,
   getMetricsVehiculares,
   getOperativosPie,
+  exportarOperativosPie,
   getNovedadesNoAtendidas,
   getDashboardOperativos,
   exportarReportesCombinados
