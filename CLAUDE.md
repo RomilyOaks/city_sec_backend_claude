@@ -673,6 +673,86 @@ Archivos corregidos (2026-05-31):
 
 ---
 
+### 🚨 Alias SQL con mayúsculas devuelven clave lowercase en PostgreSQL
+
+PostgreSQL **lowercasea todos los identificadores no entre comillas dobles**. Un alias
+`AS Usuario_Operador_Sistema` devuelve la clave `usuario_operador_sistema` en el objeto
+resultado. MySQL preserva el case del alias sin comillas.
+
+Consecuencia: cualquier código que acceda `item.Usuario_Operador_Sistema` obtiene
+`undefined` en PostgreSQL → campos vacíos en exports Excel/CSV.
+
+```sql
+-- ❌ MySQL OK pero PostgreSQL devuelve 'usuario_operador_sistema'
+CONCAT(ps.nombres, ' ', ps.apellidos) AS Usuario_Operador_Sistema
+
+-- ✅ Comillas dobles preservan el case en ambos dialectos
+CONCAT(ps.nombres, ' ', ps.apellidos) AS "Usuario_Operador_Sistema"
+```
+
+**Aplica también a bare aliases (sin AS):**
+```sql
+-- ❌ PostgreSQL devuelve 'cargo_conductor'
+carg_chof.nombre Cargo_Conductor,
+
+-- ✅
+carg_chof.nombre "Cargo_Conductor",
+```
+
+**Regla**: todo alias en SQL raw con al menos una letra mayúscula debe ir entre comillas dobles.
+Esto incluye aliases que **empiezan con minúscula pero tienen mayúsculas internas**
+(`cargo_Usuario_Actualiza_Operativo_Novedad` → también requiere comillas).
+
+MySQL ignora las comillas dobles en alias — el patrón es seguro en ambos dialectos.
+
+Archivos corregidos (2026-05-31):
+- `src/services/reportesOperativosService.js` — 62 aliases en `getOperativosVehiculares`
+  y `getOperativosPie`
+
+---
+
+### 🚨 Columnas faltantes en Supabase — migración incremental
+
+Al migrar MySQL → Supabase, la migración inicial puede no incluir todas las columnas
+que se fueron agregando con ALTER TABLE en MySQL. Síntoma: `column X does not exist`
+en el log de Supabase al ejecutar queries que las referencian.
+
+Patrón de fix:
+1. Identificar la columna en el log de error de Supabase (servicio `postgres`)
+2. Verificar esquema: `SELECT column_name FROM information_schema.columns WHERE table_name = 'tabla'`
+3. Aplicar migración: `mcp__supabase__apply_migration` con `ADD COLUMN IF NOT EXISTS`
+4. Crear archivo `supabase/migrations/0NN_descripcion.sql` para el historial del repo
+
+Columnas agregadas post-migración inicial (2026-05-31):
+| Migración | Tabla | Columna | Tipo |
+|---|---|---|---|
+| 011 | `novedades_incidentes` | `ajustado_en_mapa`, `fecha_ajuste_mapa`, `reporte_vecino_id` | SMALLINT / TIMESTAMPTZ / BIGINT |
+| 012 | `operativos_vehiculos` | `kilometros_recorridos` | INTEGER |
+| 013 | `operativos_vehiculos_cuadrantes` | `tiempo_minutos` | INTEGER |
+| 013 | `operativos_personal_cuadrantes` | `tiempo_minutos` | INTEGER |
+
+---
+
+### 🚨 `getNovedadesNoAtendidas` — prepared statements y SQL injection
+
+La función original usaba template literals con user input directo en el SQL
+(`'%${generico}%'`, `${sector_id}`, etc.), vulnerable a SQL injection y también
+incompatible con el binding estricto de PostgreSQL.
+
+Fix (2026-05-31): migrada a construcción dinámica de `whereConditions[]` + `whereReplacements[]`.
+Cada filtro agrega `"AND campo = ?"` al array de condiciones y el valor al array de
+replacements. Los arrays se combinan en una sola query con `LIMIT ? OFFSET ?`.
+
+```js
+// ✅ Patrón seguro — user input NUNCA toca el SQL string
+whereConditions.push("AND ni.sector_id = ?");
+whereReplacements.push(sector_id);
+// ...
+db.query(query, { replacements: [...whereReplacements, limit, offset] });
+```
+
+---
+
 ## Trampas Conocidas — Express 5 + Railway
 
 Lecciones aprendidas en producción. **Leer antes de tocar `app.js` o el deploy.**
