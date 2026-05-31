@@ -623,7 +623,7 @@ export const getResumenVehicular = async (queryParams = {}) => {
     return {
       success: true,
       data: {
-        total_novedades: totalNovedades[0]?.total || 0,
+        total_novedades: parseInt(totalNovedades[0]?.total, 10) || 0,
         novedades_por_turno: novedadesPorTurno,
         novedades_por_sector: novedadesPorSector,
         novedades_por_prioridad: novedadesPorPrioridad,
@@ -1614,7 +1614,7 @@ export const getResumenPie = async (queryParams = {}) => {
     return {
       success: true,
       data: {
-        total_novedades: totalNovedades,
+        total_novedades: parseInt(totalNovedades, 10) || 0,
         novedades_por_turno: novedadesPorTurno,
         novedades_por_sector: novedadesPorSector,
         novedades_por_prioridad: novedadesPorPrioridad,
@@ -2109,7 +2109,7 @@ export const getResumenNovedadesNoAtendidas = async (queryParams = {}) => {
     return {
       success: true,
       data: {
-        total_novedades_no_atendidas: totalNovedades,
+        total_novedades_no_atendidas: parseInt(totalNovedades, 10) || 0,
         novedades_por_tipo: Object.entries(novedadesPorTipo).map(([tipo, cantidad]) => ({
           tipo,
           cantidad,
@@ -2243,9 +2243,9 @@ export const getDashboardOperativos = async (queryParams = {}) => {
     ]);
 
     // Métricas generales - Acceder correctamente a los datos anidados en propiedad data
-    const totalVehiculares = resumenVehicular.data?.total_novedades || 0;
-    const totalPie = resumenPie.data?.total_novedades || 0;
-    const totalNoAtendidas = resumenNoAtendidas.data?.total_novedades_no_atendidas || 0;
+    const totalVehiculares = parseInt(resumenVehicular.data?.total_novedades, 10) || 0;
+    const totalPie = parseInt(resumenPie.data?.total_novedades, 10) || 0;
+    const totalNoAtendidas = parseInt(resumenNoAtendidas.data?.total_novedades_no_atendidas, 10) || 0;
     const totalGeneral = totalVehiculares + totalPie + totalNoAtendidas;
 
     // KPIs principales
