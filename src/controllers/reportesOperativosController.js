@@ -1062,6 +1062,131 @@ export const exportarOperativosPie = async (req, res) => {
   }
 };
 
+export const exportarNovedadesNoAtendidas = async (req, res) => {
+  try {
+    const formato = req.query.formato?.toLowerCase() || "excel";
+
+    if (!["excel", "csv"].includes(formato)) {
+      return res.status(400).json(buildResponse(
+        false,
+        "Formato no válido. Use 'excel' o 'csv'",
+        null,
+        { formatos_validos: ["excel", "csv"] }
+      ));
+    }
+
+    const exportQuery = { ...req.query, limit: 10000, page: 1, export_mode: true };
+    const result = await reportesOperativosService.getNovedadesNoAtendidas(exportQuery);
+
+    if (!result.success || result.data.length === 0) {
+      return res.status(404).json(buildResponse(
+        false,
+        "No hay datos para exportar con los filtros seleccionados"
+      ));
+    }
+
+    const datos = result.data;
+    const datosParaExportar = datos.map(item => ({
+      "id": item.id || "",
+      "novedad_code": item.novedad_code || "",
+      "fecha_hora_ocurrencia": item.fecha_hora_ocurrencia || "",
+      "turno": item.turno || "",
+      "tipo_subtipo_novedad": item.tipo_subtipo_novedad || "",
+      "prioridad": item.prioridad || "",
+      "prioridad_actual": item.prioridad_actual || "",
+      "estado_novedad_id": item.estado_novedad_id || "",
+      "estado_novedad_actual": item.estado_novedad_actual || "",
+      "sector_id": item.sector_id || "",
+      "sector_code": item.sector_code || "",
+      "nombre_sector": item.nombre_sector || "",
+      "cuadrante_id": item.cuadrante_id || "",
+      "cuadrante_code": item.cuadrante_code || "",
+      "nombre_cuadrante": item.nombre_cuadrante || "",
+      "zona_code": item.zona_code || "",
+      "localizacion": item.localizacion || "",
+      "referencia_ubicacion": item.referencia_ubicacion || "",
+      "latitud": item.latitud || "",
+      "longitud": item.longitud || "",
+      "ajustado_en_mapa": item.ajustado_en_mapa || "",
+      "fecha_ajuste_mapa": item.fecha_ajuste_mapa || "",
+      "ubigeo_code": item.ubigeo_code || "",
+      "origen_llamada": item.origen_llamada || "",
+      "radio_tetra_code": item.radio_tetra_code || "",
+      "Descripcion_Radio_Tetra": item.Descripcion_Radio_Tetra || "",
+      "es_anonimo": item.es_anonimo || "",
+      "reportante_nombre": item.reportante_nombre || "",
+      "reportante_telefono": item.reportante_telefono || "",
+      "reportante_doc_identidad": item.reportante_doc_identidad || "",
+      "descripcion": item.descripcion || "",
+      "observaciones": item.observaciones || "",
+      "gravedad": item.gravedad || "",
+      "personal_cargo_id": item.personal_cargo_id || "",
+      "fecha_despacho": item.fecha_despacho || "",
+      "nombre_usuario_despacho": item.nombre_usuario_despacho || "",
+      "Cargo_Despachador": item.Cargo_Despachador || "",
+      "fecha_llegada": item.fecha_llegada || "",
+      "fecha_cierre": item.fecha_cierre || "",
+      "km_inicial": item.km_inicial || "",
+      "km_final": item.km_final || "",
+      "tiempo_respuesta_min": item.tiempo_respuesta_min || "",
+      "tiempo_respuesta_min_operativo": item.tiempo_respuesta_min_operativo || "",
+      "requiere_seguimiento": item.requiere_seguimiento || "",
+      "fecha_proxima_revision": item.fecha_proxima_revision || "",
+      "num_personas_afectadas": item.num_personas_afectadas || "",
+      "perdidas_materiales_estimadas": item.perdidas_materiales_estimadas || "",
+      "fecha_hora_reporte": item.fecha_hora_reporte || "",
+      "nombre_usuario_creacion": item.nombre_usuario_creacion || "",
+      "Cargo_Usuario_Creacion": item.Cargo_Usuario_Creacion || "",
+      "created_at": item.created_at || "",
+      "nombre_usuario_modificacion": item.nombre_usuario_modificacion || "",
+      "cargo_usuario_modificacion": item.cargo_usuario_modificacion || "",
+      "updated_at": item.updated_at || "",
+      "reporte_vecino_id": item.reporte_vecino_id || ""
+    }));
+
+    if (formato === "excel") {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Novedades No Atendidas");
+
+      if (datosParaExportar.length > 0) {
+        const columnas = Object.keys(datosParaExportar[0]);
+        worksheet.columns = columnas.map(col => ({ header: col, key: col, width: 20 }));
+        worksheet.addRows(datosParaExportar);
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE6B8" } };
+      }
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename=novedades-no-atendidas-${new Date().toISOString().split("T")[0]}.xlsx`);
+      const buffer = await workbook.xlsx.writeBuffer();
+      return res.send(buffer);
+    } else {
+      if (datosParaExportar.length === 0) {
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename=novedades-no-atendidas-${new Date().toISOString().split("T")[0]}.csv`);
+        return res.send("");
+      }
+      const columnas = Object.keys(datosParaExportar[0]);
+      const csvHeader = columnas.join(",") + "\n";
+      const csvRows = datosParaExportar.map(row =>
+        columnas.map(col => `"${row[col] || ""}"`).join(",")
+      ).join("\n");
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=novedades-no-atendidas-${new Date().toISOString().split("T")[0]}.csv`);
+      return res.send(csvHeader + csvRows);
+    }
+
+  } catch (error) {
+    console.error("❌ Error en exportarNovedadesNoAtendidas:", error);
+    return res.status(500).json(buildResponse(
+      false,
+      "Error interno al exportar novedades no atendidas",
+      null,
+      { error: error.message }
+    ));
+  }
+};
+
 export default {
   getOperativosVehiculares,
   getResumenVehicular,
@@ -1071,6 +1196,7 @@ export default {
   getOperativosPie,
   exportarOperativosPie,
   getNovedadesNoAtendidas,
+  exportarNovedadesNoAtendidas,
   getDashboardOperativos,
   exportarReportesCombinados
 };

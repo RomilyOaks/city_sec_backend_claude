@@ -308,6 +308,42 @@ router.get(
 );
 
 /**
+ * GET /api/v1/reportes-operativos/novedades-no-atendidas/exportar
+ * GET /api/v1/reportes-operativos/no-atendidas/exportar
+ * Exportar novedades no atendidas a Excel o CSV
+ *
+ * @query {string} fecha_inicio - Fecha de inicio del rango (YYYY-MM-DD) [opcional]
+ * @query {string} fecha_fin - Fecha de fin del rango (YYYY-MM-DD) [opcional]
+ * @query {string} prioridad - Prioridad (BAJA, MEDIA, ALTA, CRÍTICA) [opcional]
+ * @query {number} sector_id - ID del sector [opcional]
+ * @query {string} origen_llamada - Canal de reporte [opcional]
+ * @query {string} formato - Formato de exportación (excel, csv) [opcional]
+ *
+ * @access Private
+ * @roles super_admin, admin, supervisor
+ * @permissions reportes.novedades_no_atendidas.export
+ */
+router.get(
+  "/novedades-no-atendidas/exportar",
+  verificarToken,
+  verificarRolesOPermisos(
+    ["super_admin", "admin", "supervisor"],
+    ["reportes.novedades_no_atendidas.export"]
+  ),
+  reportesOperativosController.exportarNovedadesNoAtendidas
+);
+
+router.get(
+  "/no-atendidas/exportar",
+  verificarToken,
+  verificarRolesOPermisos(
+    ["super_admin", "admin", "supervisor"],
+    ["reportes.novedades_no_atendidas.export"]
+  ),
+  reportesOperativosController.exportarNovedadesNoAtendidas
+);
+
+/**
  * GET /api/v1/reportes-operativos/no-atendidas/resumen
  * Obtener resumen estadístico de novedades no atendidas
  * 
