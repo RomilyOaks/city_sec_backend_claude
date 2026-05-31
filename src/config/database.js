@@ -103,6 +103,8 @@ const mysqlDialectOptions = {
 
 const pgDialectOptions = {
   ...(sslConfig && { ssl: sslConfig }),
+  // Set search_path so raw SQL queries find tables in citysecure schema without prefix
+  ...(DB_SCHEMA && { options: `-c search_path=${DB_SCHEMA},public` }),
 };
 
 const dialectOptions = IS_POSTGRES ? pgDialectOptions : mysqlDialectOptions;
