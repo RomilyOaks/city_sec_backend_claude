@@ -7,12 +7,38 @@ import models from "../models/index.js";
  * Ajusta estos nombres según tus valores reales en la BD
  */
 const ENTITY_MODEL_MAP = {
+  // ── Usuarios / Auth ───────────────────────────────────────
   USUARIO: "Usuario",
+
+  // ── Novedades ─────────────────────────────────────────────
   NOVEDAD: "Novedad",
+
+  // ── Personal / Vehículos / Territorio ─────────────────────
   VEHICULO: "Vehiculo",
   PERSONAL: "PersonalSeguridad",
   SECTOR: "Sector",
   CUADRANTE: "Cuadrante",
+  CALLECUADRANTE: "CallesCuadrantes",
+
+  // ── Operativos — Turnos ───────────────────────────────────
+  OPERATIVOTURNO: "OperativosTurno",
+  OPERATIVOSTURNO: "OperativosTurno",
+
+  // ── Operativos — Vehículos ────────────────────────────────
+  OPERATIVOVEHICULO: "OperativosVehiculos",
+  OPERATIVOSVEHICULOS: "OperativosVehiculos",
+  OPERATIVOVEHICULOCUADRANTE: "OperativosVehiculosCuadrantes",
+  OPERATIVOSVEHICULOSCUADRANTES: "OperativosVehiculosCuadrantes",
+  OPERATIVOVEHICULONOVEDAD: "OperativosVehiculosNovedades",
+  OPERATIVOSVEHICULOSNOVEDADES: "OperativosVehiculosNovedades",
+
+  // ── Operativos — Personal ─────────────────────────────────
+  OPERATIVOPERSONAL: "OperativosPersonal",
+  OPERATIVOSPERSONAL: "OperativosPersonal",
+  OPERATIVOPERSONALCUADRANTE: "OperativosPersonalCuadrantes",
+  OPERATIVOSPERSONALCUADRANTES: "OperativosPersonalCuadrantes",
+  OPERATIVOPERSONALNOVEDAD: "OperativosPersonalNovedades",
+  OPERATIVOSPERSONALNOVEDADES: "OperativosPersonalNovedades",
 };
 
 /**
