@@ -929,28 +929,28 @@ async function seedRBAC() {
       // ============================================
       {
         modulo: "operativos",
-        recurso: "vehiculos_cuadrantes",
+        recurso: "vehiculos.cuadrantes",
         accion: "read",
         descripcion: "Leer cuadrantes de vehículos operativos",
         es_sistema: true,
       },
       {
         modulo: "operativos",
-        recurso: "vehiculos_cuadrantes",
+        recurso: "vehiculos.cuadrantes",
         accion: "create",
         descripcion: "Crear cuadrantes de vehículos operativos",
         es_sistema: true,
       },
       {
         modulo: "operativos",
-        recurso: "vehiculos_cuadrantes",
+        recurso: "vehiculos.cuadrantes",
         accion: "update",
         descripcion: "Actualizar cuadrantes de vehículos operativos",
         es_sistema: true,
       },
       {
         modulo: "operativos",
-        recurso: "vehiculos_cuadrantes",
+        recurso: "vehiculos.cuadrantes",
         accion: "delete",
         descripcion: "Eliminar cuadrantes de vehículos operativos",
         es_sistema: true,
@@ -1163,7 +1163,7 @@ async function seedRBAC() {
             [Op.in]: [
               "turnos",
               "vehiculos",
-              "vehiculos_cuadrantes",
+              "vehiculos.cuadrantes",
               "vehiculos.novedades",
               "reportes",
               "personal",
