@@ -34,6 +34,12 @@ const EstadoOperativoRecurso = sequelize.define(
       allowNull: false,
       comment: "Descripción del estado operativo",
     },
+    alcance: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
+      defaultValue: "AMBOS",
+      comment: "A qué tipo de recurso aplica: AMBOS, VEHICULO, PERSONAL",
+    },
     estado: {
       type: DataTypes.TINYINT,
       allowNull: true,
