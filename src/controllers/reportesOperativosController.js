@@ -659,11 +659,91 @@ export const exportarReportesCombinados = async (req, res) => {
       };
     });
 
+    // --- Métricas para hoja de resumen ---
+    const totalVehiculares   = vehicularesResult.data?.length   || 0;
+    const totalPie           = pieResult.data?.length           || 0;
+    const totalNoAtendidas   = noAtendidasResult.data?.length   || 0;
+    const totalGeneral       = totalVehiculares + totalPie + totalNoAtendidas;
+    const totalAtendidas     = totalVehiculares + totalPie;
+    const tasaAtencion       = totalGeneral > 0
+      ? ((totalAtendidas / totalGeneral) * 100).toFixed(2)
+      : "0.00";
+    const pctVehiculares     = totalGeneral > 0 ? ((totalVehiculares / totalGeneral) * 100).toFixed(2) : "0.00";
+    const pctPie             = totalGeneral > 0 ? ((totalPie         / totalGeneral) * 100).toFixed(2) : "0.00";
+    const pctNoAtendidas     = totalGeneral > 0 ? ((totalNoAtendidas / totalGeneral) * 100).toFixed(2) : "0.00";
+    const fechaInicioLabel   = req.query.fecha_inicio || "—";
+    const fechaFinLabel      = req.query.fecha_fin    || "—";
+    const generadoEn         = new Date().toLocaleString("es-PE", { timeZone: "America/Lima" });
+
     // 3. Exportar en el formato solicitado
     if (formato === "excel") {
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Reportes Combinados Operativos");
+      const wsResumen  = workbook.addWorksheet("RESUMEN");
+      const worksheet  = workbook.addWorksheet("DETALLE OPERATIVOS");
 
+      // === HOJA RESUMEN ===
+      wsResumen.columns = [
+        { key: "A", width: 30 },
+        { key: "B", width: 18 },
+        { key: "C", width: 14 },
+      ];
+
+      const addResumenRow = (col1, col2, col3 = "", boldCols = [], bgColor = null) => {
+        const row = wsResumen.addRow([col1, col2, col3]);
+        row.eachCell((cell, colNum) => {
+          cell.alignment = { vertical: "middle", horizontal: colNum === 1 ? "left" : "center" };
+          cell.border = {
+            top:    { style: "thin", color: { argb: "FFD0D0D0" } },
+            left:   { style: "thin", color: { argb: "FFD0D0D0" } },
+            bottom: { style: "thin", color: { argb: "FFD0D0D0" } },
+            right:  { style: "thin", color: { argb: "FFD0D0D0" } },
+          };
+          if (boldCols.includes(colNum)) cell.font = { bold: true };
+          if (bgColor) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: bgColor } };
+        });
+        row.height = 22;
+        return row;
+      };
+
+      const titleRow = wsResumen.addRow(["DASHBOARD REPORTES OPERATIVOS — CitySecure", "", ""]);
+      wsResumen.mergeCells(`A${titleRow.number}:C${titleRow.number}`);
+      titleRow.getCell(1).font      = { bold: true, size: 14, color: { argb: "FFFFFFFF" } };
+      titleRow.getCell(1).fill      = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4E8C1F" } };
+      titleRow.getCell(1).alignment = { vertical: "middle", horizontal: "center" };
+      titleRow.height = 30;
+
+      addResumenRow(`Período: ${fechaInicioLabel}  al  ${fechaFinLabel}`, "", "", [], "FFF0F9E8");
+      addResumenRow(`Generado: ${generadoEn}`, "", "", [], "FFF0F9E8");
+      wsResumen.addRow([]);
+
+      const kpiHeaderRow = wsResumen.addRow(["KPIs PRINCIPALES", "", ""]);
+      wsResumen.mergeCells(`A${kpiHeaderRow.number}:C${kpiHeaderRow.number}`);
+      kpiHeaderRow.getCell(1).font      = { bold: true, size: 11, color: { argb: "FFFFFFFF" } };
+      kpiHeaderRow.getCell(1).fill      = { type: "pattern", pattern: "solid", fgColor: { argb: "FF365C14" } };
+      kpiHeaderRow.getCell(1).alignment = { vertical: "middle", horizontal: "left" };
+      kpiHeaderRow.height = 24;
+
+      addResumenRow("Indicador",               "Valor",          "",      [1, 2],    "FFD4EDDA");
+      addResumenRow("Total Novedades",          totalGeneral,     "",      [1, 2]);
+      addResumenRow("Novedades Atendidas",      totalAtendidas,   "",      [1, 2]);
+      addResumenRow("Novedades No Atendidas",   totalNoAtendidas, "",      [1, 2]);
+      addResumenRow("Tasa de Atención",         `${tasaAtencion}%`, "",   [1, 2]);
+      wsResumen.addRow([]);
+
+      const distHeaderRow = wsResumen.addRow(["DISTRIBUCIÓN POR TIPO OPERATIVO", "", ""]);
+      wsResumen.mergeCells(`A${distHeaderRow.number}:C${distHeaderRow.number}`);
+      distHeaderRow.getCell(1).font      = { bold: true, size: 11, color: { argb: "FFFFFFFF" } };
+      distHeaderRow.getCell(1).fill      = { type: "pattern", pattern: "solid", fgColor: { argb: "FF365C14" } };
+      distHeaderRow.getCell(1).alignment = { vertical: "middle", horizontal: "left" };
+      distHeaderRow.height = 24;
+
+      addResumenRow("Tipo Operativo", "Cantidad",       "Porcentaje",         [1, 2, 3], "FFD4EDDA");
+      addResumenRow("Vehiculares",    totalVehiculares, `${pctVehiculares}%`, [1]);
+      addResumenRow("A Pie",          totalPie,         `${pctPie}%`,         [1]);
+      addResumenRow("No Atendidas",   totalNoAtendidas, `${pctNoAtendidas}%`, [1]);
+      addResumenRow("TOTAL",          totalGeneral,     "100.00%",            [1, 2, 3], "FFE9F5E1");
+
+      // === HOJA DETALLE OPERATIVOS ===
       // Columnas fijas en el orden correcto
       const columnasFijas = [
         { header: "TIPO OPERATIVO", key: "tipo_operativo", width: 15 },
