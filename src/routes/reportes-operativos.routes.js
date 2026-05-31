@@ -81,7 +81,7 @@ router.get(
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor", "operador", "consulta"],
-    ["reportes.operativos_vehiculares.read"]
+    ["reportes.operativos.vehiculares.read"]
   ),
   validateReportesOperativosVehiculares,
   reportesOperativosController.getOperativosVehiculares
@@ -109,7 +109,7 @@ router.get(
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor", "operador", "consulta"],
-    ["reportes.operativos_vehiculares.read"]
+    ["reportes.operativos.vehiculares.read"]
   ),
   validateResumenVehicular,
   reportesOperativosController.getResumenVehicular
@@ -133,14 +133,14 @@ router.get(
  * 
  * @access Private
  * @roles super_admin, admin, supervisor
- * @permissions reportes.operativos_vehiculares.export
+ * @permissions reportes.operativos.vehiculares.export
  */
 router.get(
   "/vehiculares/exportar",
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor"],
-    ["reportes.operativos_vehiculares.export"]
+    ["reportes.operativos.vehiculares.export"]
   ),
   validateExportarVehicular,
   reportesOperativosController.exportarOperativosVehiculares
@@ -166,7 +166,7 @@ router.get(
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor", "operador", "consulta"],
-    ["reportes.operativos_vehiculares.read"]
+    ["reportes.operativos.vehiculares.read"]
   ),
   validateEstadisticasVehiculares,
   reportesOperativosController.getEstadisticasVehiculares
@@ -223,7 +223,7 @@ router.get(
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor", "operador", "consulta"],
-    ["reportes.operativos_personales.read"]
+    ["reportes.operativos.personales.read"]
   ),
   validateReportesOperativosPie,
   reportesOperativosController.getOperativosPie
@@ -244,14 +244,14 @@ router.get(
  *
  * @access Private
  * @roles super_admin, admin, supervisor
- * @permissions reportes.operativos_personales.export
+ * @permissions reportes.operativos.personales.export
  */
 router.get(
   "/pie/exportar",
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor"],
-    ["reportes.operativos_personales.export"]
+    ["reportes.operativos.personales.export"]
   ),
   reportesOperativosController.exportarOperativosPie
 );
@@ -301,7 +301,7 @@ router.get(
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor", "operador", "consulta"],
-    ["reportes.novedades_no_atendidas.read"]
+    ["reportes.novedades.no_atendidas.read"]
   ),
   validateNovedadesNoAtendidas,
   reportesOperativosController.getNovedadesNoAtendidas
@@ -321,14 +321,14 @@ router.get(
  *
  * @access Private
  * @roles super_admin, admin, supervisor
- * @permissions reportes.novedades_no_atendidas.export
+ * @permissions reportes.novedades.no_atendidas.export
  */
 router.get(
   "/novedades-no-atendidas/exportar",
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor"],
-    ["reportes.novedades_no_atendidas.export"]
+    ["reportes.novedades.no_atendidas.export"]
   ),
   reportesOperativosController.exportarNovedadesNoAtendidas
 );
@@ -338,7 +338,7 @@ router.get(
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor"],
-    ["reportes.novedades_no_atendidas.export"]
+    ["reportes.novedades.no_atendidas.export"]
   ),
   reportesOperativosController.exportarNovedadesNoAtendidas
 );
@@ -391,7 +391,7 @@ router.get(
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor", "operador", "consulta"],
-    ["reportes.operativos_dashboard.read"]
+    ["reportes.operativos.dashboard.read"]
   ),
   validateReportesOperativosVehiculares, // Reutilizamos validadores completos
   reportesOperativosController.getDashboardOperativos
@@ -410,14 +410,14 @@ router.get(
  *
  * @access Private
  * @roles super_admin, admin, supervisor
- * @permissions reportes.operativos_dashboard.read
+ * @permissions reportes.operativos.dashboard.read
  */
 router.get(
   "/combinados/exportar",
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor"],
-    ["reportes.operativos_dashboard.read"]
+    ["reportes.operativos.dashboard.read"]
   ),
   validateReportesOperativosVehiculares,
   reportesOperativosController.exportarReportesCombinados
@@ -445,7 +445,7 @@ router.get(
   verificarToken,
   verificarRolesOPermisos(
     ["super_admin", "admin", "supervisor", "operador", "consulta"],
-    ["reportes.operativos_dashboard.read"]
+    ["reportes.operativos.dashboard.read"]
   ),
   validateResumenVehicular, // Reutilizamos validadores básicos
   reportesOperativosController.getDashboardOperativos
