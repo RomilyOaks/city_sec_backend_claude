@@ -720,28 +720,28 @@ async function seedRBAC() {
       // --- TIPOS DE VÍA ---
       {
         modulo: "calles",
-        recurso: "tipos_via",
+        recurso: "tipos.via",
         accion: "read",
         descripcion: "Ver catálogo de tipos de vía",
         es_sistema: true,
       },
       {
         modulo: "calles",
-        recurso: "tipos_via",
+        recurso: "tipos.via",
         accion: "create",
         descripcion: "Crear tipos de vía",
         es_sistema: true,
       },
       {
         modulo: "calles",
-        recurso: "tipos_via",
+        recurso: "tipos.via",
         accion: "update",
         descripcion: "Actualizar tipos de vía",
         es_sistema: true,
       },
       {
         modulo: "calles",
-        recurso: "tipos_via",
+        recurso: "tipos.via",
         accion: "delete",
         descripcion: "Eliminar tipos de vía",
         es_sistema: true,

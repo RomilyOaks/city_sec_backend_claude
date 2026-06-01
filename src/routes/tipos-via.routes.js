@@ -23,10 +23,10 @@
  * - PATCH  /api/tipos-via/:id/desactivar - Desactivar
  *
  * PERMISOS UTILIZADOS (según seedRBAC.js):
- * - calles.tipos_via.read: Ver tipos de vía
- * - calles.tipos_via.create: Crear tipos de vía
- * - calles.tipos_via.update: Actualizar tipos de vía
- * - calles.tipos_via.delete: Eliminar tipos de vía
+ * - calles.tipos.via.read: Ver tipos de vía
+ * - calles.tipos.via.create: Crear tipos de vía
+ * - calles.tipos.via.update: Actualizar tipos de vía
+ * - calles.tipos.via.delete: Eliminar tipos de vía
  *
  * @author Claude AI
  * @date 2025-12-23
@@ -107,7 +107,7 @@ router.use(verificarToken);
 router.get(
   "/",
   verificarToken,
-  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.tipos_via.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.tipos.via.read"]),
   (req, res, next) => {
     // #swagger.tags = ['Tipos de Vía']
     // #swagger.summary = 'Listar tipos de vía con filtros'
@@ -130,7 +130,7 @@ router.get(
 router.get(
   "/:id",
   verificarToken,
-  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.tipos_via.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["calles.tipos.via.read"]),
   validateTipoViaId,
   (req, res, next) => {
     // #swagger.tags = ['Tipos de Vía']
@@ -151,7 +151,7 @@ router.get(
  */
 router.post(
   "/",
-  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.tipos_via.create"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.tipos.via.create"]),
   validateCreateTipoVia,
   registrarAuditoria({
     entidad: "TipoVia",
@@ -178,7 +178,7 @@ router.post(
  */
 router.put(
   "/:id",
-  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.tipos_via.update"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.tipos.via.update"]),
   validateUpdateTipoVia,
   registrarAuditoria({
     entidad: "TipoVia",
@@ -205,7 +205,7 @@ router.put(
  */
 router.delete(
   "/:id",
-  verificarRolesOPermisos(["super_admin"], ["calles.tipos_via.delete"]),
+  verificarRolesOPermisos(["super_admin"], ["calles.tipos.via.delete"]),
   validateTipoViaId,
   registrarAuditoria({
     entidad: "TipoVia",
@@ -235,7 +235,7 @@ router.delete(
  */
 router.patch(
   "/:id/activar",
-  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.tipos_via.update"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.tipos.via.update"]),
   validateTipoViaId,
   registrarAuditoria({
     entidad: "TipoVia",
@@ -260,7 +260,7 @@ router.patch(
  */
 router.patch(
   "/:id/desactivar",
-  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.tipos_via.update"]),
+  verificarRolesOPermisos(["supervisor", "super_admin"], ["calles.tipos.via.update"]),
   validateTipoViaId,
   registrarAuditoria({
     entidad: "TipoVia",
@@ -288,10 +288,10 @@ export default router;
  * CAMBIOS EN v2.2.2:
  *
  * ✅ PERMISOS ACTUALIZADOS CON SLUGS CORRECTOS:
- * - tipos_via.view      → calles.tipos_via.read
- * - tipos_via.create    → calles.tipos_via.create
- * - tipos_via.update    → calles.tipos_via.update
- * - tipos_via.delete    → calles.tipos_via.delete
+ * - tipos_via.view      → calles.tipos.via.read
+ * - tipos_via.create    → calles.tipos.via.create
+ * - tipos_via.update    → calles.tipos.via.update
+ * - tipos_via.delete    → calles.tipos.via.delete
  *
  * Los slugs ahora coinciden exactamente con los generados por seedRBAC.js:
  * - Módulo: "calles"
@@ -306,10 +306,10 @@ export default router;
  *
  * 2. PERMISOS EN BD:
  *    Los permisos deben existir en tabla 'permisos' con estos slugs:
- *    - calles.tipos_via.read
- *    - calles.tipos_via.create
- *    - calles.tipos_via.update
- *    - calles.tipos_via.delete
+ *    - calles.tipos.via.read
+ *    - calles.tipos.via.create
+ *    - calles.tipos.via.update
+ *    - calles.tipos.via.delete
  *
  * 3. VERIFICAR MIDDLEWARE requireAnyPermission:
  *    Debe buscar permisos por el slug completo en formato:

@@ -164,10 +164,10 @@ import reportesOperativosRoutes from "./reportes-operativos.routes.js"; // ✅ F
  * Módulo: calles
  *
  * Recurso: tipos_via (4 permisos)
- *   - calles.tipos_via.read
- *   - calles.tipos_via.create
- *   - calles.tipos_via.update
- *   - calles.tipos_via.delete
+ *   - calles.tipos.via.read
+ *   - calles.tipos.via.create
+ *   - calles.tipos.via.update
+ *   - calles.tipos.via.delete
  *
  * Recurso: calles (4 permisos)
  *   - calles.calles.read
@@ -740,10 +740,10 @@ router.use("/reportes-operativos", reportesOperativosRoutes);
  *   ✅ Soft delete
  *
  * @permissions (4)
- *   - calles.tipos_via.read     → Todos autenticados
- *   - calles.tipos_via.create   → Supervisor, Super Admin
- *   - calles.tipos_via.update   → Supervisor, Super Admin
- *   - calles.tipos_via.delete   → Super Admin
+ *   - calles.tipos.via.read     → Todos autenticados
+ *   - calles.tipos.via.create   → Supervisor, Super Admin
+ *   - calles.tipos.via.update   → Supervisor, Super Admin
+ *   - calles.tipos.via.delete   → Super Admin
  *
  * @endpoints (8)
  *   - GET    /tipos-via/activos           → PÚBLICO (sin auth)
