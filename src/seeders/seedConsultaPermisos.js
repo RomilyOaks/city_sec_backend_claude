@@ -34,17 +34,17 @@ async function seedConsultaPermisos() {
     const permisosFaltantes = [
       {
         modulo: "catalogos",
-        recurso: "tipos_novedad",
+        recurso: "tipos.novedad",
         accion: "read",
         descripcion: "Ver tipos de novedad",
-        slug: "catalogos.tipos_novedad.read"
+        slug: "catalogos.tipos.novedad.read"
       },
       {
         modulo: "catalogos",
-        recurso: "subtipos_novedad",
+        recurso: "subtipos.novedad",
         accion: "read",
         descripcion: "Ver subtipos de novedad",
-        slug: "catalogos.subtipos_novedad.read"
+        slug: "catalogos.subtipos.novedad.read"
       }
     ];
 

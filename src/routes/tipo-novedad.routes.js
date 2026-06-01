@@ -36,10 +36,10 @@ import {
 const router = Router();
 
 const permisos = {
-  read: "catalogos.tipos_novedad.read",
-  create: "catalogos.tipos_novedad.create",
-  update: "catalogos.tipos_novedad.update",
-  delete: "catalogos.tipos_novedad.delete",
+  read: "catalogos.tipos.novedad.read",
+  create: "catalogos.tipos.novedad.create",
+  update: "catalogos.tipos.novedad.update",
+  delete: "catalogos.tipos.novedad.delete",
 };
 
 /**

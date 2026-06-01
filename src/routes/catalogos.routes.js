@@ -24,7 +24,7 @@ import {
 router.get(
   "/tipos-novedad",
   verificarToken,
-  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.tipos_novedad.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.tipos.novedad.read"]),
   catalogosController.getTiposNovedad
 );
 
@@ -36,7 +36,7 @@ router.get(
 router.post(
   "/tipos-novedad",
   verificarToken,
-  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.tipos_novedad.create"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.tipos.novedad.create"]),
   catalogosController.createTipoNovedad
 );
 
@@ -51,7 +51,7 @@ router.post(
 router.get(
   "/subtipos-novedad",
   verificarToken,
-  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.subtipos_novedad.read"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor", "operador", "consulta"], ["catalogos.subtipos.novedad.read"]),
   catalogosController.getSubtiposNovedad
 );
 
@@ -63,7 +63,7 @@ router.get(
 router.post(
   "/subtipos-novedad",
   verificarToken,
-  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.subtipos_novedad.create"]),
+  verificarRolesOPermisos(["super_admin", "admin", "supervisor"], ["catalogos.subtipos.novedad.create"]),
   catalogosController.createSubtipoNovedad
 );
 
