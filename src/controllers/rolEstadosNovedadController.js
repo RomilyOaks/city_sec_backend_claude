@@ -132,12 +132,12 @@ export const getEstadosByRol = async (req, res) => {
         {
           model: EstadoNovedad,
           as: "estadoNovedadRolEstadoNovedad",
-          attributes: ["id", "nombre", "color_hex", "es_final", "es_inicial", "requiere_unidad"],
+          attributes: ["id", "nombre", "orden", "color_hex", "es_final", "es_inicial", "requiere_unidad"],
           where: { estado: IS_POSTGRES ? true : 1 },
         },
       ],
       order: [
-        [{ model: EstadoNovedad, as: "estadoNovedadRolEstadoNovedad" }, "nombre", "ASC"],
+        [{ model: EstadoNovedad, as: "estadoNovedadRolEstadoNovedad" }, "orden", "ASC"],
       ],
     });
 
