@@ -86,7 +86,13 @@
   "overrides": {
     "lodash": "4.18.1",
     "tmp": "0.2.6",
-    "brace-expansion": "1.1.14"
+    "brace-expansion": "1.1.14",
+    "sequelize": {
+      "uuid": "11.1.1"
+    },
+    "exceljs": {
+      "uuid": "11.1.1"
+    }
   },
   "engines": {
     "node": ">=18.0.0",

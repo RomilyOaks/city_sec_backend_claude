@@ -12,6 +12,10 @@ RUN npm ci --omit=dev
 # Copiar código fuente
 COPY . .
 
+# Ejecutar como usuario no-root — node:alpine incluye UID 1000 'node' por defecto
+RUN chown -R node:node /app
+USER node
+
 EXPOSE 3000
 
 CMD ["node", "src/app.js"]
