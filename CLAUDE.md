@@ -901,7 +901,7 @@ Aplica a: seeders, scripts, tests, configuración, cualquier archivo commiteado.
 
 ```env
 # ❌ Valor real en .env.example — Aikido lo detecta como "leaked secret"
-JWT_SECRET=<SECRET_64_CHARS_HEX>
+JWT_SECRET=<VALOR_REAL_AQUI>
 
 # ✅ Placeholder descriptivo — instrucción, no valor
 JWT_SECRET=                   # Generar con: node -e "require('crypto').randomBytes(64).toString('hex')"
@@ -920,11 +920,11 @@ Si se commitea un secret real en `.env.example`, la solución completa requiere:
 Los scanners de seguridad detectan `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9` (header JWT base64) como un secreto, aunque el token esté truncado con `...`.
 
 ```markdown
-<!-- ❌ Aikido lo marca como "token leaked" -->
+<!-- ❌ Aikido lo marca como "token leaked" — el prefijo base64 del header JWT dispara el scanner -->
 "token": "<TOKEN_JWT_BASE64_HEADER>..."
 
 <!-- ✅ Placeholder neutro — no dispara ningún scanner -->
-"token": "ACCESS_TOKEN_EXAMPLE"
+"token": "<ACCESS_TOKEN>"
 "accessToken": "<ACCESS_TOKEN>"
 "refreshToken": "<REFRESH_TOKEN>"
 ```
