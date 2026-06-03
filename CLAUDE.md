@@ -989,6 +989,81 @@ rm replacements.txt
 
 ---
 
+### 🚨 Los ejemplos "malos" en documentación también disparan scanners
+
+Aunque el ejemplo esté marcado con ❌ y sea solo ilustrativo, Aikido detecta el patrón igualmente. Esto incluye versiones truncadas del secret (`valor_inicio...valor_fin`).
+
+```markdown
+<!-- ❌ Aunque esté como "ejemplo de lo que NO hacer", Aikido lo detecta igual -->
+const jwtSecret = "<SECRET_TRUNCADO>";   ← versión truncada también dispara el scanner
+JWT_SECRET=<VALOR_EJEMPLO>
+
+<!-- ✅ Usar placeholders completamente inventados — sin ningún fragmento real -->
+const jwtSecret = "<SECRET_64_CHARS_HEX>";
+JWT_SECRET=<VALOR_REAL_AQUI>
+```
+
+**Regla:** en cualquier documentación o guía de seguridad, los ejemplos malos deben usar strings completamente ficticios, sin ningún fragmento del valor real (ni el inicio, ni el final, ni versiones truncadas con `...`).
+
+---
+
+### 🚨 `filter-repo` revierte cambios no commiteados — commitear antes de limpiar historial
+
+Cuando `git filter-repo` reescribe el historial, hace checkout del nuevo HEAD y **sobreescribe los archivos del working tree** que no estén commiteados. Cualquier cambio en `package.json` o `package-lock.json` hecho con `npm install` pero aún sin commitear se pierde.
+
+```bash
+# ❌ Orden incorrecto — los cambios de npm install se pierden
+npm install sequelize@6.37.8
+git filter-repo --replace-text replacements.txt --force
+# → package.json vuelve a la versión anterior del HEAD
+
+# ✅ Orden correcto — commitear ANTES de limpiar
+npm install sequelize@6.37.8
+git add package.json package-lock.json
+git commit -m "Fix: actualizar dependencia X"
+git filter-repo --replace-text replacements.txt --force
+# → el commit queda en el historial reescrito
+```
+
+---
+
+### 🚨 Overrides de dependencias transitivas con conflicto de versión directa
+
+Si el paquete a forzar también existe como dependencia directa en `package.json`, el override global falla con `EOVERRIDE`. Usar overrides anidados por paquete padre en su lugar.
+
+```json
+// ❌ Falla si "uuid" también es dependencia directa
+"overrides": {
+  "uuid": "11.1.1"
+}
+
+// ✅ Override anidado — solo afecta a sequelize y exceljs, no a la dep directa
+"overrides": {
+  "sequelize": { "uuid": "11.1.1" },
+  "exceljs":   { "uuid": "11.1.1" }
+}
+```
+
+---
+
+### 🚨 Dockerfile: nunca ejecutar como root
+
+Las imágenes `node:alpine` incluyen el usuario `node` (UID 1000). Siempre cambiar ownership y switchear antes del `CMD`.
+
+```dockerfile
+# ❌ Sin USER — el proceso corre como root dentro del contenedor
+CMD ["node", "src/app.js"]
+
+# ✅ Ejecutar como usuario no-root
+RUN chown -R node:node /app
+USER node
+CMD ["node", "src/app.js"]
+```
+
+Si un atacante logra explotar la app, tener root dentro del contenedor facilita el escape al host.
+
+---
+
 ### 🚨 Al crear un seeder con usuario inicial
 
 ```js
