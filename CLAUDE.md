@@ -993,17 +993,15 @@ rm replacements.txt
 
 Aunque el ejemplo esté marcado con ❌ y sea solo ilustrativo, Aikido detecta el patrón igualmente. Esto incluye versiones truncadas del secret (`valor_inicio...valor_fin`).
 
-```markdown
-<!-- ❌ Aunque esté como "ejemplo de lo que NO hacer", Aikido lo detecta igual -->
-const jwtSecret = "<SECRET_TRUNCADO>";   ← versión truncada también dispara el scanner
-JWT_SECRET=<VALOR_EJEMPLO>
+No mostrar el valor problemático en el ejemplo — ni completo, ni truncado, ni inventado con el mismo patrón. Describir el problema en palabras y solo mostrar el ✅.
 
-<!-- ✅ Usar placeholders completamente inventados — sin ningún fragmento real -->
+```js
+// ✅ Único ejemplo que debe aparecer en docs — placeholder entre ángulos
 const jwtSecret = "<SECRET_64_CHARS_HEX>";
 JWT_SECRET=<VALOR_REAL_AQUI>
 ```
 
-**Regla:** en cualquier documentación o guía de seguridad, los ejemplos malos deben usar strings completamente ficticios, sin ningún fragmento del valor real (ni el inicio, ni el final, ni versiones truncadas con `...`).
+**Regla:** en cualquier documentación o guía de seguridad, no mostrar el valor problemático en ninguna forma (completo, truncado ni inventado con patrón similar). Describir el problema solo con palabras y mostrar únicamente el patrón correcto.
 
 ---
 
