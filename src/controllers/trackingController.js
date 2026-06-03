@@ -261,17 +261,17 @@ export const getActivos = async (req, res) => {
 
       const personal = tv.personal
         ? {
-            id: tv.personal.id,
-            nombre: `${tv.personal.nombres} ${tv.personal.apellido_paterno}`.trim(),
-          }
+          id: tv.personal.id,
+          nombre: `${tv.personal.nombres} ${tv.personal.apellido_paterno}`.trim(),
+        }
         : null;
 
       const operativo = tv.operativo
         ? {
-            id: tv.operativo.id,
-            turno: tv.operativo.turno,
-            fecha: tv.operativo.fecha,
-          }
+          id: tv.operativo.id,
+          turno: tv.operativo.turno,
+          fecha: tv.operativo.fecha,
+        }
         : null;
 
       return {
@@ -478,9 +478,9 @@ export const getVehiculosCercanos = async (req, res) => {
         ultima_actualizacion: v.updated_at,
         personal: v.personal_id
           ? {
-              id: v.personal_id,
-              nombre: `${v.personal_nombres || ""} ${v.personal_apellido || ""}`.trim(),
-            }
+            id: v.personal_id,
+            nombre: `${v.personal_nombres || ""} ${v.personal_apellido || ""}`.trim(),
+          }
           : null,
       };
     });

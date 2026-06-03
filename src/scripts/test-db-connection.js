@@ -37,7 +37,7 @@ const TABLAS_REQUERIDAS = [
 async function tablaExiste(nombreTabla) {
   const schemaCondition = IS_POSTGRES
     ? `table_schema = '${DB_SCHEMA}'`
-    : `table_schema = DATABASE()`;
+    : "table_schema = DATABASE()";
 
   const [rows] = await sequelize.query(
     `SELECT table_name
@@ -99,7 +99,7 @@ async function main() {
         console.log(`  ✅ Schema '${DB_SCHEMA}' existe\n`);
       } else {
         console.error(`  ❌ Schema '${DB_SCHEMA}' NO existe.`);
-        console.error(`     Crear manualmente en Supabase SQL Editor:`);
+        console.error("     Crear manualmente en Supabase SQL Editor:");
         console.error(`     CREATE SCHEMA ${DB_SCHEMA};\n`);
         process.exit(1);
       }

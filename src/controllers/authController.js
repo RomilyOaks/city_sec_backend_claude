@@ -1079,7 +1079,12 @@ export const changePassword = async (req, res) => {
     }
 
     // Validar que las contraseñas no sean iguales
-    if (currentPassword === newPassword) {
+    const bufCurrent = Buffer.from(currentPassword);
+    const bufNew = Buffer.from(newPassword);
+    const samePassword =
+      bufCurrent.length === bufNew.length &&
+      crypto.timingSafeEqual(bufCurrent, bufNew);
+    if (samePassword) {
       return res.status(400).json({
         success: false,
         message: "La nueva contraseña debe ser diferente a la actual",
@@ -1297,7 +1302,12 @@ export const changePasswordRequired = async (req, res) => {
       });
     }
 
-    if (currentPassword === newPassword) {
+    const bufCurrent = Buffer.from(currentPassword);
+    const bufNew = Buffer.from(newPassword);
+    const samePassword =
+      bufCurrent.length === bufNew.length &&
+      crypto.timingSafeEqual(bufCurrent, bufNew);
+    if (samePassword) {
       return res.status(400).json({
         success: false,
         message: "La nueva contraseña debe ser diferente a la actual",

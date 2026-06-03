@@ -872,6 +872,139 @@ sequelize.authenticate()
 
 ---
 
+## Seguridad — Guía para Desarrollo Futuro
+
+Lecciones aprendidas de la auditoría Aikido (2026-06-01). Aplicar en todo código nuevo.
+
+---
+
+### 🚨 Nunca hardcodear credenciales — ni en seeders ni en ejemplos
+
+Cualquier valor secreto en el código fuente queda grabado en el historial de git para siempre, aunque luego se elimine del archivo.
+
+```js
+// ❌ Nunca — queda en git history
+const adminPassword = "<CONTRASEÑA_HARDCODEADA>";
+const jwtSecret = "<SECRET_64_CHARS_HEX>";
+
+// ✅ Siempre leer desde variable de entorno con fallback no-secreto
+const adminPassword = process.env.ADMIN_INITIAL_PASSWORD || "Admin123!";
+```
+
+Aplica a: seeders, scripts, tests, configuración, cualquier archivo commiteado.
+
+---
+
+### 🚨 `.env.example` nunca debe contener valores reales
+
+`.env.example` es un archivo público commiteado. Solo puede tener placeholders descriptivos.
+
+```env
+# ❌ Valor real en .env.example — Aikido lo detecta como "leaked secret"
+JWT_SECRET=<SECRET_64_CHARS_HEX>
+
+# ✅ Placeholder descriptivo — instrucción, no valor
+JWT_SECRET=                   # Generar con: node -e "require('crypto').randomBytes(64).toString('hex')"
+```
+
+Si se commitea un secret real en `.env.example`, la solución completa requiere:
+1. Eliminar el valor del archivo → variable de entorno.
+2. Limpiar el historial con `git filter-repo --replace-text`.
+3. Force push a GitHub.
+4. Rotar el secret comprometido (generar uno nuevo en producción).
+
+---
+
+### 🚨 Ejemplos en documentación: nunca usar el prefijo JWT real
+
+Los scanners de seguridad detectan `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9` (header JWT base64) como un secreto, aunque el token esté truncado con `...`.
+
+```markdown
+<!-- ❌ Aikido lo marca como "token leaked" -->
+"token": "<TOKEN_JWT_BASE64_HEADER>..."
+
+<!-- ✅ Placeholder neutro — no dispara ningún scanner -->
+"token": "ACCESS_TOKEN_EXAMPLE"
+"accessToken": "<ACCESS_TOKEN>"
+"refreshToken": "<REFRESH_TOKEN>"
+```
+
+Aplica a: archivos `.md`, comentarios JSDoc, `swagger.js`, `swagger_output.json`, colecciones Postman.
+
+---
+
+### 🚨 Mantener dependencias actualizadas — revisar CVEs periódicamente
+
+Las dependencias con CVEs conocidos son detectadas automáticamente por Aikido y similares.
+
+**CVEs corregidos en auditoría 2026-06-01:**
+
+| Paquete | Versión vulnerable | Versión segura | CVE / Riesgo |
+|---|---|---|---|
+| `sequelize` | 6.37.7 | 6.37.8 | SQL injection en JSON/JSONB |
+| `nodemailer` | 7.0.12 | 8.0.9 | CRLF injection, auth missing |
+| `lodash` | 4.17.21 | 4.18.1 | Prototype pollution + RCE (Critical) |
+| `tmp` | 0.2.5 | 0.2.6 | Path traversal (transitivo via exceljs) |
+| `mysql2` | 3.16.0 | 3.22.4 | SQL injection via escape inconsistente |
+
+> `lodash` y `tmp` son dependencias transitivas — su versión se fuerza vía el campo `overrides` en `package.json`.
+
+**Regla:** al agregar o actualizar una dependencia, verificar que no tenga CVEs conocidos:
+
+```bash
+npm audit                        # Reporte de vulnerabilidades en dependencias
+npm audit fix                    # Autofix de vulnerabilidades sin breaking changes
+npm audit fix --force            # Incluye breaking changes (revisar con cuidado)
+```
+
+Para saltos de versión mayor (ej: nodemailer 7→8), verificar que la API usada en el proyecto no haya cambiado antes de actualizar.
+
+---
+
+### 🚨 Si se detecta un secret en el historial: protocolo de limpieza
+
+```bash
+# 1. Instalar git-filter-repo (una sola vez)
+pip install git-filter-repo
+
+# 2. Crear archivo de reemplazos
+echo "SECRET_REAL==>PLACEHOLDER_SEGURO" > replacements.txt
+
+# 3. Reescribir TODO el historial
+git filter-repo --replace-text replacements.txt --force
+
+# 4. Restaurar el remote (filter-repo lo elimina por seguridad)
+git remote add origin https://github.com/RomilyOaks/city_sec_backend_claude.git
+
+# 5. Force push (destruye el historial remoto — confirmar antes)
+git push --force origin main
+
+# 6. Limpiar archivo temporal
+rm replacements.txt
+
+# 7. OBLIGATORIO: rotar el secret en producción (Railway)
+```
+
+⚠️ El force push reescribe el historial público. Coordinar con colaboradores si los hay.
+
+---
+
+### 🚨 Al crear un seeder con usuario inicial
+
+```js
+// ✅ Patrón correcto para seeders con credenciales
+const adminPassword = process.env.ADMIN_INITIAL_PASSWORD || "Admin123!";
+const passwordHash  = await bcrypt.hash(adminPassword, 10);
+
+// Al final del seeder, imprimir la contraseña REAL usada (no un valor hardcodeado)
+console.log(`   Password: ${adminPassword}`);
+console.log("   ⚠️  Cambiar después del primer login en producción");
+```
+
+La variable `ADMIN_INITIAL_PASSWORD` debe estar en `.env` (local) y en Railway (producción) si se quiere usar una contraseña diferente al default.
+
+---
+
 ## Credenciales Iniciales (post seed:rbac)
 
 ```

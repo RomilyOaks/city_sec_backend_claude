@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const helmet = require("helmet");
 const mysql = require("mysql2/promise");
 
 // Create a connection pool using DATABASE_URL or individual vars
@@ -23,6 +24,7 @@ console.log("MCP pool config:", maskedConfig);
 const pool = mysql.createPool(connectionConfig);
 
 const app = express();
+app.use(helmet());
 app.use(express.json());
 
 app.get("/health", async (req, res) => {

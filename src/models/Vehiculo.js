@@ -302,10 +302,10 @@ Vehiculo.init(
             });
             const ultimoVehiculo = vehiculosConPrefijo.length
               ? vehiculosConPrefijo.reduce((max, v) => {
-                  const n = parseInt((v.codigo_vehiculo || "").split("-")[1]) || 0;
-                  const m = parseInt((max.codigo_vehiculo || "").split("-")[1]) || 0;
-                  return n > m ? v : max;
-                })
+                const n = parseInt((v.codigo_vehiculo || "").split("-")[1]) || 0;
+                const m = parseInt((max.codigo_vehiculo || "").split("-")[1]) || 0;
+                return n > m ? v : max;
+              })
               : null;
 
             let nuevoNumero = 1;

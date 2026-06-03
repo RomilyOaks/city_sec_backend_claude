@@ -333,7 +333,7 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
         LEFT JOIN cargos carg_cier ON ps_cier.cargo_id = carg_cier.id
         LEFT JOIN estados_operativo_recurso Sts_Opr ON ov.estado_operativo_id = Sts_Opr.id
       LEFT JOIN estados_novedad en ON ni.estado_novedad_id = en.id
-      WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+      WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
         ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -359,7 +359,7 @@ export const getOperativosVehiculares = async (queryParams = {}) => {
         INNER JOIN operativos_vehiculos ov ON ovc.operativo_vehiculo_id = ov.id
         INNER JOIN operativos_turno ot ON ov.operativo_turno_id = ot.id
         INNER JOIN vehiculos v ON ov.vehiculo_id = v.id
-      WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+      WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
         ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -523,7 +523,7 @@ export const getResumenVehicular = async (queryParams = {}) => {
       SELECT COUNT(*) as total
       FROM novedades_incidentes ni
       INNER JOIN operativos_vehiculos_novedades ovn ON ni.id = ovn.novedad_id
-      WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+      WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
         ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -542,7 +542,7 @@ export const getResumenVehicular = async (queryParams = {}) => {
       INNER JOIN operativos_vehiculos_cuadrantes ovc ON ovn.operativo_vehiculo_cuadrante_id = ovc.id
       INNER JOIN operativos_vehiculos ov ON ovc.operativo_vehiculo_id = ov.id
       INNER JOIN operativos_turno ot ON ov.operativo_turno_id = ot.id
-      WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+      WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
         ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -564,7 +564,7 @@ export const getResumenVehicular = async (queryParams = {}) => {
       INNER JOIN operativos_vehiculos ov ON ovc.operativo_vehiculo_id = ov.id
       INNER JOIN operativos_turno ot ON ov.operativo_turno_id = ot.id
       INNER JOIN sectores sec ON ot.sector_id = sec.id
-      WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+      WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
         ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -582,7 +582,7 @@ export const getResumenVehicular = async (queryParams = {}) => {
         COUNT(*) as total
       FROM novedades_incidentes ni
       INNER JOIN operativos_vehiculos_novedades ovn ON ni.id = ovn.novedad_id
-      WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+      WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
         ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -601,7 +601,7 @@ export const getResumenVehicular = async (queryParams = {}) => {
       FROM novedades_incidentes ni
       INNER JOIN operativos_vehiculos_novedades ovn ON ni.id = ovn.novedad_id
       INNER JOIN tipos_novedad tn ON ni.tipo_novedad_id = tn.id
-      WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+      WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
         ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -620,7 +620,7 @@ export const getResumenVehicular = async (queryParams = {}) => {
       FROM novedades_incidentes ni
       INNER JOIN operativos_vehiculos_novedades ovn ON ni.id = ovn.novedad_id
       LEFT JOIN estados_novedad en ON ni.estado_novedad_id = en.id
-      WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+      WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
         ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -702,7 +702,7 @@ export const getEstadisticasVehiculares = async (queryParams = {}) => {
         INNER JOIN operativos_vehiculos_novedades ovn ON ni.id = ovn.novedad_id
         INNER JOIN operativos_vehiculos_cuadrantes ovc ON ovn.operativo_vehiculo_cuadrante_id = ovc.id
         INNER JOIN operativos_vehiculos ov ON ovc.operativo_vehiculo_id = ov.id
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1
           AND ni.deleted_at IS NULL
           ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -723,7 +723,7 @@ export const getEstadisticasVehiculares = async (queryParams = {}) => {
         INNER JOIN operativos_vehiculos_cuadrantes ovc ON ovn.operativo_vehiculo_cuadrante_id = ovc.id
         INNER JOIN operativos_vehiculos ov ON ovc.operativo_vehiculo_id = ov.id
         INNER JOIN operativos_turno ot ON ov.operativo_turno_id = ot.id
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1
           AND ni.deleted_at IS NULL
           ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -747,7 +747,7 @@ export const getEstadisticasVehiculares = async (queryParams = {}) => {
         INNER JOIN operativos_vehiculos ov ON ovc.operativo_vehiculo_id = ov.id
         INNER JOIN operativos_turno ot ON ov.operativo_turno_id = ot.id
         INNER JOIN sectores sec ON ot.sector_id = sec.id
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1
           AND ni.deleted_at IS NULL
           ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -772,7 +772,7 @@ export const getEstadisticasVehiculares = async (queryParams = {}) => {
         INNER JOIN operativos_vehiculos_cuadrantes ovc ON ovn.operativo_vehiculo_cuadrante_id = ovc.id
         INNER JOIN operativos_vehiculos ov ON ovc.operativo_vehiculo_id = ov.id
         INNER JOIN vehiculos v ON ov.vehiculo_id = v.id
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1
           AND ni.deleted_at IS NULL
           ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -796,7 +796,7 @@ export const getEstadisticasVehiculares = async (queryParams = {}) => {
         INNER JOIN operativos_vehiculos_cuadrantes ovc ON ovn.operativo_vehiculo_cuadrante_id = ovc.id
         INNER JOIN operativos_vehiculos ov ON ovc.operativo_vehiculo_id = ov.id
         INNER JOIN personal_seguridad ps ON ov.conductor_id = ps.id
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1
           AND ni.deleted_at IS NULL
           ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -817,7 +817,7 @@ export const getEstadisticasVehiculares = async (queryParams = {}) => {
         FROM novedades_incidentes ni
         INNER JOIN operativos_vehiculos_novedades ovn ON ni.id = ovn.novedad_id
         LEFT JOIN estados_novedad en ON ni.estado_novedad_id = en.id
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1
           AND ni.deleted_at IS NULL
           ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
@@ -831,7 +831,7 @@ export const getEstadisticasVehiculares = async (queryParams = {}) => {
       // Tendencias temporales (por día)
       models.sequelize.query(`
         SELECT 
-          ${DATE_COL('ni.fecha_hora_ocurrencia')} as fecha,
+          ${DATE_COL("ni.fecha_hora_ocurrencia")} as fecha,
           COUNT(*) as total_novedades,
           AVG(ni.tiempo_respuesta_min) as promedio_tiempo_respuesta,
           COUNT(DISTINCT ov.id) as total_operativos
@@ -839,11 +839,11 @@ export const getEstadisticasVehiculares = async (queryParams = {}) => {
         INNER JOIN operativos_vehiculos_novedades ovn ON ni.id = ovn.novedad_id
         INNER JOIN operativos_vehiculos_cuadrantes ovc ON ovn.operativo_vehiculo_cuadrante_id = ovc.id
         INNER JOIN operativos_vehiculos ov ON ovc.operativo_vehiculo_id = ov.id
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1
           AND ni.deleted_at IS NULL
           ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
-        GROUP BY ${DATE_COL('ni.fecha_hora_ocurrencia')}
+        GROUP BY ${DATE_COL("ni.fecha_hora_ocurrencia")}
         ORDER BY fecha ASC
       `, {
         replacements: replacements,
@@ -1108,7 +1108,7 @@ export const getOperativosPie = async (queryParams = {}) => {
       
       LEFT JOIN estados_novedad en ON ni.estado_novedad_id = en.id 	
       
-      WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+      WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
         AND ni.estado = 1 AND ni.deleted_at IS NULL 
         ${sanitizedEstadoNovedadId ? "AND ni.estado_novedad_id = ?" : ""}
         ${sanitizedPrioridad ? "AND stn.prioridad = ?" : ""}
@@ -1131,7 +1131,7 @@ export const getOperativosPie = async (queryParams = {}) => {
       LEFT JOIN subtipos_novedad stn ON ni.subtipo_novedad_id = stn.id
       LEFT JOIN operativos_turno ot ON op.operativo_turno_id = ot.id
       LEFT JOIN personal_seguridad ps2 ON op.personal_id = ps2.id
-      WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+      WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
         AND ni.estado = 1
         AND ni.deleted_at IS NULL
         AND opn.estado_registro = 1
@@ -1542,7 +1542,7 @@ export const getResumenPie = async (queryParams = {}) => {
         INNER JOIN operativos_personal_novedades opn ON ni.id = opn.novedad_id 
         INNER JOIN operativos_personal_cuadrantes opc ON opn.operativo_personal_cuadrante_id = opc.id 
         INNER JOIN operativos_personal op ON opc.operativo_personal_id = op.id 
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1 AND ni.deleted_at IS NULL
       `, {
         replacements: [fecha_inicio, fecha_fin],
@@ -1559,7 +1559,7 @@ export const getResumenPie = async (queryParams = {}) => {
         INNER JOIN operativos_personal_cuadrantes opc ON opn.operativo_personal_cuadrante_id = opc.id 
         INNER JOIN operativos_personal op ON opc.operativo_personal_id = op.id 
         INNER JOIN operativos_turno ot ON op.operativo_turno_id = ot.id 
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1 AND ni.deleted_at IS NULL
         GROUP BY ot.turno
         ORDER BY total DESC
@@ -1580,7 +1580,7 @@ export const getResumenPie = async (queryParams = {}) => {
         INNER JOIN operativos_personal op ON opc.operativo_personal_id = op.id 
         INNER JOIN operativos_turno ot ON op.operativo_turno_id = ot.id 
         INNER JOIN sectores sec ON ot.sector_id = sec.id 
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1 AND ni.deleted_at IS NULL
         GROUP BY sec.sector_code, sec.nombre
         ORDER BY total DESC
@@ -1598,7 +1598,7 @@ export const getResumenPie = async (queryParams = {}) => {
         INNER JOIN operativos_personal_novedades opn ON ni.id = opn.novedad_id 
         INNER JOIN operativos_personal_cuadrantes opc ON opn.operativo_personal_cuadrante_id = opc.id 
         INNER JOIN operativos_personal op ON opc.operativo_personal_id = op.id 
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1 AND ni.deleted_at IS NULL
         GROUP BY ni.prioridad_actual
         ORDER BY total DESC
@@ -1617,7 +1617,7 @@ export const getResumenPie = async (queryParams = {}) => {
         INNER JOIN operativos_personal_novedades opn ON ni.id = opn.novedad_id 
         INNER JOIN operativos_personal_cuadrantes opc ON opn.operativo_personal_cuadrante_id = opc.id 
         INNER JOIN operativos_personal op ON opc.operativo_personal_id = op.id 
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1 AND ni.deleted_at IS NULL
         GROUP BY tn.nombre
         ORDER BY total DESC
@@ -2290,7 +2290,7 @@ const obtenerMetricasRendimiento = async (queryParams = {}) => {
           'VEHICULAR' as tipo_operativo
         FROM novedades_incidentes ni
         INNER JOIN operativos_vehiculos_novedades ovn ON ni.id = ovn.novedad_id
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1 
           AND ni.deleted_at IS NULL
           AND ni.tiempo_respuesta_min_operativo IS NOT NULL
@@ -2309,7 +2309,7 @@ const obtenerMetricasRendimiento = async (queryParams = {}) => {
           'PIE' as tipo_operativo
         FROM novedades_incidentes ni
         INNER JOIN operativos_personal_novedades opn ON ni.id = opn.novedad_id
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1 
           AND ni.deleted_at IS NULL
           AND ni.tiempo_respuesta_min_operativo IS NOT NULL
@@ -2448,14 +2448,14 @@ const combinarTendencias = async (queryParams = {}) => {
       // Novedades vehiculares por fecha
       db.query(`
         SELECT 
-          ${DATE_COL('ni.fecha_hora_ocurrencia')} as fecha,
+          ${DATE_COL("ni.fecha_hora_ocurrencia")} as fecha,
           COUNT(DISTINCT ni.id) as cantidad
         FROM novedades_incidentes ni
         INNER JOIN operativos_vehiculos_novedades ovn ON ni.id = ovn.novedad_id
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1 
           AND ni.deleted_at IS NULL
-        GROUP BY ${DATE_COL('ni.fecha_hora_ocurrencia')}
+        GROUP BY ${DATE_COL("ni.fecha_hora_ocurrencia")}
         ORDER BY fecha
       `, {
         replacements: [sanitizedFechaInicio, sanitizedFechaFin],
@@ -2465,14 +2465,14 @@ const combinarTendencias = async (queryParams = {}) => {
       // Novedades a pie por fecha
       db.query(`
         SELECT 
-          ${DATE_COL('ni.fecha_hora_ocurrencia')} as fecha,
+          ${DATE_COL("ni.fecha_hora_ocurrencia")} as fecha,
           COUNT(DISTINCT ni.id) as cantidad
         FROM novedades_incidentes ni
         INNER JOIN operativos_personal_novedades opn ON ni.id = opn.novedad_id
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1 
           AND ni.deleted_at IS NULL
-        GROUP BY ${DATE_COL('ni.fecha_hora_ocurrencia')}
+        GROUP BY ${DATE_COL("ni.fecha_hora_ocurrencia")}
         ORDER BY fecha
       `, {
         replacements: [sanitizedFechaInicio, sanitizedFechaFin],
@@ -2482,10 +2482,10 @@ const combinarTendencias = async (queryParams = {}) => {
       // Novedades no atendidas por fecha
       db.query(`
         SELECT 
-          ${DATE_COL('ni.fecha_hora_ocurrencia')} as fecha,
+          ${DATE_COL("ni.fecha_hora_ocurrencia")} as fecha,
           COUNT(DISTINCT ni.id) as cantidad
         FROM novedades_incidentes ni
-        WHERE ${DATE_COL('ni.fecha_hora_ocurrencia')} BETWEEN ? AND ?
+        WHERE ${DATE_COL("ni.fecha_hora_ocurrencia")} BETWEEN ? AND ?
           AND ni.estado = 1 
           AND ni.deleted_at IS NULL
           AND NOT EXISTS (
@@ -2494,7 +2494,7 @@ const combinarTendencias = async (queryParams = {}) => {
           AND NOT EXISTS (
             SELECT 1 FROM operativos_personal_novedades opn WHERE opn.novedad_id = ni.id
           )
-        GROUP BY ${DATE_COL('ni.fecha_hora_ocurrencia')}
+        GROUP BY ${DATE_COL("ni.fecha_hora_ocurrencia")}
         ORDER BY fecha
       `, {
         replacements: [sanitizedFechaInicio, sanitizedFechaFin],
