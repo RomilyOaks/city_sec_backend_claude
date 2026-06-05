@@ -130,6 +130,7 @@ import auditoriaAccionRoutes from "./auditoriaAcciones.routes.js";
 import abastecimientosRoutes from "./abastecimientos.routes.js";
 import grifosRoutes from "./grifos.routes.js";
 import reportesOperativosRoutes from "./reportes-operativos.routes.js"; // ✅ Fase 1 Implementada
+import visionRoutes from "./vision.routes.js"; // ✅ TD-P-002 Proxy OCR
 
 // ============================================================================
 // 🛣️ MÓDULO CALLES Y DIRECCIONES v2.4.0 ✨
@@ -1023,6 +1024,12 @@ router.use("/calles-cuadrantes", callesCuadrantesRoutes);
  *   }
  */
 router.use("/direcciones", direccionesRoutes);
+
+//=============================================
+// MÓDULO VISIÓN / OCR — TD-P-002
+//=============================================
+
+router.use("/vision", visionRoutes);
 
 //=============================================
 // RUTA DE HEALTH CHECK

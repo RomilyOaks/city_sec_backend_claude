@@ -1097,3 +1097,9 @@ Este backend es consumido por:
 - `city_sec_voice_gateway` — microservicio que crea novedades desde reportes ciudadanos
 
 Ver `/mnt/d/robles/Project/CLAUDE.md` para el diagrama completo de la arquitectura.
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+at `.specify/specs/002-proxy-ocr/plan.md`
+<!-- SPECKIT END -->
