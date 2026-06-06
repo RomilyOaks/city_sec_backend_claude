@@ -91,9 +91,9 @@ const buildNovedadShape = (n) => {
     descripcion: nov.descripcion,
     prioridad: nov.prioridad_actual,
     fecha_hora: nov.fecha_hora_ocurrencia,
-    tipo: nov.tipoNovedadNovedad?.nombre ?? null,
+    tipo: nov.novedadTipoNovedad?.nombre ?? null,
     subtipo: nov.novedadSubtipoNovedad?.nombre ?? null,
-    estado: nov.estadoNovedad?.nombre ?? null,
+    estado: nov.novedadEstado?.nombre ?? null,
   };
 };
 
@@ -121,9 +121,9 @@ const getCuadranteActivoVehiculo = async (opVehiculoId) => {
             as: "novedad",
             attributes: ["id", "novedad_code", "descripcion", "prioridad_actual", "fecha_hora_ocurrencia"],
             include: [
-              { model: TipoNovedad, as: "tipoNovedadNovedad", attributes: ["nombre"] },
+              { model: TipoNovedad, as: "novedadTipoNovedad", attributes: ["nombre"] },
               { model: SubtipoNovedad, as: "novedadSubtipoNovedad", attributes: ["nombre"] },
-              { model: EstadoNovedad, as: "estadoNovedad", attributes: ["nombre"] },
+              { model: EstadoNovedad, as: "novedadEstado", attributes: ["nombre"] },
             ],
           },
         ],
@@ -163,9 +163,9 @@ const getCuadranteActivoPersonal = async (opPersonalId) => {
             as: "novedad",
             attributes: ["id", "novedad_code", "descripcion", "prioridad_actual", "fecha_hora_ocurrencia"],
             include: [
-              { model: TipoNovedad, as: "tipoNovedadNovedad", attributes: ["nombre"] },
+              { model: TipoNovedad, as: "novedadTipoNovedad", attributes: ["nombre"] },
               { model: SubtipoNovedad, as: "novedadSubtipoNovedad", attributes: ["nombre"] },
-              { model: EstadoNovedad, as: "estadoNovedad", attributes: ["nombre"] },
+              { model: EstadoNovedad, as: "novedadEstado", attributes: ["nombre"] },
             ],
           },
         ],
