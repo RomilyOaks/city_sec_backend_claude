@@ -220,6 +220,15 @@ export const getTurnoActivo = async (req, res) => {
 
     const operativoIds = operativosTurno.map((ot) => ot.id);
 
+    // DEBUG TEMPORAL — remover luego de diagnosticar
+    logger.info("DEBUG turno-activo", {
+      psId,
+      fechaOperativo,
+      turno: horarioActivo.turno,
+      cruza_medianoche: horarioActivo.cruza_medianoche,
+      operativoIds,
+    });
+
     // 5. Buscar en operativos_vehiculos (conductor o copiloto) en cualquier operativo del turno
     const opVehiculo = await OperativosVehiculos.findOne({
       where: {
