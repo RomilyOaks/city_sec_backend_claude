@@ -172,11 +172,31 @@ export const getTurnoActivo = async (req, res) => {
     // 3. Fecha local Lima en formato YYYY-MM-DD (para comparar con operativos_turno.fecha)
     const hoyPeru = getDateInTimezone();
 
+    // Para turnos que cruzan medianoche (ej. NOCHE 23:00–07:00), si la hora actual
+    // está entre 00:00 y hora_fin el turno empezó ayer — buscar con fecha de ayer
+    let fechaOperativo = hoyPeru;
+    if (horarioActivo.cruza_medianoche) {
+      const horaActualLima = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "America/Lima",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).format(new Date());
+
+      if (horaActualLima < horarioActivo.hora_fin) {
+        // Estamos en la madrugada — el operativo fue registrado con la fecha de ayer
+        fechaOperativo = new Intl.DateTimeFormat("sv-SE", {
+          timeZone: "America/Lima",
+        }).format(new Date(Date.now() - 24 * 60 * 60 * 1000));
+      }
+    }
+
     // 4. Buscar TODOS los operativos del turno de hoy (puede haber más de uno por turno)
     const operativosTurno = await OperativosTurno.findAll({
       where: {
         turno: horarioActivo.turno,
-        fecha: hoyPeru,
+        fecha: fechaOperativo,
         deleted_at: null,
       },
       attributes: ["id"],
@@ -188,7 +208,7 @@ export const getTurnoActivo = async (req, res) => {
           true,
           "Turno activo sin operativo configurado para hoy",
           {
-            turno: buildTurnoShape(horarioActivo, hoyPeru),
+            turno: buildTurnoShape(horarioActivo, fechaOperativo),
             rol_operativo: null,
             vehiculo: null,
             tipo_patrullaje: null,
@@ -223,7 +243,7 @@ export const getTurnoActivo = async (req, res) => {
 
       return res.json(
         formatResponse(true, "Turno activo obtenido exitosamente", {
-          turno: buildTurnoShape(horarioActivo, hoyPeru),
+          turno: buildTurnoShape(horarioActivo, fechaOperativo),
           rol_operativo: rolOperativo,
           vehiculo: opVehiculo.vehiculo,
           tipo_patrullaje: "VEHICULAR",
@@ -250,7 +270,7 @@ export const getTurnoActivo = async (req, res) => {
 
       return res.json(
         formatResponse(true, "Turno activo obtenido exitosamente", {
-          turno: buildTurnoShape(horarioActivo, hoyPeru),
+          turno: buildTurnoShape(horarioActivo, fechaOperativo),
           rol_operativo: rolOperativo,
           vehiculo: null,
           tipo_patrullaje: "A_PIE",
@@ -262,7 +282,7 @@ export const getTurnoActivo = async (req, res) => {
     // 7. Tiene turno activo pero sin asignación operativa aún
     return res.json(
       formatResponse(true, "Turno activo sin asignación operativa", {
-        turno: buildTurnoShape(horarioActivo, hoyPeru),
+        turno: buildTurnoShape(horarioActivo, fechaOperativo),
         rol_operativo: null,
         vehiculo: null,
         tipo_patrullaje: null,
