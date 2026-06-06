@@ -16,6 +16,10 @@
  * HISTORIAL DE CAMBIOS:
  * =====================
  *
+ * v2.5.0 (2026-06-05):
+ *   - ✅ Módulo /patrullaje — turno activo del sereno (TD-P-005)
+ *   - ✅ Módulo /vision — proxy OCR (TD-P-002)
+ *   - ✅ Nuevos permisos patrullaje.sereno.read y patrullaje.conductor.read
  * v2.4.0 (2025-12-23):
  *   - ✅ Agregado módulo completo /tipos-via, /calles, /calles-cuadrantes, /direcciones
  *   - ✅ Sistema dual de direccionamiento (numeración municipal + Mz/Lote)
@@ -131,6 +135,7 @@ import abastecimientosRoutes from "./abastecimientos.routes.js";
 import grifosRoutes from "./grifos.routes.js";
 import reportesOperativosRoutes from "./reportes-operativos.routes.js"; // ✅ Fase 1 Implementada
 import visionRoutes from "./vision.routes.js"; // ✅ TD-P-002 Proxy OCR
+import patrullajeRoutes from "./patrullaje.routes.js"; // ✅ TD-P-005 Turno activo del sereno
 
 // ============================================================================
 // 🛣️ MÓDULO CALLES Y DIRECCIONES v2.4.0 ✨
@@ -1030,6 +1035,12 @@ router.use("/direcciones", direccionesRoutes);
 //=============================================
 
 router.use("/vision", visionRoutes);
+
+//=============================================
+// MÓDULO PATRULLAJE — TD-P-005
+//=============================================
+
+router.use("/patrullaje", patrullajeRoutes);
 
 //=============================================
 // RUTA DE HEALTH CHECK
