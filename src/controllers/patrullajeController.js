@@ -4,9 +4,7 @@
  * Endpoint: GET /api/v1/patrullaje/turno-activo
  *
  * Devuelve el turno activo del sereno autenticado (vía JWT) junto con
- * su asignación vehicular o de patrullaje a pie. Si no hay turno activo
- * o no hay asignación, responde { data: null } — el APK usa ese valor
- * para bloquear el switch GPS.
+ * datos del personal, asignación operativa y novedades asignadas.
  *
  * Implementación: TD-P-005
  */
@@ -19,28 +17,27 @@ import { getDateInTimezone } from "../utils/dateHelper.js";
 
 const {
   Usuario,
+  PersonalSeguridad,
   HorariosTurnos,
   OperativosTurno,
   OperativosVehiculos,
   OperativosPersonal,
   OperativosVehiculosCuadrantes,
   OperativosPersonalCuadrantes,
+  OperativosVehiculosNovedades,
+  OperativosPersonalNovedades,
   Vehiculo,
   Cuadrante,
+  Novedad,
+  TipoNovedad,
+  SubtipoNovedad,
+  EstadoNovedad,
 } = models;
 
 // ─────────────────────────────────────────────────────────
 // HELPERS PRIVADOS
 // ─────────────────────────────────────────────────────────
 
-/**
- * Detecta el horario de turno activo según la hora actual en Lima.
- * Replica la lógica de horariosTurnosController.getHorarioActivo
- * pero retorna el objeto directamente (sin res.json) para que
- * pueda ser consumido por otros controladores.
- *
- * @returns {Object|null} Instancia de HorariosTurnos o null
- */
 const resolveHorarioActivo = async () => {
   const timezone = "America/Lima";
   const now = new Date();
@@ -61,20 +58,15 @@ const resolveHorarioActivo = async () => {
   for (const horario of horariosActivos) {
     const inicio = horario.hora_inicio;
     const fin = horario.hora_fin;
-
     if (horario.cruza_medianoche) {
       if (horaString >= inicio || horaString < fin) return horario;
     } else {
       if (horaString >= inicio && horaString < fin) return horario;
     }
   }
-
   return null;
 };
 
-/**
- * Construye el objeto turno para la respuesta.
- */
 const buildTurnoShape = (horario, fecha) => ({
   nombre: horario.turno,
   hora_inicio: horario.hora_inicio,
@@ -82,53 +74,112 @@ const buildTurnoShape = (horario, fecha) => ({
   fecha,
 });
 
+const buildSerenoShape = (ps) => ({
+  id: ps.id,
+  nombres: ps.nombres,
+  apellido_paterno: ps.apellido_paterno,
+  apellido_materno: ps.apellido_materno,
+  doc_tipo: ps.doc_tipo,
+  doc_numero: ps.doc_numero,
+});
+
+const buildNovedadShape = (n) => {
+  const nov = n.novedad ?? n; // soporta tanto novedad anidada como directa
+  return {
+    id: nov.id,
+    codigo: nov.novedad_code,
+    descripcion: nov.descripcion,
+    prioridad: nov.prioridad_actual,
+    fecha_hora: nov.fecha_hora_ocurrencia,
+    tipo: nov.tipoNovedadNovedad?.nombre ?? null,
+    subtipo: nov.novedadSubtipoNovedad?.nombre ?? null,
+    estado: nov.estadoNovedad?.nombre ?? null,
+  };
+};
+
 /**
- * Obtiene el cuadrante activo de un operativo vehicular.
- * "Activo" = sin hora_salida y sin soft-delete.
- *
- * @param {number} opVehiculoId - ID del operativo vehicular
- * @returns {Object|null} Datos del cuadrante o null
+ * Devuelve { cuadrante, novedades } del operativo vehicular activo.
+ * "Activo" = sin hora_salida en la asignación de cuadrante.
  */
 const getCuadranteActivoVehiculo = async (opVehiculoId) => {
   const ovc = await OperativosVehiculosCuadrantes.findOne({
-    where: {
-      operativo_vehiculo_id: opVehiculoId,
-      hora_salida: null,
-      deleted_at: null,
-    },
+    where: { operativo_vehiculo_id: opVehiculoId, hora_salida: null },
     include: [
       {
         model: Cuadrante,
         as: "cuadrante",
         attributes: ["id", "nombre"],
       },
+      {
+        model: OperativosVehiculosNovedades,
+        as: "novedades",
+        attributes: [],
+        required: false,
+        include: [
+          {
+            model: Novedad,
+            as: "novedad",
+            attributes: ["id", "novedad_code", "descripcion", "prioridad_actual", "fecha_hora_ocurrencia"],
+            include: [
+              { model: TipoNovedad, as: "tipoNovedadNovedad", attributes: ["nombre"] },
+              { model: SubtipoNovedad, as: "novedadSubtipoNovedad", attributes: ["nombre"] },
+              { model: EstadoNovedad, as: "estadoNovedad", attributes: ["nombre"] },
+            ],
+          },
+        ],
+      },
     ],
   });
-  return ovc?.cuadrante ?? null;
+
+  if (!ovc) return { cuadrante: null, novedades: [] };
+
+  const novedadesRaw = ovc.novedades ?? [];
+  return {
+    cuadrante: ovc.cuadrante ?? null,
+    novedades: novedadesRaw.map(buildNovedadShape),
+  };
 };
 
 /**
- * Obtiene el cuadrante activo de un operativo de personal a pie.
- *
- * @param {number} opPersonalId - ID del operativo de personal
- * @returns {Object|null} Datos del cuadrante o null
+ * Devuelve { cuadrante, novedades } del operativo personal activo.
  */
 const getCuadranteActivoPersonal = async (opPersonalId) => {
   const opc = await OperativosPersonalCuadrantes.findOne({
-    where: {
-      operativo_personal_id: opPersonalId,
-      hora_salida: null,
-      deleted_at: null,
-    },
+    where: { operativo_personal_id: opPersonalId, hora_salida: null },
     include: [
       {
         model: Cuadrante,
         as: "datosCuadrante",
         attributes: ["id", "nombre"],
       },
+      {
+        model: OperativosPersonalNovedades,
+        as: "novedades",
+        attributes: [],
+        required: false,
+        include: [
+          {
+            model: Novedad,
+            as: "novedad",
+            attributes: ["id", "novedad_code", "descripcion", "prioridad_actual", "fecha_hora_ocurrencia"],
+            include: [
+              { model: TipoNovedad, as: "tipoNovedadNovedad", attributes: ["nombre"] },
+              { model: SubtipoNovedad, as: "novedadSubtipoNovedad", attributes: ["nombre"] },
+              { model: EstadoNovedad, as: "estadoNovedad", attributes: ["nombre"] },
+            ],
+          },
+        ],
+      },
     ],
   });
-  return opc?.datosCuadrante ?? null;
+
+  if (!opc) return { cuadrante: null, novedades: [] };
+
+  const novedadesRaw = opc.novedades ?? [];
+  return {
+    cuadrante: opc.datosCuadrante ?? null,
+    novedades: novedadesRaw.map(buildNovedadShape),
+  };
 };
 
 // ─────────────────────────────────────────────────────────
@@ -138,20 +189,22 @@ const getCuadranteActivoPersonal = async (opPersonalId) => {
 /**
  * GET /api/v1/patrullaje/turno-activo
  *
- * Devuelve el turno activo y la asignación operativa del sereno autenticado.
- * Siempre responde HTTP 200. data:null significa "sin turno" (GPS bloqueado en APK).
- *
- * Casos de respuesta:
- *   - turno activo + vehiculo asignado   → { turno, rol_operativo, vehiculo, tipo_patrullaje: 'VEHICULAR', cuadrante }
- *   - turno activo + patrullaje a pie    → { turno, rol_operativo, vehiculo: null, tipo_patrullaje: 'A_PIE', cuadrante }
- *   - turno activo sin asignación aún    → { turno, rol_operativo: null, vehiculo: null, tipo_patrullaje: null, cuadrante: null }
- *   - sin turno activo                   → data: null
+ * Responde siempre HTTP 200.
+ * data:null → sin turno activo (APK bloquea GPS).
  */
 export const getTurnoActivo = async (req, res) => {
   try {
-    // 1. Resolver personal_seguridad_id del usuario autenticado
+    // 1. Datos del usuario + personal de seguridad
     const usuario = await Usuario.findByPk(req.user.id, {
       attributes: ["personal_seguridad_id"],
+      include: [
+        {
+          model: PersonalSeguridad,
+          as: "usuarioPersonalSeguridad",
+          attributes: ["id", "nombres", "apellido_paterno", "apellido_materno", "doc_tipo", "doc_numero"],
+          required: false,
+        },
+      ],
     });
 
     if (!usuario?.personal_seguridad_id) {
@@ -159,9 +212,13 @@ export const getTurnoActivo = async (req, res) => {
         formatResponse(true, "Usuario sin personal de seguridad asignado", null)
       );
     }
-    const psId = usuario.personal_seguridad_id;
 
-    // 2. Obtener horario activo (hora Lima)
+    const psId = usuario.personal_seguridad_id;
+    const sereno = usuario.usuarioPersonalSeguridad
+      ? buildSerenoShape(usuario.usuarioPersonalSeguridad)
+      : null;
+
+    // 2. Horario activo (hora Lima)
     const horarioActivo = await resolveHorarioActivo();
     if (!horarioActivo) {
       return res.json(
@@ -169,12 +226,10 @@ export const getTurnoActivo = async (req, res) => {
       );
     }
 
-    // 3. Fecha local Lima (dateHelper usa aritmética pura — seguro en Alpine/Railway)
+    // 3. Fecha del operativo — para turnos cross-midnight usa ayer si hora < hora_fin
     const hoyPeru = getDateInTimezone();
-
-    // Para turnos cross-midnight: si hora Lima < hora_fin, el turno empezó ayer.
-    // Usamos aritmética de fecha pura (sin Intl locale sv-SE, no disponible en Alpine).
     let fechaOperativo = hoyPeru;
+
     if (horarioActivo.cruza_medianoche) {
       const horaActualLima = new Intl.DateTimeFormat("en-GB", {
         timeZone: "America/Lima",
@@ -185,14 +240,13 @@ export const getTurnoActivo = async (req, res) => {
       }).format(new Date());
 
       if (horaActualLima < horarioActivo.hora_fin) {
-        // Restar 1 día al string YYYY-MM-DD de hoyPeru (aritmética UTC pura)
         const [y, m, d] = hoyPeru.split("-").map(Number);
         const ayer = new Date(Date.UTC(y, m - 1, d - 1));
         fechaOperativo = ayer.toISOString().slice(0, 10);
       }
     }
 
-    // 4. Verificar si existe al menos un operativo_turno para este turno/fecha
+    // 4. Verificar que existe operativo_turno para este turno/fecha
     const hayOperativo = await OperativosTurno.findOne({
       where: { turno: horarioActivo.turno, fecha: fechaOperativo },
       attributes: ["id"],
@@ -202,19 +256,19 @@ export const getTurnoActivo = async (req, res) => {
       return res.json(
         formatResponse(true, "Turno activo sin operativo configurado para hoy", {
           turno: buildTurnoShape(horarioActivo, fechaOperativo),
+          sereno,
           rol_operativo: null,
           vehiculo: null,
           tipo_patrullaje: null,
           cuadrante: null,
+          novedades_asignadas: [],
         })
       );
     }
 
-    // 5. Buscar asignación vehicular — JOIN directo con operativos_turno (evita Op.in)
+    // 5. Buscar asignación vehicular — JOIN directo con operativos_turno
     const opVehiculo = await OperativosVehiculos.findOne({
-      where: {
-        [Op.or]: [{ conductor_id: psId }, { copiloto_id: psId }],
-      },
+      where: { [Op.or]: [{ conductor_id: psId }, { copiloto_id: psId }] },
       include: [
         {
           model: OperativosTurno,
@@ -234,24 +288,24 @@ export const getTurnoActivo = async (req, res) => {
     if (opVehiculo) {
       const rolOperativo =
         Number(opVehiculo.conductor_id) === Number(psId) ? "CONDUCTOR" : "COPILOTO";
-      const cuadrante = await getCuadranteActivoVehiculo(opVehiculo.id);
+      const { cuadrante, novedades } = await getCuadranteActivoVehiculo(opVehiculo.id);
 
       return res.json(
         formatResponse(true, "Turno activo obtenido exitosamente", {
           turno: buildTurnoShape(horarioActivo, fechaOperativo),
+          sereno,
           rol_operativo: rolOperativo,
           vehiculo: opVehiculo.vehiculo,
           tipo_patrullaje: "VEHICULAR",
           cuadrante,
+          novedades_asignadas: novedades,
         })
       );
     }
 
     // 6. Buscar asignación a pie — JOIN directo con operativos_turno
     const opPersonal = await OperativosPersonal.findOne({
-      where: {
-        [Op.or]: [{ personal_id: psId }, { sereno_id: psId }],
-      },
+      where: { [Op.or]: [{ personal_id: psId }, { sereno_id: psId }] },
       include: [
         {
           model: OperativosTurno,
@@ -268,27 +322,31 @@ export const getTurnoActivo = async (req, res) => {
         Number(opPersonal.personal_id) === Number(psId)
           ? "SERENO_PRINCIPAL"
           : "SERENO_AUXILIAR";
-      const cuadrante = await getCuadranteActivoPersonal(opPersonal.id);
+      const { cuadrante, novedades } = await getCuadranteActivoPersonal(opPersonal.id);
 
       return res.json(
         formatResponse(true, "Turno activo obtenido exitosamente", {
           turno: buildTurnoShape(horarioActivo, fechaOperativo),
+          sereno,
           rol_operativo: rolOperativo,
           vehiculo: null,
           tipo_patrullaje: "A_PIE",
           cuadrante,
+          novedades_asignadas: novedades,
         })
       );
     }
 
-    // 7. Tiene turno activo pero sin asignación operativa aún
+    // 7. Turno activo pero sin asignación operativa aún
     return res.json(
       formatResponse(true, "Turno activo sin asignación operativa", {
         turno: buildTurnoShape(horarioActivo, fechaOperativo),
+        sereno,
         rol_operativo: null,
         vehiculo: null,
         tipo_patrullaje: null,
         cuadrante: null,
+        novedades_asignadas: [],
       })
     );
   } catch (error) {
