@@ -169,11 +169,11 @@ export const getTurnoActivo = async (req, res) => {
       );
     }
 
-    // 3. Fecha local Lima en formato YYYY-MM-DD (para comparar con operativos_turno.fecha)
+    // 3. Fecha local Lima (dateHelper usa aritmética pura — seguro en Alpine/Railway)
     const hoyPeru = getDateInTimezone();
 
-    // Para turnos que cruzan medianoche (ej. NOCHE 23:00–07:00), si la hora actual
-    // está entre 00:00 y hora_fin el turno empezó ayer — buscar con fecha de ayer
+    // Para turnos cross-midnight: si hora Lima < hora_fin, el turno empezó ayer.
+    // Usamos aritmética de fecha pura (sin Intl locale sv-SE, no disponible en Alpine).
     let fechaOperativo = hoyPeru;
     if (horarioActivo.cruza_medianoche) {
       const horaActualLima = new Intl.DateTimeFormat("en-GB", {
@@ -185,58 +185,44 @@ export const getTurnoActivo = async (req, res) => {
       }).format(new Date());
 
       if (horaActualLima < horarioActivo.hora_fin) {
-        // Estamos en la madrugada — el operativo fue registrado con la fecha de ayer
-        fechaOperativo = new Intl.DateTimeFormat("sv-SE", {
-          timeZone: "America/Lima",
-        }).format(new Date(Date.now() - 24 * 60 * 60 * 1000));
+        // Restar 1 día al string YYYY-MM-DD de hoyPeru (aritmética UTC pura)
+        const [y, m, d] = hoyPeru.split("-").map(Number);
+        const ayer = new Date(Date.UTC(y, m - 1, d - 1));
+        fechaOperativo = ayer.toISOString().slice(0, 10);
       }
     }
 
-    // 4. Buscar TODOS los operativos del turno de hoy (puede haber más de uno por turno)
-    const operativosTurno = await OperativosTurno.findAll({
-      where: {
-        turno: horarioActivo.turno,
-        fecha: fechaOperativo,
-        deleted_at: null,
-      },
+    // 4. Verificar si existe al menos un operativo_turno para este turno/fecha
+    const hayOperativo = await OperativosTurno.findOne({
+      where: { turno: horarioActivo.turno, fecha: fechaOperativo },
       attributes: ["id"],
     });
 
-    if (!operativosTurno.length) {
+    if (!hayOperativo) {
       return res.json(
-        formatResponse(
-          true,
-          "Turno activo sin operativo configurado para hoy",
-          {
-            turno: buildTurnoShape(horarioActivo, fechaOperativo),
-            rol_operativo: null,
-            vehiculo: null,
-            tipo_patrullaje: null,
-            cuadrante: null,
-          }
-        )
+        formatResponse(true, "Turno activo sin operativo configurado para hoy", {
+          turno: buildTurnoShape(horarioActivo, fechaOperativo),
+          rol_operativo: null,
+          vehiculo: null,
+          tipo_patrullaje: null,
+          cuadrante: null,
+        })
       );
     }
 
-    const operativoIds = operativosTurno.map((ot) => ot.id);
-
-    // DEBUG TEMPORAL — remover luego de diagnosticar
-    logger.info("DEBUG turno-activo", {
-      psId,
-      fechaOperativo,
-      turno: horarioActivo.turno,
-      cruza_medianoche: horarioActivo.cruza_medianoche,
-      operativoIds,
-    });
-
-    // 5. Buscar en operativos_vehiculos (conductor o copiloto) en cualquier operativo del turno
+    // 5. Buscar asignación vehicular — JOIN directo con operativos_turno (evita Op.in)
     const opVehiculo = await OperativosVehiculos.findOne({
       where: {
-        operativo_turno_id: { [Op.in]: operativoIds },
         [Op.or]: [{ conductor_id: psId }, { copiloto_id: psId }],
-        deleted_at: null,
       },
       include: [
+        {
+          model: OperativosTurno,
+          as: "turno",
+          where: { turno: horarioActivo.turno, fecha: fechaOperativo },
+          attributes: [],
+          required: true,
+        },
         {
           model: Vehiculo,
           as: "vehiculo",
@@ -247,7 +233,7 @@ export const getTurnoActivo = async (req, res) => {
 
     if (opVehiculo) {
       const rolOperativo =
-        opVehiculo.conductor_id === psId ? "CONDUCTOR" : "COPILOTO";
+        Number(opVehiculo.conductor_id) === Number(psId) ? "CONDUCTOR" : "COPILOTO";
       const cuadrante = await getCuadranteActivoVehiculo(opVehiculo.id);
 
       return res.json(
@@ -261,18 +247,25 @@ export const getTurnoActivo = async (req, res) => {
       );
     }
 
-    // 6. Buscar en operativos_personal (principal o auxiliar a pie) en cualquier operativo del turno
+    // 6. Buscar asignación a pie — JOIN directo con operativos_turno
     const opPersonal = await OperativosPersonal.findOne({
       where: {
-        operativo_turno_id: { [Op.in]: operativoIds },
         [Op.or]: [{ personal_id: psId }, { sereno_id: psId }],
-        deleted_at: null,
       },
+      include: [
+        {
+          model: OperativosTurno,
+          as: "turno",
+          where: { turno: horarioActivo.turno, fecha: fechaOperativo },
+          attributes: [],
+          required: true,
+        },
+      ],
     });
 
     if (opPersonal) {
       const rolOperativo =
-        opPersonal.personal_id === psId
+        Number(opPersonal.personal_id) === Number(psId)
           ? "SERENO_PRINCIPAL"
           : "SERENO_AUXILIAR";
       const cuadrante = await getCuadranteActivoPersonal(opPersonal.id);
