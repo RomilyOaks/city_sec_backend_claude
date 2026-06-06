@@ -1,7 +1,7 @@
 # PRD — Sistema de Seguridad Ciudadana (CitySec Backend)
 
-**Versión:** 2.6.0
-**Fecha:** 2026-05-25
+**Versión:** 2.7.0
+**Fecha:** 2026-06-06
 **Estado:** Producción activa — desarrollo incremental
 **Stakeholders primarios:** Área de Tecnología Municipal, Coordinación de Serenazgo
 **Deploy:** `https://citysecbackendclaude-production.up.railway.app`
@@ -48,6 +48,7 @@ Una API centralizada y estructurada que actúa como sistema de registro único (
 | `supervisor` | 3 | Supervisor de turno | Operativos, novedades, reportes, auditoría |
 | `operador` | 2 | Central de comunicaciones | Registro de novedades, consulta de recursos |
 | `consulta` | 1 | Analista / auditor | Solo lectura de datos y reportes |
+| `sereno` | — | Efectivo de patrullaje (APK) | Solo `patrullaje.sereno.read` vía permisos DB |
 | `usuario_basico` | 0 | Ciudadano / portal externo | Acceso mínimo (futuro) |
 
 ### 2.2 Modelo de Permisos
@@ -58,6 +59,8 @@ Ejemplos:
 - `usuarios.usuarios.read` — Listar usuarios
 - `operativos.turnos.create` — Crear turnos
 - `novedades.novedades.update_estado` — Cambiar estado de incidentes
+- `patrullaje.sereno.read` — Consultar turno activo (APK `city_sec_patrol`)
+- `patrullaje.conductor.read` — Acceso futuro para conductor (reservado)
 
 Los permisos son aditivos: un rol hereda sus permisos base y puede recibir permisos adicionales individuales por usuario.
 
@@ -271,6 +274,7 @@ restartPolicyMaxRetries = 3
 | Ubigeo | `/api/v1/ubigeo` | Geografía Perú (1,875 registros) |
 | Auditoría | `/api/v1/auditoria` | Logs de acciones del sistema |
 | Horarios de turno | `/api/v1/horarios-turnos` | Horarios disponibles |
+| **Patrullaje** | `/api/v1/patrullaje` | Turno activo del sereno — consumido por APK `city_sec_patrol` |
 
 ### 5.2 Endpoints críticos de negocio
 
@@ -334,6 +338,60 @@ POST /api/v1/operativos-vehiculos/:turnoId/vehiculos/:vId/cuadrantes
 POST /api/v1/operativos-personal/:turnoId/personal
 POST /api/v1/operativos-personal/:turnoId/personal/:pId/cuadrantes
 ```
+
+#### Patrullaje — Turno Activo del Sereno (v2.7.0)
+
+```
+GET /api/v1/patrullaje/turno-activo    → Turno + vehículo/pie + cuadrante + novedades asignadas
+```
+
+**Requiere:** `patrullaje.sereno.read` (rol `sereno`) — `super_admin`/`admin` pasan automáticamente.
+
+Siempre responde HTTP 200. `data: null` cuando no hay turno activo en ese momento.
+
+**Flujo vehicular** — sereno asignado como conductor o copiloto:
+
+```json
+{
+  "turno":    { "nombre": "NOCHE", "hora_inicio": "23:00:00", "hora_fin": "07:00:00", "fecha": "2026-06-05" },
+  "sereno":   { "id": 18, "nombres": "Federico", "apellido_paterno": "CHAVEZ", "apellido_materno": "QUIROGA",
+                "doc_tipo": "DNI", "doc_numero": "91734562" },
+  "rol_operativo":  "CONDUCTOR",
+  "vehiculo": { "id": 37, "codigo_vehiculo": "M-3", "placa": "UWG-5623", "marca": "Nissan" },
+  "tipo_patrullaje": "VEHICULAR",
+  "cuadrante": { "id": 24, "nombre": "Cuadrante CSS3A-01" },
+  "novedades_asignadas": []
+}
+```
+
+`rol_operativo`: `CONDUCTOR` | `COPILOTO`
+
+**Flujo a pie** — sereno asignado como personal_id o sereno_id en operativos_personal:
+
+```json
+{
+  "turno":    { "nombre": "NOCHE", "hora_inicio": "23:00:00", "hora_fin": "07:00:00", "fecha": "2026-06-05" },
+  "sereno":   { "id": 20, "nombres": "Jose", "apellido_paterno": "TAMAYO", "apellido_materno": "TRUJILLO",
+                "doc_tipo": "DNI", "doc_numero": "88774455" },
+  "rol_operativo":  "SERENO_PRINCIPAL",
+  "vehiculo": null,
+  "tipo_patrullaje": "A_PIE",
+  "cuadrante": { "id": 27, "nombre": "Cuadrante CSS1A-01" },
+  "novedades_asignadas": []
+}
+```
+
+`rol_operativo`: `SERENO_PRINCIPAL` | `SERENO_AUXILIAR`
+
+**Casos posibles:**
+
+| Situación | `tipo_patrullaje` | `vehiculo` | `cuadrante` | `data` |
+|---|---|---|---|---|
+| Turno activo + vehículo asignado + cuadrante | `VEHICULAR` | objeto | objeto | objeto |
+| Turno activo + a pie + cuadrante | `A_PIE` | `null` | objeto | objeto |
+| Turno activo + sin asignación operativa | `null` | `null` | `null` | objeto con turno/sereno |
+| Turno activo + sin operativo configurado | `null` | `null` | `null` | objeto con turno/sereno |
+| Sin turno activo en este momento | — | — | — | `null` |
 
 #### Reportes
 ```
@@ -418,6 +476,7 @@ GET /api/v1/reportes-operativos/dashboard
 - [x] Fix criterio novedades no atendidas (solo estado PENDIENTE)
 - [x] **Recuperación de contraseña** — forgot-password + reset-password + email via Resend SDK
 - [x] **Fix deploy Railway** — Express 5 wildcard, pool.min=0, uncaughtException al inicio, swagger try/catch
+- [x] **Turno activo del sereno** (TD-P-005) — `GET /api/v1/patrullaje/turno-activo`; flujo vehicular (CONDUCTOR/COPILOTO) y a pie (SERENO_PRINCIPAL/SERENO_AUXILIAR); novedades asignadas por cuadrante
 
 ### 8.2 Features identificadas para implementar
 
@@ -455,6 +514,7 @@ GET /api/v1/reportes-operativos/dashboard
 
 | Versión | Fecha | Cambios principales |
 |---------|-------|---------------------|
+| 2.7.0 | 2026-06-06 | TD-P-005: `GET /api/v1/patrullaje/turno-activo` — turno activo del sereno con flujo vehicular (CONDUCTOR/COPILOTO) y a pie (SERENO_PRINCIPAL/SERENO_AUXILIAR); novedades asignadas por cuadrante; permisos `patrullaje.sereno.read` / `patrullaje.conductor.read`; corrección alias Sequelize EagerLoadingError |
 | 2.6.0 | 2026-05-25 | Recuperación de contraseña (forgot + reset) con Resend SDK; fix crítico deploy Railway (Express 5 wildcard, pool.min, uncaughtException); fix 500 en GET /auditoria/:id (variable shadowing); nueva variable FRONTEND_PUBLIC_URL |
 | 2.5.0 | 2026-05-21 | Adjuntos multimedia en novedades; RBAC field-level; integración voice_gateway; reporte combinado exportar; fix novedades no atendidas |
 | 2.4.x | 2026-05-13 | Sistema de direcciones dual; módulo calles/cuadrantes v2; SSE tiempo real; reportes operativos fase 1 |
