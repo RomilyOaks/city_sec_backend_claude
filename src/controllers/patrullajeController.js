@@ -172,16 +172,17 @@ export const getTurnoActivo = async (req, res) => {
     // 3. Fecha local Lima en formato YYYY-MM-DD (para comparar con operativos_turno.fecha)
     const hoyPeru = getDateInTimezone();
 
-    // 4. Buscar operativo del turno de hoy
-    const operativoTurno = await OperativosTurno.findOne({
+    // 4. Buscar TODOS los operativos del turno de hoy (puede haber más de uno por turno)
+    const operativosTurno = await OperativosTurno.findAll({
       where: {
         turno: horarioActivo.turno,
         fecha: hoyPeru,
         deleted_at: null,
       },
+      attributes: ["id"],
     });
 
-    if (!operativoTurno) {
+    if (!operativosTurno.length) {
       return res.json(
         formatResponse(
           true,
@@ -197,10 +198,12 @@ export const getTurnoActivo = async (req, res) => {
       );
     }
 
-    // 5. Buscar en operativos_vehiculos (conductor o copiloto)
+    const operativoIds = operativosTurno.map((ot) => ot.id);
+
+    // 5. Buscar en operativos_vehiculos (conductor o copiloto) en cualquier operativo del turno
     const opVehiculo = await OperativosVehiculos.findOne({
       where: {
-        operativo_turno_id: operativoTurno.id,
+        operativo_turno_id: { [Op.in]: operativoIds },
         [Op.or]: [{ conductor_id: psId }, { copiloto_id: psId }],
         deleted_at: null,
       },
@@ -229,10 +232,10 @@ export const getTurnoActivo = async (req, res) => {
       );
     }
 
-    // 6. Buscar en operativos_personal (principal o auxiliar a pie)
+    // 6. Buscar en operativos_personal (principal o auxiliar a pie) en cualquier operativo del turno
     const opPersonal = await OperativosPersonal.findOne({
       where: {
-        operativo_turno_id: operativoTurno.id,
+        operativo_turno_id: { [Op.in]: operativoIds },
         [Op.or]: [{ personal_id: psId }, { sereno_id: psId }],
         deleted_at: null,
       },
