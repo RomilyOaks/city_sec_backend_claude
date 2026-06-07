@@ -484,6 +484,14 @@ if (NODE_ENV !== "test") {
     process.exit(1);
   });
 
+  // El keepAliveTimeout por defecto de Node (5s) es menor que el timeout
+  // del proxy de Railway, que mantiene conexiones keep-alive con el backend.
+  // Node cierra el socket a los 5s, el proxy lo ve como caída y devuelve
+  // 502 (sin headers CORS) — esto rompe el stream SSE de /novedades/stream.
+  // Debe ser MAYOR que el timeout del proxy, y headersTimeout MAYOR que este.
+  httpServer.keepAliveTimeout = 65000;
+  httpServer.headersTimeout = 66000;
+
   // Conectar DB de forma asíncrona — no bloquea el servidor HTTP
   console.log("📊 Conectando a la base de datos (async)...");
   sequelize
