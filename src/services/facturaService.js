@@ -1,4 +1,5 @@
 import { Op } from "sequelize";
+import PDFDocument from "pdfkit";
 import models from "../models/index.js";
 import { calcularMetricasPeriodo } from "./metricasService.js";
 import getSupabaseClient from "../config/supabaseClient.js";
@@ -27,15 +28,172 @@ function limaDate(offsetDays = 0) {
   return lima.toISOString().slice(0, 10);
 }
 
-// ─── PLACEHOLDER PDF ──────────────────────────────────────────────────────────
-// TODO (SPEC-BILLING-001 PDF): implementar con pdfkit.
-// Diseño en sección 9 del spec: logo, datos emisor/cliente, tabla de conceptos,
-// subtotal, IGV, total, datos bancarios, soporte bi-moneda (tipo_cambio si USD).
-// Variables de entorno: FACTURA_EMISOR_RAZON_SOCIAL, FACTURA_EMISOR_RUC,
-//   FACTURA_EMISOR_DIRECCION, FACTURA_BANCO_NOMBRE, FACTURA_BANCO_CUENTA, FACTURA_BANCO_CCI
-// Retorna un Buffer; pasar ese Buffer a subirPdf().
-async function generarPdfBuffer(_factura, _metrica, _datos, _plan) {
-  return null; // reemplazar por implementación pdfkit
+const MESES_ES = [
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+];
+
+function simboloMoneda(moneda) {
+  return moneda === "USD" ? "$" : "S/";
+}
+
+function fmtMoney(valor, moneda) {
+  const numero = parseFloat(valor || 0).toLocaleString("es-PE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `${simboloMoneda(moneda)} ${numero}`;
+}
+
+function fmtPeriodo(periodo) {
+  const [anio, mes] = periodo.split("-");
+  const nombreMes = MESES_ES[parseInt(mes, 10) - 1];
+  return `${nombreMes.charAt(0).toUpperCase()}${nombreMes.slice(1)} ${anio}`;
+}
+
+function fmtFechaCorta(fecha) {
+  const [anio, mes, dia] = fecha.split("-");
+  return `${dia}/${mes}/${anio}`;
+}
+
+// ─── PDF DE FACTURA (pdfkit) ──────────────────────────────────────────────────
+// Diseño según sección 9 del SPEC-BILLING-001. Retorna un Buffer en memoria.
+async function generarPdfBuffer(factura, metrica, datos, plan) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ size: "A4", margin: 50 });
+    const chunks = [];
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+
+    const moneda = factura.moneda;
+
+    // ─── Encabezado ───
+    doc.font("Helvetica-Bold").fontSize(20).text("CITYSECURE", 50, 50);
+    doc.font("Helvetica-Bold").fontSize(16).text("FACTURA", 0, 50, { align: "right" });
+    doc.font("Helvetica").fontSize(11).text(`N° ${factura.numero_factura}`, { align: "right" });
+    doc.moveDown(1.5);
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // ─── Emisor ───
+    doc.font("Helvetica-Bold").fontSize(11).text("EMISOR");
+    doc.font("Helvetica").fontSize(10);
+    doc.text(`Razón Social: ${process.env.FACTURA_EMISOR_RAZON_SOCIAL || "-"}`);
+    doc.text(`RUC: ${process.env.FACTURA_EMISOR_RUC || "-"}`);
+    doc.text(`Dirección: ${process.env.FACTURA_EMISOR_DIRECCION || "-"}`);
+    doc.moveDown(0.5);
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // ─── Cliente ───
+    doc.font("Helvetica-Bold").fontSize(11).text("CLIENTE");
+    doc.font("Helvetica").fontSize(10);
+    if (datos) {
+      doc.text(`Razón Social: ${datos.razon_social || "-"}`);
+      doc.text(`RUC: ${datos.ruc || "-"}`);
+      doc.text(`Dirección fiscal: ${datos.direccion_fiscal || "-"}`);
+    } else {
+      doc.text("Pendiente de configurar");
+    }
+    doc.moveDown(0.5);
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // ─── Info de factura ───
+    doc.font("Helvetica").fontSize(10);
+    doc.text(`Período: ${fmtPeriodo(factura.periodo)}`);
+    doc.text(`Fecha emisión: ${fmtFechaCorta(factura.fecha_emision)}`);
+    doc.text(`Fecha vencimiento: ${fmtFechaCorta(factura.fecha_vencimiento)}`);
+    doc.text(`Moneda: ${moneda === "USD" ? "USD (Dólares)" : "PEN (Soles)"}`);
+    doc.moveDown(0.5);
+
+    // ─── Tabla de conceptos ───
+    const colDescX = 50;
+    const colCantX = 380;
+    const colMontoX = 440;
+
+    doc.font("Helvetica-Bold").fontSize(10);
+    let y = doc.y;
+    doc.text("DESCRIPCIÓN", colDescX, y);
+    doc.text("CANT.", colCantX, y, { width: 60, align: "right" });
+    doc.text("MONTO", colMontoX, y, { width: 105, align: "right" });
+    doc.moveDown(0.3);
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+    doc.moveDown(0.3);
+
+    doc.font("Helvetica").fontSize(10);
+
+    // Fila 1: cuota base
+    y = doc.y;
+    doc.text(`Plan ${plan.nombre} (cuota base)`, colDescX, y, { width: 320 });
+    doc.text("1", colCantX, y, { width: 60, align: "right" });
+    doc.text(fmtMoney(factura.monto_base, moneda), colMontoX, y, { width: 105, align: "right" });
+    doc.moveDown(0.3);
+
+    // Fila 2: usuarios adicionales (solo si hay excedente y el plan tiene tope)
+    const costoExcUsuarios = parseFloat(metrica.costo_excedente_usuarios || 0);
+    if (costoExcUsuarios > 0 && plan.max_usuarios != null) {
+      const extraUsuarios = Math.max(0, metrica.usuarios_activos - plan.max_usuarios);
+      y = doc.y;
+      doc.text(`Usuarios adicionales (${extraUsuarios} extra)`, colDescX, y, { width: 320 });
+      doc.text(String(extraUsuarios), colCantX, y, { width: 60, align: "right" });
+      doc.text(fmtMoney(costoExcUsuarios, moneda), colMontoX, y, { width: 105, align: "right" });
+      doc.moveDown(0.3);
+    }
+
+    // Fila 3: novedades extra (solo si hay excedente y el plan tiene tope)
+    const costoExcNovedades = parseFloat(metrica.costo_excedente_novedades || 0);
+    if (costoExcNovedades > 0 && plan.max_novedades_mes != null) {
+      const extraNovedades = metrica.novedades_creadas - plan.max_novedades_mes;
+      y = doc.y;
+      doc.text(`Novedades extra (${extraNovedades} sobre ${plan.max_novedades_mes})`, colDescX, y, { width: 320 });
+      doc.text(String(extraNovedades), colCantX, y, { width: 60, align: "right" });
+      doc.text(fmtMoney(costoExcNovedades, moneda), colMontoX, y, { width: 105, align: "right" });
+      doc.moveDown(0.3);
+    }
+
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+    doc.moveDown(0.3);
+
+    // ─── Totales ───
+    const subtotal = parseFloat(factura.monto_base) + parseFloat(factura.monto_excedente);
+    doc.font("Helvetica").fontSize(10);
+    doc.text(`Subtotal: ${fmtMoney(subtotal, moneda)}`, { align: "right" });
+    doc.text(`IGV (${process.env.IGV_PORCENTAJE || "18"}%): ${fmtMoney(factura.monto_igv, moneda)}`, { align: "right" });
+    doc.font("Helvetica-Bold");
+    doc.text(`TOTAL: ${fmtMoney(factura.monto_total, moneda)}`, { align: "right" });
+    doc.font("Helvetica");
+    doc.moveDown(0.5);
+
+    // ─── Bi-moneda ───
+    if (moneda === "USD" && factura.tipo_cambio) {
+      const tipoCambio = parseFloat(factura.tipo_cambio);
+      const equivalenteSoles = parseFloat(factura.monto_total) * tipoCambio;
+      doc.text(`Tipo de cambio: S/ ${tipoCambio.toFixed(4)} por USD 1.00`, { align: "right" });
+      doc.text(
+        `Equivalente en soles: S/ ${equivalenteSoles.toLocaleString("es-PE", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+        { align: "right" }
+      );
+      doc.moveDown(0.5);
+    }
+
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // ─── Datos bancarios ───
+    doc.font("Helvetica-Bold").fontSize(11).text("FORMA DE PAGO");
+    doc.font("Helvetica").fontSize(10);
+    doc.text("Transferencia bancaria");
+    doc.text(`Banco: ${process.env.FACTURA_BANCO_NOMBRE || "Pendiente de confirmar"}`);
+    doc.text(`Cuenta: ${process.env.FACTURA_BANCO_CUENTA || "Pendiente de confirmar"}`);
+    doc.text(`CCI: ${process.env.FACTURA_BANCO_CCI || "Pendiente de confirmar"}`);
+
+    doc.end();
+  });
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
