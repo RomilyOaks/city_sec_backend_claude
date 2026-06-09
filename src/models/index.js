@@ -420,6 +420,16 @@ import Direccion from "./Direccion.js";
 import Ciudadano from "./Ciudadano.js";
 import ReporteCiudadano from "./ReporteCiudadano.js";
 
+// ============================================================================
+// IMPORTAR MODELOS — MÓDULO BILLING (SPEC-BILLING-001)
+// ============================================================================
+
+import Plan from "./Plan.js";
+import Suscripcion from "./Suscripcion.js";
+import MetricasUso from "./MetricasUso.js";
+import Factura from "./Factura.js";
+import DatosFacturacion from "./DatosFacturacion.js";
+
 //=============================================================================
 // DEFINICIÓN DE ASOCIACIONES (RELACIONES ENTRE MODELOS)
 //=============================================================================
@@ -2089,6 +2099,22 @@ Novedad.hasMany(ReporteCiudadano, {
 });
 
 //=============================================
+// ASOCIACIONES: MÓDULO BILLING (SPEC-BILLING-001)
+//=============================================
+
+Plan.hasMany(Suscripcion, { foreignKey: "plan_id", as: "suscripciones" });
+Suscripcion.belongsTo(Plan, { foreignKey: "plan_id", as: "plan" });
+
+Suscripcion.hasMany(MetricasUso, { foreignKey: "suscripcion_id", as: "metricas" });
+MetricasUso.belongsTo(Suscripcion, { foreignKey: "suscripcion_id", as: "suscripcion" });
+
+Suscripcion.hasMany(Factura, { foreignKey: "suscripcion_id", as: "facturas" });
+Factura.belongsTo(Suscripcion, { foreignKey: "suscripcion_id", as: "suscripcion" });
+
+MetricasUso.hasMany(Factura, { foreignKey: "metrica_id", as: "facturas" });
+Factura.belongsTo(MetricasUso, { foreignKey: "metrica_id", as: "metrica" });
+
+//=============================================
 // EXPORTAR MODELOS
 //=============================================
 
@@ -2170,6 +2196,13 @@ const models = {
   // Módulo Ciudadano (SPEC-ABSORCION-ALERT-001)
   Ciudadano,
   ReporteCiudadano,
+
+  // Billing (SPEC-BILLING-001)
+  Plan,
+  Suscripcion,
+  MetricasUso,
+  Factura,
+  DatosFacturacion,
 };
 
 /**
@@ -2262,4 +2295,11 @@ export {
   // Módulo Ciudadano (SPEC-ABSORCION-ALERT-001)
   Ciudadano,
   ReporteCiudadano,
+
+  // Billing (SPEC-BILLING-001)
+  Plan,
+  Suscripcion,
+  MetricasUso,
+  Factura,
+  DatosFacturacion,
 };

@@ -1,18 +1,20 @@
 import seedRBAC from "./seedRBAC.js";
 import seedEstadosNovedad from "./seedEstadosNovedad.js";
 import seedOperativosTurno from "./seedOperativosTurno.js";
+import seedBilling from "./seedBilling.js";
 import sequelize from "../config/database.js";
 
 const seeders = {
   rbac: seedRBAC,
   estados: seedEstadosNovedad,
   turnos: seedOperativosTurno,
+  billing: seedBilling,
 };
 
 async function runSeeders() {
   try {
-    await sequelize.sync({ force: false }); // `force: false` para no borrar datos existentes
-    console.log("🗄️  Base de datos sincronizada.");
+    await sequelize.authenticate();
+    console.log("🗄️  Conexión a la base de datos verificada.");
 
     const args = process.argv.slice(2);
 
@@ -21,6 +23,7 @@ async function runSeeders() {
       await seedRBAC();
       await seedEstadosNovedad();
       await seedOperativosTurno();
+      await seedBilling();
       console.log("✅ Todos los seeders se han ejecutado exitosamente.");
     } else {
       for (const seederName of args) {

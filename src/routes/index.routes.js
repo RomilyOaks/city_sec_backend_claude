@@ -137,6 +137,7 @@ import reportesOperativosRoutes from "./reportes-operativos.routes.js"; // ✅ F
 import visionRoutes from "./vision.routes.js"; // ✅ TD-P-002 Proxy OCR
 import patrullajeRoutes from "./patrullaje.routes.js"; // ✅ TD-P-005 Turno activo del sereno
 import ciudadanosRoutes from "./ciudadanos.routes.js"; // ✅ SPEC-ABSORCION-ALERT-001 Módulo ciudadano
+import billingRoutes from "./billing.routes.js"; // ✅ SPEC-BILLING-001 Módulo facturación
 
 // ============================================================================
 // 🛣️ MÓDULO CALLES Y DIRECCIONES v2.4.0 ✨
@@ -1048,6 +1049,12 @@ router.use("/patrullaje", patrullajeRoutes);
 //=============================================
 
 router.use("/ciudadanos", ciudadanosRoutes);
+
+//=============================================
+// MÓDULO BILLING — SPEC-BILLING-001
+//=============================================
+
+router.use("/billing", billingRoutes);
 
 //=============================================
 // RUTA DE HEALTH CHECK

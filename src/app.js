@@ -43,6 +43,7 @@ import sequelize from "./config/database.js";
 // ============================================
 
 import indexRoutes from "./routes/index.routes.js";
+import checkSuscripcion from "./middlewares/checkSuscripcion.js";
 
 // ============================================
 // MANEJADORES DE ERRORES NO CAPTURADOS
@@ -326,7 +327,7 @@ app.get("/health", (_req, res) => {
  */
 console.log(`\n📦 Registrando rutas en /api/${API_VERSION}...`);
 
-app.use(`/api/${API_VERSION}`, indexRoutes);
+app.use(`/api/${API_VERSION}`, checkSuscripcion, indexRoutes);
 
 console.log("✅ Rutas registradas correctamente\n");
 
