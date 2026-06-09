@@ -1,7 +1,7 @@
 # PRD — Sistema de Seguridad Ciudadana (CitySec Backend)
 
-**Versión:** 2.7.0
-**Fecha:** 2026-06-06
+**Versión:** 2.8.0
+**Fecha:** 2026-06-09
 **Estado:** Producción activa — desarrollo incremental
 **Stakeholders primarios:** Área de Tecnología Municipal, Coordinación de Serenazgo
 **Deploy:** `https://citysecbackendclaude-production.up.railway.app`
@@ -133,6 +133,13 @@ Soporte operacional:
   MantenimientoVehiculo / Taller
   HorariosTurnos
   UnidadOficina (SERENAZGO, PNP, BOMBEROS, AMBULANCIA)
+
+Billing (SPEC-BILLING-001):
+  Plan
+  Suscripcion → Plan
+  MetricasUso → Suscripcion (UNIQUE por período)
+  Factura     → Suscripcion, MetricasUso
+  DatosFacturacion (datos del cliente en PDF)
 ```
 
 ### 3.2 Jerarquía geográfica
@@ -175,6 +182,9 @@ La transición entre estados está restringida por rol via `RolEstadoNovedad`.
 | Seguridad HTTP | Helmet |
 | Testing | Jest + Supertest |
 | Deploy | Railway (railway.toml) |
+| PDF | pdfkit (placeholder — implementación pendiente) |
+| Cron jobs | node-cron (billing automático — `BILLING_CRON_ENABLED=false` en prod por ahora) |
+| Storage PDFs | Supabase Storage bucket `facturas` |
 
 ### 4.2 Variables de entorno requeridas
 
@@ -213,6 +223,20 @@ SMTP_PASSWORD=
 
 # Auth
 BCRYPT_ROUNDS=10
+
+# Billing (SPEC-BILLING-001)
+FACTURA_SERIE=F001
+FACTURA_DIAS_VENCIMIENTO=30
+IGV_PORCENTAJE=18
+PLAN_INICIAL=3
+FACTURA_EMISOR_RAZON_SOCIAL=MICROHELP E.I.R.L.
+FACTURA_EMISOR_RUC=20265884564
+FACTURA_EMISOR_DIRECCION=JR. HUASCAR NRO. 1675 JESUS MARIA
+FACTURA_BANCO_NOMBRE=
+FACTURA_BANCO_CUENTA=
+FACTURA_BANCO_CCI=
+BILLING_CRON_ENABLED=false
+BILLING_CRON_DIA_CIERRE=1
 ```
 
 ### 4.3 Trampas conocidas de producción (Railway + Express 5)
@@ -228,6 +252,7 @@ BCRYPT_ROUNDS=10
 | `app.listen()` dentro de async | El healthcheck falla si se espera a la DB para levantar HTTP | Levantar HTTP primero; DB conecta async |
 | SMTP bloqueado en Railway | Railway bloquea puertos 25/465/587 | Usar Resend SDK (HTTPS 443) |
 | `FRONTEND_URL` interno | `.railway.internal` no es accesible desde emails | Usar `FRONTEND_PUBLIC_URL` para links en emails |
+| `npm ci` falla al agregar paquetes | Dockerfile usa `npm ci` — exige `package-lock.json` en sincronía con `package.json` | Siempre commitear `package-lock.json` tras `npm install` de nuevas dependencias |
 
 ### 4.4 railway.toml
 
@@ -275,6 +300,7 @@ restartPolicyMaxRetries = 3
 | Auditoría | `/api/v1/auditoria` | Logs de acciones del sistema |
 | Horarios de turno | `/api/v1/horarios-turnos` | Horarios disponibles |
 | **Patrullaje** | `/api/v1/patrullaje` | Turno activo del sereno — consumido por APK `city_sec_patrol` |
+| **Billing** | `/api/v1/billing` | Planes, suscripción, métricas de uso y facturación — solo `super_admin` |
 
 ### 5.2 Endpoints críticos de negocio
 
@@ -393,6 +419,35 @@ Siempre responde HTTP 200. `data: null` cuando no hay turno activo en ese moment
 | Turno activo + sin operativo configurado | `null` | `null` | `null` | objeto con turno/sereno |
 | Sin turno activo en este momento | — | — | — | `null` |
 
+#### Billing — Planes, Suscripción y Facturación (v2.8.0)
+
+Todos los endpoints requieren rol `super_admin`. El middleware `checkSuscripcion` bloquea con **503** cualquier request a `/api/v1/*` cuando `suscripciones.estado = 'suspendida'`. Rutas excluidas del bloqueo: `/health`, `/auth/login`, `/auth/refresh`, `/ciudadanos/*`.
+
+```
+GET  /api/v1/billing/suscripcion             → Estado actual + plan activo
+GET  /api/v1/billing/planes                  → Planes disponibles
+PUT  /api/v1/billing/suscripcion/plan        → Cambiar plan  { plan_id }
+GET  /api/v1/billing/metricas/actual         → Métricas del mes en curso (tiempo real)
+GET  /api/v1/billing/metricas/:periodo       → Métricas de período YYYY-MM
+GET  /api/v1/billing/facturas                → Listado (filtros: estado, periodo)
+GET  /api/v1/billing/facturas/:id            → Detalle
+GET  /api/v1/billing/facturas/:id/pdf        → Redirect a PDF en Supabase Storage
+POST /api/v1/billing/facturas/generar        → Genera factura  { periodo, tipo_cambio? }
+POST /api/v1/billing/facturas/:id/pagar      → Registra pago manual + reactiva suscripción
+GET  /api/v1/billing/datos-facturacion       → Datos de la municipalidad
+PUT  /api/v1/billing/datos-facturacion       → Actualizar datos de facturación
+```
+
+**Modelo de facturación:**
+- Precio base fijo + excedente por usuarios activos + excedente por novedades (cada 100 bloques)
+- IGV 18% sobre subtotal (`IGV_PORCENTAJE` configurable)
+- Numeración correlativa `{FACTURA_SERIE}-00001`
+- Moneda: PEN o USD (USD requiere `tipo_cambio` manual al generar)
+- Período de gracia configurable (`dias_gracia` en suscripción, default 15)
+- PDF generado con pdfkit → subido a Supabase Storage bucket `facturas` (**placeholder activo — implementación pdfkit pendiente**)
+
+**Caché `checkSuscripcion`:** 5 minutos en memoria. Se invalida automáticamente al registrar un pago (`POST /billing/facturas/:id/pagar`).
+
 #### Reportes
 ```
 GET /api/v1/reportes-operativos/vehiculares
@@ -456,7 +511,7 @@ GET /api/v1/reportes-operativos/dashboard
 
 ## 8. Roadmap y Features Pendientes
 
-### 8.1 Estado actual (v2.6.0)
+### 8.1 Estado actual (v2.8.0)
 
 - [x] RBAC completo con permisos granulares
 - [x] Gestión de novedades con workflow de estados
@@ -477,8 +532,14 @@ GET /api/v1/reportes-operativos/dashboard
 - [x] **Recuperación de contraseña** — forgot-password + reset-password + email via Resend SDK
 - [x] **Fix deploy Railway** — Express 5 wildcard, pool.min=0, uncaughtException al inicio, swagger try/catch
 - [x] **Turno activo del sereno** (TD-P-005) — `GET /api/v1/patrullaje/turno-activo`; flujo vehicular (CONDUCTOR/COPILOTO) y a pie (SERENO_PRINCIPAL/SERENO_AUXILIAR); novedades asignadas por cuadrante
+- [x] **Billing — planes, suscripción y facturación** (SPEC-BILLING-001) — 5 modelos, 12 endpoints `/api/v1/billing`, middleware `checkSuscripcion` (bloqueo 503), cálculo de métricas, generación de facturas con numeración correlativa; PDF placeholder (pdfkit pendiente)
 
 ### 8.2 Features identificadas para implementar
+
+#### Billing (pendiente de esta versión)
+- [ ] **Implementar PDF con pdfkit** — diseño en sección 9 del SPEC-BILLING-001; fuente UTF-8, datos emisor/cliente, tabla de conceptos, IGV, datos bancarios, soporte bi-moneda
+- [ ] **Email de factura** — envío vía Resend con PDF adjunto al confirmar `datos_facturacion.email_facturacion`; datos bancarios pendientes de confirmar (`FACTURA_BANCO_*`)
+- [ ] **Cron automático** — activar `BILLING_CRON_ENABLED=true` en Railway cuando PDF esté listo; genera factura el día `BILLING_CRON_DIA_CIERRE` de cada mes
 
 #### Seguridad (alta prioridad)
 - [ ] Registro de intentos de login fallidos en `login_intentos` (3 TODOs en `authController.js`)
@@ -514,6 +575,7 @@ GET /api/v1/reportes-operativos/dashboard
 
 | Versión | Fecha | Cambios principales |
 |---------|-------|---------------------|
+| 2.8.0 | 2026-06-09 | SPEC-BILLING-001: módulo billing completo — 5 tablas MySQL, 5 modelos Sequelize, middleware `checkSuscripcion` (bloqueo 503 por impago, caché 5 min), `metricasService` (usuarios activos + novedades + excedentes), `facturaService` (numeración correlativa, IGV 18%, PDF placeholder, Supabase Storage), 12 endpoints `/api/v1/billing` (solo `super_admin`); seeder con 3 planes + suscripción Premium activa |
 | 2.7.0 | 2026-06-06 | TD-P-005: `GET /api/v1/patrullaje/turno-activo` — turno activo del sereno con flujo vehicular (CONDUCTOR/COPILOTO) y a pie (SERENO_PRINCIPAL/SERENO_AUXILIAR); novedades asignadas por cuadrante; permisos `patrullaje.sereno.read` / `patrullaje.conductor.read`; corrección alias Sequelize EagerLoadingError |
 | 2.6.0 | 2026-05-25 | Recuperación de contraseña (forgot + reset) con Resend SDK; fix crítico deploy Railway (Express 5 wildcard, pool.min, uncaughtException); fix 500 en GET /auditoria/:id (variable shadowing); nueva variable FRONTEND_PUBLIC_URL |
 | 2.5.0 | 2026-05-21 | Adjuntos multimedia en novedades; RBAC field-level; integración voice_gateway; reporte combinado exportar; fix novedades no atendidas |

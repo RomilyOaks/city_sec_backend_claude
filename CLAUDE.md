@@ -11,7 +11,7 @@ Las secciones detalladas están divididas en archivos bajo `docs/claude/` y se c
 **CitySecure Backend** — API REST principal del sistema de seguridad ciudadana para la municipalidad de Chorrillos. Sirve al dashboard de serenazgo (`city_sec_frontend_v2`) y recibe novedades desde el Voice Gateway (`city_sec_voice_gateway`).
 
 - **Puerto local:** 3000 (dev) · Railway asigna dinámicamente via `$PORT` (producción: 8080)
-- **Versión app:** 2.5.0
+- **Versión app:** 2.8.0
 - **Deploy:** Railway (auto-deploy en push a `main`)
 - **Swagger UI:** `GET /api/v1/docs`
 - **Swagger JSON:** `GET /api/v1/docs.json`
@@ -49,6 +49,8 @@ Las secciones detalladas están divididas en archivos bajo `docs/claude/` y se c
 | Tiempo real | SSE (`src/utils/sse-manager.js`) |
 | Supabase | `@supabase/supabase-js` 2.108.0 · `ws` (WebSocket transport) |
 | Uploads | multer (memoryStorage) · `@supabase/supabase-js` Storage |
+| PDF | pdfkit — generación de facturas (placeholder activo; implementación pendiente) |
+| Cron | node-cron — billing automático (`BILLING_CRON_ENABLED=false` por ahora) |
 | OAuth (futuro) | passport-google-oauth20 · passport-microsoft |
 
 > **⚠️ `@supabase/supabase-js` v2.108.0 y Node.js 18:** Esta versión exige WebSocket nativo, disponible de forma estable recién en Node.js 22. En Node.js 18 el cliente falla al inicializarse con `"Node.js 18 detected without native WebSocket support"`. **Solución aplicada:** instalar el paquete `ws` y pasarlo como transport en `src/config/supabaseClient.js`:
@@ -73,6 +75,7 @@ npm run db:seed          # Ejecuta todos los seeders (LOCAL)
 npm run db:seed:rbac     # Solo seeds de roles y permisos (LOCAL)
 npm run db:seed:estados  # Solo seeds de estados de novedad (LOCAL)
 npm run db:seed:turnos   # Solo seeds de turnos operativos (LOCAL)
+npm run db:seed:billing  # Solo seed de billing — planes, suscripción, datos facturación (LOCAL)
 npm run db:migrate       # Aplica migraciones Sequelize (LOCAL)
 npm run db:migrate:undo  # Revierte última migración (LOCAL)
 
@@ -81,8 +84,20 @@ npm run railway:seed          # Ejecuta todos los seeders en Railway
 npm run railway:seed:rbac     # Solo RBAC en Railway
 npm run railway:seed:estados  # Solo estados en Railway
 npm run railway:seed:turnos   # Solo turnos en Railway
+npm run railway:seed:billing  # Solo billing en Railway
 npm run railway:migrate       # Aplica migraciones en Railway
 npm run railway:migrate:undo  # Revierte última migración en Railway
+
+# ⚠️ railway:seed:billing NO funciona directamente (DB_HOST interno no resuelve desde local)
+# Usar en su lugar:
+# railway run --service citizen_security_db node --input-type=module <<'EOF'
+# import { URL as U } from 'url'; const u = new U(process.env.MYSQL_PUBLIC_URL);
+# process.env.DB_HOST=u.hostname; process.env.DB_PORT=u.port;
+# process.env.DB_USER=decodeURIComponent(u.username);
+# process.env.DB_PASSWORD=decodeURIComponent(u.password);
+# process.env.DB_NAME=u.pathname.slice(1); process.env.DB_DIALECT='mysql';
+# const { seedBilling } = await import('./src/seeders/seedBilling.js'); await seedBilling();
+# EOF
 ```
 
 ---
@@ -112,6 +127,7 @@ src/
 │   └── *.routes.js             # Rutas por módulo
 ├── middlewares/
 │   ├── authMiddleware.js       # authenticate / requireRole / requirePermission
+│   ├── checkSuscripcion.js     # Bloqueo 503 por suscripción suspendida + caché 5 min
 │   ├── rateLimitMiddleware.js
 │   ├── handleValidationErrors.js
 │   └── auditoriaAccionMiddleware.js
@@ -119,12 +135,15 @@ src/
 ├── services/
 │   ├── geocodingService.js
 │   ├── operativosHelperService.js
-│   └── reportesOperativosService.js
+│   ├── reportesOperativosService.js
+│   ├── metricasService.js      # Cálculo de métricas mensuales (usuarios activos + novedades + excedentes)
+│   └── facturaService.js       # Generación de factura: numeración, IGV, PDF placeholder, Supabase Storage
 ├── seeders/
 │   ├── seedRBAC.js             # Roles, permisos y usuario admin inicial
 │   ├── seedEstadosNovedad.js
 │   ├── seedOperativosTurno.js
-│   └── seedPatrullaje.js       # Permisos patrullaje.sereno.read / patrullaje.conductor.read
+│   ├── seedPatrullaje.js       # Permisos patrullaje.sereno.read / patrullaje.conductor.read
+│   └── seedBilling.js          # 3 planes + 1 suscripción Premium + datos_facturacion
 ├── utils/
 │   ├── logger.js               # Winston logger
 │   ├── responseFormatter.js    # Formato estándar de respuestas { success, data, message }
@@ -184,6 +203,20 @@ LOCK_TIME=15m
 
 # 2FA
 TWO_FACTOR_APP_NAME=Seguridad Ciudadana
+
+# Billing (SPEC-BILLING-001)
+FACTURA_SERIE=F001
+FACTURA_DIAS_VENCIMIENTO=30
+IGV_PORCENTAJE=18
+PLAN_INICIAL=3                        # ID del plan inicial para el seeder
+FACTURA_EMISOR_RAZON_SOCIAL=MICROHELP E.I.R.L.
+FACTURA_EMISOR_RUC=20265884564
+FACTURA_EMISOR_DIRECCION=JR. HUASCAR NRO. 1675 JESUS MARIA
+FACTURA_BANCO_NOMBRE=                 # pendiente confirmar
+FACTURA_BANCO_CUENTA=                 # pendiente confirmar
+FACTURA_BANCO_CCI=                    # pendiente confirmar
+BILLING_CRON_ENABLED=false            # true solo en producción cuando PDF esté listo
+BILLING_CRON_DIA_CIERRE=1
 ```
 
 ---
@@ -219,6 +252,7 @@ TWO_FACTOR_APP_NAME=Seguridad Ciudadana
 | `/api/v1/reportes-operativos` | Reportes de operativos |
 | `/api/v1/auditoria` | Historial de acciones (AuditoriaAccion) |
 | `/api/v1/patrullaje` | Turno activo del sereno (APK city_sec_patrol) |
+| `/api/v1/billing` | Planes, suscripción, métricas y facturación (solo `super_admin`) |
 | `/api/v1/health` | Health check |
 
 ---
@@ -232,6 +266,43 @@ TWO_FACTOR_APP_NAME=Seguridad Ciudadana
 ## Módulo Patrullaje — Turno Activo del Sereno (TD-P-005)
 
 @docs/claude/patrullaje-turno-activo.md
+
+---
+
+## Módulo Billing — Planes, Suscripción y Facturación (SPEC-BILLING-001)
+
+### Archivos clave
+
+| Archivo | Propósito |
+|---|---|
+| `migrations/021_billing_tables.sql` | 5 tablas MySQL: `planes`, `suscripciones`, `metricas_uso`, `facturas`, `datos_facturacion` |
+| `src/models/Plan.js` · `Suscripcion.js` · `MetricasUso.js` · `Factura.js` · `DatosFacturacion.js` | Modelos Sequelize con `schema: DB_SCHEMA` |
+| `src/middlewares/checkSuscripcion.js` | Bloquea con 503 si `estado='suspendida'`; caché 5 min; exporta `invalidarCacheCheckSuscripcion()` |
+| `src/services/metricasService.js` | `calcularMetricasPeriodo(suscripcionId, 'YYYY-MM')` — usuarios activos (tokens_acceso) + novedades + excedentes |
+| `src/services/facturaService.js` | `generarFactura(suscripcionId, 'YYYY-MM', opciones)` — numeración, IGV 18%, PDF placeholder, Supabase Storage bucket `facturas` |
+| `src/controllers/billingController.js` | 12 handlers para todos los endpoints |
+| `src/routes/billing.routes.js` | 12 rutas bajo `/billing` — todas `verificarRolesOPermisos(["super_admin"], [])` |
+| `src/validators/billingValidator.js` | Validators para todos los endpoints |
+| `src/seeders/seedBilling.js` | Idempotente: 3 planes + 1 suscripción activa + 1 datos_facturacion |
+
+### Montaje en app.js
+
+`checkSuscripcion` se aplica globalmente antes del router de API:
+```js
+app.use(`/api/${API_VERSION}`, checkSuscripcion, indexRoutes);
+```
+Rutas excluidas del bloqueo: `/health`, `/auth/login`, `/auth/refresh`, `/ciudadanos/*`.
+
+### Pendientes del módulo
+
+- **PDF con pdfkit**: `generarPdfBuffer()` en `facturaService.js` retorna `null` (placeholder). Implementar diseño del SPEC sección 9.
+- **Email de factura**: `enviarEmailFactura()` en `facturaService.js` es stub. Activar con Resend cuando datos bancarios estén confirmados.
+- **Cron automático**: `BILLING_CRON_ENABLED=false` — activar en producción cuando PDF esté listo.
+- **Datos bancarios**: `FACTURA_BANCO_NOMBRE`, `FACTURA_BANCO_CUENTA`, `FACTURA_BANCO_CCI` pendientes de confirmar.
+
+### Trampa: `npm ci` en Dockerfile
+
+Al agregar paquetes nuevos (`npm install <pkg>`), siempre commitear `package-lock.json` junto con `package.json`. El Dockerfile de Railway usa `npm ci` que falla si el lockfile no está sincronizado.
 
 ---
 
