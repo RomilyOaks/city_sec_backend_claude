@@ -136,6 +136,7 @@ import grifosRoutes from "./grifos.routes.js";
 import reportesOperativosRoutes from "./reportes-operativos.routes.js"; // ✅ Fase 1 Implementada
 import visionRoutes from "./vision.routes.js"; // ✅ TD-P-002 Proxy OCR
 import patrullajeRoutes from "./patrullaje.routes.js"; // ✅ TD-P-005 Turno activo del sereno
+import ciudadanosRoutes from "./ciudadanos.routes.js"; // ✅ SPEC-ABSORCION-ALERT-001 Módulo ciudadano
 
 // ============================================================================
 // 🛣️ MÓDULO CALLES Y DIRECCIONES v2.4.0 ✨
@@ -1043,6 +1044,12 @@ router.use("/vision", visionRoutes);
 router.use("/patrullaje", patrullajeRoutes);
 
 //=============================================
+// MÓDULO CIUDADANO — SPEC-ABSORCION-ALERT-001
+//=============================================
+
+router.use("/ciudadanos", ciudadanosRoutes);
+
+//=============================================
 // RUTA DE HEALTH CHECK
 //=============================================
 
@@ -1317,6 +1324,10 @@ router.use((req, res) => {
       "/tracking/activos",                 // 📍 ✅ v2.2.3
       "/tracking/vehiculo/:id/ruta",       // 📍 ✅ v2.2.3
       "/tracking/novedad/:id/vehiculos-cercanos", // 📍 ✅ v2.2.3
+      "/ciudadanos/auth/register",               // 🏙️ SPEC-ABSORCION-ALERT-001
+      "/ciudadanos/auth/login",
+      "/ciudadanos/reportes",
+      "/ciudadanos/playas",
       "/roles",
       "/permisos",
       "/auditoria",

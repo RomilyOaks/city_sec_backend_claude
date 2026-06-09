@@ -413,6 +413,13 @@ import Calle from "./Calle.js";
 import CallesCuadrantes from "./CallesCuadrantes.js";
 import Direccion from "./Direccion.js";
 
+// ============================================================================
+// IMPORTAR MODELOS — MÓDULO CIUDADANO (SPEC-ABSORCION-ALERT-001)
+// ============================================================================
+
+import Ciudadano from "./Ciudadano.js";
+import ReporteCiudadano from "./ReporteCiudadano.js";
+
 //=============================================================================
 // DEFINICIÓN DE ASOCIACIONES (RELACIONES ENTRE MODELOS)
 //=============================================================================
@@ -2047,6 +2054,41 @@ CuadranteVehiculoAsignado.belongsTo(Usuario, {
 });
 
 //=============================================
+// ASOCIACIONES: MÓDULO CIUDADANO
+//=============================================
+
+/**
+ * Relación: Ciudadano -> ReporteCiudadano (One-to-Many)
+ * Un ciudadano puede enviar muchos reportes.
+ * created_by en reportes_ciudadano = user_id en ciudadanos (UUID de Supabase Auth)
+ */
+Ciudadano.hasMany(ReporteCiudadano, {
+  foreignKey: "created_by",
+  sourceKey: "user_id",
+  as: "reportes",
+});
+
+ReporteCiudadano.belongsTo(Ciudadano, {
+  foreignKey: "created_by",
+  targetKey: "user_id",
+  as: "creador",
+});
+
+/**
+ * Relación: ReporteCiudadano -> Novedad (Many-to-One)
+ * Un reporte ciudadano puede estar vinculado a una novedad interna.
+ */
+ReporteCiudadano.belongsTo(Novedad, {
+  foreignKey: "novedad_id",
+  as: "novedad",
+});
+
+Novedad.hasMany(ReporteCiudadano, {
+  foreignKey: "novedad_id",
+  as: "reportesCiudadano",
+});
+
+//=============================================
 // EXPORTAR MODELOS
 //=============================================
 
@@ -2124,6 +2166,10 @@ const models = {
   Calle,
   CallesCuadrantes,
   Direccion,
+
+  // Módulo Ciudadano (SPEC-ABSORCION-ALERT-001)
+  Ciudadano,
+  ReporteCiudadano,
 };
 
 /**
@@ -2212,4 +2258,8 @@ export {
   // Tracking GPS (✅ v2.2.3)
   TrackingVehiculo,
   TrackingHistorial,
+
+  // Módulo Ciudadano (SPEC-ABSORCION-ALERT-001)
+  Ciudadano,
+  ReporteCiudadano,
 };
