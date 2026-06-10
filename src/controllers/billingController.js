@@ -4,6 +4,7 @@ import logger from "../utils/logger.js";
 import { calcularMetricasPeriodo } from "../services/metricasService.js";
 import { generarFactura as svcGenerarFactura } from "../services/facturaService.js";
 import { invalidarCacheCheckSuscripcion } from "../middlewares/checkSuscripcion.js";
+import getSupabaseClient from "../config/supabaseClient.js";
 
 const { Suscripcion, Plan, MetricasUso, Factura, DatosFacturacion } = models;
 
@@ -107,7 +108,18 @@ export const getFacturaPdf = async (req, res) => {
     });
     if (!factura) return res.status(404).json(formatErrorResponse("Factura no encontrada"));
     if (!factura.pdf_url) return res.status(404).json(formatErrorResponse("PDF aún no generado"));
-    res.redirect(factura.pdf_url);
+
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.storage
+      .from("facturas")
+      .createSignedUrl(factura.pdf_url, 3600);
+
+    if (error || !data?.signedUrl) {
+      logger.error("getFacturaPdf: error al generar signed URL", { error: error?.message });
+      return res.status(500).json(formatErrorResponse("Error al generar acceso al PDF"));
+    }
+
+    res.redirect(data.signedUrl);
   } catch (err) {
     logger.error("getFacturaPdf error", { stack: err.stack });
     res.status(500).json(formatErrorResponse("Error al obtener PDF"));

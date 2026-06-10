@@ -208,8 +208,17 @@ async function subirPdf(buffer, numeroFactura) {
     logger.error("facturaService: error al subir PDF", { error: error.message });
     return null;
   }
-  const { data } = supabase.storage.from("facturas").getPublicUrl(path);
-  return data.publicUrl;
+
+  // Verificar que el archivo subido es accesible (no se guarda esta URL: expira)
+  const { error: signedError } = await supabase.storage
+    .from("facturas")
+    .createSignedUrl(path, 3600);
+  if (signedError) {
+    logger.error("facturaService: error al verificar PDF subido", { error: signedError.message });
+    return null;
+  }
+
+  return path; // se guarda el path en facturas.pdf_url, no una URL
 }
 
 async function enviarEmailFactura(_datos, _factura, _pdfBuffer) {
