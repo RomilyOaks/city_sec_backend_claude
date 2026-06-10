@@ -204,7 +204,7 @@ LOCK_TIME=15m
 # 2FA
 TWO_FACTOR_APP_NAME=Seguridad Ciudadana
 
-# Billing (SPEC-BILLING-001)
+# Billing (SPEC-BILLING-001 / SPEC-BILLING-002)
 FACTURA_SERIE=F001
 FACTURA_DIAS_VENCIMIENTO=30
 IGV_PORCENTAJE=18
@@ -212,12 +212,14 @@ PLAN_INICIAL=3                        # ID del plan inicial para el seeder
 FACTURA_EMISOR_RAZON_SOCIAL=MICROHELP E.I.R.L.
 FACTURA_EMISOR_RUC=20265884564
 FACTURA_EMISOR_DIRECCION=JR. HUASCAR NRO. 1675 JESUS MARIA
-FACTURA_BANCO_NOMBRE=                 # pendiente confirmar
-FACTURA_BANCO_CUENTA=                 # pendiente confirmar
-FACTURA_BANCO_CCI=                    # pendiente confirmar
-BILLING_CRON_ENABLED=false            # true cuando se implemente el job de node-cron (pendiente)
+FACTURA_BANCO_NOMBRE=SCOTIABANK
+FACTURA_BANCO_CUENTA=...
+FACTURA_BANCO_CCI=...
+BILLING_CRON_ENABLED=true              # job node-cron activo en producción
 BILLING_CRON_DIA_CIERRE=1
 ```
+
+> Estas variables están configuradas tanto en `city_sec_backend` (Railway, MySQL) como en `city_secure_backend_supabase` (Railway, proyecto `CitySecure_Supabase`, Postgres/Supabase). `FACTURA_BANCO_*` están confirmadas en el service MySQL; pendiente sincronizarlas también al service Supabase.
 
 ---
 
@@ -269,21 +271,23 @@ BILLING_CRON_DIA_CIERRE=1
 
 ---
 
-## Módulo Billing — Planes, Suscripción y Facturación (SPEC-BILLING-001)
+## Módulo Billing — Planes, Suscripción y Facturación (SPEC-BILLING-001 / SPEC-BILLING-002)
 
 ### Archivos clave
 
 | Archivo | Propósito |
 |---|---|
 | `migrations/021_billing_tables.sql` | 5 tablas MySQL: `planes`, `suscripciones`, `metricas_uso`, `facturas`, `datos_facturacion` |
-| `src/models/Plan.js` · `Suscripcion.js` · `MetricasUso.js` · `Factura.js` · `DatosFacturacion.js` | Modelos Sequelize con `schema: DB_SCHEMA` |
+| `supabase/migrations/022_billing_tables.sql` | Mismas 5 tablas en Postgres/Supabase, schema `citysecure` (`SERIAL`, `JSONB`, `TIMESTAMPTZ`, `CHECK` en vez de ENUM) + RLS habilitado |
+| `src/models/Plan.js` · `Suscripcion.js` · `MetricasUso.js` · `Factura.js` · `DatosFacturacion.js` | Modelos Sequelize con `schema: DB_SCHEMA` — funcionan sin cambios en ambos dialectos |
 | `src/middlewares/checkSuscripcion.js` | Bloquea con 503 si `estado='suspendida'`; caché 5 min; exporta `invalidarCacheCheckSuscripcion()` |
 | `src/services/metricasService.js` | `calcularMetricasPeriodo(suscripcionId, 'YYYY-MM')` — usuarios activos (tokens_acceso) + novedades + excedentes |
-| `src/services/facturaService.js` | `generarFactura(suscripcionId, 'YYYY-MM', opciones)` — numeración, IGV 18%, PDF placeholder, Supabase Storage bucket `facturas` |
+| `src/services/facturaService.js` | `generarFactura(suscripcionId, 'YYYY-MM', opciones)` — numeración, IGV 18%, PDF con pdfkit, sube a Supabase Storage bucket `facturas`, envía email con PDF adjunto vía Resend |
 | `src/controllers/billingController.js` | 12 handlers para todos los endpoints |
 | `src/routes/billing.routes.js` | 12 rutas bajo `/billing` — todas `verificarRolesOPermisos(["super_admin"], [])` |
 | `src/validators/billingValidator.js` | Validators para todos los endpoints |
 | `src/seeders/seedBilling.js` | Idempotente: 3 planes + 1 suscripción activa + 1 datos_facturacion |
+| `src/cron/billingCron.js` (node-cron) | Genera factura automáticamente el día `BILLING_CRON_DIA_CIERRE` de cada mes a las 00:00 America/Lima |
 
 ### Montaje en app.js
 
@@ -293,12 +297,43 @@ app.use(`/api/${API_VERSION}`, checkSuscripcion, indexRoutes);
 ```
 Rutas excluidas del bloqueo: `/health`, `/auth/login`, `/auth/refresh`, `/ciudadanos/*`.
 
-### Pendientes del módulo
+### Estado del módulo
 
-- ~~**PDF con pdfkit**: `generarPdfBuffer()` en `facturaService.js` retorna `null` (placeholder).~~ ✅ Implementado (diseño SPEC sección 9, bucket privado `facturas` con signed URLs).
-- **Email de factura**: `enviarEmailFactura()` en `facturaService.js` es stub. Activar con Resend cuando datos bancarios estén confirmados.
-- **Cron automático**: `BILLING_CRON_ENABLED=false` — pendiente de implementar el job de `node-cron` (`BILLING_CRON_DIA_CIERRE`) que genere la factura mensual automáticamente. Tarea separada, ya no bloqueada por el PDF.
-- **Datos bancarios**: `FACTURA_BANCO_NOMBRE`, `FACTURA_BANCO_CUENTA`, `FACTURA_BANCO_CCI` pendientes de confirmar.
+- ✅ **PDF con pdfkit** — bucket privado `facturas` con signed URLs (`GET /billing/facturas/:id/pdf` redirige 302 a la URL firmada).
+- ✅ **Email de factura** — `enviarEmailFactura()` envía vía Resend con el PDF adjunto a `datos_facturacion.email_facturacion`.
+- ✅ **Cron automático** — `BILLING_CRON_ENABLED=true` en producción (MySQL y Supabase); log de arranque: `billingCron: programado para el día 1 de cada mes a las 00:00 (America/Lima)`.
+- ✅ **Datos bancarios** — `FACTURA_BANCO_NOMBRE/CUENTA/CCI` confirmados en el service MySQL; pendiente replicarlos al service Supabase.
+
+### SPEC-BILLING-002 — Port a Supabase PostgreSQL (dual-dialect)
+
+El mismo repo (`city_sec_backend_claude`) corre en dos proyectos Railway separados:
+
+| Proyecto Railway | Service | BD | `DB_DIALECT` | `DB_SCHEMA` |
+|---|---|---|---|---|
+| `CitySecure` | `city_sec_backend` | MySQL Railway (`citizen_security_db`) | `mysql` | ignorado |
+| `CitySecure_Supabase` | `city_secure_backend_supabase` | PostgreSQL Supabase | `postgres` | `citysecure` |
+
+Ambos services comparten código y modelos Sequelize; solo difieren las variables de entorno (`DB_*`, `DB_DIALECT`, `DB_SCHEMA`, Supabase Storage). El cambio de modelo necesario para soportar ambos fue en `Plan.js`:
+
+- `activo`: `DataTypes.TINYINT` → `DataTypes.BOOLEAN` (compatible con `BOOLEAN` de Postgres y `TINYINT(1)` de MySQL).
+- Getter de `features`: maneja tanto `JSONB` (Postgres devuelve objeto) como `TEXT` (MySQL devuelve string JSON):
+  ```js
+  get() {
+    const raw = this.getDataValue("features");
+    if (!raw) return null;
+    return typeof raw === "string" ? JSON.parse(raw) : raw;
+  }
+  ```
+
+**Ejecución de la migration en Supabase** (sin MCP `execute_sql` disponible en esta sesión, se usó el CLI ya autenticado vía `supabase login`):
+```bash
+supabase db query --linked -f supabase/migrations/022_billing_tables.sql
+```
+
+**Seeder y verificación contra Supabase** — proyecto y service distintos al linkeado por defecto, usar `-p`/`-s`/`-e`:
+```bash
+railway run -p <project_id_CitySecure_Supabase> -s city_secure_backend_supabase -e production npm run db:seed:billing
+```
 
 ### Trampa: `npm ci` en Dockerfile
 

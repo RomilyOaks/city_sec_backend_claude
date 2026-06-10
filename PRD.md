@@ -1,10 +1,12 @@
 # PRD — Sistema de Seguridad Ciudadana (CitySec Backend)
 
-**Versión:** 2.8.0
-**Fecha:** 2026-06-09
+**Versión:** 2.9.0
+**Fecha:** 2026-06-10
 **Estado:** Producción activa — desarrollo incremental
 **Stakeholders primarios:** Área de Tecnología Municipal, Coordinación de Serenazgo
-**Deploy:** `https://citysecbackendclaude-production.up.railway.app`
+**Deploy:**
+- MySQL (Railway, proyecto `CitySecure`): `https://citysecbackendclaude-production.up.railway.app`
+- PostgreSQL/Supabase (Railway, proyecto `CitySecure_Supabase`): `https://citysecurebackendsupabase-production-7d1c.up.railway.app`
 
 ---
 
@@ -181,9 +183,10 @@ La transición entre estados está restringida por rol via `RolEstadoNovedad`.
 | Exportación | ExcelJS |
 | Seguridad HTTP | Helmet |
 | Testing | Jest + Supertest |
-| Deploy | Railway (railway.toml) |
-| PDF | pdfkit (placeholder — implementación pendiente) |
-| Cron jobs | node-cron (billing automático — `BILLING_CRON_ENABLED=false` en prod por ahora) |
+| Deploy | Railway (railway.toml) — dual deploy: MySQL (`city_sec_backend`) y PostgreSQL/Supabase (`city_secure_backend_supabase`) |
+| Base de datos (alternativa) | PostgreSQL 15 (Supabase, schema `citysecure`) — `DB_DIALECT=postgres` |
+| PDF | pdfkit — implementado (bucket privado `facturas`, signed URLs) |
+| Cron jobs | node-cron — billing automático activo (`BILLING_CRON_ENABLED=true`), genera factura el día `BILLING_CRON_DIA_CIERRE` de cada mes |
 | Storage PDFs | Supabase Storage bucket `facturas` |
 
 ### 4.2 Variables de entorno requeridas
@@ -224,7 +227,7 @@ SMTP_PASSWORD=
 # Auth
 BCRYPT_ROUNDS=10
 
-# Billing (SPEC-BILLING-001)
+# Billing (SPEC-BILLING-001 / SPEC-BILLING-002)
 FACTURA_SERIE=F001
 FACTURA_DIAS_VENCIMIENTO=30
 IGV_PORCENTAJE=18
@@ -232,12 +235,21 @@ PLAN_INICIAL=3
 FACTURA_EMISOR_RAZON_SOCIAL=MICROHELP E.I.R.L.
 FACTURA_EMISOR_RUC=20265884564
 FACTURA_EMISOR_DIRECCION=JR. HUASCAR NRO. 1675 JESUS MARIA
-FACTURA_BANCO_NOMBRE=
-FACTURA_BANCO_CUENTA=
-FACTURA_BANCO_CCI=
-BILLING_CRON_ENABLED=false
+FACTURA_BANCO_NOMBRE=SCOTIABANK
+FACTURA_BANCO_CUENTA=...
+FACTURA_BANCO_CCI=...
+BILLING_CRON_ENABLED=true
 BILLING_CRON_DIA_CIERRE=1
+
+# Supabase (requerido cuando DB_DIALECT=postgres)
+DB_DIALECT=postgres
+DB_SCHEMA=citysecure
+DB_SSL=true
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 ```
+
+> Configuradas en ambos services de Railway: `city_sec_backend` (MySQL) y `city_secure_backend_supabase` (Supabase, proyecto `CitySecure_Supabase`). `FACTURA_BANCO_*` confirmados en MySQL; pendiente replicar al service Supabase.
 
 ### 4.3 Trampas conocidas de producción (Railway + Express 5)
 
@@ -444,9 +456,13 @@ PUT  /api/v1/billing/datos-facturacion       → Actualizar datos de facturació
 - Numeración correlativa `{FACTURA_SERIE}-00001`
 - Moneda: PEN o USD (USD requiere `tipo_cambio` manual al generar)
 - Período de gracia configurable (`dias_gracia` en suscripción, default 15)
-- PDF generado con pdfkit → subido a Supabase Storage bucket `facturas` (**placeholder activo — implementación pdfkit pendiente**)
+- PDF generado con pdfkit → subido a Supabase Storage bucket `facturas` (privado, `pdf_url` guarda el path; `GET /billing/facturas/:id/pdf` redirige 302 a una signed URL)
+- Email de la factura con el PDF adjunto, enviado vía Resend a `datos_facturacion.email_facturacion`
+- Generación automática mensual vía `node-cron` (`BILLING_CRON_DIA_CIERRE`)
 
 **Caché `checkSuscripcion`:** 5 minutos en memoria. Se invalida automáticamente al registrar un pago (`POST /billing/facturas/:id/pagar`).
+
+**Soporte dual-dialecto (SPEC-BILLING-002):** las 5 tablas de billing existen tanto en MySQL Railway (`migrations/021_billing_tables.sql`) como en PostgreSQL/Supabase, schema `citysecure` (`supabase/migrations/022_billing_tables.sql`, con RLS habilitado). Los modelos Sequelize son los mismos en ambos dialectos; `Plan.js` usa `DataTypes.BOOLEAN` para `activo` y un getter de `features` que soporta tanto `JSONB` (Postgres) como `TEXT` (MySQL).
 
 #### Reportes
 ```
@@ -532,14 +548,13 @@ GET /api/v1/reportes-operativos/dashboard
 - [x] **Recuperación de contraseña** — forgot-password + reset-password + email via Resend SDK
 - [x] **Fix deploy Railway** — Express 5 wildcard, pool.min=0, uncaughtException al inicio, swagger try/catch
 - [x] **Turno activo del sereno** (TD-P-005) — `GET /api/v1/patrullaje/turno-activo`; flujo vehicular (CONDUCTOR/COPILOTO) y a pie (SERENO_PRINCIPAL/SERENO_AUXILIAR); novedades asignadas por cuadrante
-- [x] **Billing — planes, suscripción y facturación** (SPEC-BILLING-001) — 5 modelos, 12 endpoints `/api/v1/billing`, middleware `checkSuscripcion` (bloqueo 503), cálculo de métricas, generación de facturas con numeración correlativa; PDF placeholder (pdfkit pendiente)
+- [x] **Billing — planes, suscripción y facturación** (SPEC-BILLING-001) — 5 modelos, 12 endpoints `/api/v1/billing`, middleware `checkSuscripcion` (bloqueo 503), cálculo de métricas, generación de facturas con numeración correlativa, PDF con pdfkit (signed URLs), email de factura vía Resend, cron mensual activo
+- [x] **Billing — port a Supabase PostgreSQL** (SPEC-BILLING-002) — 5 tablas en schema `citysecure` con RLS, `Plan.js` dual-dialect (`BOOLEAN` + getter `features` JSONB/TEXT), seeder y deploy en service `city_secure_backend_supabase` (proyecto Railway `CitySecure_Supabase`)
 
 ### 8.2 Features identificadas para implementar
 
-#### Billing (pendiente de esta versión)
-- [ ] **Implementar PDF con pdfkit** — diseño en sección 9 del SPEC-BILLING-001; fuente UTF-8, datos emisor/cliente, tabla de conceptos, IGV, datos bancarios, soporte bi-moneda
-- [ ] **Email de factura** — envío vía Resend con PDF adjunto al confirmar `datos_facturacion.email_facturacion`; datos bancarios pendientes de confirmar (`FACTURA_BANCO_*`)
-- [ ] **Cron automático** — activar `BILLING_CRON_ENABLED=true` en Railway cuando PDF esté listo; genera factura el día `BILLING_CRON_DIA_CIERRE` de cada mes
+#### Billing (pendiente)
+- [ ] Replicar `FACTURA_BANCO_NOMBRE/CUENTA/CCI` (ya confirmados en MySQL) al service Supabase
 
 #### Seguridad (alta prioridad)
 - [ ] Registro de intentos de login fallidos en `login_intentos` (3 TODOs en `authController.js`)
@@ -575,6 +590,7 @@ GET /api/v1/reportes-operativos/dashboard
 
 | Versión | Fecha | Cambios principales |
 |---------|-------|---------------------|
+| 2.9.0 | 2026-06-10 | SPEC-BILLING-002: port del módulo billing a PostgreSQL/Supabase — `supabase/migrations/022_billing_tables.sql` (5 tablas en schema `citysecure` + RLS), `Plan.js` dual-dialect (`activo` BOOLEAN, getter `features` JSONB/TEXT), seeder ejecutado y validado contra service `city_secure_backend_supabase` (proyecto Railway `CitySecure_Supabase`), variables de billing y cron configuradas, smoke test completo de `/api/v1/billing/suscripcion` y `/api/v1/billing/facturas/generar` (PDF + email vía Resend) |
 | 2.8.0 | 2026-06-09 | SPEC-BILLING-001: módulo billing completo — 5 tablas MySQL, 5 modelos Sequelize, middleware `checkSuscripcion` (bloqueo 503 por impago, caché 5 min), `metricasService` (usuarios activos + novedades + excedentes), `facturaService` (numeración correlativa, IGV 18%, PDF placeholder, Supabase Storage), 12 endpoints `/api/v1/billing` (solo `super_admin`); seeder con 3 planes + suscripción Premium activa |
 | 2.7.0 | 2026-06-06 | TD-P-005: `GET /api/v1/patrullaje/turno-activo` — turno activo del sereno con flujo vehicular (CONDUCTOR/COPILOTO) y a pie (SERENO_PRINCIPAL/SERENO_AUXILIAR); novedades asignadas por cuadrante; permisos `patrullaje.sereno.read` / `patrullaje.conductor.read`; corrección alias Sequelize EagerLoadingError |
 | 2.6.0 | 2026-05-25 | Recuperación de contraseña (forgot + reset) con Resend SDK; fix crítico deploy Railway (Express 5 wildcard, pool.min, uncaughtException); fix 500 en GET /auditoria/:id (variable shadowing); nueva variable FRONTEND_PUBLIC_URL |
