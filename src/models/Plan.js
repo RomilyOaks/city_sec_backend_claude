@@ -51,17 +51,19 @@ const Plan = sequelize.define(
       allowNull: true,
       get() {
         const raw = this.getDataValue("features");
-        return raw ? JSON.parse(raw) : null;
+        if (!raw) return null;
+        // JSONB en Postgres ya retorna objeto; TEXT en MySQL retorna string
+        return typeof raw === "string" ? JSON.parse(raw) : raw;
       },
       set(val) {
         this.setDataValue("features", val ? JSON.stringify(val) : null);
       },
     },
     activo: {
-      type: DataTypes.TINYINT,
+      type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: 1,
-      comment: "1=Activo | 0=Inactivo",
+      defaultValue: true,
+      comment: "true=Activo | false=Inactivo",
     },
   },
   {
