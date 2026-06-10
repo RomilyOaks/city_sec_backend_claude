@@ -3,6 +3,7 @@ import PDFDocument from "pdfkit";
 import models from "../models/index.js";
 import { calcularMetricasPeriodo } from "./metricasService.js";
 import getSupabaseClient from "../config/supabaseClient.js";
+import { enviarEmailConAdjunto } from "./emailService.js";
 import logger from "../utils/logger.js";
 
 const { Suscripcion, Plan, Factura, DatosFacturacion } = models;
@@ -224,9 +225,46 @@ async function subirPdf(buffer, numeroFactura) {
   return path; // se guarda el path en facturas.pdf_url, no una URL
 }
 
-async function enviarEmailFactura(_datos, _factura, _pdfBuffer) {
-  // TODO: implementar con Resend cuando datos bancarios estén confirmados.
-  // Usar RESEND_FROM_EMAIL / RESEND_FROM_NAME y adjuntar pdfBuffer.
+function htmlFactura(factura) {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+      <h2 style="color: #4e8c1f;">CitySecure — Nueva factura</h2>
+      <p>Se ha generado una nueva factura para su suscripción:</p>
+      <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+        <tr><td style="padding: 6px 0; color: #666;">N° Factura:</td><td style="padding: 6px 0; font-weight: bold;">${factura.numero_factura}</td></tr>
+        <tr><td style="padding: 6px 0; color: #666;">Período:</td><td style="padding: 6px 0;">${fmtPeriodo(factura.periodo)}</td></tr>
+        <tr><td style="padding: 6px 0; color: #666;">Monto total:</td><td style="padding: 6px 0; font-weight: bold;">${fmtMoney(factura.monto_total, factura.moneda)}</td></tr>
+        <tr><td style="padding: 6px 0; color: #666;">Fecha de vencimiento:</td><td style="padding: 6px 0;">${fmtFechaCorta(factura.fecha_vencimiento)}</td></tr>
+      </table>
+      <p style="color: #666; font-size: 13px;">El PDF de la factura se encuentra adjunto a este correo.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+      <p style="color: #999; font-size: 12px;">Sistema de Seguridad Ciudadana — Municipalidad</p>
+    </div>
+  `;
+}
+
+async function enviarEmailFactura(datos, factura, pdfBuffer) {
+  if (!datos?.email_facturacion) {
+    logger.warn(`facturaService: sin email_facturacion configurado — no se envía email de factura ${factura.numero_factura}`);
+    return;
+  }
+  if (!pdfBuffer) {
+    logger.warn(`facturaService: factura ${factura.numero_factura} sin PDF — no se envía email`);
+    return;
+  }
+
+  try {
+    await enviarEmailConAdjunto({
+      to: datos.email_facturacion,
+      subject: `Factura N° ${factura.numero_factura} — ${fmtPeriodo(factura.periodo)}`,
+      html: htmlFactura(factura),
+      attachments: [{ filename: `${factura.numero_factura}.pdf`, content: pdfBuffer }],
+    });
+    logger.info(`facturaService: email de factura ${factura.numero_factura} enviado a ${datos.email_facturacion}`);
+  } catch (err) {
+    logger.error("facturaService: error al enviar email de factura", { error: err.message });
+    // best-effort: no se relanza, no bloquea generarFactura()
+  }
 }
 
 export async function generarFactura(suscripcionId, periodo, opciones = {}) {

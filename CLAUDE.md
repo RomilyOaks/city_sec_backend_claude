@@ -215,7 +215,7 @@ FACTURA_EMISOR_DIRECCION=JR. HUASCAR NRO. 1675 JESUS MARIA
 FACTURA_BANCO_NOMBRE=                 # pendiente confirmar
 FACTURA_BANCO_CUENTA=                 # pendiente confirmar
 FACTURA_BANCO_CCI=                    # pendiente confirmar
-BILLING_CRON_ENABLED=false            # true solo en producción cuando PDF esté listo
+BILLING_CRON_ENABLED=false            # true cuando se implemente el job de node-cron (pendiente)
 BILLING_CRON_DIA_CIERRE=1
 ```
 
@@ -295,9 +295,9 @@ Rutas excluidas del bloqueo: `/health`, `/auth/login`, `/auth/refresh`, `/ciudad
 
 ### Pendientes del módulo
 
-- **PDF con pdfkit**: `generarPdfBuffer()` en `facturaService.js` retorna `null` (placeholder). Implementar diseño del SPEC sección 9.
+- ~~**PDF con pdfkit**: `generarPdfBuffer()` en `facturaService.js` retorna `null` (placeholder).~~ ✅ Implementado (diseño SPEC sección 9, bucket privado `facturas` con signed URLs).
 - **Email de factura**: `enviarEmailFactura()` en `facturaService.js` es stub. Activar con Resend cuando datos bancarios estén confirmados.
-- **Cron automático**: `BILLING_CRON_ENABLED=false` — activar en producción cuando PDF esté listo.
+- **Cron automático**: `BILLING_CRON_ENABLED=false` — pendiente de implementar el job de `node-cron` (`BILLING_CRON_DIA_CIERRE`) que genere la factura mensual automáticamente. Tarea separada, ya no bloqueada por el PDF.
 - **Datos bancarios**: `FACTURA_BANCO_NOMBRE`, `FACTURA_BANCO_CUENTA`, `FACTURA_BANCO_CCI` pendientes de confirmar.
 
 ### Trampa: `npm ci` en Dockerfile

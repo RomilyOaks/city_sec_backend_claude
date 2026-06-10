@@ -42,13 +42,14 @@ const smtpTransporter = nodemailer.createTransport({
 // ──────────────────────────────────────────────
 // Función interna: enviar con Resend SDK (HTTP)
 // ──────────────────────────────────────────────
-const enviarConResend = async ({ to, subject, html }) => {
+const enviarConResend = async ({ to, subject, html, attachments }) => {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const { data, error } = await resend.emails.send({
     from: `${FROM_NAME} <${FROM_EMAIL}>`,
     to,
     subject,
     html,
+    ...(attachments ? { attachments } : {}),
   });
   if (error) {
     throw new Error(`Resend error: ${error.message}`);
@@ -59,7 +60,7 @@ const enviarConResend = async ({ to, subject, html }) => {
 // ──────────────────────────────────────────────
 // Función interna: enviar con nodemailer (SMTP)
 // ──────────────────────────────────────────────
-const enviarConSMTP = async ({ to, subject, html }) => {
+const enviarConSMTP = async ({ to, subject, html, attachments }) => {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
     console.warn("⚠️  SMTP no configurado — email NO enviado");
     return null;
@@ -69,6 +70,7 @@ const enviarConSMTP = async ({ to, subject, html }) => {
     to,
     subject,
     html,
+    ...(attachments ? { attachments } : {}),
   });
 };
 
@@ -124,5 +126,28 @@ export const enviarEmailRecuperacionPassword = async ({ email, username, resetLi
   await enviarConSMTP(payload);
   if (process.env.SMTP_USER) {
     console.log(`✅ Email enviado vía SMTP a: ${email}`);
+  }
+};
+
+/**
+ * Envía un email con adjuntos (ej: PDF de factura).
+ * Usa Resend SDK si RESEND_API_KEY está disponible (recomendado en Railway).
+ * Fallback a SMTP si solo hay credenciales nodemailer configuradas.
+ */
+export const enviarEmailConAdjunto = async ({ to, subject, html, attachments }) => {
+  const payload = { to, subject, html, attachments };
+
+  if (process.env.RESEND_API_KEY) {
+    console.log("📧 Enviando email vía Resend SDK...");
+    await enviarConResend(payload);
+    console.log(`✅ Email enviado vía Resend a: ${to}`);
+    return;
+  }
+
+  // Fallback: SMTP
+  console.log("📧 Enviando email vía SMTP...");
+  await enviarConSMTP(payload);
+  if (process.env.SMTP_USER) {
+    console.log(`✅ Email enviado vía SMTP a: ${to}`);
   }
 };
