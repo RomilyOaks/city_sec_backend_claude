@@ -57,7 +57,10 @@ function fmtFechaCorta(fecha) {
 }
 
 // ─── PDF DE FACTURA (pdfkit) ──────────────────────────────────────────────────
-// Diseño según sección 9 del SPEC-BILLING-001. Retorna un Buffer en memoria.
+// Implementado según diseño de la sección 9 del SPEC-BILLING-001:
+// emisor/cliente, tabla de conceptos (base + excedentes), subtotal/IGV/total,
+// datos bancarios y soporte bi-moneda (tipo de cambio + equivalente en soles).
+// Retorna un Buffer en memoria; subirPdf() lo sube al bucket privado "facturas".
 async function generarPdfBuffer(factura, metrica, datos, plan) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: "A4", margin: 50 });
