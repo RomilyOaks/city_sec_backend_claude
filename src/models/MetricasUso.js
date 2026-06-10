@@ -65,6 +65,9 @@ const MetricasUso = sequelize.define(
     timestamps: true,
     createdAt: false,        // la tabla no tiene columna created_at
     updatedAt: "updated_at",
+    indexes: [
+      { unique: true, fields: ["suscripcion_id", "periodo"], name: "uq_metrica_periodo" },
+    ],
   }
 );
 

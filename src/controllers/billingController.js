@@ -222,7 +222,7 @@ export const updateDatosFacturacion = async (req, res) => {
 export const getPlanes = async (req, res) => {
   try {
     const planes = await Plan.findAll({
-      where: { activo: 1 },
+      where: { activo: true },
       order: [["precio_base_mensual", "ASC"]],
     });
     res.json(formatResponse(true, "Planes obtenidos", planes));
