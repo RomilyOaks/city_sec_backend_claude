@@ -44,6 +44,7 @@ import sequelize from "./config/database.js";
 
 import indexRoutes from "./routes/index.routes.js";
 import checkSuscripcion from "./middlewares/checkSuscripcion.js";
+import { iniciarBillingCron } from "./jobs/billingCron.js";
 
 // ============================================
 // MANEJADORES DE ERRORES NO CAPTURADOS
@@ -492,6 +493,9 @@ if (NODE_ENV !== "test") {
   // Debe ser MAYOR que el timeout del proxy, y headersTimeout MAYOR que este.
   httpServer.keepAliveTimeout = 65000;
   httpServer.headersTimeout = 66000;
+
+  // Cron de billing — solo si BILLING_CRON_ENABLED=true
+  iniciarBillingCron();
 
   // Conectar DB de forma asíncrona — no bloquea el servidor HTTP
   console.log("📊 Conectando a la base de datos (async)...");
